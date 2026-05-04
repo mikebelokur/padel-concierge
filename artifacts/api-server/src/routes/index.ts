@@ -7,6 +7,9 @@ import bookingsRouter from "./bookings";
 import videoAnalysesRouter from "./video_analyses";
 import statsRouter from "./stats";
 import coachRouter from "./coach";
+import courtsRouter from "./courts";
+import matchRequestsRouter from "./match_requests";
+import assessmentsRouter from "./assessments";
 
 const router: IRouter = Router();
 
@@ -18,5 +21,8 @@ router.use(bookingsRouter);
 router.use(videoAnalysesRouter);
 router.use(statsRouter);
 router.use(coachRouter);
+router.use(courtsRouter);
+router.use(matchRequestsRouter);
+router.use(assessmentsRouter);
 
 export default router;

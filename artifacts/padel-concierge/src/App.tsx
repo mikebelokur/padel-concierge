@@ -22,14 +22,34 @@ import VideoAnalysisDetail from "@/pages/video-analysis-detail";
 import Settings from "@/pages/settings";
 import CoachDashboard from "@/pages/coach";
 import Admin from "@/pages/admin";
+import Courts from "@/pages/courts";
+import Members from "@/pages/members";
+import MatchRequests from "@/pages/match-requests";
+import Assessment from "@/pages/assessment";
 
 setAuthTokenGetter(() => localStorage.getItem("token"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: 1, staleTime: 30_000 },
+  },
+});
 
-function ProtectedRoute({ component: Component, allowedRoles }: { component: any, allowedRoles?: string[] }) {
+function ProtectedRoute({
+  component: Component,
+  allowedRoles,
+}: {
+  component: React.ComponentType;
+  allowedRoles?: string[];
+}) {
   const { user, isLoading } = useAuth();
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-background text-foreground">Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground text-sm">
+        Loading…
+      </div>
+    );
+  }
   if (!user) return <Redirect to="/login" />;
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     return <Redirect to="/dashboard" />;
@@ -43,23 +63,29 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
-      
+
       <Route path="/dashboard">{() => <ProtectedRoute component={Dashboard} />}</Route>
+
       <Route path="/matches/suggest">{() => <ProtectedRoute component={MatchSuggest} />}</Route>
       <Route path="/matches/:id">{() => <ProtectedRoute component={MatchDetail} />}</Route>
       <Route path="/matches">{() => <ProtectedRoute component={Matches} />}</Route>
-      
+
       <Route path="/bookings/:id">{() => <ProtectedRoute component={BookingDetail} />}</Route>
       <Route path="/bookings">{() => <ProtectedRoute component={Bookings} />}</Route>
-      
+
+      <Route path="/courts">{() => <ProtectedRoute component={Courts} />}</Route>
+      <Route path="/members">{() => <ProtectedRoute component={Members} />}</Route>
+      <Route path="/match-requests">{() => <ProtectedRoute component={MatchRequests} />}</Route>
+      <Route path="/assessment">{() => <ProtectedRoute component={Assessment} />}</Route>
+
       <Route path="/profile">{() => <ProtectedRoute component={Profile} />}</Route>
       <Route path="/video-analysis/:id">{() => <ProtectedRoute component={VideoAnalysisDetail} />}</Route>
       <Route path="/video-analysis">{() => <ProtectedRoute component={VideoAnalysisList} />}</Route>
       <Route path="/settings">{() => <ProtectedRoute component={Settings} />}</Route>
-      
-      <Route path="/coach">{() => <ProtectedRoute component={CoachDashboard} allowedRoles={['coach', 'admin']} />}</Route>
-      <Route path="/admin">{() => <ProtectedRoute component={Admin} allowedRoles={['admin']} />}</Route>
-      
+
+      <Route path="/coach">{() => <ProtectedRoute component={CoachDashboard} allowedRoles={["coach", "admin"]} />}</Route>
+      <Route path="/admin">{() => <ProtectedRoute component={Admin} allowedRoles={["admin"]} />}</Route>
+
       <Route component={NotFound} />
     </Switch>
   );

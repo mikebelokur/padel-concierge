@@ -3,3 +3,6 @@ export * from "./matches";
 export * from "./bookings";
 export * from "./video_analyses";
 export * from "./activity_logs";
+export * from "./courts";
+export * from "./match_requests";
+export * from "./skill_assessments";

@@ -3,20 +3,36 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Padel Concierge API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: users
+    description: User management
+  - name: matches
+    description: Match management
+  - name: bookings
+    description: Booking management
+  - name: video-analysis
+    description: Video analysis
+  - name: admin
+    description: Admin operations
+  - name: coach
+    description: Coach operations
+  - name: stats
+    description: Statistics and dashboards
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +40,624 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # AUTH
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Bad request
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Unauthorized
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  # USERS
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all users (admin)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+  /users/{id}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateUser
+      tags: [users]
+      summary: Update user profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}/availability:
+    patch:
+      operationId: updateAvailability
+      tags: [users]
+      summary: Update user availability
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAvailabilityBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}/favourites:
+    post:
+      operationId: addFavourite
+      tags: [users]
+      summary: Add favourite player
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FavouriteBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    delete:
+      operationId: removeFavourite
+      tags: [users]
+      summary: Remove favourite player
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FavouriteBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}/verify:
+    post:
+      operationId: verifyUser
+      tags: [users]
+      summary: Mark user as verified (coach only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  # MATCHES
+  /matches:
+    get:
+      operationId: listMatches
+      tags: [matches]
+      summary: List matches with optional filters
+      parameters:
+        - name: level
+          in: query
+          schema:
+            type: string
+        - name: format
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: date
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Match"
+    post:
+      operationId: createMatch
+      tags: [matches]
+      summary: Create a new match
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMatchBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+
+  /matches/suggestions:
+    get:
+      operationId: getMatchSuggestions
+      tags: [matches]
+      summary: Get smart match suggestions for current user
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatchSuggestions"
+
+  /matches/{id}:
+    get:
+      operationId: getMatch
+      tags: [matches]
+      summary: Get match by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateMatch
+      tags: [matches]
+      summary: Update match
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMatchBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+
+  # BOOKINGS
+  /bookings:
+    get:
+      operationId: listBookings
+      tags: [bookings]
+      summary: List bookings
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: integer
+        - name: matchId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Create a booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBookingBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/{id}:
+    get:
+      operationId: getBooking
+      tags: [bookings]
+      summary: Get booking by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+    patch:
+      operationId: updateBooking
+      tags: [bookings]
+      summary: Update booking (confirm warmup, cancel)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBookingBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/{id}/payment:
+    post:
+      operationId: createPaymentIntent
+      tags: [bookings]
+      summary: Create Stripe payment intent for booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentIntentResponse"
+
+  /bookings/{id}/confirm-payment:
+    post:
+      operationId: confirmPayment
+      tags: [bookings]
+      summary: Confirm payment completion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfirmPaymentBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  # VIDEO ANALYSIS
+  /video-analysis:
+    get:
+      operationId: listVideoAnalyses
+      tags: [video-analysis]
+      summary: List video analyses
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VideoAnalysis"
+    post:
+      operationId: createVideoAnalysis
+      tags: [video-analysis]
+      summary: Submit video for analysis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVideoAnalysisBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VideoAnalysis"
+
+  /video-analysis/{id}:
+    get:
+      operationId: getVideoAnalysis
+      tags: [video-analysis]
+      summary: Get video analysis by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VideoAnalysis"
+    patch:
+      operationId: updateVideoAnalysis
+      tags: [video-analysis]
+      summary: Update video analysis (coach uploads report)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVideoAnalysisBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VideoAnalysis"
+
+  # STATS
+  /stats/dashboard:
+    get:
+      operationId: getDashboardStats
+      tags: [stats]
+      summary: Get dashboard stats for admin
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /stats/player/{id}:
+    get:
+      operationId: getPlayerStats
+      tags: [stats]
+      summary: Get stats for a specific player
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayerStats"
+
+  /stats/activity:
+    get:
+      operationId: getActivityLog
+      tags: [stats]
+      summary: Get recent activity log
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityLog"
+
+  # COACH
+  /coach/players:
+    get:
+      operationId: listCoachPlayers
+      tags: [coach]
+      summary: List all players (coach view)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+  /coach/upcoming-matches:
+    get:
+      operationId: listCoachUpcomingMatches
+      tags: [coach]
+      summary: List upcoming matches for coach to attend
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Match"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +668,648 @@ components:
       required:
         - status
 
+    RegisterBody:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        password:
+          type: string
+        level:
+          type: string
+        goal:
+          type: string
+        intensity:
+          type: string
+        locationLat:
+          type: ["number", "null"]
+        locationLng:
+          type: ["number", "null"]
+        locationName:
+          type: string
+        role:
+          type: string
+      required:
+        - name
+        - email
+        - phone
+        - password
+        - level
+        - goal
+        - intensity
+
+    LoginBody:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+      required:
+        - token
+        - user
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        level:
+          type: string
+        goal:
+          type: string
+        intensity:
+          type: string
+        locationLat:
+          type: ["number", "null"]
+        locationLng:
+          type: ["number", "null"]
+        locationName:
+          type: ["string", "null"]
+        avatar:
+          type: ["string", "null"]
+        verified:
+          type: boolean
+        verificationDate:
+          type: ["string", "null"]
+        role:
+          type: string
+        favouritePlayers:
+          type: array
+          items:
+            type: integer
+        availability:
+          type: array
+          items:
+            $ref: "#/components/schemas/AvailabilityEntry"
+        matchesPlayed:
+          type: integer
+        wins:
+          type: integer
+        language:
+          type: string
+        isOnline:
+          type: boolean
+        lastActive:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        lastLogin:
+          type: ["string", "null"]
+      required:
+        - id
+        - name
+        - email
+        - phone
+        - level
+        - goal
+        - intensity
+        - verified
+        - role
+        - favouritePlayers
+        - availability
+        - matchesPlayed
+        - wins
+        - language
+        - isOnline
+        - createdAt
+
+    AvailabilityEntry:
+      type: object
+      properties:
+        date:
+          type: string
+        slots:
+          type: array
+          items:
+            type: array
+            items:
+              type: string
+      required:
+        - date
+        - slots
+
+    UpdateUserBody:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        level:
+          type: string
+        goal:
+          type: string
+        intensity:
+          type: string
+        locationLat:
+          type: ["number", "null"]
+        locationLng:
+          type: ["number", "null"]
+        locationName:
+          type: ["string", "null"]
+        avatar:
+          type: ["string", "null"]
+        language:
+          type: string
+
+    UpdateAvailabilityBody:
+      type: object
+      properties:
+        availability:
+          type: array
+          items:
+            $ref: "#/components/schemas/AvailabilityEntry"
+      required:
+        - availability
+
+    FavouriteBody:
+      type: object
+      properties:
+        targetUserId:
+          type: integer
+      required:
+        - targetUserId
+
+    Match:
+      type: object
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+        time:
+          type: string
+        clubName:
+          type: string
+        format:
+          type: string
+        players:
+          type: array
+          items:
+            $ref: "#/components/schemas/MatchPlayer"
+        status:
+          type: string
+        price:
+          type: number
+        levelMin:
+          type: ["string", "null"]
+        levelMax:
+          type: ["string", "null"]
+        matchType:
+          type: string
+        balanceScore:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - date
+        - time
+        - clubName
+        - format
+        - players
+        - status
+        - price
+        - matchType
+        - createdAt
+
+    MatchPlayer:
+      type: object
+      properties:
+        userId:
+          type: integer
+        name:
+          type: string
+        level:
+          type: string
+        confirmed:
+          type: boolean
+        avatar:
+          type: ["string", "null"]
+      required:
+        - userId
+        - name
+        - level
+        - confirmed
+
+    CreateMatchBody:
+      type: object
+      properties:
+        date:
+          type: string
+        time:
+          type: string
+        clubName:
+          type: string
+        format:
+          type: string
+        playerIds:
+          type: array
+          items:
+            type: integer
+        matchType:
+          type: string
+      required:
+        - date
+        - time
+        - clubName
+        - format
+        - playerIds
+        - matchType
+
+    UpdateMatchBody:
+      type: object
+      properties:
+        status:
+          type: string
+        format:
+          type: string
+        clubName:
+          type: string
+
+    MatchSuggestions:
+      type: object
+      properties:
+        best:
+          $ref: "#/components/schemas/Match"
+        balanced:
+          $ref: "#/components/schemas/Match"
+        challenging:
+          $ref: "#/components/schemas/Match"
+        easy:
+          $ref: "#/components/schemas/Match"
+      required: []
+
+    Booking:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        matchId:
+          type: integer
+        paymentStatus:
+          type: string
+        paymentId:
+          type: ["string", "null"]
+        warmUpCompleted:
+          type: boolean
+        cancelledAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        match:
+          $ref: "#/components/schemas/Match"
+      required:
+        - id
+        - userId
+        - matchId
+        - paymentStatus
+        - warmUpCompleted
+        - createdAt
+        - match
+
+    CreateBookingBody:
+      type: object
+      properties:
+        userId:
+          type: integer
+        matchId:
+          type: integer
+      required:
+        - userId
+        - matchId
+
+    UpdateBookingBody:
+      type: object
+      properties:
+        warmUpCompleted:
+          type: boolean
+        paymentStatus:
+          type: string
+        cancelledAt:
+          type: ["string", "null"]
+
+    PaymentIntentResponse:
+      type: object
+      properties:
+        clientSecret:
+          type: string
+        paymentIntentId:
+          type: string
+      required:
+        - clientSecret
+        - paymentIntentId
+
+    ConfirmPaymentBody:
+      type: object
+      properties:
+        paymentIntentId:
+          type: string
+      required:
+        - paymentIntentId
+
+    VideoAnalysis:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        videoUrl:
+          type: string
+        playerShirtColor:
+          type: string
+        analysisQuery:
+          type: ["string", "null"]
+        status:
+          type: string
+        assignedCoachId:
+          type: ["integer", "null"]
+        analysisReport:
+          $ref: "#/components/schemas/AnalysisReport"
+        deliveredAt:
+          type: ["string", "null"]
+        responseTime:
+          type: ["number", "null"]
+        uploadDate:
+          type: string
+      required:
+        - id
+        - userId
+        - videoUrl
+        - playerShirtColor
+        - status
+        - uploadDate
+
+    AnalysisReport:
+      type: object
+      properties:
+        coverInsight:
+          type: string
+        strengths:
+          type: array
+          items:
+            type: string
+        weaknesses:
+          type: array
+          items:
+            type: string
+        decisionQuality:
+          type: number
+        positioning:
+          type: number
+        shotSelection:
+          type: number
+        tempoConsistency:
+          type: number
+        keyErrors:
+          type: array
+          items:
+            type: string
+        patterns:
+          type: string
+        playerIdentity:
+          type: string
+        actionPlan:
+          type: array
+          items:
+            type: string
+        coachRecommendation:
+          type: string
+        developmentPath:
+          type: string
+
+    CreateVideoAnalysisBody:
+      type: object
+      properties:
+        userId:
+          type: integer
+        videoUrl:
+          type: string
+        playerShirtColor:
+          type: string
+        analysisQuery:
+          type: ["string", "null"]
+      required:
+        - userId
+        - videoUrl
+        - playerShirtColor
+
+    UpdateVideoAnalysisBody:
+      type: object
+      properties:
+        status:
+          type: string
+        assignedCoachId:
+          type: ["integer", "null"]
+        analysisReport:
+          $ref: "#/components/schemas/AnalysisReport"
+
+    DashboardStats:
+      type: object
+      properties:
+        totalUsers:
+          type: integer
+        onlineUsers:
+          type: integer
+        totalMatches:
+          type: integer
+        confirmedMatches:
+          type: integer
+        cancelledMatches:
+          type: integer
+        completedMatches:
+          type: integer
+        dailyRevenue:
+          type: number
+        weeklyRevenue:
+          type: number
+        monthlyRevenue:
+          type: number
+        pendingVideoAnalyses:
+          type: integer
+        inProgressVideoAnalyses:
+          type: integer
+        completedVideoAnalyses:
+          type: integer
+        avgAnalysisResponseTime:
+          type: number
+        levelDistribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/LevelCount"
+        topPlayers:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopPlayer"
+      required:
+        - totalUsers
+        - onlineUsers
+        - totalMatches
+        - confirmedMatches
+        - cancelledMatches
+        - completedMatches
+        - dailyRevenue
+        - weeklyRevenue
+        - monthlyRevenue
+        - pendingVideoAnalyses
+        - inProgressVideoAnalyses
+        - completedVideoAnalyses
+        - avgAnalysisResponseTime
+        - levelDistribution
+        - topPlayers
+
+    LevelCount:
+      type: object
+      properties:
+        level:
+          type: string
+        count:
+          type: integer
+      required:
+        - level
+        - count
+
+    TopPlayer:
+      type: object
+      properties:
+        userId:
+          type: integer
+        name:
+          type: string
+        matchesPlayed:
+          type: integer
+        level:
+          type: string
+        avatar:
+          type: ["string", "null"]
+      required:
+        - userId
+        - name
+        - matchesPlayed
+        - level
+
+    PlayerStats:
+      type: object
+      properties:
+        userId:
+          type: integer
+        matchesPlayed:
+          type: integer
+        wins:
+          type: integer
+        winRate:
+          type: number
+        levelProgress:
+          type: number
+        winsToNextLevel:
+          type: integer
+        levelConfidence:
+          type: number
+        formatBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/FormatCount"
+        winTrend:
+          type: array
+          items:
+            $ref: "#/components/schemas/WinTrendEntry"
+        frequentPartners:
+          type: array
+          items:
+            $ref: "#/components/schemas/FrequentPartner"
+      required:
+        - userId
+        - matchesPlayed
+        - wins
+        - winRate
+        - levelProgress
+        - winsToNextLevel
+        - levelConfidence
+        - formatBreakdown
+        - winTrend
+        - frequentPartners
+
+    FormatCount:
+      type: object
+      properties:
+        format:
+          type: string
+        count:
+          type: integer
+      required:
+        - format
+        - count
+
+    WinTrendEntry:
+      type: object
+      properties:
+        date:
+          type: string
+        winRate:
+          type: number
+      required:
+        - date
+        - winRate
+
+    FrequentPartner:
+      type: object
+      properties:
+        userId:
+          type: integer
+        name:
+          type: string
+        matchesTogether:
+          type: integer
+        avatar:
+          type: ["string", "null"]
+      required:
+        - userId
+        - name
+        - matchesTogether
+
+    ActivityLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        userName:
+          type: string
+        action:
+          type: string
+        details:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - userId
+        - userName
+        - action
+        - createdAt

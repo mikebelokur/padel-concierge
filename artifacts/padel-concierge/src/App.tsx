@@ -10,6 +10,8 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
+import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
 import Dashboard from "@/pages/dashboard";
 import Matches from "@/pages/matches";
 import MatchSuggest from "@/pages/match-suggest";
@@ -63,6 +65,8 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
 
       <Route path="/dashboard">{() => <ProtectedRoute component={Dashboard} />}</Route>
 
@@ -84,7 +88,7 @@ function Router() {
       <Route path="/settings">{() => <ProtectedRoute component={Settings} />}</Route>
 
       <Route path="/coach">{() => <ProtectedRoute component={CoachDashboard} allowedRoles={["coach", "admin"]} />}</Route>
-      <Route path="/admin">{() => <ProtectedRoute component={Admin} allowedRoles={["admin"]} />}</Route>
+      <Route path="/admin">{() => <ProtectedRoute component={Admin} allowedRoles={["admin", "owner"]} />}</Route>
 
       <Route component={NotFound} />
     </Switch>

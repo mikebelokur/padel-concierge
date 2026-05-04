@@ -10,6 +10,7 @@ import coachRouter from "./coach";
 import courtsRouter from "./courts";
 import matchRequestsRouter from "./match_requests";
 import assessmentsRouter from "./assessments";
+import adminRouter from "./admin";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(coachRouter);
 router.use(courtsRouter);
 router.use(matchRequestsRouter);
 router.use(assessmentsRouter);
+router.use(adminRouter);
 
 export default router;

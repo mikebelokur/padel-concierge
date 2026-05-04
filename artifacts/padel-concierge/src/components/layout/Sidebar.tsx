@@ -20,8 +20,8 @@ const navItems: NavItem[] = [
   { href: "/assessment", label: "Assessment", icon: "📊" },
   { href: "/video-analysis", label: "Video Analysis", icon: "🎬" },
   { href: "/settings", label: "Settings", icon: "⚙️" },
-  { href: "/coach", label: "Coach Console", icon: "🏆", roles: ["coach", "admin"] },
-  { href: "/admin", label: "Admin Panel", icon: "🔧", roles: ["admin"] },
+  { href: "/coach", label: "Coach Console", icon: "🏆", roles: ["coach", "admin", "owner"] },
+  { href: "/admin", label: "Admin Panel", icon: "🔧", roles: ["admin", "owner"] },
 ];
 
 export function Sidebar() {
@@ -31,6 +31,8 @@ export function Sidebar() {
   const visibleItems = navItems.filter(
     (item) => !item.roles || (user?.role && item.roles.includes(user.role))
   );
+
+  const isOwner = user?.role === "owner";
 
   return (
     <div className="w-64 border-r border-white/5 bg-card flex flex-col h-screen fixed top-0 left-0 z-30">
@@ -65,13 +67,23 @@ export function Sidebar() {
       {/* User */}
       <div className="p-4 border-t border-white/5 flex-shrink-0">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-serif flex-shrink-0">
+          <div
+            className={cn(
+              "w-9 h-9 rounded-full flex items-center justify-center font-serif flex-shrink-0",
+              isOwner
+                ? "bg-yellow-500/20 text-yellow-400 ring-1 ring-yellow-500/40"
+                : "bg-primary/20 text-primary"
+            )}
+          >
             {user?.name?.[0] ?? "U"}
           </div>
           <div className="min-w-0">
-            <div className="font-medium text-sm truncate">{user?.name}</div>
+            <div className="font-medium text-sm truncate flex items-center gap-1.5">
+              {isOwner && <span title="Owner" className="text-yellow-400 text-base leading-none">👑</span>}
+              {user?.name}
+            </div>
             <div className="text-xs text-muted-foreground flex items-center gap-1.5">
-              <span className="capitalize">{user?.role}</span>
+              <span className={cn("capitalize", isOwner && "text-yellow-400")}>{user?.role}</span>
               {user?.verified && <span className="text-accent">· ✓</span>}
               {user?.level && <span className="font-mono">· {user.level}</span>}
             </div>

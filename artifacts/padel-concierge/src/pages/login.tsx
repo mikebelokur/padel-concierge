@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useLogin } from "@workspace/api-client-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -19,18 +19,18 @@ export default function Login() {
     mutation: {
       onSuccess: (data) => {
         authLogin(data.token, data.user);
-        if (data.user.role === 'admin') setLocation("/admin");
-        else if (data.user.role === 'coach') setLocation("/coach");
+        if (data.user.role === "owner" || data.user.role === "admin") setLocation("/admin");
+        else if (data.user.role === "coach") setLocation("/coach");
         else setLocation("/dashboard");
       },
       onError: (err: any) => {
         toast({
           title: "Login failed",
           description: err.message || "Invalid credentials",
-          variant: "destructive"
+          variant: "destructive",
         });
-      }
-    }
+      },
+    },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -43,16 +43,18 @@ export default function Login() {
       <Card className="w-full max-w-md bg-card border-white/5">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-3xl font-serif">Welcome Back</CardTitle>
-          <CardDescription className="text-muted-foreground">Enter your credentials to access your account</CardDescription>
+          <CardDescription className="text-muted-foreground">
+            Enter your credentials to access your account
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="player@example.com" 
+              <Input
+                id="email"
+                type="text"
+                placeholder="player@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -60,23 +62,38 @@ export default function Login() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input 
-                id="password" 
-                type="password" 
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link href="/forgot-password">
+                  <span className="text-xs text-muted-foreground hover:text-primary cursor-pointer transition-colors">
+                    Forgot password?
+                  </span>
+                </Link>
+              </div>
+              <Input
+                id="password"
+                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="bg-background border-white/10 focus-visible:ring-primary"
               />
             </div>
-            <Button 
-              type="submit" 
-              className="w-full mt-6" 
+            <Button
+              type="submit"
+              className="w-full mt-6"
               disabled={loginMutation.isPending}
             >
               {loginMutation.isPending ? "Logging in..." : "Login"}
             </Button>
+            <div className="text-center pt-2">
+              <span className="text-sm text-muted-foreground">
+                Not a member?{" "}
+                <Link href="/register">
+                  <span className="text-primary hover:underline cursor-pointer">Join now</span>
+                </Link>
+              </span>
+            </div>
           </form>
         </CardContent>
       </Card>

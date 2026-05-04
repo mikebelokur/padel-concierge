@@ -1,0 +1,89 @@
+import { Router, type IRouter } from "express";
+import { db, usersTable, activityLogsTable } from "@workspace/db";
+import { eq, ne } from "drizzle-orm";
+import { getTokenFromRequest, verifyToken } from "../lib/auth";
+import { formatUser } from "./auth";
+
+const router: IRouter = Router();
+
+function requireOwnerOrAdmin(req: any, res: any): { userId: number; role: string } | null {
+  const token = getTokenFromRequest(req);
+  if (!token) { res.status(401).json({ error: "Unauthorized" }); return null; }
+  const payload = verifyToken(token);
+  if (!payload || !["admin", "owner"].includes(payload.role)) {
+    res.status(403).json({ error: "Forbidden" });
+    return null;
+  }
+  return payload;
+}
+
+// GET /api/admin/users — all users with stats
+router.get("/admin/users", async (req, res): Promise<void> => {
+  if (!requireOwnerOrAdmin(req, res)) return;
+
+  const users = await db.select().from(usersTable).orderBy(usersTable.createdAt);
+  res.json(users.map(formatUser));
+});
+
+// PUT /api/admin/users/:id/level — set skill level
+router.put("/admin/users/:id/level", async (req, res): Promise<void> => {
+  if (!requireOwnerOrAdmin(req, res)) return;
+  const id = parseInt(req.params.id);
+  const { level } = req.body;
+  if (!level) { res.status(400).json({ error: "Level is required" }); return; }
+
+  const [user] = await db.update(usersTable)
+    .set({ level, verified: true, verificationDate: new Date() })
+    .where(eq(usersTable.id, id))
+    .returning();
+
+  if (!user) { res.status(404).json({ error: "User not found" }); return; }
+
+  await db.insert(activityLogsTable).values({
+    userId: id,
+    userName: user.name,
+    action: "level_updated",
+    details: `Level manually set to ${level} by admin`,
+  });
+
+  res.json(formatUser(user));
+});
+
+// DELETE /api/admin/users/:id — delete user
+router.delete("/admin/users/:id", async (req, res): Promise<void> => {
+  const auth = requireOwnerOrAdmin(req, res);
+  if (!auth) return;
+
+  const id = parseInt(req.params.id);
+  if (id === auth.userId) {
+    res.status(400).json({ error: "Cannot delete your own account" });
+    return;
+  }
+
+  const [deleted] = await db.delete(usersTable).where(eq(usersTable.id, id)).returning();
+  if (!deleted) { res.status(404).json({ error: "User not found" }); return; }
+
+  res.json({ message: "User deleted" });
+});
+
+// PUT /api/admin/users/:id/role — set role
+router.put("/admin/users/:id/role", async (req, res): Promise<void> => {
+  if (!requireOwnerOrAdmin(req, res)) return;
+  const id = parseInt(req.params.id);
+  const { role } = req.body;
+  const validRoles = ["player", "coach", "admin", "owner"];
+  if (!role || !validRoles.includes(role)) {
+    res.status(400).json({ error: "Invalid role" });
+    return;
+  }
+
+  const [user] = await db.update(usersTable)
+    .set({ role })
+    .where(eq(usersTable.id, id))
+    .returning();
+
+  if (!user) { res.status(404).json({ error: "User not found" }); return; }
+  res.json(formatUser(user));
+});
+
+export default router;

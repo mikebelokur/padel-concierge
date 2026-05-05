@@ -33,6 +33,8 @@ function formatUser(user: typeof usersTable.$inferSelect) {
     lastActive: user.lastActive?.toISOString() ?? null,
     createdAt: user.createdAt.toISOString(),
     lastLogin: user.lastLogin?.toISOString() ?? null,
+    archetype: user.archetype ?? null,
+    warmUpPreference: user.warmUpPreference,
   };
 }
 

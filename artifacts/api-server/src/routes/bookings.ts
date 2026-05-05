@@ -112,6 +112,62 @@ router.patch("/bookings/:id", async (req, res): Promise<void> => {
   res.json(await formatBooking(booking));
 });
 
+router.post("/bookings/lateness-split", async (req, res): Promise<void> => {
+  const { courtCost = 400, numPlayers = 4, latePlayers = [] } = req.body as {
+    courtCost?: number;
+    numPlayers?: number;
+    latePlayers?: Array<{ playerIndex: number; name?: string; minutesLate: number }>;
+  };
+
+  if (numPlayers < 2 || numPlayers > 8) {
+    res.status(400).json({ error: "numPlayers must be 2–8" });
+    return;
+  }
+
+  const baseShare = courtCost / numPlayers;
+  const lateSet = new Set(latePlayers.map(lp => lp.playerIndex));
+
+  const splits = Array.from({ length: numPlayers }, (_, i) => {
+    const entry = latePlayers.find(lp => lp.playerIndex === i);
+    if (entry) {
+      const penalty = entry.minutesLate * (courtCost / 100);
+      return {
+        playerIndex: i,
+        name: entry.name ?? `Player ${i + 1}`,
+        baseShare: Math.round(baseShare * 100) / 100,
+        penalty: Math.round(penalty * 100) / 100,
+        total: Math.round((baseShare + penalty) * 100) / 100,
+        isLate: true,
+        minutesLate: entry.minutesLate,
+      };
+    }
+    const numLate = latePlayers.length;
+    const totalPenalty = latePlayers.reduce((s, lp) => s + lp.minutesLate * (courtCost / 100), 0);
+    const saving = numLate > 0 ? totalPenalty / (numPlayers - numLate) : 0;
+    return {
+      playerIndex: i,
+      name: `Player ${i + 1}`,
+      baseShare: Math.round(baseShare * 100) / 100,
+      penalty: 0,
+      saving: Math.round(saving * 100) / 100,
+      total: Math.round((baseShare - saving) * 100) / 100,
+      isLate: false,
+      minutesLate: 0,
+    };
+  });
+
+  const totalCollected = splits.reduce((s, sp) => s + sp.total, 0);
+
+  res.json({
+    courtCost,
+    numPlayers,
+    baseShare: Math.round(baseShare * 100) / 100,
+    totalCollected: Math.round(totalCollected * 100) / 100,
+    penaltyRateInfo: "1% of court cost per minute late",
+    splits,
+  });
+});
+
 router.post("/bookings/:id/payment", async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
   const [booking] = await db.select().from(bookingsTable).where(eq(bookingsTable.id, id));

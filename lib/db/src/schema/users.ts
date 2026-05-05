@@ -40,6 +40,8 @@ export const usersTable = pgTable("users", {
   approvalStatus: text("approval_status").notNull().default("approved"),
   approvedAt: timestamp("approved_at", { withTimezone: true }),
   approvedBy: text("approved_by"),
+  archetype: text("archetype"),
+  warmUpPreference: boolean("warm_up_preference").notNull().default(false),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({

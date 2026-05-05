@@ -36,7 +36,7 @@ Premium padel player matchmaking platform for Dubai. A quality-control system (n
 
 ## Database Schema
 
-- `users` — Players, coaches, and admins with availability, levels, and favourites
+- `users` — Players, coaches, admins. Includes `archetype` (text, nullable) and `warmUpPreference` (boolean, default false)
 - `matches` — Match records with player lists, format, status, and scoring
 - `bookings` — Match bookings with payment status and warm-up tracking
 - `video_analyses` — Video submissions and AI analysis reports
@@ -76,6 +76,10 @@ Premium padel player matchmaking platform for Dubai. A quality-control system (n
 
 ## Feature Highlights
 
+- **Archetype Quiz** (`/quiz`): 13 questions — 6 personality (Russian) → archetype + 7 tactics → level. Saves archetype + warmUpPreference to user profile. Archetypes: pro-ambitious, competitive-improver, balanced-competitor, social-enjoyer, casual-recreational. Shared utility: `artifacts/padel-concierge/src/lib/archetypes.ts`
+- **Archetype Matchmaking**: `GET /api/users/find-matches?userId=X` — Priority 1: same archetype + skill ±2; Priority 2: skill ±3. Returns top 3.
+- **Smart Match UI** (`/match-requests`): "Умный подбор" tab shows top 3 archetype-matched players with compatibility notes and warmup hints.
+- **Lateness Billing**: `POST /api/bookings/lateness-split` — calculates payment splits (1% of court cost per minute late, redistributed to on-time players).
 - **Smart Matchmaking**: Groups players by level (max 1-level gap), intensity, and location; outputs 4 suggestion types (Best/Balanced/Challenging/Easy)
 - **Level Verification**: Best Match locked until player completes 1 verification match or coach session
 - **Game Formats**: Classic (best of 3), Simplified (2 sets), Rotation (partner swap every 15-20 min); auto-selected by level
@@ -89,6 +93,10 @@ Premium padel player matchmaking platform for Dubai. A quality-control system (n
 ## Auth
 
 JWT stored in localStorage. Token decoded client-side for user/role data. Roles: `player`, `coach`, `admin`. Route guards redirect by role.
+
+## Archetype System
+
+5 archetypes computed from 6 binary questions. Scoring: Q1(analyze=1), Q2(win=1), Q3(push=1), Q4(new=1), Q5(pro=1). Q6(warmup) only affects `warmUpPreference`. Score≥4+isPro→pro-ambitious; Score≥4→competitive-improver; Score=3→balanced-competitor; Score≥2→social-enjoyer; else→casual-recreational. Saved via `POST /api/users/:id/archetype`. Shared utilities in `artifacts/padel-concierge/src/lib/archetypes.ts`.
 
 ## Important Notes on Codegen
 

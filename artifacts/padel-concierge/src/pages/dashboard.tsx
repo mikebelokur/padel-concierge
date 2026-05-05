@@ -212,6 +212,24 @@ export default function Dashboard() {
           </Card>
         </div>
 
+        {/* Quiz CTA */}
+        <Card className="bg-gradient-to-r from-primary/10 via-accent/5 to-transparent border-primary/20">
+          <CardContent className="p-6 flex items-center justify-between gap-4">
+            <div>
+              <div className="text-xl mb-0.5">🎾</div>
+              <div className="font-serif text-lg mb-1">Узнай свой честный уровень</div>
+              <div className="text-muted-foreground text-sm">
+                10 вопросов — тактика и психология. Честный результат без лишних комплиментов.
+              </div>
+            </div>
+            <Link href="/quiz">
+              <Button className="shrink-0 bg-primary shadow-lg shadow-primary/20">
+                Пройти тест
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
         {/* Assessment CTA */}
         {!user?.verified && (
           <Card className="bg-gradient-to-r from-primary/10 to-accent/5 border-primary/20">

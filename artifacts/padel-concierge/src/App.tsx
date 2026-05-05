@@ -4,6 +4,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { DrawerProvider } from "@/contexts/DrawerContext";
+import { Drawer } from "@/components/layout/Drawer";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
 import NotFound from "@/pages/not-found";
 
@@ -115,7 +117,10 @@ function App() {
         <AuthProvider>
           <TooltipProvider>
             <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-              <Router />
+              <DrawerProvider>
+                <Drawer />
+                <Router />
+              </DrawerProvider>
             </WouterRouter>
             <Toaster />
           </TooltipProvider>

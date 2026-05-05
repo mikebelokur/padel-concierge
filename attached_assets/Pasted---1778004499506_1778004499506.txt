@@ -1,0 +1,170 @@
+╔═══════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                   ║
+║  ИСПРАВЬ ЧЁРНЫЙ ЭКРАН КОГДА ПЕРЕХОДИШЬ НА ДРУГИЕ ВКЛАДКИ                        ║
+║  КОГДА КЛИКАЕШЬ НА MEMBERS, SETTINGS, ANALYTICS - ДОЛЖЕН ВИДЕТЬ СОДЕРЖИМОЕ      ║
+║                                                                                   ║
+║  ВСТАВЬ ЭТОТ ПРОМПТ В REPLIT AGENT                                               ║
+║                                                                                   ║
+╚═══════════════════════════════════════════════════════════════════════════════════╝
+
+FIX BLACK SCREEN NAVIGATION BUG - LOAD PAGE CONTENT PROPERLY
+
+Problem: When user clicks on menu items (Members, Settings, Analytics, Bookings, etc)
+Result: Black screen appears instead of page content
+Solution: Fix page loading and content rendering
+
+REQUIRED FIXES:
+
+1. FIX PAGE ROUTING
+   - When user clicks "Members" → navigate to /members page
+   - When user clicks "Settings" → navigate to /settings page
+   - When user clicks "Analytics" → navigate to /analytics page
+   - All routes must work without black screen
+
+2. LOAD PAGE CONTENT
+   - Each page must have content:
+   
+   DASHBOARD PAGE:
+   - Show welcome message
+   - Show stats (users count, bookings, revenue)
+   - Show quick actions
+   
+   MEMBERS PAGE:
+   - Show list of all clients
+   - Show: Name, Level, Email, Phone
+   - Show buttons: View, Edit, Delete
+   - Show new registrations count
+   
+   BOOKINGS PAGE:
+   - Show all bookings/sessions
+   - Show: Date, Time, Client, Status
+   - Show upcoming and past bookings
+   
+   VIDEO ANALYSIS PAGE:
+   - Show queue of videos
+   - Show: Status (Pending/In Progress/Completed)
+   - Show analysis reports
+   
+   MESSAGES PAGE:
+   - Show list of chats
+   - Show recent messages
+   
+   SETTINGS PAGE:
+   - Show account settings
+   - Show: Name, Email, Password change
+   - Show app preferences
+   
+   PADEL RULES PAGE:
+   - Show rules content
+   - Show search
+   
+   PADEL NEWS PAGE:
+   - Show news feed
+   - Show posts
+
+3. FIX PAGE RENDERING
+   - When page loads: show loading spinner (2-3 seconds)
+   - Load data from database
+   - Display content when data ready
+   - NO black screen at any point
+
+4. ADD LOADING STATES
+   
+   While loading:
+   ┌──────────────────┐
+   │  ⏳ Loading...    │
+   │  Please wait     │
+   └──────────────────┘
+   
+   After loading:
+   ┌──────────────────┐
+   │ Page content     │
+   │ displays here    │
+   └──────────────────┘
+
+5. VERIFY EACH PAGE WORKS
+   
+   ✅ Dashboard → Shows dashboard content (no black screen)
+   ✅ Members → Shows member list (no black screen)
+   ✅ Bookings → Shows bookings (no black screen)
+   ✅ Video Analysis → Shows videos (no black screen)
+   ✅ Messages → Shows chats (no black screen)
+   ✅ Settings → Shows settings (no black screen)
+   ✅ Padel Rules → Shows rules (no black screen)
+   ✅ Padel News → Shows news (no black screen)
+   ✅ Admin Panel → Shows admin options (no black screen)
+
+6. DATABASE CONNECTION
+   - Make sure database queries work
+   - Make sure data fetches correctly
+   - Make sure no errors prevent rendering
+   - Add error handling: if data load fails → show error message (not black screen)
+
+7. FIX NAVIGATION FLOW
+   
+   Current (BROKEN):
+   Click "Members" → Black screen → Nothing happens
+   
+   Fixed (CORRECT):
+   Click "Members" → Loading spinner → Content loads → Show member list
+
+8. PREVENT BLACK SCREEN
+   
+   If page fails to load:
+   - Show error message: "Failed to load page. Try again?"
+   - Add retry button
+   - Don't show blank black screen
+   - Always show SOMETHING to user
+
+9. TEST EACH NAVIGATION ITEM
+   
+   Test on both desktop and mobile:
+   - Click Dashboard → see dashboard
+   - Click Members → see members list
+   - Click Bookings → see bookings
+   - Click Video Analysis → see videos
+   - Click Messages → see messages
+   - Click Settings → see settings
+   - Click Padel Rules → see rules
+   - Click Padel News → see news
+   - Click Admin Panel → see admin tools
+   
+   None of these should show black screen
+
+10. ADD BREADCRUMB OR PAGE TITLE
+    
+    Show user where they are:
+    ┌──────────────────────┐
+    │ You are here:        │
+    │ Dashboard > Members  │
+    │                      │
+    │ [Members content]    │
+    └──────────────────────┘
+
+RESULT:
+
+✅ No more black screens
+✅ All pages load correctly
+✅ Content displays immediately
+✅ Navigation works smoothly
+✅ User always sees content or loading indicator
+✅ Professional user experience
+
+BLACK SCREEN BUG FIXED. ALL PAGES WORK.
+
+╔═══════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                   ║
+║  ПОСЛЕ ЭТОГО ПРОМПТА:                                                            ║
+║                                                                                   ║
+║  1. Открой приложение                                                            ║
+║  2. Логинься: misha.belokur@gmail.com / 123456                                   ║
+║  3. В меню нажимаешь на разные вкладки (Members, Settings, Analytics)           ║
+║  4. БЕЗ ЧЁРНОГО ЭКРАНА!                                                          ║
+║  5. Видишь сразу содержимое каждой страницы                                      ║
+║  6. Members → список всех клиентов                                               ║
+║  7. Settings → настройки                                                         ║
+║  8. Analytics → статистика                                                       ║
+║  9. Bookings → бронирования                                                      ║
+║  10. Всё видно, ничего чёрного! ✅                                               ║
+║                                                                                   ║
+╚═══════════════════════════════════════════════════════════════════════════════════╝

@@ -1,0 +1,61 @@
+MAKE PADEL CONCIERGE FULLY PUBLIC AND ACCESSIBLE
+
+1. Enable public access to the app
+   - Remove any authentication requirements for initial page load
+   - Allow direct access without redirects
+   - Disable CORS blocking if enabled
+
+2. Make sure the live preview URL works
+   - Generate stable public URL
+   - Make URL accessible from mobile phones
+   - Test URL works on different devices
+
+3. Fix any redirect issues
+   - No redirects to auth pages before app loads
+   - App loads immediately when clicking link
+   - Login form appears on first page load
+
+4. Ensure database is connected
+   - Users table has all real clients (Олег Илин, Олег Miserva, Юрий, Максим, Misha)
+   - App can read from database
+   - No database connection errors
+
+5. Test login flow
+   - Login page shows correctly
+   - Can enter email: misha.belokur@gmail.com
+   - Can enter password: 123456
+   - Click "Login" button works
+   - Dashboard loads after successful login
+
+6. Generate public share link
+   - Create stable public URL (format: https://[app-name].replit.dev)
+   - This link works on mobile phones
+   - Link doesn't require any special permissions
+   - Link can be sent via WhatsApp/Telegram and opens directly
+
+VERIFICATION CHECKLIST:
+✅ App loads without errors when clicking link
+✅ Login page appears (not redirects or blank page)
+✅ Can type email and password
+✅ Click login and sees dashboard
+✅ Works on mobile phone browser
+✅ Works on desktop browser
+✅ All client data loads (Олег, Юрий, Максим, etc)
+
+APP IS NOW PUBLIC AND WORKING.
+
+╔═══════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                   ║
+║  ПОСЛЕ ЭТОГО ПРОМПТА:                                                            ║
+║                                                                                   ║
+║  1. Открой Replit                                                                ║
+║  2. Нажми "Run" (зелёная кнопка)                                                 ║
+║  3. Жди чтоб приложение загрузилось                                              ║
+║  4. В адресной строке браузера скопируй ссылку                                   ║
+║  5. Отправь эту ссылку себе в телефон                                            ║
+║  6. На телефоне нажми ссылку                                                     ║
+║  7. Должно открыться приложение прямо                                            ║
+║  8. Введи: misha.belokur@gmail.com / 123456                                      ║
+║  9. Смотри Dashboard                                                              ║
+║                                                                                   ║
+╚═══════════════════════════════════════════════════════════════════════════════════╝

@@ -188,8 +188,8 @@ export default function Assessment() {
     const { label, desc } = levelDescription(result);
     return (
       <AppLayout>
-        <div className="p-8 max-w-2xl mx-auto">
-          <div className="text-center space-y-6 py-12">
+        <div className="p-4 sm:p-8 max-w-2xl mx-auto">
+          <div className="text-center space-y-6 py-8 sm:py-12">
             <div className="inline-block">
               <div className="w-28 h-28 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center mx-auto">
                 <div className="font-serif text-3xl text-primary">{result}</div>
@@ -220,7 +220,7 @@ export default function Assessment() {
 
   return (
     <AppLayout>
-      <div className="p-8 max-w-2xl mx-auto space-y-8">
+      <div className="p-4 sm:p-8 max-w-2xl mx-auto space-y-5 sm:space-y-8">
         <header>
           <h1 className="text-3xl font-serif mb-2">Skill Assessment</h1>
           <p className="text-muted-foreground">Answer 10 questions to calculate your official WPT level.</p>

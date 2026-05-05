@@ -1,0 +1,271 @@
+╔═══════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                   ║
+║  ИСПРАВЬ ЧЁРНЫЙ ЭКРАН + СДЕЛАЙ ИДЕАЛЬНЫЙ МОБИЛЬНЫЙ ДИЗАЙН                      ║
+║  ЧТОБ НА ТЕЛЕФОНЕ ВСЁ ВЫГЛЯДЕЛО КРАСИВО И ПРОФЕССИОНАЛЬНО                       ║
+║                                                                                   ║
+║  ВСТАВЬ ЭТОТ ПРОМПТ В REPLIT AGENT                                               ║
+║                                                                                   ║
+╚═══════════════════════════════════════════════════════════════════════════════════╝
+
+FIX BLACK SCREEN NAVIGATION + MAKE PERFECT MOBILE UI DESIGN
+
+Problem 1: Black screen when navigating to different pages
+Problem 2: Mobile design is not perfect - elements cut off, not responsive
+Solution: Fix navigation AND make beautiful mobile-first design
+
+PART 1: FIX BLACK SCREEN NAVIGATION
+
+1. FIX PAGE ROUTING
+   - All pages load without black screen
+   - Dashboard, Members, Settings, Analytics, Bookings, Messages - all work
+   - Add loading spinner while data loads (2-3 seconds)
+   - Show content immediately when ready
+
+2. LOAD ALL PAGE CONTENT
+   
+   DASHBOARD:
+   - Welcome message: "Welcome back, Misha"
+   - Stats cards: Total Users, Active Bookings, Revenue
+   - Quick actions buttons
+   
+   MEMBERS:
+   - List of all clients with: Name, Level, Email, Phone
+   - Edit/Delete buttons for each
+   - Add new member button
+   - Search functionality
+   
+   BOOKINGS:
+   - Calendar or list of all bookings
+   - Show: Date, Time, Client, Status
+   - Upcoming and past bookings
+   
+   SETTINGS:
+   - Account settings form
+   - Name, Email, Phone
+   - Password change
+   - Preferences
+   
+   VIDEO ANALYSIS:
+   - Queue of pending videos
+   - In progress videos
+   - Completed analysis reports
+   
+   All pages must load content, NO BLACK SCREEN
+
+---
+
+PART 2: PERFECT MOBILE DESIGN (PROFESSIONAL & BEAUTIFUL)
+
+3. MOBILE-FIRST RESPONSIVE LAYOUT
+
+   Screen sizes:
+   - iPhone SE (375px width)
+   - iPhone 12 (390px width)
+   - iPhone Max (430px width)
+   - iPad (768px width)
+   - Desktop (1920px width)
+   
+   All must look perfect!
+
+4. PERFECT SPACING & PADDING
+   
+   Mobile layout (< 768px):
+   - Page padding: 16px (left and right)
+   - Card spacing: 12px between items
+   - Button height: 48px (easy to tap)
+   - Font sizes: readable and appropriate
+   
+   NO CRAMPED LAYOUT
+   NO TINY TEXT
+   Everything has breathing room
+
+5. COMPLETE VISIBILITY - NOTHING CUT OFF
+   
+   Every element must be fully visible:
+   - No horizontal scrolling needed (except tables)
+   - All buttons fully visible (not cut off at bottom)
+   - All text fully visible (not cut off at sides)
+   - Headers and footers fully visible
+   - Input fields fully visible
+   - NO elements extending beyond screen width
+   
+   Check every page on mobile:
+   ✅ Dashboard - all cards visible
+   ✅ Members list - all columns visible
+   ✅ Buttons - not cut off at bottom
+   ✅ Forms - all fields visible
+   ✅ Text - nothing cut off
+
+6. BORDER & BOUNDARY CLARITY
+   
+   Show clear boundaries:
+   - Cards have visible borders or shadows
+   - Sections separated clearly
+   - Menu items clearly separated
+   - Buttons clearly defined
+   - Input fields clearly defined
+   
+   Dark theme with good contrast:
+   - Background: #080c14 (very dark)
+   - Cards: #0d1420 (slightly lighter)
+   - Text: #f0f4ff (bright white)
+   - Accent: #2d7dff (bright blue)
+   - Borders: rgba(255,255,255,0.1) (subtle)
+
+7. PROFESSIONAL UI POLISH
+   
+   - Icons are clear and visible
+   - Colors match dark theme perfectly
+   - Typography is readable (14px minimum)
+   - Buttons have hover/press states
+   - Loading states show spinner
+   - Error states show clear messages
+   - Success states show confirmations
+   
+   Quality checklist:
+   ✅ Looks like a real app
+   ✅ Professional appearance
+   ✅ Premium feel
+   ✅ Easy to navigate
+   ✅ Beautiful on all devices
+
+8. HAMBURGER MENU MOBILE OPTIMIZED
+   
+   Top bar:
+   ┌────────────────────────────┐
+   │ ☰  Padel Concierge  👤    │  ← 56px height
+   └────────────────────────────┘
+   
+   Sidebar when open:
+   - Slides from left smoothly
+   - Full screen height
+   - Clear menu items with icons
+   - Each item 56px tall (easy to tap)
+   - Touch-friendly spacing
+   
+   NO TINY MENU ITEMS
+   Everything easy to tap on phone
+
+9. PAGE CONTENT LAYOUT (MOBILE)
+   
+   Header section (40px):
+   - Page title clearly visible
+   
+   Main content section:
+   - Full width with 16px padding
+   - Cards stacked vertically
+   - All content visible without scroll if possible
+   - If scroll needed: smooth scrolling
+   
+   Bottom section:
+   - Action buttons at bottom
+   - Full width buttons (not cramped)
+   - 16px padding around
+
+10. FORM DESIGN (MOBILE)
+    
+    Input fields:
+    - Full width (100%)
+    - 48px height minimum
+    - 14-16px font size
+    - Clear placeholder text
+    - Focus state visible (blue border)
+    - Error state visible (red border)
+    
+    Buttons:
+    - Full width
+    - 48px height minimum
+    - Clear text (white on blue)
+    - Touch-friendly
+
+11. DATA TABLES (MOBILE)
+    
+    On mobile, tables should show as CARDS not horizontal scroll:
+    
+    Example (Members):
+    Instead of scroll table, show:
+    
+    ┌──────────────────────────┐
+    │ Олег Илин                │
+    │ Level: C                 │
+    │ Email: oleg@email.com    │
+    │ Phone: +971...           │
+    │ [View] [Edit] [Delete]   │
+    └──────────────────────────┘
+    
+    ┌──────────────────────────┐
+    │ Юрий                     │
+    │ Level: C                 │
+    │ Email: yuri@email.com    │
+    │ Phone: +971...           │
+    │ [View] [Edit] [Delete]   │
+    └──────────────────────────┘
+
+12. TEST ON REAL PHONE
+    
+    Before deployment, test on:
+    ✅ iPhone (375px width) - scroll test
+    ✅ iPad (768px width) - layout test
+    ✅ Different orientations (portrait & landscape)
+    ✅ Different page sizes (check all pages)
+    ✅ No elements cut off on any page
+    ✅ All buttons fully visible
+    ✅ All text fully visible
+    ✅ Professional appearance
+    ✅ Smooth navigation
+    ✅ Loading states work
+    ✅ Interactions smooth
+
+13. PERFORMANCE & SPEED
+    
+    - Pages load in < 2 seconds
+    - Navigation smooth (no lag)
+    - Animations smooth (60 FPS)
+    - Touch responses instant
+    - No janky scrolling
+
+RESULT AFTER FIX:
+
+✅ No black screens on navigation
+✅ Perfect mobile responsive design
+✅ Nothing cut off at any resolution
+✅ Professional appearance
+✅ Beautiful on iPhone, iPad, Desktop
+✅ All content fully visible
+✅ Easy to navigate
+✅ Premium feel
+✅ Works smoothly
+✅ Ready to show investors/clients
+
+DEPLOYMENT TEST:
+
+1. Open on iPhone (375px) → Perfect layout ✅
+2. Open on iPad (768px) → Perfect layout ✅
+3. Open on Desktop → Perfect layout ✅
+4. Tap all menu items → No black screen ✅
+5. Navigate all pages → Content loads ✅
+6. Scroll all pages → Nothing cut off ✅
+7. All buttons work → Smooth transitions ✅
+8. Professional look → Ready for clients ✅
+
+PERFECT MOBILE DESIGN COMPLETE.
+NAVIGATION BUG FIXED.
+APP READY FOR TESTING ON PHONE.
+
+╔═══════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                   ║
+║  ПОСЛЕ ЭТОГО ПРОМПТА:                                                            ║
+║                                                                                   ║
+║  1. Вставь промпт в Replit Agent                                                 ║
+║  2. Жди 3-5 минут пока обновляет                                                 ║
+║  3. Нажми Run                                                                     ║
+║  4. Открой ссылку приложения на ТЕЛЕФОНЕ                                        ║
+║  5. Логинься: misha.belokur@gmail.com / 123456                                   ║
+║  6. Видишь идеальный мобильный интерфейс!                                        ║
+║  7. Переходишь на разные вкладки (Members, Settings, etc)                       ║
+║  8. БЕЗ ЧЁРНОГО ЭКРАНА - ВСЁ ВИДНО!                                             ║
+║  9. На любом телефоне выглядит красиво                                           ║
+║  10. Ничего не обрезается, всё расширено правильно                              ║
+║  11. Профессиональный вид, как настоящее приложение! ✅                         ║
+║                                                                                   ║
+╚═══════════════════════════════════════════════════════════════════════════════════╝

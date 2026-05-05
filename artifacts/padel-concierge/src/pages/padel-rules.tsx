@@ -39,7 +39,7 @@ export default function PadelRules() {
 
   return (
     <AppLayout>
-      <div className="p-6 max-w-3xl mx-auto space-y-6">
+      <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-4 sm:space-y-6">
         <div>
           <h1 className="text-3xl font-serif mb-1">Правила Падела</h1>
           <p className="text-muted-foreground">Official padel rules reference</p>

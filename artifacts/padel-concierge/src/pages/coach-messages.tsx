@@ -58,9 +58,9 @@ export default function CoachMessages() {
 
   return (
     <AppLayout>
-      <div className="flex h-[calc(100vh-0px)] overflow-hidden">
+      <div className="flex h-[calc(100vh-56px)] overflow-hidden">
         {/* Client list */}
-        <div className="w-72 border-r border-white/5 flex flex-col">
+        <div className={`${selectedClient ? "hidden sm:flex" : "flex"} w-full sm:w-72 border-r border-white/5 flex-col`}>
           <div className="p-4 border-b border-white/5">
             <h2 className="font-serif text-lg mb-1">Messages</h2>
             <p className="text-xs text-muted-foreground">WhatsApp conversations</p>
@@ -99,7 +99,7 @@ export default function CoachMessages() {
         </div>
 
         {/* Chat thread */}
-        <div className="flex-1 flex flex-col">
+        <div className={`${selectedClient ? "flex" : "hidden sm:flex"} flex-1 flex-col`}>
           {!selectedClient ? (
             <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
               Select a client to view messages
@@ -107,19 +107,23 @@ export default function CoachMessages() {
           ) : (
             <>
               {/* Chat header */}
-              <div className="p-4 border-b border-white/5 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-serif">
+              <div className="p-4 border-b border-white/5 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3 min-w-0">
+                  <button
+                    className="sm:hidden text-muted-foreground hover:text-foreground mr-1 flex-shrink-0"
+                    onClick={() => setSelectedClient(null)}
+                  >←</button>
+                  <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-serif flex-shrink-0">
                     {selectedClient.avatarInitials}
                   </div>
-                  <div>
-                    <div className="font-medium text-sm">{selectedClient.name}</div>
+                  <div className="min-w-0">
+                    <div className="font-medium text-sm truncate">{selectedClient.name}</div>
                     <div className="text-xs text-muted-foreground flex items-center gap-1">
                       <span className="text-green-400">●</span> WhatsApp
                     </div>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 shrink-0">
                   <Button size="sm" variant="outline" className="border-white/10 text-xs" onClick={sendSlots}>
                     📅 Send Slots
                   </Button>

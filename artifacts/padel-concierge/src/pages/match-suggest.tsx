@@ -64,7 +64,7 @@ export default function MatchSuggest() {
 
   return (
     <AppLayout>
-      <div className="p-8 max-w-7xl mx-auto space-y-8">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-5 sm:space-y-8">
         <header>
           <h1 className="text-3xl font-serif mb-2">Smart Match Suggestions</h1>
           <p className="text-muted-foreground">Curated games based on your level, style, and history.</p>

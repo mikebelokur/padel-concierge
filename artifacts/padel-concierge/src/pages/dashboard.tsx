@@ -47,27 +47,27 @@ export default function Dashboard() {
 
   return (
     <AppLayout>
-      <div className="p-8 max-w-6xl mx-auto space-y-8">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-5 sm:space-y-8">
         {/* Header */}
-        <header className="flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-serif mb-1">
+        <header className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-serif mb-1 truncate">
               Welcome back, {user?.name?.split(" ")[0] || "Player"}
             </h1>
-            <div className="flex items-center gap-3 mt-2">
-              <Badge className="bg-primary/20 text-primary border-primary/30 text-sm px-3 py-1">
+            <div className="flex flex-wrap items-center gap-2 mt-2">
+              <Badge className="bg-primary/20 text-primary border-primary/30 text-xs sm:text-sm px-2 sm:px-3 py-1">
                 WPT {user?.level ?? "—"}
               </Badge>
               <span className="text-muted-foreground text-sm">{levelLabel(user?.level ?? "")}</span>
               {user?.verified && (
-                <Badge className="bg-accent/20 text-accent border-accent/30 text-sm">
+                <Badge className="bg-accent/20 text-accent border-accent/30 text-xs sm:text-sm">
                   ✓ Certified
                 </Badge>
               )}
             </div>
           </div>
           <Link href="/matches/suggest">
-            <Button className="shadow-lg shadow-primary/20">Find a Match</Button>
+            <Button size="sm" className="shadow-lg shadow-primary/20 shrink-0 text-sm sm:text-base sm:h-10">Find Match</Button>
           </Link>
         </header>
 

@@ -151,7 +151,7 @@ export default function Admin() {
 
   return (
     <AppLayout>
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
         <header>
           <h1 className="text-3xl font-serif mb-1">Admin Console</h1>
           <p className="text-muted-foreground">Platform overview and user management.</p>

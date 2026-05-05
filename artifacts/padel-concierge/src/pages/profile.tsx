@@ -18,7 +18,7 @@ export default function Profile() {
 
   return (
     <AppLayout>
-      <div className="p-8 max-w-6xl mx-auto space-y-8">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-5 sm:space-y-8">
         <header className="flex items-center gap-6">
           <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center text-primary font-serif text-3xl border border-primary/30">
             {user?.name?.[0]}

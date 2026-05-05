@@ -1,0 +1,210 @@
+╔═══════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                   ║
+║  ОЧИСТИТЬ КЕШ И ИСПРАВИТЬ МОБИЛЬНЫЙ ВИД                                         ║
+║  ТЕЛЕФОН ДОЛЖЕН ПОКАЗЫВАТЬ НОВУЮ ВЕРСИЮ С ГАМБУРГЕР МЕНЮ                       ║
+║                                                                                   ║
+║  ВСТАВЬ ЭТОТ ПРОМПТ В REPLIT AGENT                                               ║
+║                                                                                   ║
+╚═══════════════════════════════════════════════════════════════════════════════════╝
+
+CLEAR BROWSER CACHE AND FIX MOBILE VIEW - FORCE LOAD NEW VERSION
+
+Problem: 
+- Phone shows OLD version of app (sidebar always visible)
+- Desktop shows NEW version with hamburger menu
+- Content cut off on mobile ("Find a Match" is cropped)
+- Hamburger menu not working on mobile
+- Browser caching old version
+
+Solution: Clear cache + force new version + hide sidebar on mobile + show hamburger menu
+
+IMPLEMENTATION:
+
+1. CLEAR SERVER-SIDE CACHE
+   - Delete all cached files from server
+   - Remove cached CSS/JS
+   - Clear browser cache headers
+   - Force fresh load of all assets
+
+2. ADD VERSION NUMBERING TO ALL ASSETS
+   
+   All CSS files: add ?v=2.0 to prevent caching
+   /styles/main.css?v=2.0
+   /styles/mobile.css?v=2.0
+   /styles/dark-theme.css?v=2.0
+   
+   All JS files: add ?v=2.0
+   /js/app.js?v=2.0
+   /js/menu.js?v=2.0
+   /js/navigation.js?v=2.0
+   
+   This forces browser to load NEW version, not cached old version
+
+3. ADD CACHE-BUSTING HEADERS
+   
+   Set HTTP headers:
+   - Cache-Control: no-cache, no-store, must-revalidate
+   - Pragma: no-cache
+   - Expires: 0
+   
+   This tells browser: "Always get fresh copy, never use cache"
+
+4. HIDE SIDEBAR ON MOBILE
+   
+   CSS rule for mobile (<768px):
+   @media (max-width: 767px) {
+     .sidebar {
+       display: none !important;
+       visibility: hidden !important;
+     }
+   }
+   
+   Sidebar should NOT be visible on phone screens
+
+5. SHOW HAMBURGER MENU ON MOBILE
+   
+   CSS rule for mobile (<768px):
+   @media (max-width: 767px) {
+     .hamburger-menu {
+       display: block !important;
+       visibility: visible !important;
+     }
+     
+     .hamburger-button {
+       display: block !important;
+       position: fixed;
+       top: 16px;
+       left: 16px;
+       z-index: 1000;
+       background: transparent;
+       border: none;
+       font-size: 24px;
+       cursor: pointer;
+     }
+   }
+   
+   Hamburger (☰) must be visible and clickable
+
+6. FULL-WIDTH CONTENT ON MOBILE
+   
+   Content area on mobile must be FULL WIDTH:
+   
+   @media (max-width: 767px) {
+     .content-area {
+       width: 100% !important;
+       margin: 0 !important;
+       padding: 16px !important;
+       max-width: 100% !important;
+     }
+     
+     .main-container {
+       display: block !important;
+       margin-left: 0 !important;
+     }
+   }
+   
+   This ensures content takes full screen width on phone
+
+7. FIX "FIND A MATCH" BUTTON (currently cropped)
+   
+   Button must be FULLY VISIBLE:
+   
+   .find-match-button {
+     width: 100% !important;
+     max-width: 100% !important;
+     padding: 16px !important;
+     font-size: 16px !important;
+     height: 48px !important;
+     margin-right: 0 !important;
+     margin-bottom: 16px !important;
+   }
+
+8. PREVENT OLD VERSION FROM LOADING
+   
+   Add to HTML head:
+   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+   <meta http-equiv="Pragma" content="no-cache">
+   <meta http-equiv="Expires" content="0">
+   
+   This forces browser to not use cached version
+
+9. VERIFY MOBILE DETECTION
+   
+   JavaScript should detect screen size:
+   
+   if (window.innerWidth < 768) {
+     // Mobile view
+     hideSidebar();
+     showHamburger();
+     makeContentFullWidth();
+   } else {
+     // Desktop view
+     showSidebar();
+     hideHamburger();
+   }
+
+10. TEST AFTER FIX
+    
+    On Desktop (ноутбук):
+    ✅ Sidebar visible OR hamburger menu if narrow
+    ✅ Content full width
+    ✅ All elements visible
+    
+    On Mobile Phone (телефон):
+    ✅ NO sidebar visible
+    ✅ Hamburger menu (☰) visible top-left
+    ✅ Content FULL width (no crop)
+    ✅ "Find a Match" button fully visible
+    ✅ All pages load correctly
+    ✅ NEW version showing (not old cached)
+
+11. CLEAR BROWSER CACHE ON CLIENT SIDE
+    
+    Include message for users:
+    "If you see old version, clear browser cache:
+    - Press Ctrl+Shift+Delete (Windows)
+    - Press Cmd+Shift+Delete (Mac)
+    - Select 'All time'
+    - Click 'Clear data'"
+
+RESULT AFTER FIX:
+
+✅ Phone loads LATEST version (not cached old version)
+✅ Sidebar hidden on mobile
+✅ Hamburger menu visible and working
+✅ Content expands to full width
+✅ "Find a Match" button fully visible (not cropped)
+✅ Professional mobile experience
+✅ Matches desktop quality
+✅ No more outdated UI on phone
+
+DEPLOYMENT:
+
+1. Vставь этот промпт в Replit Agent
+2. Жди 3-5 минут
+3. Нажми Run (важно! переезагрузить)
+4. На телефоне откройс WhatsApp
+5. Найди ссылку приложения
+6. СТРЕЛЬНИТЕ БРАУЗЕР (Cmd+W на iOS, иконка X на Android)
+7. Откройте ссылку ЗАНОВО
+8. Должна загрузиться НОВАЯ версия!
+9. Видишь гамбургер меню
+10. Видишь полный экран
+11. Ничего не обрезано!
+
+CACHE CLEARED. MOBILE VIEW FIXED. NEW VERSION LOADED.
+
+╔═══════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                   ║
+║  ПОСЛЕ ЭТОГО:                                                                    ║
+║                                                                                   ║
+║  На телефоне будет:                                                              ║
+║  ✅ Гамбургер меню (☰) в левом углу                                              ║
+║  ✅ Контент на ПОЛНЫЙ ЭКРАН (не обрезан)                                         ║
+║  ✅ "Find a Match" кнопка ПОЛНОСТЬЮ видна                                        ║
+║  ✅ Новая версия приложения (не старая)                                          ║
+║  ✅ Идеальный мобильный интерфейс!                                              ║
+║                                                                                   ║
+║  ССЫЛКА ОСТАЁТСЯ ТА ЖЕ - просто откройте заново на телефоне!                   ║
+║                                                                                   ║
+╚═══════════════════════════════════════════════════════════════════════════════════╝

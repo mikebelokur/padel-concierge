@@ -1,0 +1,178 @@
+BUILD A PREMIUM PADEL COACHING & MATCHMAKING PLATFORM "PADEL CONCIERGE" FOR COACH MISHA IN DUBAI
+
+=== REAL CLIENTS DATABASE (ONLY REAL CLIENTS) ===
+
+CLIENT 1: ОЛЕГ ИЛИН
+- Level: C
+- Status: Premium recurring client (платит 700+ AED)
+- Booking pattern: По запросу (пишет в WhatsApp когда нужно)
+- Sessions: Session 2 / 10 (Backhand + Off-glass fundamentals)
+- Communication: WhatsApp (Миша показывает свободные слоты)
+- Post-match questions from past: "Как улучшить технику виоловки?"
+- Video analysis: Uploads for tactical analysis
+- Camera setup: One camera, full court view
+
+CLIENT 2: ОЛЕГ MISERVA
+- Level: C+
+- Status: Recurring booking client
+- Booking pattern: ПОСТОЯННЫЕ СЛОТЫ: Понедельник 09:30-10:30, Среда 09:30-10:30, Пятница 09:30-10:30
+- Communication: WhatsApp + invitations from Misha
+- Session format: 1-на-1 coaching + match analysis
+
+CLIENT 3: ЮРИЙ
+- Level: Unknown
+- Status: Premium paying client (700 AED per booking)
+- Booking pattern: По запросу (пишет "когда свободно?")
+- Last contact: 22 January (WhatsApp)
+- Communication: WhatsApp
+
+CLIENT 4: МАКСИМ
+- Status: Paying client
+- Booking pattern: По запросу
+- Communication: WhatsApp
+
+=== REAL COMMUNICATION PATTERNS ===
+
+PATTERN 1: Recurring slot (Олег Miserva) - Auto-confirm, one click
+PATTERN 2: Request availability (Олег Илин, Юрий) - "Какие свободно?"
+PATTERN 3: Invitations from Misha - Client accepts/declines
+PATTERN 4: Post-match questions ON COURT - Misha records after session
+PATTERN 5: Video analysis - Client uploads, Misha analyzes
+
+=== REAL QUESTIONS CLIENTS ASK ===
+- "Как мне улучшить технику виоловки?"
+- "Что не так с моей защитой?"
+- "Почему я теряю в нападении?"
+- "Как лучше позиционироваться?"
+- "Когда у тебя свободно?"
+- "Сколько это стоит?"
+
+=== HOW MISHA CONFIRMS BOOKINGS ===
+Step 1: Client writes in WhatsApp
+Step 2: Misha sends available slots via WhatsApp
+Step 3: Client picks a slot
+Step 4: Misha confirms in WhatsApp: "Договорились. Буду ждать."
+Step 5: WhatsApp message syncs to app (booking created)
+Payment: 120 AED per match
+
+=== SYSTEM REQUIREMENTS ===
+
+1. WHATSAPP INTEGRATION (ESSENTIAL)
+   - Sync WhatsApp messages (Twilio API)
+   - Chat history visible in client profile
+   - Misha can send available slots directly from app
+
+2. RECURRING SLOTS (FOR ОЛЕГ MISERVA)
+   - Mon 09:30-10:30 (auto-recurring)
+   - Wed 09:30-10:30 (auto-recurring)
+   - Fri 09:30-10:30 (auto-recurring)
+   - One-click confirmation UI
+
+3. ON-DEMAND BOOKING (FOR ОЛЕГ ИЛИН, ЮРИЙ, МАКСИМ)
+   - Client writes "хочу тренировку"
+   - System shows available slots
+   - Client clicks → booking confirmed
+
+4. POST-MATCH QUESTIONS RECORDING
+   - Misha manually records questions asked on court
+   - Stored in: Client Profile → Lessons → Post-Match Questions
+   - Used for next session planning
+
+5. VIDEO ANALYSIS
+   - Client uploads ONE video (full court view from single camera)
+   - Status: Pending / In Progress / Completed
+   - Misha writes: strengths, weaknesses, action plan
+
+6. LESSON TRACKING
+   - Session 1: Forehand
+   - Session 2: Backhand + Off-glass fundamentals
+   - Session 3-10: Planned
+
+7. MESSAGING SYSTEM
+   - WhatsApp sync (import + new messages)
+   - Misha can message from app → goes to WhatsApp
+   - All conversations in one place
+
+8. ANALYTICS DASHBOARD
+   - Active clients count
+   - Recurring slots: Олег Miserva (3/week)
+   - Video analysis queue
+   - Revenue daily/weekly
+
+=== APP STRUCTURE ===
+
+DASHBOARD: Welcome Misha, Today's sessions, Pending videos, Revenue this week
+
+CLIENTS TAB: List clients - Олег Илин, Олег Miserva, Юрий, Максим
+
+CLIENT PROFILE (Example: Олег Илин):
+- Basic info: Level C, Phone, Email
+- Booking history: Last 5 bookings
+- Lessons: Session 1 (Forehand), Session 2 (Backhand)
+- Post-Match Questions: "Техника виоловки"
+- Next Session Plan: "Работать над виолой"
+- Video Analysis: List of videos + status
+- Chat History: Last messages from WhatsApp
+
+BOOKINGS TAB: 
+- Recurring: Олег Miserva Mon/Wed/Fri 09:30-10:30
+- Upcoming: List of confirmed sessions
+- Pending: Invitations sent
+
+VIDEO ANALYSIS:
+- Queue: Pending uploads
+- In Progress: Being reviewed
+- Completed: Analysis reports ready
+
+MESSAGES:
+- WhatsApp sync history
+- Send available slots directly
+- View conversations with each client
+- New message notifications
+
+RULES / ПАДЕЛ РЕФЕРИ:
+- Scoring rules, Serve rules, Ball in/out, Wall rules, Net rules
+- Common disputes with videos
+- Search by keyword
+- 3 languages: Russian, English, Arabic
+
+PADEL NEWS:
+- Global news (WPT, pro matches)
+- Coaching tips (Misha can post)
+- Student achievements
+- Comments section
+
+=== DATA TO PRE-LOAD ===
+
+CLIENTS (REAL ONLY):
+- Олег Илин (C, on-demand, 700+ AED)
+- Олег Miserva (C+, Mon/Wed/Fri 09:30-10:30)
+- Юрий (on-demand, 700 AED, last msg Jan 22)
+- Максим (on-demand, paying client)
+
+LESSONS (real):
+- Олег Илин: Session 1 (Forehand), Session 2 (Backhand + Off-glass)
+
+POST-MATCH QUESTIONS:
+- Олег Илин / Session 2: "Как улучшить технику виоловки?"
+
+CHAT HISTORY (sample):
+- Олег: "Миша, хочу тренировку на понедельник"
+- Миша: "Свободно в 18:00-19:30, подойдёт?"
+- Олег: "Да, буду там"
+
+VIDEO ANALYSIS (sample):
+- Client: Олег Илин, Date: May 2 2026
+- Status: Completed
+- Report: Strengths (defense), Weaknesses (quick attacks), Plan (volley practice)
+
+=== DESIGN ===
+Dark premium theme, Mobile-responsive (iPhone + iPad), Blue accent (#2d7dff)
+Languages: Russian (default), English, Arabic
+
+=== DEPLOYMENT ===
+Deploy live to Replit immediately. Ready for Misha to test with real clients.
+
+BUILD THIS EXACTLY. The app should feel like Misha's business is already inside this app. Pre-loaded data makes it instantly credible for clients or investors.
+
+BUILD NOW. DEPLOY NOW. READY FOR REAL TESTING.

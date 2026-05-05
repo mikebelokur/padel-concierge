@@ -11,6 +11,9 @@ import courtsRouter from "./courts";
 import matchRequestsRouter from "./match_requests";
 import assessmentsRouter from "./assessments";
 import adminRouter from "./admin";
+import coachingRouter from "./coaching";
+import padelRulesRouter from "./padel_rules";
+import padelNewsRouter from "./padel_news";
 
 const router: IRouter = Router();
 
@@ -26,5 +29,8 @@ router.use(courtsRouter);
 router.use(matchRequestsRouter);
 router.use(assessmentsRouter);
 router.use(adminRouter);
+router.use(coachingRouter);
+router.use(padelRulesRouter);
+router.use(padelNewsRouter);
 
 export default router;

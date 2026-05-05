@@ -41,14 +41,38 @@ Premium padel player matchmaking platform for Dubai. A quality-control system (n
 - `bookings` — Match bookings with payment status and warm-up tracking
 - `video_analyses` — Video submissions and AI analysis reports
 - `activity_logs` — Real-time activity feed for admin dashboard
+- `coaching_clients` — Coach Misha's real private clients (Oleg Ilin, Oleg Miserva, Yuri, Maxim)
+- `coaching_sessions` — Lesson tracking with topics, drills, coach notes
+- `post_match_notes` — Questions asked on court recorded by Misha
+- `coaching_messages` — WhatsApp/in-app message history per client
+- `recurring_schedules` — Fixed weekly slots (Oleg Miserva: Mon/Wed/Fri 09:30–10:30)
+- `padel_rules` — Official padel rules in EN/RU/AR (10 rules across 5 categories)
+- `padel_news` — News feed with categories: WPT news, coaching tips, student achievements
 
 ## Test Accounts
 
-| Role   | Email                           | Password   |
-|--------|---------------------------------|------------|
-| Admin  | admin@padelconcierge.com        | admin123   |
-| Coach  | coach@padelconcierge.com        | coach123   |
-| Player | player@padelconcierge.com       | player123  |
+| Role   | Email                           | Password         |
+|--------|---------------------------------|------------------|
+| Misha  | admin (username)                | MISHA_JR9N3UZT   |
+| Admin  | admin@padelconcierge.com        | admin123         |
+| Coach  | coach@padelconcierge.com        | coach123         |
+| Player | player@padelconcierge.com       | player123        |
+
+## Coach Misha's Real Clients (Pre-loaded)
+
+- **Oleg Ilin** — Level C, on-demand, 700 AED. 2 sessions: Forehand + Backhand/Off-Glass. Post-match Q&A recorded. WhatsApp history seeded.
+- **Oleg Miserva** — Level C+, recurring Mon/Wed/Fri 09:30–10:30. Strongest client.
+- **Yuri** — Level C, on-demand, 700 AED. Last contact Jan 22. Sample chat history.
+- **Maxim** — Level C, on-demand. Unread incoming WhatsApp message seeded.
+
+## Coach Pages (owner/coach/admin only)
+
+- `/coach` — Misha's command center: today's sessions, stats, client cards, pending video queue
+- `/clients` — Client list with search
+- `/clients/:id` — Full profile: sessions, post-match notes, chat history
+- `/messages` — WhatsApp-style messaging hub with "Send Slots" shortcut
+- `/rules` — Padel rules reference in RU/EN/AR
+- `/news` — News feed; owners/coaches can post
 
 ## Feature Highlights
 

@@ -28,6 +28,11 @@ import Courts from "@/pages/courts";
 import Members from "@/pages/members";
 import MatchRequests from "@/pages/match-requests";
 import Assessment from "@/pages/assessment";
+import Clients from "@/pages/clients";
+import ClientProfile from "@/pages/client-profile";
+import CoachMessages from "@/pages/coach-messages";
+import PadelRules from "@/pages/padel-rules";
+import PadelNews from "@/pages/padel-news";
 
 setAuthTokenGetter(() => localStorage.getItem("token"));
 
@@ -82,12 +87,18 @@ function Router() {
       <Route path="/match-requests">{() => <ProtectedRoute component={MatchRequests} />}</Route>
       <Route path="/assessment">{() => <ProtectedRoute component={Assessment} />}</Route>
 
+      <Route path="/clients/:id">{() => <ProtectedRoute component={ClientProfile} allowedRoles={["coach", "admin", "owner"]} />}</Route>
+      <Route path="/clients">{() => <ProtectedRoute component={Clients} allowedRoles={["coach", "admin", "owner"]} />}</Route>
+      <Route path="/messages">{() => <ProtectedRoute component={CoachMessages} allowedRoles={["coach", "admin", "owner"]} />}</Route>
+      <Route path="/rules">{() => <ProtectedRoute component={PadelRules} />}</Route>
+      <Route path="/news">{() => <ProtectedRoute component={PadelNews} />}</Route>
+
       <Route path="/profile">{() => <ProtectedRoute component={Profile} />}</Route>
       <Route path="/video-analysis/:id">{() => <ProtectedRoute component={VideoAnalysisDetail} />}</Route>
       <Route path="/video-analysis">{() => <ProtectedRoute component={VideoAnalysisList} />}</Route>
       <Route path="/settings">{() => <ProtectedRoute component={Settings} />}</Route>
 
-      <Route path="/coach">{() => <ProtectedRoute component={CoachDashboard} allowedRoles={["coach", "admin"]} />}</Route>
+      <Route path="/coach">{() => <ProtectedRoute component={CoachDashboard} allowedRoles={["coach", "admin", "owner"]} />}</Route>
       <Route path="/admin">{() => <ProtectedRoute component={Admin} allowedRoles={["admin", "owner"]} />}</Route>
 
       <Route component={NotFound} />

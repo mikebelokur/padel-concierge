@@ -9,6 +9,7 @@ import { Drawer } from "@/components/layout/Drawer";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
 import NotFound from "@/pages/not-found";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { DevToolbar } from "@/components/DevToolbar";
 
 import Home from "@/pages/home";
 import Login from "@/pages/login";
@@ -129,6 +130,7 @@ function App() {
               <DrawerProvider>
                 <Drawer />
                 <Router />
+                <DevToolbar />
               </DrawerProvider>
             </WouterRouter>
             <Toaster />

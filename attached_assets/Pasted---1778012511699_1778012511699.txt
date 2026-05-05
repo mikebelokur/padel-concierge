@@ -1,0 +1,246 @@
+╔═══════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                   ║
+║  УБЕДИСЬ ЧТО КАЖДЫЙ РАЗДЕЛ ПОКАЗЫВАЕТ РЕАЛЬНЫЙ КОНТЕНТ                          ║
+║  НИКАКИХ ЧЁРНЫХ ЭКРАНОВ - ТОЛЬКО РЕАЛЬНОЕ СОДЕРЖИМОЕ                            ║
+║                                                                                   ║
+║  ВСТАВЬ ЭТОТ ПРОМПТ И БУДЕШЬ ВИДЕТЬ РЕАЛЬНЫЙ КОНТЕНТ                            ║
+║                                                                                   ║
+╚═══════════════════════════════════════════════════════════════════════════════════╝
+
+GUARANTEE REAL CONTENT LOADS - NO MORE BLACK SCREENS
+
+Problem:
+- Click "Мои клиенты" → Black screen (should show list of clients)
+- Click "Бронирования" → Black screen (should show bookings)
+- Click "Video Analysis" → Black screen (should show videos)
+- No content displayed, only darkness
+
+Solution: Ensure EVERY section has REAL CONTENT that displays when clicked
+
+IMPLEMENTATION:
+
+For EVERY menu item, create actual content:
+
+1. МОИ КЛИЕНТЫ (Members Page)
+   ┌─────────────────────────────┐
+   │ МОИ КЛИЕНТЫ                 │
+   ├─────────────────────────────┤
+   │ Всего клиентов: 4           │
+   │ Активных: 3                 │
+   │                             │
+   │ Олег Илин        | Level C  │
+   │ Email: o@... Phone: +971... │
+   │ [Edit] [Delete]             │
+   │                             │
+   │ Олег Miserva     | Level C+ │
+   │ Email: o@... Phone: +971... │
+   │ [Edit] [Delete]             │
+   │                             │
+   │ Юрий             | Level C  │
+   │ Email: y@... Phone: +971... │
+   │ [Edit] [Delete]             │
+   │                             │
+   │ Максим           | Level D+ │
+   │ Email: m@... Phone: +971... │
+   │ [Edit] [Delete]             │
+   └─────────────────────────────┘
+
+2. БРОНИРОВАНИЯ (Bookings Page)
+   ┌─────────────────────────────┐
+   │ МОИ БРОНИРОВАНИЯ            │
+   ├─────────────────────────────┤
+   │ Предстоящие (3)             │
+   │                             │
+   │ 6 мая, 09:30 - 10:30        │
+   │ Олег Miserva (C+)           │
+   │ Padel Edition               │
+   │ Status: Confirmed           │
+   │                             │
+   │ 7 мая, 18:00 - 19:30        │
+   │ Олег Илин (C)               │
+   │ Al Qasr Padel               │
+   │ Status: Confirmed           │
+   │                             │
+   │ 8 мая, 19:00 - 20:30        │
+   │ Юрий (C)                    │
+   │ Padel Edition               │
+   │ Status: Pending             │
+   └─────────────────────────────┘
+
+3. ВИДЕОАНАЛИЗ (Video Analysis Page)
+   ┌─────────────────────────────┐
+   │ ВИДЕОАНАЛИЗ                 │
+   ├─────────────────────────────┤
+   │ В ожидании (1)              │
+   │ - Олег Илин, May 2 (24h)    │
+   │                             │
+   │ В процессе (0)              │
+   │                             │
+   │ Завершено (1)               │
+   │ - Олег Илин, Apr 28         │
+   │   ✓ Анализ готов            │
+   │   [View Report]             │
+   └─────────────────────────────┘
+
+4. СООБЩЕНИЯ (Messages Page)
+   ┌─────────────────────────────┐
+   │ МОИ СООБЩЕНИЯ               │
+   ├─────────────────────────────┤
+   │ Олег Илин          [1]      │
+   │ "Когда следующая..."        │
+   │                             │
+   │ Юрий                        │
+   │ "спасибо за анализ"         │
+   │                             │
+   │ Максим             [2]      │
+   │ "когда свободно?"           │
+   └─────────────────────────────┘
+
+5. РЕГИСТРАЦИЯ (New Registrations Page)
+   ┌─────────────────────────────┐
+   │ НОВЫЕ РЕГИСТРАЦИИ           │
+   ├─────────────────────────────┤
+   │ Ожидают одобрения (1)       │
+   │                             │
+   │ YevhenYevhen Andriievsky    │
+   │ Email: yevhen@email.com     │
+   │ Phone: +971505551236        │
+   │ Level: Unknown              │
+   │ Registered: May 5, 2026     │
+   │ [Approve] [Reject]          │
+   └─────────────────────────────┘
+
+6. АДМИН ПАНЕЛЬ (Admin Panel)
+   ┌─────────────────────────────┐
+   │ АДМИН ПАНЕЛЬ                │
+   ├─────────────────────────────┤
+   │ Статистика:                 │
+   │ Всего пользователей: 5      │
+   │ Активные бронирования: 3    │
+   │ Доход на неделю: 420 AED    │
+   │                             │
+   │ User Management:            │
+   │ [Таблица всех пользователей]│
+   │ [Edit] [Delete] для каждого │
+   └─────────────────────────────┘
+
+7. PADEL RULES (Правила)
+   ┌─────────────────────────────┐
+   │ ПРАВИЛА ПАДЕЛЯ              │
+   ├─────────────────────────────┤
+   │ 📖 Основные правила         │
+   │ 🎯 Подсчёт очков           │
+   │ 🎾 Правила подачи           │
+   │ 📏 Ball In/Out              │
+   │ 🧱 Правила стены            │
+   │ 🔗 Правила сетки            │
+   │ ❓ Часто спорные моменты    │
+   │                             │
+   │ [Поиск...]                  │
+   └─────────────────────────────┘
+
+8. PADEL NEWS (Новости)
+   ┌─────────────────────────────┐
+   │ ПАДЕЛ НОВОСТИ               │
+   ├─────────────────────────────┤
+   │ Global | Coaching Tips      │
+   │                             │
+   │ WPT Dubai Open 2026         │
+   │ "Финал начался сегодня"     │
+   │ 2 часа назад | 1.2K views   │
+   │                             │
+   │ Как улучшить бэкхенд        │
+   │ "5 упражнений для новичков"  │
+   │ 4 часа назад | 234 views    │
+   │                             │
+   │ Новое снаряжение сезона     │
+   │ "Лучшие ракетки 2026"       │
+   │ 1 день назад | 567 views    │
+   └─────────────────────────────┘
+
+JAVASCRIPT CODE TO LOAD CONTENT:
+
+function loadContent(page) {
+  const contentArea = document.querySelector('.content');
+  
+  // Clear previous content
+  contentArea.innerHTML = '';
+  
+  // Create HTML for selected page
+  switch(page) {
+    case 'members':
+      contentArea.innerHTML = getMembersContent();
+      break;
+    case 'bookings':
+      contentArea.innerHTML = getBookingsContent();
+      break;
+    case 'video':
+      contentArea.innerHTML = getVideoContent();
+      break;
+    case 'messages':
+      contentArea.innerHTML = getMessagesContent();
+      break;
+    case 'registrations':
+      contentArea.innerHTML = getRegistrationsContent();
+      break;
+    case 'admin':
+      contentArea.innerHTML = getAdminContent();
+      break;
+    case 'rules':
+      contentArea.innerHTML = getRulesContent();
+      break;
+    case 'news':
+      contentArea.innerHTML = getNewsContent();
+      break;
+    default:
+      contentArea.innerHTML = '<div class="error">Страница не найдена</div>';
+  }
+}
+
+// Menu item click handler
+document.querySelectorAll('.sidebar a').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    const page = link.getAttribute('data-page');
+    loadContent(page);
+    closeSidebar();
+  });
+});
+
+CRITICAL RULE:
+
+✅ NEVER show black screen
+✅ ALWAYS show real content
+✅ Every menu item has content function
+✅ Content loads immediately
+✅ If page not found → show error message (not black)
+✅ User always sees SOMETHING
+
+RESULT:
+
+✅ Click "Мои клиенты" → See list of 4 clients
+✅ Click "Бронирования" → See list of bookings
+✅ Click "Видеоанализ" → See video queue
+✅ Click "Сообщения" → See chat history
+✅ Click "Админ" → See admin stats
+✅ Click "Правила" → See padel rules
+✅ Click "Новости" → See news feed
+✅ ZERO black screens
+✅ REAL CONTENT on every page
+
+NO MORE BLACK SCREENS. REAL CONTENT GUARANTEED.
+
+╔═══════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                   ║
+║  ПОСЛЕ ЭТОГО ПРОМПТА БУДЕШЬ ВИДЕТЬ:                                             ║
+║                                                                                   ║
+║  ☰ НАЖИМАЕШЬ → МЕНЮ ОТКРЫВАЕТСЯ                                                 ║
+║  "МОИ КЛИЕНТЫ" → ВИДИШЬ СПИСОК ИЗ 4 КЛИЕНТОВ                                   ║
+║  "БРОНИРОВАНИЯ" → ВИДИШЬ СПИСОК МАТЧЕЙ                                          ║
+║  "ВИДЕОАНАЛИЗ" → ВИДИШЬ ОЧЕРЕДЬ ВИДЕО                                           ║
+║  "АДМИН ПАНЕЛЬ" → ВИДИШЬ СТАТИСТИКУ                                             ║
+║  И ТАК ДАЛЕЕ ДЛЯ КАЖДОГО РАЗДЕЛА                                               ║
+║                                                                                   ║
+║  НИКОГДА НЕ БУДЕТ ЧЁРНОГО ЭКРАНА - ТОЛЬКО РЕАЛЬНЫЙ КОНТЕНТ! ✅                ║
+║                                                                                   ║
+╚═══════════════════════════════════════════════════════════════════════════════════╝

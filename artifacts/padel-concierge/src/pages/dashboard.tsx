@@ -1,5 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { useGetPlayerStats, useListBookings, useGetActivityLog } from "@workspace/api-client-react";
+import { useGetPlayerStats, useListBookings, useGetActivityLog, getGetPlayerStatsQueryKey, getListBookingsQueryKey, getGetActivityLogQueryKey } from "@workspace/api-client-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,17 +21,17 @@ export default function Dashboard() {
   const userId = user?.id ?? 0;
 
   const { data: stats } = useGetPlayerStats(userId, {
-    query: { enabled: !!userId },
+    query: { queryKey: getGetPlayerStatsQueryKey(userId), enabled: !!userId },
   });
 
   const { data: bookings } = useListBookings(
     { userId },
-    { query: { enabled: !!userId } }
+    { query: { queryKey: getListBookingsQueryKey({ userId }), enabled: !!userId } }
   );
 
   const { data: activity } = useGetActivityLog(
     { limit: 8 },
-    { query: { refetchInterval: 30000 } }
+    { query: { queryKey: getGetActivityLogQueryKey({ limit: 8 }), refetchInterval: 30000 } }
   );
 
   const upcoming = (bookings ?? [])

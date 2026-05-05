@@ -34,6 +34,7 @@ export default function MatchDetail() {
       setPhase(p => p + 1);
       setTimeLeft(phases[phase + 1].duration);
     }
+    return undefined;
   }, [timeLeft, phase]);
 
   const handleBook = () => {

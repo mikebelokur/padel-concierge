@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { useGetDashboardStats } from "@workspace/api-client-react";
+import { useGetDashboardStats, getGetDashboardStatsQueryKey } from "@workspace/api-client-react";
 import { apiFetch } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -62,7 +62,7 @@ export default function Admin() {
   const [editingLevel, setEditingLevel] = useState<Record<number, string>>({});
 
   const { data: stats, isLoading: statsLoading } = useGetDashboardStats({
-    query: { refetchInterval: 30000 },
+    query: { queryKey: getGetDashboardStatsQueryKey(), refetchInterval: 30000 },
   });
 
   const { data: users = [], isLoading: usersLoading } = useQuery({
@@ -171,7 +171,7 @@ export default function Admin() {
               )}
             >
               {tab.label}
-              {tab.badge && (
+              {"badge" in tab && tab.badge != null && (
                 <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-yellow-500 text-black text-xs font-bold flex items-center justify-center">
                   {tab.badge}
                 </span>

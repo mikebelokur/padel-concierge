@@ -37,7 +37,7 @@ export default function CoachDashboard() {
 
   const { data: analyses = [] } = useQuery({
     queryKey: ["video-analyses-coach"],
-    queryFn: () => apiFetch("/video-analyses?limit=20"),
+    queryFn: () => apiFetch("/video-analysis?limit=20"),
   });
 
   const { data: messages = [] } = useQuery({
@@ -94,7 +94,7 @@ export default function CoachDashboard() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base font-medium">Today — {dayName}</CardTitle>
-              {todaySessions.length === 0 && (
+              {(todaySessions as any[]).length === 0 && (
                 <span className="text-xs text-muted-foreground">No recurring sessions today</span>
               )}
             </div>

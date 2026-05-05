@@ -8,6 +8,7 @@ import { DrawerProvider } from "@/contexts/DrawerContext";
 import { Drawer } from "@/components/layout/Drawer";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
 import NotFound from "@/pages/not-found";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 import Home from "@/pages/home";
 import Login from "@/pages/login";
@@ -65,7 +66,11 @@ function ProtectedRoute({
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     return <Redirect to="/dashboard" />;
   }
-  return <Component />;
+  return (
+    <ErrorBoundary>
+      <Component />
+    </ErrorBoundary>
+  );
 }
 
 function Router() {

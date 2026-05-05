@@ -68,7 +68,7 @@ export default function PadelRules() {
         {isLoading ? (
           <div className="text-center py-16 text-muted-foreground">Loading rules…</div>
         ) : (
-          Object.entries(grouped).map(([category, catRules]) => (
+          Object.entries(grouped).map(([category, catRules]: [string, any[]]) => (
             <div key={category}>
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-lg">{CATEGORY_ICONS[category] ?? "📋"}</span>

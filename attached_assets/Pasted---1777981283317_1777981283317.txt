@@ -1,0 +1,94 @@
+╔═══════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                   ║
+║  ИСПРАВЬ АДМИН ПАНЕЛЬ ЧТОБ ПОКАЗЫВАЛА НОВЫЕ РЕГИСТРАЦИИ                         ║
+║  КОГДА МИША ЗАХОДИТ С НОУТБУКА - ДОЛЖЕН ВИДЕТЬ ВСЕ РЕГИСТРАЦИИ                  ║
+║                                                                                   ║
+║  ВСТАВЬ ЭТОТ ПРОМПТ В REPLIT AGENT                                               ║
+║                                                                                   ║
+╚═══════════════════════════════════════════════════════════════════════════════════╝
+
+FIX ADMIN PANEL - SHOW NEW REGISTRATIONS ON ADMIN VIEW
+
+Problem: New registrations visible on mobile but NOT showing in admin panel on desktop/laptop
+
+Solution: Make sure admin panel fetches and displays all registration data from database
+
+REQUIRED CHANGES:
+
+1. ADMIN PANEL MUST HAVE "NEW REGISTRATIONS" TAB
+   Location: Main admin dashboard
+   Visible to: Admin users (Misha only)
+   
+   The tab should show:
+   - Count of new registrations: "3 pending registrations"
+   - List of all users who registered but not yet approved
+
+2. FETCH DATA FROM DATABASE
+   - Query users collection where status = "pending"
+   - Display ALL pending registrations
+   - Update in real-time when new user registers
+   - Load data immediately when admin opens admin panel
+
+3. SHOW REGISTRATION DETAILS IN TABLE FORMAT
+   
+   Columns:
+   | Name | Email | Phone | Level | Registered | Actions |
+   
+   Example data should show:
+   | John Doe | john@test.com | +971505551234 | C | May 5 14:30 | [Approve][Reject] |
+
+4. LOAD DATA FROM CORRECT COLLECTION
+   - Check that data is stored in: users collection with status="pending"
+   - Or if separate collection: pending_registrations
+   - Make sure query is correct: find all where status="pending"
+
+5. TEST DATA
+   - Right now there should be registrations from Misha's test
+   - These MUST appear in admin panel
+   - If not appearing: check database connection
+   - Check if data actually exists in database
+
+6. FIX DATABASE QUERY
+   If registrations not showing:
+   - Verify users table has records
+   - Verify at least one user has status="pending" or role="player" with recent registration
+   - Make sure admin query is fetching from correct table
+   - Add console logging to debug: log what data is returned
+
+7. ADD REFRESH BUTTON
+   - Button: "Refresh Registrations"
+   - Clicking it re-fetches data from database
+   - Shows updated list immediately
+
+8. VERIFICATION:
+   ✅ Open admin panel on laptop/desktop
+   ✅ Go to "NEW REGISTRATIONS" tab
+   ✅ Should see list of registered players
+   ✅ Should see names, emails, phones
+   ✅ Should see "Approve" buttons
+   ✅ Click approve → adds to active players
+   ✅ Registration disappears from pending list
+
+IF STILL NOT WORKING:
+
+Add to admin panel:
+- Debug section showing: "Total users in database: X"
+- Show: "Pending registrations: X"
+- List all users with their status
+- This will help identify where data is stored
+
+ADMIN PANEL REGISTRATION VIEW FIX COMPLETE.
+
+╔═══════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                   ║
+║  ПОСЛЕ ЭТОГО:                                                                    ║
+║                                                                                   ║
+║  1. Открой приложение с ноутбука                                                 ║
+║  2. Залогинься: misha.belokur@gmail.com / 123456                                 ║
+║  3. Открой Admin Panel                                                           ║
+║  4. Ищи раздел "NEW REGISTRATIONS"                                               ║
+║  5. Там должны быть все новые регистрации                                        ║
+║  6. Видишь имена, емейлы, телефоны                                              ║
+║  7. Можешь одобрить каждого (кнопка Approve)                                     ║
+║                                                                                   ║
+╚═══════════════════════════════════════════════════════════════════════════════════╝

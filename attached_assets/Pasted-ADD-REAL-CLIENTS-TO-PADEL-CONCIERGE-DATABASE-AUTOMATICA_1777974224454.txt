@@ -1,0 +1,267 @@
+ADD REAL CLIENTS TO PADEL CONCIERGE DATABASE AUTOMATICALLY
+
+Add these 5 users directly to the database with their exact information:
+
+USER 1 - ОЛЕГ ИЛИН (Client)
+{
+  name: "Олег Илин",
+  email: "oleg.ilin@email.com",
+  phone: "+971505551111",
+  password_hash: hashPassword("OlegIlin2026"),
+  level: "C",
+  role: "player",
+  goal: "Improve",
+  intensity: "Competitive",
+  location: { lat: 25.1972, lng: 55.2744 },
+  verified: true,
+  created_at: "2026-03-15",
+  last_login: "2026-05-05",
+  status: "active"
+}
+
+Add to users collection with ID: user_oleg_ilin
+
+Add lesson history:
+- Session 1: "2026-04-01", Topic: "Forehand", Duration: 60
+- Session 2: "2026-04-15", Topic: "Backhand + Off-glass fundamentals", Duration: 60, Current: true
+
+Add post-match questions:
+- Session 2: "Как улучшить технику виоловки?"
+
+Add booking history:
+- Booking 1: "2026-04-20", Time: "18:00-19:30", Status: "completed", Price: 120 AED
+- Booking 2: "2026-04-27", Time: "18:00-19:30", Status: "confirmed"
+
+---
+
+USER 2 - ОЛЕГ MISERVA (Recurring Client)
+{
+  name: "Олег Miserva",
+  email: "oleg.miserva@email.com",
+  phone: "+971505551112",
+  password_hash: hashPassword("OlegMiserva2026"),
+  level: "C+",
+  role: "player",
+  goal: "Improve",
+  intensity: "Tactical",
+  location: { lat: 25.1972, lng: 55.2744 },
+  verified: true,
+  created_at: "2026-02-01",
+  last_login: "2026-05-05",
+  status: "active",
+  recurring_slots: [
+    { day: "Monday", time: "09:30-10:30" },
+    { day: "Wednesday", time: "09:30-10:30" },
+    { day: "Friday", time: "09:30-10:30" }
+  ]
+}
+
+Add to users collection with ID: user_oleg_miserva
+
+Add recurring bookings (next 4 weeks):
+- Mon 09:30-10:30
+- Wed 09:30-10:30
+- Fri 09:30-10:30
+Status: "confirmed" for all
+
+---
+
+USER 3 - ЮРИЙ (Client)
+{
+  name: "Юрий",
+  email: "yuri@email.com",
+  phone: "+971505551113",
+  password_hash: hashPassword("Yuri2026"),
+  level: "C",
+  role: "player",
+  goal: "Play",
+  intensity: "Active",
+  location: { lat: 25.1972, lng: 55.2744 },
+  verified: true,
+  created_at: "2026-01-20",
+  last_login: "2026-01-22",
+  status: "active"
+}
+
+Add to users collection with ID: user_yuri
+
+Add booking history:
+- Booking 1: "2026-04-05", Status: "completed", Price: 700 AED
+- Booking 2: "2026-04-19", Status: "completed", Price: 700 AED
+
+Add chat history (WhatsApp sync):
+- Date: 2026-01-22, Юрий: "Привет Миша, когда у тебя есть время?"
+- Date: 2026-01-22, Миша: "Свободно в пт 18:00 или сб 16:00"
+- Date: 2026-01-22, Юрий: "Пятница идеально"
+
+---
+
+USER 4 - МАКСИМ (Client)
+{
+  name: "Максим",
+  email: "maksim@email.com",
+  phone: "+971505551114",
+  password_hash: hashPassword("Maksim2026"),
+  level: "D+",
+  role: "player",
+  goal: "Improve",
+  intensity: "Active",
+  location: { lat: 25.1972, lng: 55.2744 },
+  verified: true,
+  created_at: "2026-03-01",
+  last_login: "2026-05-04",
+  status: "active"
+}
+
+Add to users collection with ID: user_maksim
+
+Add booking history:
+- Booking 1: "2026-04-22", Status: "completed", Price: 120 AED
+
+Add chat history:
+- Date: 2026-05-04, Максим: "Миша, когда свободно?"
+- Date: 2026-05-04, Миша: "Вторник 19:00 или среда 18:00"
+
+---
+
+USER 5 - MISHA BELOKUR (Owner/Coach)
+{
+  name: "Misha Belokur",
+  email: "misha.belokur@gmail.com",
+  phone: "+971505551115",
+  password_hash: hashPassword("Padel2026!"),
+  level: "C+",
+  role: "owner",
+  goal: "Coach",
+  intensity: "Competitive",
+  location: { lat: 25.1972, lng: 55.2744 },
+  verified: true,
+  created_at: "2026-01-01",
+  last_login: "2026-05-05",
+  status: "active"
+}
+
+Add to users collection with ID: user_misha
+
+---
+
+ADDITIONAL DATA TO CREATE:
+
+Create Bookings Collection:
+
+Booking 1: Олег Илин
+{
+  client_id: "user_oleg_ilin",
+  date: "2026-04-20",
+  time: "18:00-19:30",
+  duration: 90,
+  status: "completed",
+  price: 120,
+  coach: "misha.belokur@gmail.com",
+  notes: "Session 1 - Forehand practice"
+}
+
+Booking 2: Олег Miserva (recurring)
+{
+  client_id: "user_oleg_miserva",
+  date: "2026-05-06",
+  time: "09:30-10:30",
+  duration: 60,
+  status: "confirmed",
+  recurring: true,
+  coach: "misha.belokur@gmail.com"
+}
+
+Booking 3: Юрий
+{
+  client_id: "user_yuri",
+  date: "2026-04-05",
+  status: "completed",
+  price: 700,
+  notes: "Premium session"
+}
+
+Booking 4: Максим
+{
+  client_id: "user_maksim",
+  date: "2026-04-22",
+  status: "completed",
+  price: 120
+}
+
+---
+
+Create Lessons Collection:
+
+Lesson 1: Олег Илин
+{
+  client_id: "user_oleg_ilin",
+  session_number: 1,
+  date: "2026-04-01",
+  topic: "Forehand",
+  duration: 60,
+  coach: "misha.belokur@gmail.com"
+}
+
+Lesson 2: Олег Илин
+{
+  client_id: "user_oleg_ilin",
+  session_number: 2,
+  date: "2026-04-15",
+  topic: "Backhand + Off-glass fundamentals",
+  duration: 60,
+  post_match_questions: ["Как улучшить технику виоловки?"],
+  next_session_plan: "Работать над виолой",
+  coach: "misha.belokur@gmail.com",
+  current: true
+}
+
+---
+
+Create Chat History Collection:
+
+Chat 1: Олег Илин
+{
+  client_id: "user_oleg_ilin",
+  messages: [
+    { sender: "oleg_ilin", text: "Миша, хочу тренировку на понедельник", timestamp: "2026-05-03 14:30" },
+    { sender: "misha", text: "Свободно в 18:00-19:30, подойдёт?", timestamp: "2026-05-03 14:35" },
+    { sender: "oleg_ilin", text: "Да, буду там", timestamp: "2026-05-03 14:36" }
+  ],
+  last_updated: "2026-05-03"
+}
+
+Chat 2: Юрий
+{
+  client_id: "user_yuri",
+  messages: [
+    { sender: "yuri", text: "Привет Миша, когда у тебя есть время?", timestamp: "2026-01-22 10:00" },
+    { sender: "misha", text: "Свободно в пт 18:00 или сб 16:00", timestamp: "2026-01-22 10:05" },
+    { sender: "yuri", text: "Пятница идеально", timestamp: "2026-01-22 10:06" }
+  ],
+  last_updated: "2026-01-22"
+}
+
+---
+
+CREATE INDEXES:
+- Index on users.email (unique)
+- Index on users.role
+- Index on bookings.client_id
+- Index on bookings.date
+- Index on lessons.client_id
+
+---
+
+DATABASE INITIALIZATION COMPLETE.
+
+All 5 users added:
+✅ Олег Илин (Player, C level)
+✅ Олег Miserva (Player, C+ level, recurring slots)
+✅ Юрий (Player, C level)
+✅ Максим (Player, D+ level)
+✅ Misha Belokur (Owner/Coach)
+
+All bookings, lessons, and chat history pre-loaded.
+
+CLIENTS ADDED SUCCESSFULLY. PADEL CONCIERGE READY FOR TESTING.

@@ -32,6 +32,7 @@ import Members from "@/pages/members";
 import MatchRequests from "@/pages/match-requests";
 import Assessment from "@/pages/assessment";
 import Clients from "@/pages/clients";
+import ClientNew from "@/pages/client-new";
 import ClientProfile from "@/pages/client-profile";
 import CoachMessages from "@/pages/coach-messages";
 import PadelRules from "@/pages/padel-rules";
@@ -96,6 +97,7 @@ function Router() {
       <Route path="/match-requests">{() => <ProtectedRoute component={MatchRequests} />}</Route>
       <Route path="/assessment">{() => <ProtectedRoute component={Assessment} />}</Route>
 
+      <Route path="/clients/new">{() => <ProtectedRoute component={ClientNew} allowedRoles={["coach", "admin", "owner"]} />}</Route>
       <Route path="/clients/:id">{() => <ProtectedRoute component={ClientProfile} allowedRoles={["coach", "admin", "owner"]} />}</Route>
       <Route path="/clients">{() => <ProtectedRoute component={Clients} allowedRoles={["coach", "admin", "owner"]} />}</Route>
       <Route path="/messages">{() => <ProtectedRoute component={CoachMessages} allowedRoles={["coach", "admin", "owner"]} />}</Route>

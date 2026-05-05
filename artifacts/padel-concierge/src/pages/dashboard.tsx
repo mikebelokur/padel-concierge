@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { Link } from "wouter";
+import { ARCHETYPE_META, type Archetype } from "@/lib/archetypes";
 
 function levelLabel(level: string) {
   const n = parseFloat(level);
@@ -212,23 +213,50 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* Quiz CTA */}
-        <Card className="bg-gradient-to-r from-primary/10 via-accent/5 to-transparent border-primary/20">
-          <CardContent className="p-6 flex items-center justify-between gap-4">
-            <div>
-              <div className="text-xl mb-0.5">🎾</div>
-              <div className="font-serif text-lg mb-1">Узнай свой честный уровень</div>
-              <div className="text-muted-foreground text-sm">
-                10 вопросов — тактика и психология. Честный результат без лишних комплиментов.
-              </div>
-            </div>
-            <Link href="/quiz">
-              <Button className="shrink-0 bg-primary shadow-lg shadow-primary/20">
-                Пройти тест
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
+        {/* Archetype Card */}
+        {(() => {
+          const archetype = user?.archetype as Archetype | undefined;
+          const meta = archetype ? ARCHETYPE_META[archetype] : null;
+          if (meta) {
+            return (
+              <Card className={`border ${meta.border} ${meta.bg}`}>
+                <CardContent className="p-6 flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-2xl mb-1">{meta.icon}</div>
+                    <div className={`font-serif text-lg mb-1 ${meta.color}`}>{meta.nameRu}</div>
+                    <div className="text-muted-foreground text-sm max-w-md">{meta.desc}</div>
+                    {user?.warmUpPreference && (
+                      <div className="text-xs text-orange-400 mt-1.5">🔥 Предпочитает разминку перед игрой</div>
+                    )}
+                  </div>
+                  <Link href="/quiz">
+                    <Button variant="outline" className="shrink-0 border-white/10 text-muted-foreground hover:text-foreground">
+                      Пересдать
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            );
+          }
+          return (
+            <Card className="bg-gradient-to-r from-primary/10 via-accent/5 to-transparent border-primary/20">
+              <CardContent className="p-6 flex items-center justify-between gap-4">
+                <div>
+                  <div className="text-xl mb-0.5">🧠</div>
+                  <div className="font-serif text-lg mb-1">Узнай свой архетип игрока</div>
+                  <div className="text-muted-foreground text-sm">
+                    6 вопросов — психология и стиль игры. Поможет находить совместимых партнёров.
+                  </div>
+                </div>
+                <Link href="/quiz">
+                  <Button className="shrink-0 bg-primary shadow-lg shadow-primary/20">
+                    Пройти тест
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          );
+        })()}
 
         {/* Assessment CTA */}
         {!user?.verified && (

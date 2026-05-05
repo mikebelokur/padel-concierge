@@ -26,6 +26,7 @@ const navItems: NavItem[] = [
   { href: "/members",       label: "Members",           icon: "👤" },
   { href: "/assessment",    label: "Assessment",        icon: "📊" },
   { href: "/video-analysis",label: "Video Analysis",    icon: "🎬" },
+  { href: "/quiz",          label: "Archetype Quiz",    icon: "🧠" },
   { href: "/rules",         label: "Padel Rules",       icon: "📖", dividerBefore: true },
   { href: "/news",          label: "News & Tips",       icon: "📰" },
   { href: "/settings",      label: "Settings",          icon: "⚙️", dividerBefore: true },

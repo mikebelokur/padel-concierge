@@ -69,6 +69,7 @@ Premium padel player matchmaking platform for Dubai. A quality-control system (n
 
 - `/coach` — Misha's command center: today's sessions, stats, client cards, pending video queue
 - `/clients` — Client list with search
+- `/clients/new` — Add new coaching client (name, email, phone, level, booking pattern, price)
 - `/clients/:id` — Full profile: sessions, post-match notes, chat history
 - `/messages` — WhatsApp-style messaging hub with "Send Slots" shortcut
 - `/rules` — Padel rules reference in RU/EN/AR

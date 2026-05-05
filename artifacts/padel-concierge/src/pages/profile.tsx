@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
+import { ARCHETYPE_META, type Archetype } from "@/lib/archetypes";
 
 const COLORS = ['#2d7dff', '#00d4ff', '#6b7a99'];
 
@@ -16,6 +19,9 @@ export default function Profile() {
 
   if (isLoading) return <AppLayout><div className="p-8">Loading profile...</div></AppLayout>;
 
+  const archetype = user?.archetype as Archetype | undefined;
+  const archetypeMeta = archetype ? ARCHETYPE_META[archetype] : null;
+
   return (
     <AppLayout>
       <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-5 sm:space-y-8">
@@ -23,12 +29,30 @@ export default function Profile() {
           <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center text-primary font-serif text-3xl border border-primary/30">
             {user?.name?.[0]}
           </div>
-          <div>
-            <h1 className="text-3xl font-serif mb-2">{user?.name}</h1>
-            <div className="flex gap-3 items-center">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-serif">{user?.name}</h1>
+            <div className="flex flex-wrap gap-2 items-center">
               <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-sm px-3">{user?.level}</Badge>
-              <span className="text-muted-foreground">{user?.locationName}</span>
+              {user?.verified && (
+                <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 text-sm px-3">✓ Certified</Badge>
+              )}
+              {archetypeMeta && (
+                <Badge variant="outline" className={`text-sm px-3 ${archetypeMeta.color} ${archetypeMeta.bg} ${archetypeMeta.border}`}>
+                  {archetypeMeta.icon} {archetypeMeta.nameRu}
+                </Badge>
+              )}
+              {user?.warmUpPreference && (
+                <Badge variant="outline" className="text-sm px-3 text-orange-400 bg-orange-500/10 border-orange-500/20">🔥 Разминка</Badge>
+              )}
+              {user?.locationName && <span className="text-muted-foreground text-sm">{user.locationName}</span>}
             </div>
+            {!archetype && (
+              <Link href="/quiz">
+                <Button variant="outline" size="sm" className="border-primary/30 text-primary hover:bg-primary/10 mt-1">
+                  🧠 Пройти тест архетипа
+                </Button>
+              </Link>
+            )}
           </div>
         </header>
 

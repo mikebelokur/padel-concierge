@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
+import { ARCHETYPE_META, type Archetype } from "@/lib/archetypes";
 
 export default function Settings() {
   const { user } = useAuth();
@@ -71,6 +73,50 @@ export default function Settings() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Archetype */}
+        {(() => {
+          const archetype = user?.archetype as Archetype | undefined;
+          const meta = archetype ? ARCHETYPE_META[archetype] : null;
+          return (
+            <Card className="bg-card border-white/5">
+              <CardHeader>
+                <CardTitle>Player Archetype</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {meta ? (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{meta.icon}</span>
+                      <div>
+                        <div className={`font-medium ${meta.color}`}>{meta.nameRu}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">{meta.name}</div>
+                      </div>
+                    </div>
+                    <Link href="/quiz">
+                      <Button variant="outline" size="sm" className="border-white/10">
+                        Пересдать тест
+                      </Button>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">Архетип не определён. Пройди тест, чтобы получить персональные рекомендации.</p>
+                    <Link href="/quiz">
+                      <Button size="sm" className="ml-4 shrink-0">Пройти тест</Button>
+                    </Link>
+                  </div>
+                )}
+                {user?.warmUpPreference && (
+                  <div className="flex items-center gap-2 text-sm text-orange-400 border-t border-white/5 pt-3">
+                    <span>🔥</span>
+                    <span>Предпочитает разминку перед игрой</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })()}
 
         <Card className="bg-card border-white/5">
           <CardHeader>

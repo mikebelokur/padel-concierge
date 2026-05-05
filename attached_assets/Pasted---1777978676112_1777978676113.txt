@@ -1,0 +1,141 @@
+╔═══════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                   ║
+║  ДОБАВЬ СИСТЕМУ ВИДЕНИЯ НОВЫХ РЕГИСТРАЦИЙ                                       ║
+║  ЧТОБ МИША ВИДЕЛ КОГДА НОВЫЙ КЛИЕНТ ЗАРЕГИСТРИРОВАЛСЯ                           ║
+║                                                                                   ║
+║  ВСТАВЬ ЭТОТ ПРОМПТ В REPLIT AGENT                                               ║
+║                                                                                   ║
+╚═══════════════════════════════════════════════════════════════════════════════════╝
+
+ADD NEW REGISTRATION NOTIFICATIONS AND ADMIN PANEL VISIBILITY
+
+When a new user registers through the app:
+
+1. CREATE NEW REGISTRATIONS LOG
+   - Store all new registrations in a "pending_registrations" collection
+   - Record: name, email, phone, level, date_registered, status: "pending"
+
+2. ADD ADMIN DASHBOARD SECTION "NEW REGISTRATIONS"
+   - Show in admin panel (Misha's view)
+   - Display list of all new registrations that day/week
+   - Show: Name, Email, Phone, Level, Time Registered
+
+3. SEND NOTIFICATION TO ADMIN (MISHA)
+   - When new user registers: show popup/badge in app
+   - Badge shows: "1 new registration"
+   - Click to see full details
+
+4. NEW REGISTRATIONS TAB (FOR MISHA)
+   Location: Dashboard or sidebar menu
+   
+   Title: "NEW REGISTRATIONS" or "PENDING PLAYERS"
+   
+   Show table with columns:
+   - Name (полное имя)
+   - Email (почта)
+   - Phone (номер телефона)
+   - Level (уровень который выбрал)
+   - Registered (когда зарегистрировался)
+   - Action (кнопка "Approve" или "View Details")
+   
+   Example:
+   ┌─────────────────────────────────────────────────────────┐
+   │ NEW REGISTRATIONS (3 new)                               │
+   ├─────────────────────────────────────────────────────────┤
+   │ John Doe     | john@email.com | +971505551234 | C  | Now │
+   │ Alex Smith   | alex@email.com | +971505551235 | D+ | 2h  │
+   │ Maria Garcia | maria@email.com| +971505551236 | D  | 5h  │
+   └─────────────────────────────────────────────────────────┘
+
+5. VIEW REGISTRATION DETAILS PAGE
+   When Misha clicks on new registration, show:
+   
+   - Full Name: [name]
+   - Email: [email]
+   - Phone: [phone]
+   - Level Selected: [level]
+   - Goal: [goal - Play/Improve/Coach]
+   - Intensity Preference: [chill/active/competitive]
+   - Location: [city/area]
+   - Registration Date: [date and time]
+   - Status: [pending/approved/rejected]
+   
+   Buttons:
+   - [✅ APPROVE] - add to active players list
+   - [❌ REJECT] - remove registration
+   - [👁️ VIEW PROFILE] - see all data entered
+
+6. AUTO-APPROVE OPTION
+   - Checkbox: "Auto-approve new registrations"
+   - If checked: new players approved instantly
+   - If unchecked: manual approval by Misha
+
+7. NOTIFICATION SETTINGS
+   - New registration alert appears at top of dashboard
+   - Badge shows count of pending registrations
+   - Can be dismissed but counter stays until approved
+
+8. EXPORT REGISTRATIONS
+   - Button to download CSV of all new registrations
+   - Useful for tracking
+
+IMPLEMENTATION:
+
+When user registers (signs up):
+1. Create record in pending_registrations collection
+2. Set status = "pending"
+3. Show notification to admin
+4. User can login but marked as "pending approval"
+
+When admin approves:
+1. Move from pending_registrations to active users
+2. Set status = "active"
+3. User gets notification: "Account approved!"
+4. User can now use all features
+
+DATABASE STRUCTURE:
+
+pending_registrations collection:
+{
+  id: "reg_123",
+  name: "John Doe",
+  email: "john@email.com",
+  phone: "+971505551234",
+  level: "C",
+  goal: "Improve",
+  intensity: "Competitive",
+  location: "Dubai",
+  registered_at: "2026-05-05 14:30",
+  status: "pending", // or "approved" or "rejected"
+  approved_at: null,
+  approved_by: "misha.belokur@gmail.com"
+}
+
+RESULT:
+
+✅ Misha sees: "3 new registrations waiting"
+✅ Can see names, emails, phones of new players
+✅ Can approve them one by one
+✅ New players added to active players list
+✅ Can track who registered and when
+✅ Can reject unwanted registrations
+
+NEW REGISTRATION SYSTEM COMPLETE.
+
+╔═══════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                   ║
+║  ПОСЛЕ ЭТОГО ПРОМПТА:                                                            ║
+║                                                                                   ║
+║  В ПРИЛОЖЕНИИ ПОЯВИТСЯ РАЗДЕЛ "NEW REGISTRATIONS"                               ║
+║  ГДЕ МЫ ВИДИШЬ ВСЕХ КТО ЗАРЕГИСТРИРОВАЛСЯ                                      ║
+║                                                                                   ║
+║  МОЖЕШЬ ВИДЕТЬ:                                                                 ║
+║  - Имя                                                                           ║
+║  - Email                                                                         ║
+║  - Телефон                                                                       ║
+║  - Уровень                                                                       ║
+║  - Когда зарегистрировался                                                      ║
+║                                                                                   ║
+║  И КНОПКА "APPROVE" ЧТО БЫ ОДОБРИТЬ НОВОГО КЛИЕНТА                             ║
+║                                                                                   ║
+╚═══════════════════════════════════════════════════════════════════════════════════╝

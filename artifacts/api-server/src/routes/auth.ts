@@ -67,6 +67,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     lastLogin: new Date(),
     isOnline: true,
     lastActive: new Date(),
+    approvalStatus: "pending",
   }).returning();
 
   await db.insert(activityLogsTable).values({

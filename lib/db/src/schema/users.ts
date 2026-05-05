@@ -37,6 +37,9 @@ export const usersTable = pgTable("users", {
     .notNull()
     .defaultNow(),
   lastLogin: timestamp("last_login", { withTimezone: true }),
+  approvalStatus: text("approval_status").notNull().default("approved"),
+  approvedAt: timestamp("approved_at", { withTimezone: true }),
+  approvedBy: text("approved_by"),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({

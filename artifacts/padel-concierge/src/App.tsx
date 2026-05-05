@@ -33,6 +33,7 @@ import ClientProfile from "@/pages/client-profile";
 import CoachMessages from "@/pages/coach-messages";
 import PadelRules from "@/pages/padel-rules";
 import PadelNews from "@/pages/padel-news";
+import Registrations from "@/pages/registrations";
 
 setAuthTokenGetter(() => localStorage.getItem("token"));
 
@@ -98,6 +99,7 @@ function Router() {
       <Route path="/video-analysis">{() => <ProtectedRoute component={VideoAnalysisList} />}</Route>
       <Route path="/settings">{() => <ProtectedRoute component={Settings} />}</Route>
 
+      <Route path="/registrations">{() => <ProtectedRoute component={Registrations} allowedRoles={["admin", "owner"]} />}</Route>
       <Route path="/coach">{() => <ProtectedRoute component={CoachDashboard} allowedRoles={["coach", "admin", "owner"]} />}</Route>
       <Route path="/admin">{() => <ProtectedRoute component={Admin} allowedRoles={["admin", "owner"]} />}</Route>
 

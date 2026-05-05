@@ -1,5 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -8,29 +10,41 @@ interface NavItem {
   icon: string;
   roles?: string[];
   dividerBefore?: boolean;
+  badgeKey?: string;
 }
 
 const navItems: NavItem[] = [
-  { href: "/coach",    label: "Coach Hub",      icon: "🏆", roles: ["coach", "admin", "owner"] },
-  { href: "/clients",  label: "My Clients",     icon: "👥", roles: ["coach", "admin", "owner"] },
-  { href: "/messages", label: "Messages",        icon: "💬", roles: ["coach", "admin", "owner"] },
-  { href: "/dashboard",label: "Dashboard",       icon: "◈", dividerBefore: true },
-  { href: "/matches",  label: "Matches",         icon: "🎾" },
-  { href: "/match-requests", label: "Requests",  icon: "📨" },
-  { href: "/bookings", label: "Bookings",        icon: "📅" },
-  { href: "/courts",   label: "Courts",          icon: "🏟️" },
-  { href: "/members",  label: "Members",         icon: "👤" },
-  { href: "/assessment", label: "Assessment",    icon: "📊" },
-  { href: "/video-analysis", label: "Video Analysis", icon: "🎬" },
-  { href: "/rules",    label: "Padel Rules",     icon: "📖", dividerBefore: true },
-  { href: "/news",     label: "News & Tips",     icon: "📰" },
-  { href: "/settings", label: "Settings",        icon: "⚙️", dividerBefore: true },
-  { href: "/admin",    label: "Admin Panel",     icon: "🔧", roles: ["admin", "owner"] },
+  { href: "/coach",         label: "Coach Hub",        icon: "🏆", roles: ["coach", "admin", "owner"] },
+  { href: "/clients",       label: "My Clients",       icon: "👥", roles: ["coach", "admin", "owner"] },
+  { href: "/messages",      label: "Messages",          icon: "💬", roles: ["coach", "admin", "owner"] },
+  { href: "/registrations", label: "Registrations",     icon: "🆕", roles: ["admin", "owner"], badgeKey: "pending" },
+  { href: "/dashboard",     label: "Dashboard",         icon: "◈",  dividerBefore: true },
+  { href: "/matches",       label: "Matches",           icon: "🎾" },
+  { href: "/match-requests",label: "Requests",          icon: "📨" },
+  { href: "/bookings",      label: "Bookings",          icon: "📅" },
+  { href: "/courts",        label: "Courts",            icon: "🏟️" },
+  { href: "/members",       label: "Members",           icon: "👤" },
+  { href: "/assessment",    label: "Assessment",        icon: "📊" },
+  { href: "/video-analysis",label: "Video Analysis",    icon: "🎬" },
+  { href: "/rules",         label: "Padel Rules",       icon: "📖", dividerBefore: true },
+  { href: "/news",          label: "News & Tips",       icon: "📰" },
+  { href: "/settings",      label: "Settings",          icon: "⚙️", dividerBefore: true },
+  { href: "/admin",         label: "Admin Panel",       icon: "🔧", roles: ["admin", "owner"] },
 ];
 
 export function Sidebar() {
   const [location] = useLocation();
   const { user, logout } = useAuth();
+
+  const isOwnerOrAdmin = user?.role === "owner" || user?.role === "admin";
+
+  const { data: pendingData } = useQuery({
+    queryKey: ["pending-count"],
+    queryFn: () => apiFetch("/admin/registrations/count"),
+    enabled: isOwnerOrAdmin,
+    refetchInterval: 30000,
+  });
+  const pendingCount = (pendingData as any)?.count ?? 0;
 
   const visibleItems = navItems.filter(
     (item) => !item.roles || (user?.role && item.roles.includes(user.role))
@@ -49,10 +63,11 @@ export function Sidebar() {
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-2 px-3">
         {visibleItems.map((item) => {
-          const isActive = location === item.href || (item.href !== "/dashboard" && item.href !== "/coach" && location.startsWith(item.href));
-          const isCoachActive = item.href === "/coach" && location === "/coach";
-          const isDashActive = item.href === "/dashboard" && location === "/dashboard";
-          const active = isActive || isCoachActive || isDashActive;
+          const active =
+            location === item.href ||
+            (item.href !== "/dashboard" && item.href !== "/coach" && item.href !== "/registrations" && location.startsWith(item.href));
+
+          const badge = item.badgeKey === "pending" && pendingCount > 0 ? pendingCount : null;
 
           return (
             <div key={item.href}>
@@ -67,7 +82,12 @@ export function Sidebar() {
                   )}
                 >
                   <span className="text-base w-5 text-center leading-none">{item.icon}</span>
-                  <span>{item.label}</span>
+                  <span className="flex-1">{item.label}</span>
+                  {badge !== null && (
+                    <span className="ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-yellow-500 text-black text-xs font-bold flex items-center justify-center">
+                      {badge}
+                    </span>
+                  )}
                 </div>
               </Link>
             </div>

@@ -1,0 +1,233 @@
+# REPLIT PROMPT — Padel Future MVP v1
+## Quiz + Profile + Database
+
+---
+
+Paste this as your first message in Replit Agent:
+
+---
+
+Build a full-stack web app called **Padel Future** with the following MVP scope:
+
+## TECH STACK
+- Frontend: React + Tailwind CSS
+- Backend: Node.js + Express
+- Database: PostgreSQL (or SQLite for quick start)
+- Auth: Email + name only (no password for MVP)
+
+---
+
+## SCREEN 1 — Welcome / Registration
+
+Simple entry screen:
+- Logo: "Padel Future"
+- Tagline: "Найди свой уровень. Найди свою игру."
+- Input: Name (text)
+- Input: Email (text)
+- Input: Phone (optional)
+- Button: "Начать →"
+
+On submit → save user to DB → go to Quiz
+
+---
+
+## SCREEN 2 — Onboarding Quiz (10 questions)
+
+One question per screen. Progress bar at top. Back button.
+
+### PERSONALITY QUESTIONS (3):
+
+**Q1** — Visual: 🎯 "Цель"
+"Почему ты начал(а) играть в падел?"
+- Друзья позвали — понравилось
+- Видел(а) в Instagram и захотел(а)
+- Искал(а) активный спорт
+- Теннисный бэкграунд
+- Другое (+ text field appears)
+
+**Q2** — Visual: ❤️ "Мотивация"
+"Что для тебя важнее на корте?"
+- Выиграть
+- Хорошо провести время
+- Улучшить игру
+- Найти хорошую компанию
+
+**Q3** — Visual: 🏆 "Идеал"
+"Как выглядит твоя идеальная игра?"
+- Интенсивный матч с сильными игроками
+- Спокойно с друзьями своего уровня
+- С тренером — хочу расти
+- Любая игра, главное корт забронирован
+
+### LEVEL QUESTIONS (7) — Big YES / NO buttons:
+
+**Q4** — Visual: ⚡ "Удар"
+"Когда мяч летит к тебе — лучше подождать нужный момент и только потом бить?"
+correct = YES
++ optional textarea: "Как ты обычно это делаешь?" (appears after answer)
+
+**Q5** — Visual: 🪟 "Стекло"
+"После отскока от стекла — нужно сразу занять позицию у сетки?"
+correct = YES
+
+**Q6** — Visual: 🤝 "Партнёр"
+"Когда партнёр ошибается — лучше сразу сказать ему что он сделал не так?"
+correct = NO
+
+**Q7** — Visual: 💥 "Смэш"
+"Смэш изо всей силы — всегда лучший выбор когда мяч летит высоко?"
+correct = NO
+
+**Q8** — Visual: 🧠 "Голова"
+"Три ошибки подряд — это нормально, менять всю игру из-за этого не стоит?"
+correct = YES
+
+**Q9** — Visual: 📍 "Позиция"
+"Позиция на корте важнее силы удара?"
+correct = YES
+
+**Q10** — Visual: 🎭 "Стратегия"
+"Против слабых соперников можно расслабиться и не думать о тактике?"
+correct = NO
+
+---
+
+## LEVEL CALCULATION LOGIC
+
+Count correct answers in Q4–Q10:
+- 7 correct → C+
+- 6 → C
+- 5 → C-
+- 4 → D+
+- 3 → D
+- 0–2 → D-
+
+Then **downgrade by one tier**:
+C+ → C, C → C-, C- → D+, D+ → D, D → D-, D- stays D-
+
+Save BOTH: quiz_level (before) and real_level (after downgrade)
+
+---
+
+## SCREEN 3 — Result
+
+Show:
+1. Big level display (e.g. "C-")
+2. Level description (see below)
+3. Honest message block (orange left border):
+   > "Это твой уровень в идеальных условиях. В реальной игре сложнее: партнёр влияет на половину розыгрышей, эмоции не всегда стабильны, техника под давлением работает иначе. Рабочий уровень — на ступень ниже. Это не плохо — это честно. Именно отсюда начинается настоящий рост."
+4. Development scale (D- to C+, highlight current)
+5. Personality profile summary (Q1–Q3 answers)
+6. Button: "Перейти в мой профиль →"
+
+Level descriptions:
+- D-: "Ты только начинаешь — самый интересный момент. Всё впереди."
+- D: "Ты понимаешь базу падела. Несколько ключевых привычек — и рост будет заметным."
+- D+: "Есть понимание, но инстинкты опережают логику. Сейчас закладывается фундамент."
+- C-: "Хорошая база. Несколько деталей делают большую разницу."
+- C: "Ты думаешь правильно. Нужна стабильность под давлением."
+- C+: "Сильный игрок. Главная задача — найти достойных партнёров."
+
+---
+
+## SCREEN 4 — Player Profile
+
+After quiz, player sees their profile:
+
+```
+[Avatar initials]  Имя игрока
+Уровень: C-        Дата регистрации: 06.05.2026
+
+[Шкала прогресса D- ——●—— C+]
+
+ПРОФИЛЬ ИГРОКА
+├── Мотивация: Улучшить игру
+├── Стиль: С тренером — хочу расти
+└── Бэкграунд: Теннис
+
+СТАТИСТИКА
+├── Матчей сыграно: 0
+├── Квиз пройден: ✅
+└── Следующий шаг: Найти первую игру
+```
+
+---
+
+## DATABASE SCHEMA
+
+```sql
+-- Users
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(200) UNIQUE NOT NULL,
+  phone VARCHAR(50),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Quiz Results
+CREATE TABLE quiz_results (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  quiz_level VARCHAR(5),      -- before downgrade
+  real_level VARCHAR(5),      -- after downgrade
+  q1_answer INTEGER,
+  q2_answer INTEGER,
+  q3_answer INTEGER,
+  q4_answer VARCHAR(5),       -- yes/no
+  q4_extra TEXT,              -- optional text
+  q5_answer VARCHAR(5),
+  q6_answer VARCHAR(5),
+  q7_answer VARCHAR(5),
+  q8_answer VARCHAR(5),
+  q9_answer VARCHAR(5),
+  q10_answer VARCHAR(5),
+  personality_type VARCHAR(50),
+  completed_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Preset users (seed data)
+INSERT INTO users (name, email, phone) VALUES ('Женя', 'zhenya@padelfuture.com', '');
+INSERT INTO quiz_results (user_id, quiz_level, real_level) VALUES (1, 'C', 'C-');
+```
+
+---
+
+## ADMIN VIEW (simple, /admin route, no auth for MVP)
+
+Table with columns:
+| Name | Real Level | Quiz Level | Personality | Phone | Date |
+
+Sort by date descending. Show total count at top.
+
+---
+
+## UI REQUIREMENTS
+
+- Dark theme: background #080808, cards #161616, borders #2a2a2a
+- Mobile-first (max-width 420px centered)
+- Font: system-ui / SF Pro
+- Primary color: #0A84FF (blue)
+- Success: #30D158 (green)
+- Warning: #FFB84D (orange)
+- No animations except progress bar transition
+- Large tap targets for YES/NO buttons (min 56px height)
+
+---
+
+## WHAT IS NOT IN MVP (do not build yet)
+
+- Booking / court reservation
+- Matchmaking
+- Payment / subscriptions
+- Push notifications
+- Social features
+- Coach dashboard
+
+---
+
+## START COMMAND
+
+After building, run on port 3000.
+Seed the database with Zhenya as first user.
+Show me the /admin route so I can verify data is saving.

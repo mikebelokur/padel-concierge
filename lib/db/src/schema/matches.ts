@@ -22,6 +22,10 @@ export const matchesTable = pgTable("matches", {
   levelMax: text("level_max"),
   matchType: text("match_type").notNull().default("balanced"),
   balanceScore: real("balance_score"),
+  setScores: text("set_scores").notNull().default(""),
+  playerRatings: text("player_ratings").notNull().default("{}"),
+  conflictOccurred: text("conflict_occurred").notNull().default("false"),
+  overallNote: text("overall_note").notNull().default(""),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

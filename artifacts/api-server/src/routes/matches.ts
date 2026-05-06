@@ -13,6 +13,8 @@ function formatPlayers(playersJson: string) {
 }
 
 function formatMatch(m: typeof matchesTable.$inferSelect) {
+  let playerRatings: Record<string, number> = {};
+  try { playerRatings = JSON.parse(m.playerRatings); } catch { /* ignore */ }
   return {
     id: m.id,
     date: m.date,
@@ -26,6 +28,10 @@ function formatMatch(m: typeof matchesTable.$inferSelect) {
     levelMax: m.levelMax ?? null,
     matchType: m.matchType,
     balanceScore: m.balanceScore ?? null,
+    setScores: m.setScores,
+    playerRatings,
+    conflictOccurred: m.conflictOccurred === "true",
+    overallNote: m.overallNote,
     createdAt: m.createdAt.toISOString(),
   };
 }
@@ -136,15 +142,20 @@ router.get("/matches/:id", async (req, res): Promise<void> => {
 
 router.patch("/matches/:id", async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
-  const parsed = UpdateMatchBody.safeParse(req.body);
-  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
-  const [match] = await db.update(matchesTable).set({
-    ...(parsed.data.status && { status: parsed.data.status }),
-    ...(parsed.data.format && { format: parsed.data.format }),
-    ...(parsed.data.clubName && { clubName: parsed.data.clubName }),
-  }).where(eq(matchesTable.id, id)).returning();
+  const setObj: Record<string, unknown> = {};
+  if (req.body.status) setObj.status = req.body.status;
+  if (req.body.format) setObj.format = req.body.format;
+  if (req.body.clubName) setObj.clubName = req.body.clubName;
+  if (req.body.setScores !== undefined) setObj.setScores = req.body.setScores;
+  if (req.body.playerRatings !== undefined) setObj.playerRatings = JSON.stringify(req.body.playerRatings);
+  if (req.body.conflictOccurred !== undefined) setObj.conflictOccurred = String(req.body.conflictOccurred);
+  if (req.body.overallNote !== undefined) setObj.overallNote = req.body.overallNote;
 
+  if (Object.keys(setObj).length === 0) { res.status(400).json({ error: "No fields to update" }); return; }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [match] = await db.update(matchesTable).set(setObj as any).where(eq(matchesTable.id, id)).returning();
   if (!match) { res.status(404).json({ error: "Match not found" }); return; }
   res.json(formatMatch(match));
 });

@@ -1,6 +1,6 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useGetMatch, useCreateBooking, getGetMatchQueryKey } from "@workspace/api-client-react";
-import { useLocation, useParams } from "wouter";
+import { useLocation, useParams, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -130,6 +130,25 @@ export default function MatchDetail() {
             >
               {createBooking.isPending ? "Confirming..." : "Confirm Booking"}
             </Button>
+
+            {/* Coach/Admin actions */}
+            {(user?.role === "coach" || user?.role === "admin" || user?.role === "owner") && (
+              <div className="space-y-2 pt-2">
+                <div className="text-xs text-muted-foreground uppercase tracking-wider text-center">Действия тренера</div>
+                <Link href={`/match-log/${matchId}`}>
+                  <Button variant="outline" size="sm" className="w-full border-white/10">
+                    📋 Заполнить результат матча
+                  </Button>
+                </Link>
+              </div>
+            )}
+
+            {/* Feedback link for all logged-in users */}
+            <Link href={`/match-feedback/${matchId}`}>
+              <Button variant="outline" size="sm" className="w-full border-white/10 text-muted-foreground">
+                ⭐ Оставить отзыв о партнёрах
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

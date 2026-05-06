@@ -37,7 +37,9 @@ Premium padel player matchmaking platform for Dubai. A quality-control system (n
 ## Database Schema
 
 - `users` — Players, coaches, admins. Includes `archetype` (text, nullable) and `warmUpPreference` (boolean, default false)
-- `matches` — Match records with player lists, format, status, and scoring
+- `matches` — Match records with player lists, format, status, scoring, set_scores, player_ratings, conflict_occurred, overall_note
+- `trainer_match_requests` — Player → Trainer match requests (format, venue, date, time, notes, status, assignedMatchId)
+- `match_feedback` — Anonymous post-match peer feedback (rating, traits, comment)
 - `bookings` — Match bookings with payment status and warm-up tracking
 - `video_analyses` — Video submissions and AI analysis reports
 - `activity_logs` — Real-time activity feed for admin dashboard

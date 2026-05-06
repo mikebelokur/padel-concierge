@@ -14,3 +14,5 @@ export * from "./coaching_messages";
 export * from "./padel_rules";
 export * from "./padel_news";
 export * from "./recurring_schedules";
+export * from "./trainer_match_requests";
+export * from "./match_feedback";

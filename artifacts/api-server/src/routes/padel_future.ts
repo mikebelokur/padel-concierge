@@ -10,23 +10,21 @@ router.post("/pf/register", async (req, res) => {
     return;
   }
   try {
-    const existing = await pool.query(
-      "SELECT id FROM pf_users WHERE email = $1",
-      [email]
-    );
-    if (existing.rows.length > 0) {
-      const quiz = await pool.query(
-        "SELECT * FROM pf_quiz_results WHERE user_id = $1 ORDER BY completed_at DESC LIMIT 1",
-        [existing.rows[0].id]
-      );
-      res.json({ user: { ...existing.rows[0], name, email, phone }, quizResult: quiz.rows[0] || null });
-      return;
-    }
-    const result = await pool.query(
-      "INSERT INTO pf_users (name, email, phone) VALUES ($1, $2, $3) RETURNING *",
+    await pool.query(
+      "INSERT INTO pf_users (name, email, phone) VALUES ($1, $2, $3) ON CONFLICT (email) DO NOTHING",
       [name, email, phone || ""]
     );
-    res.status(201).json({ user: result.rows[0], quizResult: null });
+    const userRes = await pool.query(
+      "SELECT * FROM pf_users WHERE email = $1",
+      [email]
+    );
+    const user = userRes.rows[0];
+    const quizRes = await pool.query(
+      "SELECT * FROM pf_quiz_results WHERE user_id = $1 ORDER BY completed_at DESC LIMIT 1",
+      [user.id]
+    );
+    const quizResult = quizRes.rows[0] || null;
+    res.json({ user, quizResult });
   } catch (err: any) {
     req.log.error({ err }, "pf register error");
     res.status(500).json({ error: "registration failed" });

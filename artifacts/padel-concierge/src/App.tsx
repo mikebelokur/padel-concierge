@@ -40,6 +40,10 @@ import PadelRules from "@/pages/padel-rules";
 import PadelNews from "@/pages/padel-news";
 import Registrations from "@/pages/registrations";
 import Quiz from "@/pages/quiz";
+import LevelQuiz from "@/pages/level-quiz";
+import LevelQuizResult from "@/pages/level-quiz-result";
+import LevelQuizProfile from "@/pages/level-quiz-profile";
+import LevelQuizAdmin from "@/pages/level-quiz-admin";
 
 setAuthTokenGetter(() => localStorage.getItem("token"));
 
@@ -111,6 +115,13 @@ function Router() {
       <Route path="/settings">{() => <ProtectedRoute component={Settings} />}</Route>
 
       <Route path="/quiz" component={Quiz} />
+
+      {/* Level Quiz — no auth required */}
+      <Route path="/level-quiz" component={LevelQuiz} />
+      <Route path="/level-quiz/result" component={LevelQuizResult} />
+      <Route path="/level-quiz/profile" component={LevelQuizProfile} />
+      <Route path="/level-quiz/admin">{() => <ProtectedRoute component={LevelQuizAdmin} allowedRoles={["admin", "owner", "coach"]} />}</Route>
+
       <Route path="/registrations">{() => <ProtectedRoute component={Registrations} allowedRoles={["admin", "owner"]} />}</Route>
       <Route path="/coach">{() => <ProtectedRoute component={CoachDashboard} allowedRoles={["coach", "admin", "owner"]} />}</Route>
       <Route path="/admin">{() => <ProtectedRoute component={Admin} allowedRoles={["admin", "owner"]} />}</Route>

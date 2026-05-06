@@ -27,6 +27,8 @@ const navItems: NavItem[] = [
   { href: "/assessment",    label: "Assessment",        icon: "📊" },
   { href: "/video-analysis",label: "Video Analysis",    icon: "🎬" },
   { href: "/quiz",          label: "Archetype Quiz",    icon: "🧠" },
+  { href: "/level-quiz",    label: "Level Quiz",        icon: "📊" },
+  { href: "/level-quiz/admin", label: "Level Quiz Results", icon: "📋", roles: ["admin", "owner", "coach"] },
   { href: "/rules",         label: "Padel Rules",       icon: "📖", dividerBefore: true },
   { href: "/news",          label: "News & Tips",       icon: "📰" },
   { href: "/settings",      label: "Settings",          icon: "⚙️", dividerBefore: true },

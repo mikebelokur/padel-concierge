@@ -57,6 +57,17 @@ export default function ClientProfile() {
     },
   });
 
+  const [justMarked, setJustMarked] = useState<number | null>(null);
+
+  const markSession = useMutation({
+    mutationFn: () => apiFetch(`/coaching/clients/${id}/mark-session`, { method: "POST" }),
+    onSuccess: (updated: any) => {
+      qc.setQueryData(["client-profile", id], (old: any) => old ? { ...old, client: updated } : old);
+      setJustMarked(updated.sessionsUsed);
+      setTimeout(() => setJustMarked(null), 3000);
+    },
+  });
+
   const sendMessage = useMutation({
     mutationFn: (content: string) => apiFetch("/coaching/messages", {
       method: "POST",
@@ -114,6 +125,83 @@ export default function ClientProfile() {
             </CardContent>
           </Card>
         )}
+
+        {/* Package tracker */}
+        {client.packageType === "package" && client.sessionsInPackage > 0 && (() => {
+          const used = justMarked ?? client.sessionsUsed;
+          const total = client.sessionsInPackage;
+          const remaining = total - used;
+          const pct = Math.min(100, (used / total) * 100);
+          const exhausted = remaining <= 0;
+          return (
+            <div className={cn(
+              "p-4 rounded-xl border",
+              exhausted
+                ? "bg-amber-500/5 border-amber-500/20"
+                : "bg-primary/5 border-primary/20"
+            )}>
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">Пакет сессий</div>
+                  <div className="font-semibold text-foreground">
+                    Сессий использовано: <span className={exhausted ? "text-amber-400" : "text-primary"}>{used}</span> / {total}
+                  </div>
+                  {!exhausted && (
+                    <div className="text-xs text-muted-foreground mt-0.5">Осталось: {remaining}</div>
+                  )}
+                </div>
+                {!exhausted ? (
+                  <Button
+                    size="sm"
+                    onClick={() => markSession.mutate()}
+                    disabled={markSession.isPending}
+                    className="shrink-0"
+                  >
+                    {markSession.isPending ? "…" : "+ Отметить тренировку"}
+                  </Button>
+                ) : null}
+              </div>
+
+              {/* Progress bar */}
+              <div className="w-full h-2.5 bg-white/10 rounded-full overflow-hidden mb-2">
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-all duration-500",
+                    exhausted ? "bg-amber-500" : "bg-primary"
+                  )}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+
+              {/* Confirmation flash */}
+              {justMarked !== null && (
+                <div className="mt-2 text-sm text-emerald-400 font-medium">
+                  ✓ Тренировка {justMarked} отмечена
+                </div>
+              )}
+
+              {/* Exhausted CTA */}
+              {exhausted && (
+                <div className="mt-2 flex items-center justify-between">
+                  <span className="text-sm text-amber-400 font-medium">
+                    Пакет завершён. Предложить продление?
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10 shrink-0"
+                    onClick={() => {
+                      const msg = `Привет! Твой пакет из ${total} тренировок завершён. Готов продолжить? 💪`;
+                      window.open(`https://wa.me/${client.phone?.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`);
+                    }}
+                  >
+                    📲 WhatsApp
+                  </Button>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Next session plan */}
         {client.nextSessionPlan && (

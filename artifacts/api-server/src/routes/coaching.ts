@@ -165,6 +165,25 @@ router.post("/coaching/recurring", async (req, res): Promise<void> => {
   res.status(201).json(s);
 });
 
+// ─── PACKAGE SESSION TRACKING ────────────────────────────────────────────────
+
+router.post("/coaching/clients/:id/mark-session", async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id);
+  const [client] = await db.select().from(coachingClientsTable).where(eq(coachingClientsTable.id, id));
+  if (!client) { res.status(404).json({ error: "Client not found" }); return; }
+  if (client.packageType !== "package") { res.status(400).json({ error: "Client is not on a package" }); return; }
+  if (client.sessionsUsed >= client.sessionsInPackage) {
+    res.status(400).json({ error: "Package already exhausted" });
+    return;
+  }
+  const newUsed = client.sessionsUsed + 1;
+  const [updated] = await db.update(coachingClientsTable)
+    .set({ sessionsUsed: newUsed })
+    .where(eq(coachingClientsTable.id, id))
+    .returning();
+  res.json(updated);
+});
+
 // ─── TODAY'S SESSIONS ─────────────────────────────────────────────────────────
 
 router.get("/coaching/today", async (_req, res): Promise<void> => {

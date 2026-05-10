@@ -3,6 +3,11 @@ import { db, usersTable, activityLogsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { UpdateUserBody, UpdateAvailabilityBody, AddFavouriteBody, RemoveFavouriteBody } from "@workspace/api-zod";
 import { formatUser } from "./auth";
+import {
+  getOrCreateProfile,
+  computeAndCacheCompatibility,
+  getCachedCompatibility,
+} from "@workspace/mongo";
 
 const router: IRouter = Router();
 
@@ -37,6 +42,7 @@ router.get("/users/find-matches", async (req, res): Promise<void> => {
     skillDiff: number;
     archetypeMatch: boolean;
     priority: number;
+    compatibilityScore: number;
   };
 
   const candidates: Candidate[] = [];
@@ -46,13 +52,27 @@ router.get("/users/find-matches", async (req, res): Promise<void> => {
     const archetypeMatch = !!(me.archetype && u.archetype && me.archetype === u.archetype);
 
     if (archetypeMatch && skillDiff <= 2) {
-      candidates.push({ user: u, skillDiff, archetypeMatch, priority: 1 });
+      candidates.push({ user: u, skillDiff, archetypeMatch, priority: 1, compatibilityScore: 0 });
     } else if (skillDiff <= 3) {
-      candidates.push({ user: u, skillDiff, archetypeMatch, priority: 2 });
+      candidates.push({ user: u, skillDiff, archetypeMatch, priority: 2, compatibilityScore: 0 });
     }
   }
 
-  candidates.sort((a, b) => a.priority - b.priority || a.skillDiff - b.skillDiff);
+  await Promise.all(
+    candidates.map(async (c) => {
+      const score = await computeAndCacheCompatibility(
+        { id: me.id, level: me.level, archetype: me.archetype ?? null },
+        { id: c.user.id, level: c.user.level, archetype: c.user.archetype ?? null }
+      );
+      c.compatibilityScore = score?.score ?? 50;
+    })
+  );
+
+  candidates.sort((a, b) => {
+    if (a.priority !== b.priority) return a.priority - b.priority;
+    return b.compatibilityScore - a.compatibilityScore;
+  });
+
   const top3 = candidates.slice(0, 3);
 
   res.json({
@@ -61,11 +81,70 @@ router.get("/users/find-matches", async (req, res): Promise<void> => {
       skillDiff: c.skillDiff,
       archetypeMatch: c.archetypeMatch,
       priority: c.priority,
+      compatibilityScore: c.compatibilityScore,
     })),
     noMatchesMessage: top3.length === 0
       ? "Подходящих игроков пока нет. Попробуй позже или расширь время доступности."
       : null,
   });
+});
+
+router.get("/players/:id/profile", async (req, res): Promise<void> => {
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid player id" }); return; }
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, id));
+  if (!user) { res.status(404).json({ error: "Player not found" }); return; }
+
+  const profile = await getOrCreateProfile(id);
+  if (!profile) {
+    res.json({
+      userId: id,
+      reliabilityScore: 75,
+      noShowCount: 0,
+      sessionStreak: 0,
+      behavioralFlags: [],
+      last30MatchIds: [],
+      source: "default",
+    });
+    return;
+  }
+
+  res.json({
+    userId: profile.userId,
+    reliabilityScore: profile.reliabilityScore,
+    noShowCount: profile.noShowCount,
+    sessionStreak: profile.sessionStreak,
+    behavioralFlags: profile.behavioralFlags,
+    last30MatchIds: profile.last30MatchIds,
+    updatedAt: profile.updatedAt,
+    source: "mongodb",
+  });
+});
+
+router.get("/players/:id/compatibility/:otherId", async (req, res): Promise<void> => {
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
+  const otherId = parseInt(Array.isArray(req.params.otherId) ? req.params.otherId[0] : req.params.otherId, 10);
+
+  if (isNaN(id) || isNaN(otherId)) { res.status(400).json({ error: "Invalid player ids" }); return; }
+
+  const [playerA] = await db.select().from(usersTable).where(eq(usersTable.id, id));
+  const [playerB] = await db.select().from(usersTable).where(eq(usersTable.id, otherId));
+
+  if (!playerA) { res.status(404).json({ error: "Player not found" }); return; }
+  if (!playerB) { res.status(404).json({ error: "Other player not found" }); return; }
+
+  const score = await computeAndCacheCompatibility(
+    { id: playerA.id, level: playerA.level, archetype: playerA.archetype ?? null },
+    { id: playerB.id, level: playerB.level, archetype: playerB.archetype ?? null }
+  );
+
+  if (score) {
+    res.json({ score: score.score, factors: score.factors, computedAt: score.computedAt, source: "mongodb" });
+    return;
+  }
+
+  res.json({ score: 50, factors: null, computedAt: null, source: "fallback" });
 });
 
 router.get("/users/:id", async (req, res): Promise<void> => {

@@ -1,7 +1,9 @@
 import { Router, type IRouter } from "express";
 import { db, matchesTable, usersTable, activityLogsTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
-import { CreateMatchBody, UpdateMatchBody, ListMatchesQueryParams, GetMatchSuggestionsQueryParams } from "@workspace/api-zod";
+import { eq } from "drizzle-orm";
+import { CreateMatchBody, ListMatchesQueryParams, GetMatchSuggestionsQueryParams } from "@workspace/api-zod";
+import { upsertMatchLog, upsertProfileMatchRecord, appendMatchTimeline } from "@workspace/mongo";
+import { fireAndForget } from "../lib/fireAndForget.js";
 
 const router: IRouter = Router();
 
@@ -102,6 +104,29 @@ router.post("/matches", async (req, res): Promise<void> => {
     });
   }
 
+  fireAndForget(
+    upsertMatchLog({
+      matchId: match.id,
+      date,
+      participants: validPlayers.map(p => ({
+        userId: p.id,
+        name: p.name,
+        levelAtPlay: p.level,
+        archetype: p.archetype ?? null,
+      })),
+      setScores: match.setScores,
+      conflictOccurred: false,
+    }),
+    { route: "POST /matches", matchId: match.id }
+  );
+
+  for (const p of validPlayers) {
+    fireAndForget(
+      upsertProfileMatchRecord(p.id, match.id),
+      { route: "POST /matches", userId: p.id, matchId: match.id }
+    );
+  }
+
   res.status(201).json(formatMatch(match));
 });
 
@@ -157,6 +182,33 @@ router.patch("/matches/:id", async (req, res): Promise<void> => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [match] = await db.update(matchesTable).set(setObj as any).where(eq(matchesTable.id, id)).returning();
   if (!match) { res.status(404).json({ error: "Match not found" }); return; }
+
+  const players = formatPlayers(match.players) as Array<{ userId: number; name: string; level: string }>;
+
+  fireAndForget(
+    upsertMatchLog({
+      matchId: match.id,
+      date: match.date,
+      participants: players.map(p => ({
+        userId: p.userId,
+        name: p.name,
+        levelAtPlay: p.level,
+        archetype: null,
+      })),
+      setScores: match.setScores,
+      conflictOccurred: match.conflictOccurred === "true",
+      overallNote: match.overallNote,
+    }),
+    { route: "PATCH /matches/:id", matchId: match.id }
+  );
+
+  if (req.body.status === "completed") {
+    fireAndForget(
+      appendMatchTimeline(match.id, "match_completed"),
+      { route: "PATCH /matches/:id", matchId: match.id, event: "match_completed" }
+    );
+  }
+
   res.json(formatMatch(match));
 });
 

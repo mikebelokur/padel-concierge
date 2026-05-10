@@ -1,6 +1,8 @@
 import { Router, type IRouter } from "express";
 import { db, trainerMatchRequestsTable, matchFeedbackTable, usersTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
+import { upsertFeedbackAggregate } from "@workspace/mongo";
+import { fireAndForget } from "../lib/fireAndForget.js";
 
 const router: IRouter = Router();
 
@@ -114,6 +116,17 @@ router.post("/match-feedback", async (req, res): Promise<void> => {
     traits: traits ?? [],
     comment: comment ?? "",
   }).returning();
+
+  fireAndForget(
+    upsertFeedbackAggregate({
+      aboutUserId: parseInt(aboutUserId),
+      fromUserId: req.body.fromUserId ? parseInt(req.body.fromUserId) : 0,
+      rating: rating ?? 5,
+      traits: traits ?? [],
+    }),
+    { route: "POST /match-feedback", matchId, aboutUserId }
+  );
+
   res.status(201).json(row);
 });
 

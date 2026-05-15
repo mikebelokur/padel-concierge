@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueries, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -65,6 +65,15 @@ interface User {
   skillDiff?: number;
   archetypeMatch?: boolean;
   priority?: number;
+  compatibilityScore?: number;
+}
+
+interface PlayerProfile {
+  userId: number;
+  reliabilityScore: number;
+  noShowCount: number;
+  sessionStreak: number;
+  behavioralFlags: string[];
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -125,13 +134,58 @@ function CompatBar({ pct }: { pct: number }) {
   );
 }
 
+function CompatBadge({ pct }: { pct: number }) {
+  const color = pct >= 80 ? "text-green-400 bg-green-400/10 border-green-400/25"
+    : pct >= 60 ? "text-primary bg-primary/10 border-primary/25"
+    : "text-amber-400 bg-amber-400/10 border-amber-400/25";
+  return (
+    <span className={cn("inline-flex items-center gap-0.5 text-xs font-mono font-semibold px-1.5 py-0.5 rounded-md border", color)}>
+      {pct}%
+    </span>
+  );
+}
+
+function ReliabilityDot({ score }: { score: number | undefined }) {
+  if (score === undefined) return null;
+  const isGreen = score >= 80;
+  const isAmber = score >= 55;
+  const label = `Надёжность ${score}`;
+  const dot = isGreen
+    ? "bg-green-500 shadow-[0_0_4px_rgba(34,197,94,0.6)]"
+    : isAmber
+    ? "bg-amber-500 shadow-[0_0_4px_rgba(245,158,11,0.6)]"
+    : "bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.6)]";
+  return (
+    <span title={label} className="inline-flex items-center gap-1">
+      <span className={cn("w-2 h-2 rounded-full inline-block flex-shrink-0", dot)} />
+      <span className={cn(
+        "text-xs",
+        isGreen ? "text-green-400" : isAmber ? "text-amber-400" : "text-red-400"
+      )}>{score}</span>
+    </span>
+  );
+}
+
 // ─── Player card for smart-match list ─────────────────────────────────────────
 
-function PlayerCard({ player, onSelect, myArchetype }: { player: User; onSelect: (p: User) => void; myArchetype: string | null }) {
+function PlayerCard({
+  player,
+  onSelect,
+  myArchetype,
+  reliability,
+}: {
+  player: User;
+  onSelect: (p: User) => void;
+  myArchetype: string | null;
+  reliability?: PlayerProfile;
+}) {
   const isArchetypeMatch = player.archetypeMatch;
   const compatNote = myArchetype && player.archetype
     ? archetypeCompatibility(myArchetype as Archetype, player.archetype as Archetype)
     : null;
+  const compatPct = player.compatibilityScore;
+  const reliabilityScore = reliability?.reliabilityScore;
+
   return (
     <div
       className={cn(
@@ -155,10 +209,17 @@ function PlayerCard({ player, onSelect, myArchetype }: { player: User; onSelect:
           {isArchetypeMatch && (
             <span className="text-xs text-primary bg-primary/10 border border-primary/20 rounded-full px-2 py-0.5">Совпадение</span>
           )}
+          {compatPct !== undefined && <CompatBadge pct={compatPct} />}
         </div>
         <div className="flex items-center gap-2 mt-1 flex-wrap">
           <span className="text-xs text-muted-foreground font-mono">{player.level}</span>
           {player.archetype && <ArchetypePill archetype={player.archetype} size="xs" />}
+          {reliabilityScore !== undefined && (
+            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+              <span className="text-muted-foreground/50">·</span>
+              <ReliabilityDot score={reliabilityScore} />
+            </span>
+          )}
         </div>
         {compatNote && <div className="text-xs text-muted-foreground/60 mt-0.5 truncate">{compatNote}</div>}
       </div>
@@ -217,6 +278,21 @@ export default function MatchRequests() {
     queryKey: ["find-matches", user?.id],
     queryFn: () => apiFetch<{ matches: User[]; noMatchesMessage: string | null }>(`/users/find-matches?userId=${user?.id}`),
     enabled: !!user?.id && showSend,
+  });
+
+  const smartMatchIds = smartMatches?.matches.map(m => m.id) ?? [];
+  const profileQueries = useQueries({
+    queries: smartMatchIds.map(id => ({
+      queryKey: ["player-profile", id],
+      queryFn: () => apiFetch<PlayerProfile>(`/players/${id}/profile`),
+      enabled: !!id,
+      staleTime: 60_000,
+    })),
+  });
+  const profileMap: Record<number, PlayerProfile> = {};
+  smartMatchIds.forEach((id, i) => {
+    const data = profileQueries[i]?.data;
+    if (data) profileMap[id] = data;
   });
 
   const { data: trainerRequests = [] } = useQuery({
@@ -665,7 +741,7 @@ export default function MatchRequests() {
                     <div className="space-y-2">
                       <div className="text-xs text-muted-foreground/60 mb-1">Топ-3 по совместимости</div>
                       {smartMatches.matches.map(p => (
-                        <PlayerCard key={p.id} player={p} onSelect={setSelectedPlayer} myArchetype={user?.archetype ?? null} />
+                        <PlayerCard key={p.id} player={p} onSelect={setSelectedPlayer} myArchetype={user?.archetype ?? null} reliability={profileMap[p.id]} />
                       ))}
                     </div>
                   )}
@@ -689,10 +765,18 @@ export default function MatchRequests() {
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-serif">{selectedPlayer.name[0]}</div>
                   <div className="flex-1">
-                    <div className="font-medium text-sm">{selectedPlayer.name}</div>
-                    <div className="flex items-center gap-2 mt-0.5">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium text-sm">{selectedPlayer.name}</span>
+                      {selectedPlayer.compatibilityScore !== undefined && (
+                        <CompatBadge pct={selectedPlayer.compatibilityScore} />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                       <span className="text-xs text-muted-foreground font-mono">{selectedPlayer.level}</span>
                       {selectedPlayer.archetype && <ArchetypePill archetype={selectedPlayer.archetype} size="xs" />}
+                      {selectedPlayer.id && profileMap[selectedPlayer.id] && (
+                        <ReliabilityDot score={profileMap[selectedPlayer.id].reliabilityScore} />
+                      )}
                     </div>
                   </div>
                   <button className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setSelectedPlayer(null)}>Изменить</button>

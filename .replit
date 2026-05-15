@@ -45,4 +45,3 @@ channel = "stable-25_05"
 [userenv]
 
 [userenv.shared]
-SUPER_ADMIN_CODE = "MISHA_JR9N3UZT"

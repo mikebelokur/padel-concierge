@@ -13,6 +13,114 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
+type BehavioralProfile = {
+  reliabilityScore: number;
+  noShowCount: number;
+  sessionStreak: number;
+  behavioralFlags: string[];
+  source: string;
+};
+
+function reliabilityColor(score: number): string {
+  if (score >= 80) return "text-emerald-400";
+  if (score >= 60) return "text-amber-400";
+  return "text-red-400";
+}
+
+function reliabilityBarColor(score: number): string {
+  if (score >= 80) return "bg-emerald-500";
+  if (score >= 60) return "bg-amber-500";
+  return "bg-red-500";
+}
+
+function reliabilityLabel(score: number): string {
+  if (score >= 80) return "Reliable";
+  if (score >= 60) return "Moderate";
+  return "Unreliable";
+}
+
+function BehavioralStats({ loading, data }: { loading: boolean; data: BehavioralProfile | null }) {
+  return (
+    <Card className="bg-card border-white/5">
+      <CardHeader className="pb-2 pt-4 px-4">
+        <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+          📊 Behavioral Stats
+          {data?.source === "mongodb" && (
+            <span className="text-xs font-normal text-emerald-400/70 normal-case tracking-normal">live</span>
+          )}
+          {data?.source === "default" && (
+            <span className="text-xs font-normal text-amber-400/70 normal-case tracking-normal">estimated</span>
+          )}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="px-4 pb-4">
+        {loading ? (
+          <div className="text-sm text-muted-foreground animate-pulse">Loading…</div>
+        ) : !data ? (
+          <div className="text-sm text-muted-foreground italic">
+            Analytics unavailable — behavioral data service is offline.
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Reliability score */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-sm text-muted-foreground">Reliability Score</span>
+                <span className={cn("text-sm font-semibold tabular-nums", reliabilityColor(data.reliabilityScore))}>
+                  {data.reliabilityScore}/100 · {reliabilityLabel(data.reliabilityScore)}
+                </span>
+              </div>
+              <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className={cn("h-full rounded-full transition-all duration-500", reliabilityBarColor(data.reliabilityScore))}
+                  style={{ width: `${Math.max(0, Math.min(100, data.reliabilityScore))}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Stats row */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+                <div className="text-xs text-muted-foreground mb-1">No-shows</div>
+                <div className={cn("text-xl font-bold tabular-nums", data.noShowCount > 0 ? "text-red-400" : "text-emerald-400")}>
+                  {data.noShowCount}
+                </div>
+                <div className="text-xs text-muted-foreground">total missed</div>
+              </div>
+              <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+                <div className="text-xs text-muted-foreground mb-1">Session streak</div>
+                <div className={cn("text-xl font-bold tabular-nums", data.sessionStreak >= 3 ? "text-emerald-400" : "text-foreground")}>
+                  {data.sessionStreak}
+                  {data.sessionStreak >= 3 && <span className="text-base ml-1">🔥</span>}
+                </div>
+                <div className="text-xs text-muted-foreground">consecutive</div>
+              </div>
+            </div>
+
+            {/* Behavioral flags */}
+            {data.behavioralFlags.length > 0 && (
+              <div>
+                <div className="text-xs text-muted-foreground mb-2">Flags</div>
+                <div className="flex flex-wrap gap-2">
+                  {data.behavioralFlags.map((flag) => (
+                    <Badge
+                      key={flag}
+                      variant="outline"
+                      className="text-xs border-amber-500/30 text-amber-400 bg-amber-500/10"
+                    >
+                      ⚑ {flag}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 const LEVEL_COLORS: Record<string, string> = {
   "C+": "text-blue-400 bg-blue-500/10 border-blue-500/20",
   "C":  "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
@@ -34,6 +142,19 @@ export default function ClientProfile() {
     queryKey: ["client-profile", id],
     queryFn: () => apiFetch(`/coaching/clients/${id}`),
     enabled: !!id,
+  });
+
+  const { data: behavioralData, isLoading: behavioralLoading } = useQuery({
+    queryKey: ["player-profile", id],
+    queryFn: () => apiFetch<{
+      reliabilityScore: number;
+      noShowCount: number;
+      sessionStreak: number;
+      behavioralFlags: string[];
+      source: string;
+    }>(`/players/${id}/profile`),
+    enabled: !!id,
+    retry: false,
   });
 
   const addNote = useMutation({
@@ -210,6 +331,9 @@ export default function ClientProfile() {
             <span className="text-foreground">{client.nextSessionPlan}</span>
           </div>
         )}
+
+        {/* Behavioral Stats */}
+        <BehavioralStats loading={behavioralLoading} data={behavioralData ?? null} />
 
         <Tabs defaultValue="sessions">
           <TabsList className="bg-card border-white/5">

@@ -94,19 +94,25 @@ router.get("/players/:id/profile", async (req, res): Promise<void> => {
   if (isNaN(id)) { res.status(400).json({ error: "Invalid player id" }); return; }
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, id));
-  if (!user) { res.status(404).json({ error: "Player not found" }); return; }
+
+  const defaultProfile = {
+    userId: id,
+    reliabilityScore: 75,
+    noShowCount: 0,
+    sessionStreak: 0,
+    behavioralFlags: [] as string[],
+    last30MatchIds: [] as number[],
+    source: "default",
+  };
+
+  if (!user) {
+    res.json(defaultProfile);
+    return;
+  }
 
   const profile = await getOrCreateProfile(id);
   if (!profile) {
-    res.json({
-      userId: id,
-      reliabilityScore: 75,
-      noShowCount: 0,
-      sessionStreak: 0,
-      behavioralFlags: [],
-      last30MatchIds: [],
-      source: "default",
-    });
+    res.json(defaultProfile);
     return;
   }
 

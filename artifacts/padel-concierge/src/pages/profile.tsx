@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGetPlayerStats, getGetPlayerStatsQueryKey } from "@workspace/api-client-react";
@@ -7,14 +8,101 @@ import { Progress } from "@/components/ui/progress";
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ARCHETYPE_META, type Archetype } from "@/lib/archetypes";
+import { ARCHETYPE_META, archetypeCompatibility, type Archetype } from "@/lib/archetypes";
+import { apiFetch } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 const COLORS = ['#2d7dff', '#00d4ff', '#6b7a99'];
+
+interface PlayerProfile {
+  userId: number;
+  reliabilityScore: number;
+  noShowCount: number;
+  sessionStreak: number;
+  behavioralFlags: string[];
+  source: string;
+}
+
+interface TopMatch {
+  id: number;
+  name: string;
+  level: string;
+  archetype: string | null;
+  verified: boolean;
+  compatibilityScore: number;
+  archetypeMatch: boolean;
+}
+
+interface FindMatchesResponse {
+  matches: TopMatch[];
+  noMatchesMessage: string | null;
+}
+
+function reliabilityColor(score: number): string {
+  if (score >= 80) return "text-emerald-400";
+  if (score >= 60) return "text-amber-400";
+  return "text-red-400";
+}
+
+function reliabilityBarColor(score: number): string {
+  if (score >= 80) return "bg-emerald-500";
+  if (score >= 60) return "bg-amber-500";
+  return "bg-red-500";
+}
+
+function reliabilityLabel(score: number): string {
+  if (score >= 80) return "Reliable";
+  if (score >= 60) return "Moderate";
+  return "Unreliable";
+}
+
+function reliabilityDotClass(score: number): string {
+  if (score >= 80) return "bg-green-500 shadow-[0_0_4px_rgba(34,197,94,0.6)]";
+  if (score >= 60) return "bg-amber-500 shadow-[0_0_4px_rgba(245,158,11,0.6)]";
+  return "bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.6)]";
+}
+
+function CompatBadge({ pct }: { pct: number }) {
+  const color = pct >= 80
+    ? "text-green-400 bg-green-400/10 border-green-400/25"
+    : pct >= 60
+    ? "text-primary bg-primary/10 border-primary/25"
+    : "text-amber-400 bg-amber-400/10 border-amber-400/25";
+  return (
+    <span className={cn("inline-flex items-center gap-0.5 text-xs font-mono font-semibold px-1.5 py-0.5 rounded-md border", color)}>
+      {pct}%
+    </span>
+  );
+}
+
+function ArchetypePill({ archetype }: { archetype: string }) {
+  const meta = ARCHETYPE_META[archetype as Archetype];
+  if (!meta) return null;
+  return (
+    <span className={cn("inline-flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded-full border", meta.color, meta.bg, meta.border)}>
+      {meta.icon} {meta.nameRu}
+    </span>
+  );
+}
 
 export default function Profile() {
   const { user } = useAuth();
   const { data: stats, isLoading } = useGetPlayerStats(user?.id || 0, {
     query: { enabled: !!user?.id, queryKey: getGetPlayerStatsQueryKey(user?.id || 0) }
+  });
+
+  const { data: reliability, isLoading: reliabilityLoading } = useQuery({
+    queryKey: ["player-profile", user?.id],
+    queryFn: () => apiFetch<PlayerProfile>(`/players/${user!.id}/profile`),
+    enabled: !!user?.id,
+    retry: false,
+  });
+
+  const { data: topMatches, isLoading: matchesLoading } = useQuery({
+    queryKey: ["find-matches", user?.id],
+    queryFn: () => apiFetch<FindMatchesResponse>(`/users/find-matches?userId=${user!.id}`),
+    enabled: !!user?.id,
+    retry: false,
   });
 
   if (isLoading) return <AppLayout><div className="p-8">Loading profile...</div></AppLayout>;
@@ -43,6 +131,14 @@ export default function Profile() {
               )}
               {user?.warmUpPreference && (
                 <Badge variant="outline" className="text-sm px-3 text-orange-400 bg-orange-500/10 border-orange-500/20">🔥 Разминка</Badge>
+              )}
+              {reliability && !reliabilityLoading && (
+                <span className="inline-flex items-center gap-1.5">
+                  <span className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0", reliabilityDotClass(reliability.reliabilityScore))} />
+                  <span className={cn("text-sm font-semibold tabular-nums", reliabilityColor(reliability.reliabilityScore))}>
+                    {reliability.reliabilityScore} · {reliabilityLabel(reliability.reliabilityScore)}
+                  </span>
+                </span>
               )}
               {user?.locationName && <span className="text-muted-foreground text-sm">{user.locationName}</span>}
             </div>
@@ -80,6 +176,152 @@ export default function Profile() {
             <CardContent>
               <div className="text-4xl font-mono text-accent">{stats?.levelConfidence || 0}%</div>
               <p className="text-xs text-muted-foreground mt-2">Based on recent performance against verified players</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Reliability + Compatibility row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          {/* Reliability */}
+          <Card className="bg-card border-white/5">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2">
+                Reliability
+                {reliability && (
+                  <span className={cn("text-sm font-normal", reliabilityColor(reliability.reliabilityScore))}>
+                    {reliability.source === "mongodb" ? "· live" : "· estimated"}
+                  </span>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {reliabilityLoading ? (
+                <div className="text-sm text-muted-foreground animate-pulse">Loading…</div>
+              ) : !reliability ? (
+                <div className="text-sm text-muted-foreground italic">
+                  Behavioral data unavailable.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-muted-foreground">Reliability Score</span>
+                      <span className={cn("text-sm font-semibold tabular-nums", reliabilityColor(reliability.reliabilityScore))}>
+                        {reliability.reliabilityScore}/100 · {reliabilityLabel(reliability.reliabilityScore)}
+                      </span>
+                    </div>
+                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                      <div
+                        className={cn("h-full rounded-full transition-all duration-500", reliabilityBarColor(reliability.reliabilityScore))}
+                        style={{ width: `${Math.max(0, Math.min(100, reliability.reliabilityScore))}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+                      <div className="text-xs text-muted-foreground mb-1">No-shows</div>
+                      <div className={cn("text-2xl font-bold tabular-nums", reliability.noShowCount > 0 ? "text-red-400" : "text-emerald-400")}>
+                        {reliability.noShowCount}
+                      </div>
+                      <div className="text-xs text-muted-foreground">total missed</div>
+                    </div>
+                    <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+                      <div className="text-xs text-muted-foreground mb-1">Session streak</div>
+                      <div className={cn("text-2xl font-bold tabular-nums", reliability.sessionStreak >= 3 ? "text-emerald-400" : "text-foreground")}>
+                        {reliability.sessionStreak}
+                        {reliability.sessionStreak >= 3 && <span className="text-base ml-1">🔥</span>}
+                      </div>
+                      <div className="text-xs text-muted-foreground">consecutive</div>
+                    </div>
+                  </div>
+
+                  {reliability.behavioralFlags.length > 0 && (
+                    <div>
+                      <div className="text-xs text-muted-foreground mb-2">Flags</div>
+                      <div className="flex flex-wrap gap-2">
+                        {reliability.behavioralFlags.map((flag) => (
+                          <Badge
+                            key={flag}
+                            variant="outline"
+                            className="text-xs border-amber-500/30 text-amber-400 bg-amber-500/10"
+                          >
+                            ⚑ {flag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Compatibility */}
+          <Card className="bg-card border-white/5">
+            <CardHeader className="pb-3">
+              <CardTitle>Top Compatibility Matches</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {!archetype ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Take the archetype quiz to unlock your compatibility matches.
+                  </p>
+                  <Link href="/quiz">
+                    <Button variant="outline" size="sm" className="border-primary/30 text-primary hover:bg-primary/10">
+                      🧠 Take Quiz
+                    </Button>
+                  </Link>
+                </div>
+              ) : matchesLoading ? (
+                <div className="text-sm text-muted-foreground animate-pulse">Loading…</div>
+              ) : !topMatches?.matches?.length ? (
+                <div className="text-sm text-muted-foreground italic">
+                  {topMatches?.noMatchesMessage ?? "No compatible players found yet."}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {topMatches.matches.map((match) => {
+                    const compatNote = archetype && match.archetype
+                      ? archetypeCompatibility(archetype, match.archetype as Archetype)
+                      : null;
+                    return (
+                      <div key={match.id} className={cn(
+                        "flex items-start gap-3 p-3 rounded-xl border",
+                        match.archetypeMatch
+                          ? "border-primary/25 bg-primary/5"
+                          : "border-white/5 bg-white/[0.02]"
+                      )}>
+                        <div className={cn(
+                          "w-9 h-9 rounded-full flex items-center justify-center text-sm font-serif flex-shrink-0",
+                          match.archetypeMatch ? "bg-primary/20 text-primary" : "bg-white/10 text-foreground"
+                        )}>
+                          {match.name[0]}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-medium">{match.name}</span>
+                            {match.verified && <span className="text-accent text-xs">✓</span>}
+                            {match.archetypeMatch && (
+                              <span className="text-xs text-primary bg-primary/10 border border-primary/20 rounded-full px-1.5 py-0.5">Совпадение</span>
+                            )}
+                            <CompatBadge pct={match.compatibilityScore} />
+                          </div>
+                          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                            <span className="text-xs text-muted-foreground font-mono">{match.level}</span>
+                            {match.archetype && <ArchetypePill archetype={match.archetype} />}
+                          </div>
+                          {compatNote && (
+                            <div className="text-xs text-muted-foreground/60 mt-0.5 truncate">{compatNote}</div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

@@ -139,7 +139,10 @@ function CompatBadge({ pct }: { pct: number }) {
     : pct >= 60 ? "text-primary bg-primary/10 border-primary/25"
     : "text-amber-400 bg-amber-400/10 border-amber-400/25";
   return (
-    <span className={cn("inline-flex items-center gap-0.5 text-xs font-mono font-semibold px-1.5 py-0.5 rounded-md border", color)}>
+    <span
+      title={`Совместимость: ${pct}% — учитывает уровень игры, архетип и историю совместных матчей`}
+      className={cn("inline-flex items-center gap-0.5 text-xs font-mono font-semibold px-1.5 py-0.5 rounded-md border cursor-help", color)}
+    >
       {pct}%
     </span>
   );
@@ -149,14 +152,18 @@ function ReliabilityDot({ score }: { score: number | undefined }) {
   if (score === undefined) return null;
   const isGreen = score >= 80;
   const isAmber = score >= 55;
-  const label = `Надёжность ${score}`;
+  const label = isGreen
+    ? `Надёжность: ${score}/100 — хорошая посещаемость и поведение на корте`
+    : isAmber
+    ? `Надёжность: ${score}/100 — случались пропуски или замечания`
+    : `Надёжность: ${score}/100 — частые пропуски или нарушения`;
   const dot = isGreen
     ? "bg-green-500 shadow-[0_0_4px_rgba(34,197,94,0.6)]"
     : isAmber
     ? "bg-amber-500 shadow-[0_0_4px_rgba(245,158,11,0.6)]"
     : "bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.6)]";
   return (
-    <span title={label} className="inline-flex items-center gap-1">
+    <span title={label} className="inline-flex items-center gap-1 cursor-help">
       <span className={cn("w-2 h-2 rounded-full inline-block flex-shrink-0", dot)} />
       <span className={cn(
         "text-xs",
@@ -739,7 +746,15 @@ export default function MatchRequests() {
                     <div className="text-center py-8 text-sm text-muted-foreground">{smartMatches.noMatchesMessage}</div>
                   ) : (
                     <div className="space-y-2">
-                      <div className="text-xs text-muted-foreground/60 mb-1">Топ-3 по совместимости</div>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="text-xs text-muted-foreground/60">Топ-3 по совместимости</span>
+                        <span
+                          title={"● Совместимость (%) — учитывает уровень игры, архетип и историю матчей\n● Надёжность (точка) — зелёная ≥80, жёлтая ≥55, красная <55 — посещаемость и поведение на корте"}
+                          className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-muted-foreground/30 text-muted-foreground/50 text-[10px] leading-none cursor-help hover:border-muted-foreground/60 hover:text-muted-foreground transition-colors"
+                        >
+                          ?
+                        </span>
+                      </div>
                       {smartMatches.matches.map(p => (
                         <PlayerCard key={p.id} player={p} onSelect={setSelectedPlayer} myArchetype={user?.archetype ?? null} reliability={profileMap[p.id]} />
                       ))}

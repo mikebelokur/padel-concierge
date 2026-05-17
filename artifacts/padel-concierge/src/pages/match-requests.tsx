@@ -173,6 +173,26 @@ function ReliabilityDot({ score }: { score: number | undefined }) {
   );
 }
 
+function RiskWarning({ profile }: { profile?: PlayerProfile }) {
+  if (!profile) return null;
+  const isLowScore = profile.reliabilityScore < 60;
+  const hasFlags = profile.behavioralFlags.length > 0;
+  if (!isLowScore && !hasFlags) return null;
+
+  const parts: string[] = [];
+  if (isLowScore) parts.push(`надёжность ${profile.reliabilityScore}/100`);
+  if (hasFlags) parts.push(profile.behavioralFlags.join(", "));
+
+  return (
+    <span
+      title={`Предупреждение: ${parts.join(" · ")}`}
+      className="inline-flex items-center gap-1 text-xs font-medium text-amber-400 bg-amber-400/10 border border-amber-400/20 rounded-full px-2 py-0.5 cursor-help"
+    >
+      ⚠ Риск
+    </span>
+  );
+}
+
 // ─── Player card for smart-match list ─────────────────────────────────────────
 
 function PlayerCard({
@@ -217,6 +237,7 @@ function PlayerCard({
             <span className="text-xs text-primary bg-primary/10 border border-primary/20 rounded-full px-2 py-0.5">Совпадение</span>
           )}
           {compatPct !== undefined && <CompatBadge pct={compatPct} />}
+          <RiskWarning profile={reliability} />
         </div>
         <div className="flex items-center gap-2 mt-1 flex-wrap">
           <span className="text-xs text-muted-foreground font-mono">{player.level}</span>
@@ -315,6 +336,21 @@ export default function MatchRequests() {
     queryKey: ["candidates", assignTarget?.playerId],
     queryFn: () => apiFetch<Candidate[]>(`/trainer-match-requests/candidates?playerId=${assignTarget?.playerId}`),
     enabled: !!assignTarget,
+  });
+
+  const candidateIds = (candidates as Candidate[]).map(c => c.id);
+  const candidateProfileQueries = useQueries({
+    queries: candidateIds.map(id => ({
+      queryKey: ["player-profile", id],
+      queryFn: () => apiFetch<PlayerProfile>(`/players/${id}/profile`),
+      enabled: !!id && !!assignTarget,
+      staleTime: 60_000,
+    })),
+  });
+  const candidateProfileMap: Record<number, PlayerProfile> = {};
+  candidateIds.forEach((id, i) => {
+    const data = candidateProfileQueries[i]?.data;
+    if (data) candidateProfileMap[id] = data;
   });
 
   // ── Mutations ──
@@ -864,6 +900,7 @@ export default function MatchRequests() {
               {(candidates as Candidate[]).map(c => {
                 const selected = selectedCandidates.includes(c.id);
                 const maxReached = selectedCandidates.length >= 3 && !selected;
+                const cProfile = candidateProfileMap[c.id];
                 return (
                   <div
                     key={c.id}
@@ -881,13 +918,19 @@ export default function MatchRequests() {
                       {c.name[0]}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-medium">{c.name}</span>
                         {c.verified && <span className="text-accent text-xs">✓</span>}
                         <span className="text-xs text-muted-foreground font-mono">{c.level}</span>
                         {c.archetype && <ArchetypePill archetype={c.archetype} size="xs" />}
+                        <RiskWarning profile={cProfile} />
                       </div>
                       <CompatBar pct={c.compatibility} />
+                      {cProfile && cProfile.behavioralFlags.length > 0 && (
+                        <div className="text-xs text-amber-400/60 italic mt-0.5 truncate">
+                          {cProfile.behavioralFlags.join(", ")}
+                        </div>
+                      )}
                     </div>
                     <div className={cn(
                       "w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors",

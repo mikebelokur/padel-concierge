@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { pool } from "@workspace/db";
+import { requireAuth, requireAdmin } from "../middleware/auth";
 
 const router = Router();
 
-router.post("/pf/quiz", async (req, res) => {
+router.post("/pf/quiz", requireAuth, async (req, res) => {
   const {
     sessionId, quizLevel, realLevel, personalityType,
     q1Answer, q2Answer, q3Answer,
@@ -43,7 +44,7 @@ router.post("/pf/quiz", async (req, res) => {
   }
 });
 
-router.get("/pf/session/:sessionId", async (req, res) => {
+router.get("/pf/session/:sessionId", requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
       "SELECT * FROM pf_quiz_results WHERE session_id = $1 ORDER BY completed_at DESC LIMIT 1",
@@ -60,7 +61,7 @@ router.get("/pf/session/:sessionId", async (req, res) => {
   }
 });
 
-router.get("/pf/admin", async (req, res) => {
+router.get("/pf/admin", requireAdmin, async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT id, session_id, real_level, quiz_level, personality_type,

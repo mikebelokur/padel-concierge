@@ -2,8 +2,10 @@ import { Router, type IRouter } from "express";
 import { db, videoAnalysesTable, usersTable, activityLogsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { CreateVideoAnalysisBody, UpdateVideoAnalysisBody, ListVideoAnalysesQueryParams } from "@workspace/api-zod";
+import { requireAuth } from "../middleware/auth";
 
 const router: IRouter = Router();
+router.use(requireAuth);
 
 function formatVideoAnalysis(v: typeof videoAnalysesTable.$inferSelect) {
   return {

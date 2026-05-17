@@ -2,8 +2,10 @@ import { Router, type IRouter } from "express";
 import { db, courtsTable, courtBookingsTable, usersTable, activityLogsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { getTokenFromRequest, verifyToken } from "../lib/auth";
+import { requireAuth } from "../middleware/auth";
 
 const router: IRouter = Router();
+router.use(requireAuth);
 
 function parseCourt(c: typeof courtsTable.$inferSelect) {
   return {

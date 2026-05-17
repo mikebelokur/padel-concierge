@@ -3,8 +3,10 @@ import { db, trainerMatchRequestsTable, matchFeedbackTable, usersTable } from "@
 import { eq, desc } from "drizzle-orm";
 import { upsertFeedbackAggregate } from "@workspace/mongo";
 import { fireAndForget } from "../lib/fireAndForget.js";
+import { requireAuth } from "../middleware/auth";
 
 const router: IRouter = Router();
+router.use(requireAuth);
 
 const LEVELS = ["D-", "D", "D+", "C-", "C", "C+", "B-", "B", "B+", "A-", "A"];
 const LEVEL_INDEX = Object.fromEntries(LEVELS.map((l, i) => [l, i]));

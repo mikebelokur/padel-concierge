@@ -1,8 +1,10 @@
 import { Router, type IRouter } from "express";
 import { db, matchRequestsTable, usersTable, activityLogsTable } from "@workspace/db";
 import { eq, or } from "drizzle-orm";
+import { requireAuth } from "../middleware/auth";
 
 const router: IRouter = Router();
+router.use(requireAuth);
 
 async function formatRequest(r: typeof matchRequestsTable.$inferSelect) {
   const [fromUser] = await db.select().from(usersTable).where(eq(usersTable.id, r.fromUserId));

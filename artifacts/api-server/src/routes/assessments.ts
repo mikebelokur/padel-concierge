@@ -1,8 +1,10 @@
 import { Router, type IRouter } from "express";
 import { db, skillAssessmentsTable, usersTable, activityLogsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { requireAuth } from "../middleware/auth";
 
 const router: IRouter = Router();
+router.use(requireAuth);
 
 const WPT_LEVELS = ["1.0", "1.5", "2.0", "2.5", "3.0", "3.5", "4.0", "4.5", "5.0"];
 

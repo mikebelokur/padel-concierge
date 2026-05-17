@@ -4,8 +4,10 @@ import { eq } from "drizzle-orm";
 import { CreateMatchBody, ListMatchesQueryParams, GetMatchSuggestionsQueryParams } from "@workspace/api-zod";
 import { upsertMatchLog, upsertProfileMatchRecord, appendMatchTimeline } from "@workspace/mongo";
 import { fireAndForget } from "../lib/fireAndForget.js";
+import { requireAuth } from "../middleware/auth";
 
 const router: IRouter = Router();
+router.use(requireAuth);
 
 const LEVELS = ["D-", "D", "D+", "C-", "C", "C+"];
 const LEVEL_INDEX = Object.fromEntries(LEVELS.map((l, i) => [l, i]));

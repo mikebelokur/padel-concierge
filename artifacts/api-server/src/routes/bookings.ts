@@ -4,8 +4,10 @@ import { eq, and } from "drizzle-orm";
 import { CreateBookingBody, UpdateBookingBody, ListBookingsQueryParams, ConfirmPaymentBody } from "@workspace/api-zod";
 import { formatMatch } from "./matches";
 import { logger } from "../lib/logger";
+import { requireAuth } from "../middleware/auth";
 
 const router: IRouter = Router();
+router.use(requireAuth);
 
 async function formatBooking(b: typeof bookingsTable.$inferSelect) {
   const [match] = await db.select().from(matchesTable).where(eq(matchesTable.id, b.matchId));

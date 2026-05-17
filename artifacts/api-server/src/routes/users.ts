@@ -11,8 +11,10 @@ import {
   patchPlayerProfile,
 } from "@workspace/mongo";
 import { getTokenFromRequest, verifyToken } from "../lib/auth";
+import { requireAuth } from "../middleware/auth";
 
 const router: IRouter = Router();
+router.use(requireAuth);
 
 router.get("/users", async (_req, res): Promise<void> => {
   const users = await db.select().from(usersTable).orderBy(usersTable.createdAt);

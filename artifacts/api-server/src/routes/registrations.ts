@@ -1,8 +1,10 @@
 import { Router, type IRouter } from "express";
 import { db, usersTable } from "@workspace/db";
 import { eq, ne, desc } from "drizzle-orm";
+import { requireAdmin } from "../middleware/auth";
 
 const router: IRouter = Router();
+router.use(requireAdmin);
 
 router.get("/admin/registrations", async (_req, res): Promise<void> => {
   const pending = await db.select().from(usersTable)

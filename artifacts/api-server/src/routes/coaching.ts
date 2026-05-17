@@ -1,8 +1,10 @@
 import { Router, type IRouter } from "express";
 import { db, coachingClientsTable, coachingSessionsTable, postMatchNotesTable, coachingMessagesTable, recurringSchedulesTable } from "@workspace/db";
 import { eq, desc, and } from "drizzle-orm";
+import { requireAuth } from "../middleware/auth";
 
 const router: IRouter = Router();
+router.use(requireAuth);
 
 // ─── CLIENTS ────────────────────────────────────────────────────────────────
 

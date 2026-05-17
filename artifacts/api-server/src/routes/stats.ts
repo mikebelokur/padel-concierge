@@ -2,10 +2,11 @@ import { Router, type IRouter } from "express";
 import { db, usersTable, matchesTable, bookingsTable, videoAnalysesTable, activityLogsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { GetActivityLogQueryParams } from "@workspace/api-zod";
+import { requireAuth, requireAdmin } from "../middleware/auth";
 
 const router: IRouter = Router();
 
-router.get("/stats/dashboard", async (_req, res): Promise<void> => {
+router.get("/stats/dashboard", requireAdmin, async (_req, res): Promise<void> => {
   const users = await db.select().from(usersTable);
   const matches = await db.select().from(matchesTable);
   const bookings = await db.select().from(bookingsTable);
@@ -61,7 +62,7 @@ router.get("/stats/dashboard", async (_req, res): Promise<void> => {
   });
 });
 
-router.get("/stats/player/:id", async (req, res): Promise<void> => {
+router.get("/stats/player/:id", requireAuth, async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, id));
   if (!user) { res.status(404).json({ error: "User not found" }); return; }
@@ -106,7 +107,7 @@ router.get("/stats/player/:id", async (req, res): Promise<void> => {
   });
 });
 
-router.get("/stats/activity", async (req, res): Promise<void> => {
+router.get("/stats/activity", requireAdmin, async (req, res): Promise<void> => {
   const params = GetActivityLogQueryParams.safeParse(req.query);
   const limit = params.success && params.data.limit ? params.data.limit : 50;
 

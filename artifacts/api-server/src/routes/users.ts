@@ -1,13 +1,16 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable, activityLogsTable } from "@workspace/db";
+import { db, usersTable, activityLogsTable, coachingClientsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { UpdateUserBody, UpdateAvailabilityBody, AddFavouriteBody, RemoveFavouriteBody } from "@workspace/api-zod";
+import { z } from "zod";
 import { formatUser } from "./auth";
 import {
   getOrCreateProfile,
   computeAndCacheCompatibility,
   getCachedCompatibility,
+  patchPlayerProfile,
 } from "@workspace/mongo";
+import { getTokenFromRequest, verifyToken } from "../lib/auth";
 
 const router: IRouter = Router();
 
@@ -89,43 +92,186 @@ router.get("/users/find-matches", async (req, res): Promise<void> => {
   });
 });
 
+function parsePgOverride(raw: string | null | undefined): { reliabilityScore?: number; behavioralFlags?: string[] } {
+  if (!raw) return {};
+  try { return JSON.parse(raw); } catch { return {}; }
+}
+
+type EntityKind = "user" | "coaching_client";
+type ResolvedEntity = { kind: EntityKind; behavioralOverride: string | null };
+
+async function resolveEntity(id: number, typeHint?: string): Promise<ResolvedEntity | null> {
+  if (typeHint === "coaching_client") {
+    const [row] = await db
+      .select({ behavioralOverride: coachingClientsTable.behavioralOverride })
+      .from(coachingClientsTable)
+      .where(eq(coachingClientsTable.id, id));
+    return row ? { kind: "coaching_client", behavioralOverride: row.behavioralOverride ?? null } : null;
+  }
+  if (typeHint === "player") {
+    const [row] = await db
+      .select({ behavioralOverride: usersTable.behavioralOverride })
+      .from(usersTable)
+      .where(eq(usersTable.id, id));
+    return row ? { kind: "user", behavioralOverride: row.behavioralOverride ?? null } : null;
+  }
+  const [userRow] = await db
+    .select({ behavioralOverride: usersTable.behavioralOverride })
+    .from(usersTable)
+    .where(eq(usersTable.id, id));
+  if (userRow) return { kind: "user", behavioralOverride: userRow.behavioralOverride ?? null };
+  const [clientRow] = await db
+    .select({ behavioralOverride: coachingClientsTable.behavioralOverride })
+    .from(coachingClientsTable)
+    .where(eq(coachingClientsTable.id, id));
+  return clientRow ? { kind: "coaching_client", behavioralOverride: clientRow.behavioralOverride ?? null } : null;
+}
+
+async function writePgOverride(entity: ResolvedEntity, id: number, newOverride: string): Promise<void> {
+  if (entity.kind === "user") {
+    await db.update(usersTable).set({ behavioralOverride: newOverride }).where(eq(usersTable.id, id));
+  } else {
+    await db.update(coachingClientsTable).set({ behavioralOverride: newOverride }).where(eq(coachingClientsTable.id, id));
+  }
+}
+
 router.get("/players/:id/profile", async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid player id" }); return; }
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, id));
+  const typeHint = typeof req.query.type === "string" ? req.query.type : undefined;
+  const entity = await resolveEntity(id, typeHint);
+  const pgOverride = parsePgOverride(entity?.behavioralOverride);
+  const hasPgOverride = !!(pgOverride.behavioralFlags?.length || pgOverride.reliabilityScore !== undefined);
 
-  const defaultProfile = {
+  const pgOnlyProfile = {
     userId: id,
-    reliabilityScore: 75,
+    reliabilityScore: pgOverride.reliabilityScore ?? 75,
     noShowCount: 0,
     sessionStreak: 0,
-    behavioralFlags: [] as string[],
+    behavioralFlags: pgOverride.behavioralFlags ?? [] as string[],
     last30MatchIds: [] as number[],
-    source: "default",
+    source: hasPgOverride ? "pg-override" : "default",
   };
 
-  if (!user) {
-    res.json(defaultProfile);
+  if (entity?.kind === "coaching_client") {
+    res.json(pgOnlyProfile);
     return;
   }
 
   const profile = await getOrCreateProfile(id);
   if (!profile) {
-    res.json(defaultProfile);
+    res.json(pgOnlyProfile);
     return;
   }
 
+  const mergedFlags = [
+    ...profile.behavioralFlags,
+    ...(pgOverride.behavioralFlags ?? []).filter(f => !profile.behavioralFlags.includes(f)),
+  ];
+  const scoreIsOverridden = pgOverride.reliabilityScore !== undefined;
+  const flagsAreOverridden = (pgOverride.behavioralFlags?.length ?? 0) > 0;
+
   res.json({
     userId: profile.userId,
-    reliabilityScore: profile.reliabilityScore,
+    reliabilityScore: scoreIsOverridden ? pgOverride.reliabilityScore! : profile.reliabilityScore,
     noShowCount: profile.noShowCount,
     sessionStreak: profile.sessionStreak,
-    behavioralFlags: profile.behavioralFlags,
+    behavioralFlags: mergedFlags,
     last30MatchIds: profile.last30MatchIds,
     updatedAt: profile.updatedAt,
-    source: "mongodb",
+    source: scoreIsOverridden || flagsAreOverridden ? "mongodb+pg-override" : "mongodb",
   });
+});
+
+router.patch("/players/:id/profile/flags", async (req, res): Promise<void> => {
+  const token = getTokenFromRequest(req);
+  if (!token) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const payload = verifyToken(token);
+  if (!payload || !["coach", "admin", "owner"].includes(payload.role)) {
+    res.status(403).json({ error: "Forbidden — coach or admin required" });
+    return;
+  }
+
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid player id" }); return; }
+
+  const PatchFlagsBody = z.object({
+    type: z.enum(["coaching_client", "player"]).optional(),
+    addFlags: z.array(z.string().min(1).max(100)).max(20).optional(),
+    removeFlags: z.array(z.string().min(1).max(100)).max(20).optional(),
+    reliabilityScore: z.number().min(0).max(100).optional(),
+  });
+
+  const parsed = PatchFlagsBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const { addFlags, removeFlags, reliabilityScore, type: typeHint } = parsed.data;
+
+  const entity = await resolveEntity(id, typeHint);
+  if (!entity) { res.status(404).json({ error: "Player not found" }); return; }
+
+  let responsePayload: {
+    userId: number;
+    reliabilityScore: number;
+    noShowCount: number;
+    sessionStreak: number;
+    behavioralFlags: string[];
+    updatedAt: Date;
+    source: string;
+  };
+
+  const mongoUpdated = entity.kind === "coaching_client"
+    ? null
+    : await patchPlayerProfile(id, { addFlags, removeFlags, reliabilityScore });
+
+  if (mongoUpdated) {
+    responsePayload = {
+      userId: mongoUpdated.userId,
+      reliabilityScore: mongoUpdated.reliabilityScore,
+      noShowCount: mongoUpdated.noShowCount,
+      sessionStreak: mongoUpdated.sessionStreak,
+      behavioralFlags: mongoUpdated.behavioralFlags,
+      updatedAt: mongoUpdated.updatedAt,
+      source: "mongodb",
+    };
+  } else {
+    const pgOverride = parsePgOverride(entity.behavioralOverride);
+    let flags = [...(pgOverride.behavioralFlags ?? [])];
+    if (addFlags) {
+      for (const f of addFlags) { if (!flags.includes(f)) flags.push(f); }
+    }
+    if (removeFlags) {
+      flags = flags.filter(f => !removeFlags.includes(f));
+    }
+    const newScore = reliabilityScore !== undefined
+      ? Math.max(0, Math.min(100, reliabilityScore))
+      : (pgOverride.reliabilityScore ?? 75);
+
+    await writePgOverride(entity, id, JSON.stringify({ reliabilityScore: newScore, behavioralFlags: flags }));
+
+    responsePayload = {
+      userId: id,
+      reliabilityScore: newScore,
+      noShowCount: 0,
+      sessionStreak: 0,
+      behavioralFlags: flags,
+      updatedAt: new Date(),
+      source: "pg-override",
+    };
+  }
+
+  await db.insert(activityLogsTable).values({
+    userId: payload.userId,
+    userName: "Coach",
+    action: "profile_flags_updated",
+    details: `Player ${id} (${entity.kind}): flags=${JSON.stringify(responsePayload.behavioralFlags)}, score=${responsePayload.reliabilityScore}`,
+  });
+
+  res.json(responsePayload);
 });
 
 router.get("/players/:id/compatibility/:otherId", async (req, res): Promise<void> => {

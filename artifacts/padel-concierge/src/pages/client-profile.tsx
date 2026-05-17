@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 type BehavioralProfile = {
   reliabilityScore: number;
@@ -39,7 +40,81 @@ function reliabilityLabel(score: number): string {
   return "Unreliable";
 }
 
-function BehavioralStats({ loading, data }: { loading: boolean; data: BehavioralProfile | null }) {
+const PRESET_FLAGS = [
+  "Chronic no-show",
+  "Late payer",
+  "Cancels last minute",
+  "Aggressive on court",
+  "Poor sportsmanship",
+  "Payment dispute",
+];
+
+function BehavioralStats({
+  loading,
+  data,
+  playerId,
+  canEdit,
+  onUpdated,
+}: {
+  loading: boolean;
+  data: BehavioralProfile | null;
+  playerId: string;
+  canEdit: boolean;
+  onUpdated: (updated: BehavioralProfile) => void;
+}) {
+  const { toast } = useToast();
+  const [editing, setEditing] = useState(false);
+  const [scoreInput, setScoreInput] = useState("");
+  const [customFlag, setCustomFlag] = useState("");
+  const [pendingFlags, setPendingFlags] = useState<string[]>([]);
+
+  function openEdit() {
+    setScoreInput(data ? String(data.reliabilityScore) : "75");
+    setPendingFlags(data ? [...data.behavioralFlags] : []);
+    setCustomFlag("");
+    setEditing(true);
+  }
+
+  function togglePreset(flag: string) {
+    setPendingFlags(prev =>
+      prev.includes(flag) ? prev.filter(f => f !== flag) : [...prev, flag]
+    );
+  }
+
+  function addCustom() {
+    const f = customFlag.trim();
+    if (f && !pendingFlags.includes(f)) {
+      setPendingFlags(prev => [...prev, f]);
+    }
+    setCustomFlag("");
+  }
+
+  const saveFlags = useMutation({
+    mutationFn: () => {
+      const current = data?.behavioralFlags ?? [];
+      const addFlags = pendingFlags.filter(f => !current.includes(f));
+      const removeFlags = current.filter(f => !pendingFlags.includes(f));
+      const score = parseInt(scoreInput, 10);
+      return apiFetch<BehavioralProfile>(`/players/${playerId}/profile/flags`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          type: "coaching_client",
+          ...(addFlags.length > 0 && { addFlags }),
+          ...(removeFlags.length > 0 && { removeFlags }),
+          ...(!isNaN(score) && score !== data?.reliabilityScore && { reliabilityScore: score }),
+        }),
+      });
+    },
+    onSuccess: (updated) => {
+      onUpdated(updated);
+      setEditing(false);
+      toast({ title: "Behavioral record updated" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Failed to save", description: err.message, variant: "destructive" });
+    },
+  });
+
   return (
     <Card className="bg-card border-white/5">
       <CardHeader className="pb-2 pt-4 px-4">
@@ -51,6 +126,26 @@ function BehavioralStats({ loading, data }: { loading: boolean; data: Behavioral
           {data?.source === "default" && (
             <span className="text-xs font-normal text-amber-400/70 normal-case tracking-normal">estimated</span>
           )}
+          {canEdit && !loading && data && !editing && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="ml-auto h-6 px-2 text-xs border-white/10 text-muted-foreground hover:text-foreground"
+              onClick={openEdit}
+            >
+              ✏ Edit / Flag
+            </Button>
+          )}
+          {editing && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="ml-auto h-6 px-2 text-xs text-muted-foreground"
+              onClick={() => setEditing(false)}
+            >
+              ✕ Cancel
+            </Button>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="px-4 pb-4">
@@ -59,6 +154,87 @@ function BehavioralStats({ loading, data }: { loading: boolean; data: Behavioral
         ) : !data ? (
           <div className="text-sm text-muted-foreground italic">
             Analytics unavailable — behavioral data service is offline.
+          </div>
+        ) : editing ? (
+          <div className="space-y-4">
+            {/* Score override */}
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">Override Reliability Score (0–100)</Label>
+              <div className="flex items-center gap-3">
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={scoreInput}
+                  onChange={e => setScoreInput(e.target.value)}
+                  className="bg-background border-white/10 text-sm w-24 tabular-nums"
+                />
+                {scoreInput !== "" && !isNaN(parseInt(scoreInput, 10)) && (
+                  <span className={cn("text-sm font-semibold tabular-nums", reliabilityColor(parseInt(scoreInput, 10)))}>
+                    {reliabilityLabel(parseInt(scoreInput, 10))}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Preset flags */}
+            <div>
+              <Label className="text-xs text-muted-foreground mb-2 block">Behavioral Flags</Label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {PRESET_FLAGS.map(flag => (
+                  <button
+                    key={flag}
+                    type="button"
+                    onClick={() => togglePreset(flag)}
+                    className={cn(
+                      "text-xs px-2.5 py-1 rounded-full border transition-colors",
+                      pendingFlags.includes(flag)
+                        ? "border-amber-500/60 bg-amber-500/15 text-amber-400"
+                        : "border-white/10 bg-white/5 text-muted-foreground hover:border-white/20"
+                    )}
+                  >
+                    {pendingFlags.includes(flag) ? "⚑ " : "+ "}{flag}
+                  </button>
+                ))}
+              </div>
+              {/* Custom flag */}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Custom flag…"
+                  value={customFlag}
+                  onChange={e => setCustomFlag(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && addCustom()}
+                  className="bg-background border-white/10 text-sm h-8"
+                />
+                <Button size="sm" variant="outline" className="border-white/10 h-8" onClick={addCustom} disabled={!customFlag.trim()}>
+                  Add
+                </Button>
+              </div>
+              {/* Active custom flags not in preset list */}
+              {pendingFlags.filter(f => !PRESET_FLAGS.includes(f)).length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {pendingFlags.filter(f => !PRESET_FLAGS.includes(f)).map(f => (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => setPendingFlags(prev => prev.filter(p => p !== f))}
+                      className="text-xs px-2.5 py-1 rounded-full border border-amber-500/60 bg-amber-500/15 text-amber-400 hover:bg-red-500/15 hover:border-red-500/40 hover:text-red-400 transition-colors"
+                    >
+                      ⚑ {f} ×
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <Button
+              size="sm"
+              onClick={() => saveFlags.mutate()}
+              disabled={saveFlags.isPending}
+              className="w-full"
+            >
+              {saveFlags.isPending ? "Saving…" : "Save Changes"}
+            </Button>
           </div>
         ) : (
           <div className="space-y-4">
@@ -133,6 +309,8 @@ export default function ClientProfile() {
   const id = params?.id;
   const { toast } = useToast();
   const qc = useQueryClient();
+  const { user } = useAuth();
+  const canEditBehavior = user?.role === "coach" || user?.role === "admin" || user?.role === "owner";
 
   const [newQuestion, setNewQuestion] = useState("");
   const [newMessage, setNewMessage] = useState("");
@@ -152,7 +330,7 @@ export default function ClientProfile() {
       sessionStreak: number;
       behavioralFlags: string[];
       source: string;
-    }>(`/players/${id}/profile`),
+    }>(`/players/${id}/profile?type=coaching_client`),
     enabled: !!id,
     retry: false,
   });
@@ -333,7 +511,15 @@ export default function ClientProfile() {
         )}
 
         {/* Behavioral Stats */}
-        <BehavioralStats loading={behavioralLoading} data={behavioralData ?? null} />
+        <BehavioralStats
+          loading={behavioralLoading}
+          data={behavioralData ?? null}
+          playerId={id!}
+          canEdit={canEditBehavior}
+          onUpdated={(updated) => {
+            qc.setQueryData(["player-profile", id], updated);
+          }}
+        />
 
         <Tabs defaultValue="sessions">
           <TabsList className="bg-card border-white/5">

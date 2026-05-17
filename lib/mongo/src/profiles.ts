@@ -56,6 +56,48 @@ export async function upsertProfileMatchRecord(userId: number, matchId: number):
   );
 }
 
+export async function patchPlayerProfile(
+  userId: number,
+  patch: { addFlags?: string[]; removeFlags?: string[]; reliabilityScore?: number }
+): Promise<PlayerProfile | null> {
+  const col = playerProfiles();
+  if (!col) return null;
+
+  const existing = await col.findOne({ userId });
+  if (!existing) {
+    const base: PlayerProfile = {
+      userId,
+      reliabilityScore: patch.reliabilityScore ?? 75,
+      noShowCount: 0,
+      sessionStreak: 0,
+      behavioralFlags: patch.addFlags ?? [],
+      last30MatchIds: [],
+      updatedAt: new Date(),
+    };
+    await col.insertOne(base);
+    return base;
+  }
+
+  let flags = [...existing.behavioralFlags];
+  if (patch.addFlags) {
+    for (const f of patch.addFlags) {
+      if (!flags.includes(f)) flags.push(f);
+    }
+  }
+  if (patch.removeFlags) {
+    flags = flags.filter(f => !patch.removeFlags!.includes(f));
+  }
+
+  const update: Partial<PlayerProfile> & { updatedAt: Date } = { updatedAt: new Date() };
+  update.behavioralFlags = flags;
+  if (patch.reliabilityScore !== undefined) {
+    update.reliabilityScore = Math.max(0, Math.min(100, patch.reliabilityScore));
+  }
+
+  await col.updateOne({ userId }, { $set: update });
+  return { ...existing, ...update };
+}
+
 export async function recordNoShow(userId: number): Promise<void> {
   const col = playerProfiles();
   if (!col) return;

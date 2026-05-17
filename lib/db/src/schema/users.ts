@@ -42,6 +42,7 @@ export const usersTable = pgTable("users", {
   approvedBy: text("approved_by"),
   archetype: text("archetype"),
   warmUpPreference: boolean("warm_up_preference").notNull().default(false),
+  behavioralOverride: text("behavioral_override"),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({

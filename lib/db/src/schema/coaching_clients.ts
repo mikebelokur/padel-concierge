@@ -21,4 +21,5 @@ export const coachingClientsTable = pgTable("coaching_clients", {
   nextSessionPlan: text("next_session_plan").notNull().default(""),
   tags: text("tags").array().notNull().default([]),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  behavioralOverride: text("behavioral_override"),
 });

@@ -37,7 +37,6 @@ export async function upsertProfileMatchRecord(userId: number, matchId: number):
       },
       $addToSet: { last30MatchIds: matchId } as Record<string, unknown>,
       $set: { updatedAt: new Date() },
-      $inc: { sessionStreak: 1 },
     },
     { upsert: true }
   );
@@ -53,6 +52,30 @@ export async function upsertProfileMatchRecord(userId: number, matchId: number):
         },
       },
     ]
+  );
+}
+
+/**
+ * Increment sessionStreak for a player who attended a completed match.
+ * Called only on match outcome, not at match creation.
+ */
+export async function recordAttendance(userId: number): Promise<void> {
+  const col = playerProfiles();
+  if (!col) return;
+
+  await col.updateOne(
+    { userId },
+    {
+      $setOnInsert: {
+        reliabilityScore: 75,
+        noShowCount: 0,
+        behavioralFlags: [],
+        last30MatchIds: [],
+      },
+      $inc: { sessionStreak: 1 },
+      $set: { updatedAt: new Date() },
+    },
+    { upsert: true }
   );
 }
 
@@ -106,24 +129,23 @@ export async function recordNoShow(userId: number): Promise<void> {
     { userId },
     {
       $setOnInsert: {
-        reliabilityScore: 75,
-        sessionStreak: 0,
         behavioralFlags: [],
         last30MatchIds: [],
       },
       $inc: { noShowCount: 1 },
-      $set: { updatedAt: new Date() },
+      $set: { sessionStreak: 0, updatedAt: new Date() },
     },
     { upsert: true }
   );
 
+  // Recalculate reliabilityScore: 100 - (noShowCount * 10), capped 0–100
   await col.updateOne(
     { userId },
     [
       {
         $set: {
           reliabilityScore: {
-            $max: [10, { $subtract: ["$reliabilityScore", 5] }],
+            $max: [0, { $min: [100, { $subtract: [100, { $multiply: ["$noShowCount", 10] }] }] }],
           },
         },
       },

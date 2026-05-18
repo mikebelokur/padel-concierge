@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, matchesTable, usersTable, activityLogsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { CreateMatchBody, ListMatchesQueryParams, GetMatchSuggestionsQueryParams } from "@workspace/api-zod";
-import { upsertMatchLog, upsertProfileMatchRecord, appendMatchTimeline } from "@workspace/mongo";
+import { upsertMatchLog, upsertProfileMatchRecord, appendMatchTimeline, recordNoShow, recordAttendance } from "@workspace/mongo";
 import { fireAndForget } from "../lib/fireAndForget.js";
 import { requireAuth } from "../middleware/auth";
 
@@ -170,6 +170,13 @@ router.get("/matches/:id", async (req, res): Promise<void> => {
 router.patch("/matches/:id", async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
 
+  // Read current status before update to detect genuine completion transition
+  const [current] = await db.select().from(matchesTable).where(eq(matchesTable.id, id));
+  if (!current) { res.status(404).json({ error: "Match not found" }); return; }
+
+  const rawAbsentIds: unknown[] = Array.isArray(req.body.absentPlayerIds) ? req.body.absentPlayerIds : [];
+  const hasAbsentUpdate = Array.isArray(req.body.absentPlayerIds);
+
   const setObj: Record<string, unknown> = {};
   if (req.body.status) setObj.status = req.body.status;
   if (req.body.format) setObj.format = req.body.format;
@@ -179,36 +186,89 @@ router.patch("/matches/:id", async (req, res): Promise<void> => {
   if (req.body.conflictOccurred !== undefined) setObj.conflictOccurred = String(req.body.conflictOccurred);
   if (req.body.overallNote !== undefined) setObj.overallNote = req.body.overallNote;
 
-  if (Object.keys(setObj).length === 0) { res.status(400).json({ error: "No fields to update" }); return; }
+  // absentPlayerIds is valid even as the only change (updates MongoDB, not Postgres)
+  if (Object.keys(setObj).length === 0 && !hasAbsentUpdate) {
+    res.status(400).json({ error: "No fields to update" }); return;
+  }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [match] = await db.update(matchesTable).set(setObj as any).where(eq(matchesTable.id, id)).returning();
-  if (!match) { res.status(404).json({ error: "Match not found" }); return; }
+  // Validate absentPlayerIds against current match participants BEFORE any DB writes
+  const currentPlayers = formatPlayers(current.players) as Array<{ userId: number; name: string; level: string }>;
+  if (hasAbsentUpdate && rawAbsentIds.length > 0) {
+    // Strict type check: every element must be a positive integer
+    const nonIntegers = rawAbsentIds.filter(uid => !Number.isInteger(uid) || (uid as number) <= 0);
+    if (nonIntegers.length > 0) {
+      res.status(400).json({ error: "absentPlayerIds must be an array of positive integer user IDs" }); return;
+    }
+    const participantIds = new Set(currentPlayers.map(p => p.userId));
+    const nonParticipants = rawAbsentIds.filter(uid => !participantIds.has(uid as number));
+    if (nonParticipants.length > 0) {
+      res.status(400).json({ error: `absentPlayerIds contains non-participant user IDs: ${nonParticipants.join(", ")}` }); return;
+    }
+  }
+  const absentPlayerIds: number[] = rawAbsentIds as number[];
+
+  let match: typeof matchesTable.$inferSelect | undefined;
+  if (Object.keys(setObj).length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [match] = await db.update(matchesTable).set(setObj as any).where(eq(matchesTable.id, id)).returning();
+    if (!match) { res.status(404).json({ error: "Match not found" }); return; }
+  } else {
+    match = current;
+  }
 
   const players = formatPlayers(match.players) as Array<{ userId: number; name: string; level: string }>;
 
-  fireAndForget(
-    upsertMatchLog({
-      matchId: match.id,
-      date: match.date,
-      participants: players.map(p => ({
-        userId: p.userId,
-        name: p.name,
-        levelAtPlay: p.level,
-        archetype: null,
-      })),
-      setScores: match.setScores,
-      conflictOccurred: match.conflictOccurred === "true",
-      overallNote: match.overallNote,
-    }),
-    { route: "PATCH /matches/:id", matchId: match.id }
-  );
+  if (Object.keys(setObj).length > 0) {
+    fireAndForget(
+      upsertMatchLog({
+        matchId: match.id,
+        date: match.date,
+        participants: players.map(p => ({
+          userId: p.userId,
+          name: p.name,
+          levelAtPlay: p.level,
+          archetype: null,
+        })),
+        setScores: match.setScores,
+        conflictOccurred: match.conflictOccurred === "true",
+        overallNote: match.overallNote,
+      }),
+      { route: "PATCH /matches/:id", matchId: match.id }
+    );
+  }
 
-  if (req.body.status === "completed") {
+  // Genuine completion transition: process all players (absent → no-show, present → attendance)
+  const isCompletionTransition = current.status !== "completed" && match.status === "completed";
+
+  if (isCompletionTransition) {
     fireAndForget(
       appendMatchTimeline(match.id, "match_completed"),
       { route: "PATCH /matches/:id", matchId: match.id, event: "match_completed" }
     );
+
+    const absentSet = new Set(absentPlayerIds);
+    for (const p of players) {
+      if (absentSet.has(p.userId)) {
+        fireAndForget(
+          recordNoShow(p.userId),
+          { route: "PATCH /matches/:id", matchId: match.id, userId: p.userId, event: "no_show" }
+        );
+      } else {
+        fireAndForget(
+          recordAttendance(p.userId),
+          { route: "PATCH /matches/:id", matchId: match.id, userId: p.userId, event: "attended" }
+        );
+      }
+    }
+  } else if (hasAbsentUpdate && match.status === "completed" && absentPlayerIds.length > 0) {
+    // Retroactive absent marking on an already-completed match: only record no-shows for
+    // the specified participants (IDs already validated against match.players above)
+    for (const userId of absentPlayerIds) {
+      fireAndForget(
+        recordNoShow(userId),
+        { route: "PATCH /matches/:id", matchId: match.id, userId, event: "no_show_retroactive" }
+      );
+    }
   }
 
   res.json(formatMatch(match));

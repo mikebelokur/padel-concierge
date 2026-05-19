@@ -1,15 +1,9 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable, activityLogsTable, coachingClientsTable } from "@workspace/db";
+import { db, usersTable, activityLogsTable, coachingClientsTable, getOrCreateProfile, computeAndCacheCompatibility, patchPlayerProfile } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { UpdateUserBody, UpdateAvailabilityBody, AddFavouriteBody, RemoveFavouriteBody } from "@workspace/api-zod";
 import { z } from "zod";
 import { formatUser } from "./auth";
-import {
-  getOrCreateProfile,
-  computeAndCacheCompatibility,
-  getCachedCompatibility,
-  patchPlayerProfile,
-} from "@workspace/mongo";
 import { getTokenFromRequest, verifyToken } from "../lib/auth";
 import { requireAuth } from "../middleware/auth";
 
@@ -182,7 +176,7 @@ router.get("/players/:id/profile", async (req, res): Promise<void> => {
     behavioralFlags: mergedFlags,
     last30MatchIds: profile.last30MatchIds,
     updatedAt: profile.updatedAt,
-    source: scoreIsOverridden || flagsAreOverridden ? "mongodb+pg-override" : "mongodb",
+    source: scoreIsOverridden || flagsAreOverridden ? "postgres+pg-override" : "postgres",
   });
 });
 
@@ -226,19 +220,19 @@ router.patch("/players/:id/profile/flags", async (req, res): Promise<void> => {
     source: string;
   };
 
-  const mongoUpdated = entity.kind === "coaching_client"
+  const pgUpdated = entity.kind === "coaching_client"
     ? null
     : await patchPlayerProfile(id, { addFlags, removeFlags, reliabilityScore });
 
-  if (mongoUpdated) {
+  if (pgUpdated) {
     responsePayload = {
-      userId: mongoUpdated.userId,
-      reliabilityScore: mongoUpdated.reliabilityScore,
-      noShowCount: mongoUpdated.noShowCount,
-      sessionStreak: mongoUpdated.sessionStreak,
-      behavioralFlags: mongoUpdated.behavioralFlags,
-      updatedAt: mongoUpdated.updatedAt,
-      source: "mongodb",
+      userId: pgUpdated.userId,
+      reliabilityScore: pgUpdated.reliabilityScore,
+      noShowCount: pgUpdated.noShowCount,
+      sessionStreak: pgUpdated.sessionStreak,
+      behavioralFlags: pgUpdated.behavioralFlags,
+      updatedAt: pgUpdated.updatedAt,
+      source: "postgres",
     };
   } else {
     const pgOverride = parsePgOverride(entity.behavioralOverride);
@@ -293,12 +287,7 @@ router.get("/players/:id/compatibility/:otherId", async (req, res): Promise<void
     { id: playerB.id, level: playerB.level, archetype: playerB.archetype ?? null }
   );
 
-  if (score) {
-    res.json({ score: score.score, factors: score.factors, computedAt: score.computedAt, source: "mongodb" });
-    return;
-  }
-
-  res.json({ score: 50, factors: null, computedAt: null, source: "fallback" });
+  res.json({ score: score.score, factors: score.factors, computedAt: score.computedAt, source: "postgres" });
 });
 
 router.get("/users/:id", async (req, res): Promise<void> => {

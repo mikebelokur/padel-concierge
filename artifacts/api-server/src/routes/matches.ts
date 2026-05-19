@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, matchesTable, usersTable, activityLogsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { CreateMatchBody, ListMatchesQueryParams, GetMatchSuggestionsQueryParams } from "@workspace/api-zod";
-import { upsertMatchLog, upsertProfileMatchRecord, appendMatchTimeline, recordNoShow, recordAttendance } from "@workspace/mongo";
+import { upsertMatchLog, upsertProfileMatchRecord, appendMatchTimeline, recordNoShow, recordAttendance } from "@workspace/db";
 import { fireAndForget } from "../lib/fireAndForget.js";
 import { requireAuth } from "../middleware/auth";
 

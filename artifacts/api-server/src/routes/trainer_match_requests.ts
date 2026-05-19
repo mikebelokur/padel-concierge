@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db, trainerMatchRequestsTable, matchFeedbackTable, usersTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
-import { upsertFeedbackAggregate } from "@workspace/mongo";
+import { upsertFeedbackAggregate } from "@workspace/db";
 import { fireAndForget } from "../lib/fireAndForget.js";
 import { requireAuth } from "../middleware/auth";
 

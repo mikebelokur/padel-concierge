@@ -16,3 +16,7 @@ export * from "./padel_news";
 export * from "./recurring_schedules";
 export * from "./trainer_match_requests";
 export * from "./match_feedback";
+export * from "./player_profiles";
+export * from "./match_logs";
+export * from "./feedback_aggregates";
+export * from "./compatibility_scores";

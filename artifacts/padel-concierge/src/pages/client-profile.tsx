@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ToastAction } from "@/components/ui/toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -75,6 +76,44 @@ function BehavioralStats({
     }
     setCustomFlag("");
   }
+
+  const removeFlag = useMutation({
+    mutationFn: (flag: string) =>
+      apiFetch<BehavioralProfile>(`/players/${playerId}/profile/flags`, {
+        method: "PATCH",
+        body: JSON.stringify({ type: "coaching_client", removeFlags: [flag] }),
+      }),
+    onSuccess: (updated, flag) => {
+      onUpdated(updated);
+      toast({
+        title: `Flag removed: "${flag}"`,
+        description: "Tap Undo to restore it.",
+        action: (
+          <ToastAction altText="Undo" onClick={() => restoreFlag.mutate(flag)}>
+            Undo
+          </ToastAction>
+        ),
+      });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Failed to remove flag", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const restoreFlag = useMutation({
+    mutationFn: (flag: string) =>
+      apiFetch<BehavioralProfile>(`/players/${playerId}/profile/flags`, {
+        method: "PATCH",
+        body: JSON.stringify({ type: "coaching_client", addFlags: [flag] }),
+      }),
+    onSuccess: (updated) => {
+      onUpdated(updated);
+      toast({ title: "Flag restored" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Failed to restore flag", description: err.message, variant: "destructive" });
+    },
+  });
 
   const saveFlags = useMutation({
     mutationFn: () => {
@@ -266,13 +305,23 @@ function BehavioralStats({
                 <div className="text-xs text-muted-foreground mb-2">Flags</div>
                 <div className="flex flex-wrap gap-2">
                   {data.behavioralFlags.map((flag) => (
-                    <Badge
+                    <span
                       key={flag}
-                      variant="outline"
-                      className="text-xs border-amber-500/30 text-amber-400 bg-amber-500/10"
+                      className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border border-amber-500/30 text-amber-400 bg-amber-500/10"
                     >
                       ⚑ {flag}
-                    </Badge>
+                      {canEdit && (
+                        <button
+                          type="button"
+                          aria-label={`Remove flag ${flag}`}
+                          disabled={removeFlag.isPending}
+                          onClick={() => removeFlag.mutate(flag)}
+                          className="ml-0.5 leading-none text-amber-400/60 hover:text-red-400 transition-colors disabled:opacity-40"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </span>
                   ))}
                 </div>
               </div>

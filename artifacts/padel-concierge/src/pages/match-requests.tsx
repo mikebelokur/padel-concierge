@@ -756,6 +756,21 @@ export default function MatchRequests() {
                       {smartMatches.matches.map(p => (
                         <PlayerCard key={p.id} player={p} onSelect={setSelectedPlayer} myArchetype={user?.archetype ?? null} reliability={profileMap[p.id]} />
                       ))}
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-2 border-t border-white/8 mt-1">
+                        <span className="flex items-center gap-1 text-[11px] text-muted-foreground/70">
+                          <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
+                          надёжный
+                        </span>
+                        <span className="flex items-center gap-1 text-[11px] text-muted-foreground/70">
+                          <span className="w-2 h-2 rounded-full bg-yellow-400 inline-block" />
+                          средний
+                        </span>
+                        <span className="flex items-center gap-1 text-[11px] text-muted-foreground/70">
+                          <span className="w-2 h-2 rounded-full bg-red-500 inline-block" />
+                          ненадёжный
+                        </span>
+                        <span className="text-[11px] text-muted-foreground/50 ml-auto">% — совместимость</span>
+                      </div>
                     </div>
                   )}
                 </div>

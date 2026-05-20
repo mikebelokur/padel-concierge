@@ -75,6 +75,7 @@ interface PlayerProfile {
   noShowCount: number;
   sessionStreak: number;
   behavioralFlags: string[];
+  source?: string;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -174,6 +175,7 @@ function PlayerCard({
     : null;
   const compatPct = player.compatibilityScore;
   const reliabilityScore = reliability?.reliabilityScore;
+  const isScoreOverridden = !!(reliability?.source && reliability.source.includes("pg-override"));
 
   return (
     <div
@@ -208,6 +210,12 @@ function PlayerCard({
             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
               <span className="text-muted-foreground/50">·</span>
               <ReliabilityDot score={reliabilityScore} />
+              {isScoreOverridden && (
+                <span
+                  title="Score overridden by coach"
+                  className="text-xs text-blue-400/70 font-mono"
+                >✎</span>
+              )}
             </span>
           )}
         </div>

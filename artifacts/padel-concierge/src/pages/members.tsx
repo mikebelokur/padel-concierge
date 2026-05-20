@@ -168,6 +168,14 @@ export default function Members() {
                         <div className="text-xs text-muted-foreground">{u.locationName ?? "Dubai"}</div>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
+                        {profileMap[u.id] && profileMap[u.id].behavioralFlags.length > 0 && (
+                          <span
+                            title={profileMap[u.id].behavioralFlags.join(", ")}
+                            className="inline-flex items-center gap-0.5 text-xs font-medium text-amber-400 bg-amber-400/10 border border-amber-400/20 rounded-full px-1.5 py-0.5 cursor-help"
+                          >
+                            ⚑ {profileMap[u.id].behavioralFlags.length}
+                          </span>
+                        )}
                         {profileMap[u.id] && (
                           <ReliabilityDot score={profileMap[u.id].reliabilityScore} />
                         )}
@@ -196,6 +204,14 @@ export default function Members() {
                       <div className="text-xs text-muted-foreground">{u.matchesPlayed} matches · {u.wins}W</div>
                     </div>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
+                      {profileMap[u.id] && profileMap[u.id].behavioralFlags.length > 0 && (
+                        <span
+                          title={profileMap[u.id].behavioralFlags.join(", ")}
+                          className="inline-flex items-center gap-0.5 text-xs font-medium text-amber-400 bg-amber-400/10 border border-amber-400/20 rounded-full px-1.5 py-0.5 cursor-help"
+                        >
+                          ⚑ {profileMap[u.id].behavioralFlags.length}
+                        </span>
+                      )}
                       {profileMap[u.id] && (
                         <ReliabilityDot score={profileMap[u.id].reliabilityScore} />
                       )}

@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { ARCHETYPE_META, archetypeCompatibility, type Archetype } from "@/lib/archetypes";
-import { ReliabilityDot } from "@/components/ReliabilityDot";
+import { ReliabilityDot, CompatBadge } from "@/components/ReliabilityBadge";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -132,20 +132,6 @@ function CompatBar({ pct }: { pct: number }) {
         pct >= 80 ? "text-green-400" : pct >= 60 ? "text-primary" : "text-amber-400"
       )}>{pct}%</span>
     </div>
-  );
-}
-
-function CompatBadge({ pct }: { pct: number }) {
-  const color = pct >= 80 ? "text-green-400 bg-green-400/10 border-green-400/25"
-    : pct >= 60 ? "text-primary bg-primary/10 border-primary/25"
-    : "text-amber-400 bg-amber-400/10 border-amber-400/25";
-  return (
-    <span
-      title={`Совместимость: ${pct}% — учитывает уровень игры, архетип и историю совместных матчей`}
-      className={cn("inline-flex items-center gap-0.5 text-xs font-mono font-semibold px-1.5 py-0.5 rounded-md border cursor-help", color)}
-    >
-      {pct}%
-    </span>
   );
 }
 

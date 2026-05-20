@@ -11,6 +11,13 @@ import { Button } from "@/components/ui/button";
 import { ARCHETYPE_META, archetypeCompatibility, type Archetype } from "@/lib/archetypes";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import {
+  reliabilityColor,
+  reliabilityBarColor,
+  reliabilityLabel,
+  reliabilityDotClass,
+  CompatBadge,
+} from "@/components/ReliabilityBadge";
 
 const COLORS = ['#2d7dff', '#00d4ff', '#6b7a99'];
 
@@ -36,43 +43,6 @@ interface TopMatch {
 interface FindMatchesResponse {
   matches: TopMatch[];
   noMatchesMessage: string | null;
-}
-
-function reliabilityColor(score: number): string {
-  if (score >= 80) return "text-emerald-400";
-  if (score >= 60) return "text-amber-400";
-  return "text-red-400";
-}
-
-function reliabilityBarColor(score: number): string {
-  if (score >= 80) return "bg-emerald-500";
-  if (score >= 60) return "bg-amber-500";
-  return "bg-red-500";
-}
-
-function reliabilityLabel(score: number): string {
-  if (score >= 80) return "Reliable";
-  if (score >= 60) return "Moderate";
-  return "Unreliable";
-}
-
-function reliabilityDotClass(score: number): string {
-  if (score >= 80) return "bg-green-500 shadow-[0_0_4px_rgba(34,197,94,0.6)]";
-  if (score >= 60) return "bg-amber-500 shadow-[0_0_4px_rgba(245,158,11,0.6)]";
-  return "bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.6)]";
-}
-
-function CompatBadge({ pct }: { pct: number }) {
-  const color = pct >= 80
-    ? "text-green-400 bg-green-400/10 border-green-400/25"
-    : pct >= 60
-    ? "text-primary bg-primary/10 border-primary/25"
-    : "text-amber-400 bg-amber-400/10 border-amber-400/25";
-  return (
-    <span className={cn("inline-flex items-center gap-0.5 text-xs font-mono font-semibold px-1.5 py-0.5 rounded-md border", color)}>
-      {pct}%
-    </span>
-  );
 }
 
 function ArchetypePill({ archetype }: { archetype: string }) {

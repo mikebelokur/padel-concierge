@@ -13,6 +13,11 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  reliabilityColor,
+  reliabilityBarColor,
+  reliabilityLabel,
+} from "@/components/ReliabilityBadge";
 
 type BehavioralProfile = {
   reliabilityScore: number;
@@ -21,24 +26,6 @@ type BehavioralProfile = {
   behavioralFlags: string[];
   source: string;
 };
-
-function reliabilityColor(score: number): string {
-  if (score >= 80) return "text-emerald-400";
-  if (score >= 60) return "text-amber-400";
-  return "text-red-400";
-}
-
-function reliabilityBarColor(score: number): string {
-  if (score >= 80) return "bg-emerald-500";
-  if (score >= 60) return "bg-amber-500";
-  return "bg-red-500";
-}
-
-function reliabilityLabel(score: number): string {
-  if (score >= 80) return "Reliable";
-  if (score >= 60) return "Moderate";
-  return "Unreliable";
-}
 
 const PRESET_FLAGS = [
   "Chronic no-show",

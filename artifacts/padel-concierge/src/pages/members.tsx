@@ -1,8 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueries } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { apiFetch } from "@/lib/api";
+import { ReliabilityDot } from "@/components/ReliabilityDot";
 
 interface ActivityLog {
   id: number;
@@ -23,6 +24,14 @@ interface User {
   wins: number;
   locationName: string | null;
   createdAt: string;
+}
+
+interface PlayerProfile {
+  userId: number;
+  reliabilityScore: number;
+  noShowCount: number;
+  sessionStreak: number;
+  behavioralFlags: string[];
 }
 
 const ACTION_ICONS: Record<string, string> = {
@@ -53,15 +62,6 @@ function timeAgo(iso: string) {
   return `${days}d ago`;
 }
 
-function levelLabel(level: string) {
-  const n = parseFloat(level);
-  if (isNaN(n)) return level;
-  if (n < 2.0) return "Beginner";
-  if (n < 3.0) return "Intermediate";
-  if (n < 4.0) return "Advanced";
-  return "Elite";
-}
-
 export default function Members() {
   const { data: activity = [], isLoading: actLoading } = useQuery({
     queryKey: ["activity", 50],
@@ -81,6 +81,22 @@ export default function Members() {
   const topPlayers = [...players]
     .sort((a, b) => b.matchesPlayed - a.matchesPlayed)
     .slice(0, 5);
+
+  const listedIds = Array.from(new Set([...newMembers, ...topPlayers].map((u) => u.id)));
+
+  const profileQueries = useQueries({
+    queries: listedIds.map((id) => ({
+      queryKey: ["player-profile", id],
+      queryFn: () => apiFetch<PlayerProfile>(`/players/${id}/profile`),
+      staleTime: 60_000,
+    })),
+  });
+
+  const profileMap: Record<number, PlayerProfile> = {};
+  listedIds.forEach((id, i) => {
+    const data = profileQueries[i]?.data;
+    if (data) profileMap[id] = data;
+  });
 
   return (
     <AppLayout>
@@ -151,7 +167,12 @@ export default function Members() {
                         </div>
                         <div className="text-xs text-muted-foreground">{u.locationName ?? "Dubai"}</div>
                       </div>
-                      <Badge variant="outline" className="text-xs border-white/10 font-mono">{u.level}</Badge>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        {profileMap[u.id] && (
+                          <ReliabilityDot score={profileMap[u.id].reliabilityScore} />
+                        )}
+                        <Badge variant="outline" className="text-xs border-white/10 font-mono">{u.level}</Badge>
+                      </div>
                     </div>
                   ))
                 )}
@@ -174,7 +195,12 @@ export default function Members() {
                       <div className="text-sm font-medium truncate">{u.name}</div>
                       <div className="text-xs text-muted-foreground">{u.matchesPlayed} matches · {u.wins}W</div>
                     </div>
-                    <Badge variant="outline" className="text-xs border-white/10 font-mono">{u.level}</Badge>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      {profileMap[u.id] && (
+                        <ReliabilityDot score={profileMap[u.id].reliabilityScore} />
+                      )}
+                      <Badge variant="outline" className="text-xs border-white/10 font-mono">{u.level}</Badge>
+                    </div>
                   </div>
                 ))}
               </CardContent>

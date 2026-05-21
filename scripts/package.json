@@ -5,10 +5,15 @@
   "type": "module",
   "scripts": {
     "hello": "tsx ./src/hello.ts",
+    "seed-matchmaking": "tsx ./src/seed-matchmaking-users.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "@types/pg": "^8.11.14",
     "tsx": "catalog:"
+  },
+  "dependencies": {
+    "pg": "^8.20.0"
   }
 }

@@ -43,6 +43,10 @@ export const usersTable = pgTable("users", {
   archetype: text("archetype"),
   warmUpPreference: boolean("warm_up_preference").notNull().default(false),
   behavioralOverride: text("behavioral_override"),
+  levelSelf: real("level_self"),
+  levelQuiz: text("level_quiz"),
+  physicalSelf: integer("physical_self"),
+  warmupFormat: text("warmup_format"),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({

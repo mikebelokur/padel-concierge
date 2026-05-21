@@ -28,6 +28,7 @@ export default function MatchLog() {
   const [ratings, setRatings] = useState<Record<number, number>>({});
   const [conflict, setConflict] = useState(false);
   const [overallNote, setOverallNote] = useState("");
+  const [absentIds, setAbsentIds] = useState<Set<number>>(new Set());
   const [initialized, setInitialized] = useState(false);
 
   if (match && !initialized) {
@@ -36,6 +37,15 @@ export default function MatchLog() {
     setConflict((match as any).conflictOccurred ?? false);
     setOverallNote((match as any).overallNote ?? "");
     setInitialized(true);
+  }
+
+  function toggleAbsent(userId: number) {
+    setAbsentIds(prev => {
+      const next = new Set(prev);
+      if (next.has(userId)) next.delete(userId);
+      else next.add(userId);
+      return next;
+    });
   }
 
   const saveMutation = useMutation({
@@ -47,11 +57,18 @@ export default function MatchLog() {
         conflictOccurred: conflict,
         overallNote,
         status: "completed",
+        absentPlayerIds: [...absentIds],
       }),
     }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["match", matchId] });
-      toast({ title: "Матч сохранён ✓" });
+      const noShowCount = absentIds.size;
+      toast({
+        title: "Матч сохранён ✓",
+        description: noShowCount > 0
+          ? `Зафиксировано неявок: ${noShowCount}`
+          : undefined,
+      });
     },
   });
 
@@ -83,6 +100,47 @@ export default function MatchLog() {
                 {p.name} <span className="ml-1 text-muted-foreground font-mono">{p.level}</span>
               </Badge>
             ))}
+          </CardContent>
+        </Card>
+
+        {/* Absent players */}
+        <Card className={cn("border", absentIds.size > 0 ? "bg-amber-500/5 border-amber-500/20" : "bg-card border-white/5")}>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground uppercase tracking-wider">Неявки</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-xs text-muted-foreground">Отметь игроков, которые не пришли на матч</p>
+            {players.map(p => {
+              const absent = absentIds.has(p.userId);
+              return (
+                <label
+                  key={p.userId}
+                  className={cn(
+                    "flex items-center gap-3 cursor-pointer rounded-lg px-3 py-2 transition-colors",
+                    absent ? "bg-amber-500/10" : "hover:bg-white/5"
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    checked={absent}
+                    onChange={() => toggleAbsent(p.userId)}
+                    className="w-4 h-4 accent-amber-400 cursor-pointer"
+                  />
+                  <div className="flex items-center gap-2 flex-1">
+                    <span className={cn("text-sm font-medium", absent && "line-through text-muted-foreground")}>
+                      {p.name}
+                    </span>
+                    <span className="text-xs text-muted-foreground font-mono">{p.level}</span>
+                  </div>
+                  {absent && <span className="text-xs text-amber-400 font-medium">не явился</span>}
+                </label>
+              );
+            })}
+            {absentIds.size > 0 && (
+              <div className="text-xs text-amber-400 pt-1">
+                ⚠ {absentIds.size} {absentIds.size === 1 ? "игрок не явился" : "игрока(-ов) не явилось"} — будет зафиксировано при сохранении
+              </div>
+            )}
           </CardContent>
         </Card>
 

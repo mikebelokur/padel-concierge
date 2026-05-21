@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { useQuery, useQueries } from "@tanstack/react-query";
+import { useState, useMemo, useCallback } from "react";
+import { useQuery, useQueries, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -82,6 +82,35 @@ export default function Members() {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("reliability");
   const [levelFilter, setLevelFilter] = useState<string>("all");
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  const queryClient = useQueryClient();
+
+  const toggleSelect = useCallback((id: number, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleVerify = useCallback(async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0 || isVerifying) return;
+    setIsVerifying(true);
+    try {
+      await Promise.allSettled(
+        ids.map(id => apiFetch(`/users/${id}/verify`, { method: "POST" }))
+      );
+      await queryClient.invalidateQueries({ queryKey: ["users"] });
+      setSelectedIds(new Set());
+    } finally {
+      setIsVerifying(false);
+    }
+  }, [selectedIds, isVerifying, queryClient]);
 
   const { data: activity = [], isLoading: actLoading } = useQuery({
     queryKey: ["activity", 50],
@@ -333,6 +362,43 @@ export default function Members() {
               </div>
             </div>
 
+            {/* Floating action bar */}
+            {selectedIds.size > 0 && (
+              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl bg-card border border-white/15 shadow-2xl shadow-black/60 backdrop-blur-md">
+                <span className="text-sm font-medium tabular-nums">
+                  {selectedIds.size} selected
+                </span>
+                <button
+                  onClick={handleVerify}
+                  disabled={isVerifying}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all",
+                    isVerifying
+                      ? "bg-accent/40 text-accent/60 cursor-not-allowed"
+                      : "bg-accent text-accent-foreground hover:bg-accent/90"
+                  )}
+                >
+                  {isVerifying ? (
+                    <>
+                      <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                      </svg>
+                      Verifying…
+                    </>
+                  ) : (
+                    <>✓ Verify selected</>
+                  )}
+                </button>
+                <button
+                  onClick={() => setSelectedIds(new Set())}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+
             {/* Controls */}
             <div className="flex flex-wrap gap-3 items-center">
               <div className="relative flex-1 min-w-[200px] max-w-sm">
@@ -391,7 +457,8 @@ export default function Members() {
             ) : (
               <div className="rounded-xl border border-white/8 overflow-hidden">
                 {/* Header row */}
-                <div className="hidden sm:grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 px-4 py-2 bg-white/3 border-b border-white/5 text-xs text-muted-foreground uppercase tracking-wide">
+                <div className="hidden sm:grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-4 px-4 py-2 bg-white/3 border-b border-white/5 text-xs text-muted-foreground uppercase tracking-wide items-center">
+                  <span className="w-5" />
                   <span>Player</span>
                   <span className="text-right w-16">Level</span>
                   <span className="text-right w-20">Reliability</span>
@@ -402,83 +469,113 @@ export default function Members() {
                 <div className="divide-y divide-white/5">
                   {filteredRoster.map((u) => {
                     const profile = profileMap[u.id];
+                    const isSelected = selectedIds.has(u.id);
+                    const isAlreadyVerified = u.verified;
                     return (
-                      <Link key={u.id} href={`/players/${u.id}`}>
-                        <div className="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_auto_auto_auto_auto] gap-x-4 gap-y-0.5 px-4 py-3 hover:bg-white/5 transition-colors cursor-pointer items-center">
-                          {/* Name + meta */}
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center text-primary text-xs font-serif flex-shrink-0">
-                              {u.name[0]}
-                            </div>
-                            <div className="min-w-0">
-                              <div className="text-sm font-medium flex items-center gap-1.5">
-                                <span className="truncate">{u.name}</span>
-                                {u.verified && <span className="text-accent text-xs flex-shrink-0">✓</span>}
-                              </div>
-                              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                                {u.locationName && (
-                                  <span className="text-xs text-muted-foreground">{u.locationName}</span>
-                                )}
-                                {u.warmupFormat && (
-                                  <span className="text-xs text-muted-foreground/60 capitalize">{u.warmupFormat}</span>
-                                )}
-                                {u.levelSelf != null && (
-                                  <span className="text-xs font-mono text-primary/60 bg-primary/8 border border-primary/12 rounded px-1">
-                                    {u.levelSelf}★
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Mobile: right column summary */}
-                          <div className="flex sm:hidden items-center gap-2 flex-shrink-0">
-                            <Badge variant="outline" className="text-xs border-white/10 font-mono">
-                              {u.levelQuiz ?? u.level}
-                            </Badge>
-                            {profile && <ReliabilityDot score={profile.reliabilityScore} />}
-                          </div>
-
-                          {/* Desktop columns */}
-                          <div className="hidden sm:flex justify-end w-16">
-                            <Badge variant="outline" className="text-xs border-white/10 font-mono">
-                              {u.levelQuiz ?? u.level}
-                            </Badge>
-                          </div>
-
-                          <div className="hidden sm:flex justify-end items-center gap-1.5 w-20">
-                            {profile ? (
-                              <>
-                                <ReliabilityDot score={profile.reliabilityScore} />
-                                <span className="text-xs font-mono text-muted-foreground tabular-nums">
-                                  {profile.reliabilityScore}
+                      <div key={u.id} className="relative group">
+                        <Link href={`/players/${u.id}`}>
+                          <div className="grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_auto_auto_auto_auto] gap-x-4 gap-y-0.5 px-4 py-3 hover:bg-white/5 transition-colors cursor-pointer items-center">
+                            {/* Checkbox */}
+                            <div
+                              onClick={e => toggleSelect(u.id, e)}
+                              className="flex items-center justify-center w-5 flex-shrink-0"
+                            >
+                              {isAlreadyVerified ? (
+                                <span
+                                  title="Already verified"
+                                  className="w-4 h-4 rounded flex items-center justify-center bg-accent/20 border border-accent/40 text-accent text-[10px] cursor-default"
+                                >
+                                  ✓
                                 </span>
-                              </>
-                            ) : (
-                              <span className="text-xs text-muted-foreground/40">—</span>
-                            )}
-                          </div>
+                              ) : (
+                                <span
+                                  className={cn(
+                                    "w-4 h-4 rounded border transition-colors flex items-center justify-center text-[10px]",
+                                    isSelected
+                                      ? "bg-primary border-primary text-primary-foreground"
+                                      : "border-white/20 hover:border-white/40 bg-white/5"
+                                  )}
+                                >
+                                  {isSelected && "✓"}
+                                </span>
+                              )}
+                            </div>
 
-                          <div className="hidden sm:flex justify-end w-16">
-                            <span className="text-xs font-mono text-muted-foreground tabular-nums">
-                              {u.matchesPlayed}
-                            </span>
-                          </div>
+                            {/* Name + meta */}
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center text-primary text-xs font-serif flex-shrink-0">
+                                {u.name[0]}
+                              </div>
+                              <div className="min-w-0">
+                                <div className="text-sm font-medium flex items-center gap-1.5">
+                                  <span className="truncate">{u.name}</span>
+                                  {u.verified && <span className="text-accent text-xs flex-shrink-0">✓</span>}
+                                </div>
+                                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                  {u.locationName && (
+                                    <span className="text-xs text-muted-foreground">{u.locationName}</span>
+                                  )}
+                                  {u.warmupFormat && (
+                                    <span className="text-xs text-muted-foreground/60 capitalize">{u.warmupFormat}</span>
+                                  )}
+                                  {u.levelSelf != null && (
+                                    <span className="text-xs font-mono text-primary/60 bg-primary/8 border border-primary/12 rounded px-1">
+                                      {u.levelSelf}★
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
 
-                          <div className="hidden sm:flex justify-end w-12">
-                            {profile && profile.behavioralFlags.length > 0 ? (
-                              <span
-                                title={profile.behavioralFlags.join(", ")}
-                                className="inline-flex items-center gap-0.5 text-xs font-medium text-amber-400 bg-amber-400/10 border border-amber-400/20 rounded-full px-1.5 py-0.5 cursor-help"
-                              >
-                                ⚑ {profile.behavioralFlags.length}
+                            {/* Mobile: right column summary */}
+                            <div className="flex sm:hidden items-center gap-2 flex-shrink-0">
+                              <Badge variant="outline" className="text-xs border-white/10 font-mono">
+                                {u.levelQuiz ?? u.level}
+                              </Badge>
+                              {profile && <ReliabilityDot score={profile.reliabilityScore} />}
+                            </div>
+
+                            {/* Desktop columns */}
+                            <div className="hidden sm:flex justify-end w-16">
+                              <Badge variant="outline" className="text-xs border-white/10 font-mono">
+                                {u.levelQuiz ?? u.level}
+                              </Badge>
+                            </div>
+
+                            <div className="hidden sm:flex justify-end items-center gap-1.5 w-20">
+                              {profile ? (
+                                <>
+                                  <ReliabilityDot score={profile.reliabilityScore} />
+                                  <span className="text-xs font-mono text-muted-foreground tabular-nums">
+                                    {profile.reliabilityScore}
+                                  </span>
+                                </>
+                              ) : (
+                                <span className="text-xs text-muted-foreground/40">—</span>
+                              )}
+                            </div>
+
+                            <div className="hidden sm:flex justify-end w-16">
+                              <span className="text-xs font-mono text-muted-foreground tabular-nums">
+                                {u.matchesPlayed}
                               </span>
-                            ) : (
-                              <span className="text-xs text-muted-foreground/30">—</span>
-                            )}
+                            </div>
+
+                            <div className="hidden sm:flex justify-end w-12">
+                              {profile && profile.behavioralFlags.length > 0 ? (
+                                <span
+                                  title={profile.behavioralFlags.join(", ")}
+                                  className="inline-flex items-center gap-0.5 text-xs font-medium text-amber-400 bg-amber-400/10 border border-amber-400/20 rounded-full px-1.5 py-0.5 cursor-help"
+                                >
+                                  ⚑ {profile.behavioralFlags.length}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-muted-foreground/30">—</span>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </Link>
+                        </Link>
+                      </div>
                     );
                   })}
                 </div>

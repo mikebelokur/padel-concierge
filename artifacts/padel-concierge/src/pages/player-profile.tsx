@@ -44,6 +44,43 @@ interface PlayerProfile {
   source: string;
 }
 
+interface PlayerStats {
+  userId: number;
+  matchesPlayed: number;
+  wins: number;
+  winRate: number;
+  levelProgress: number;
+  winsToNextLevel: number;
+  levelConfidence: number;
+  formatBreakdown: { format: string; count: number }[];
+  winTrend: { date: string; winRate: number }[];
+}
+
+interface Booking {
+  id: number;
+  userId: number;
+  matchId: number;
+  paymentStatus: string;
+  warmUpCompleted: boolean;
+  cancelledAt: string | null;
+  createdAt: string;
+  match: {
+    id: number;
+    date: string;
+    time: string;
+    clubName: string;
+    format: string;
+    status: string;
+    players: { userId: number; name: string; level: string }[];
+  } | null;
+}
+
+const FORMAT_COLORS: Record<string, string> = {
+  Classic: "text-amber-400",
+  Simplified: "text-sky-400",
+  Rotation: "text-violet-400",
+};
+
 export default function PlayerProfilePage() {
   const params = useParams<{ id: string }>();
   const id = parseInt(params.id ?? "", 10);
@@ -58,6 +95,20 @@ export default function PlayerProfilePage() {
   const { data: reliability, isLoading: reliabilityLoading } = useQuery({
     queryKey: ["player-profile", id],
     queryFn: () => apiFetch<PlayerProfile>(`/players/${id}/profile`),
+    enabled: !isNaN(id),
+    retry: false,
+  });
+
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ["player-stats", id],
+    queryFn: () => apiFetch<PlayerStats>(`/stats/player/${id}`),
+    enabled: !isNaN(id),
+    retry: false,
+  });
+
+  const { data: bookings, isLoading: bookingsLoading } = useQuery({
+    queryKey: ["player-bookings", id],
+    queryFn: () => apiFetch<Booking[]>(`/bookings?userId=${id}`),
     enabled: !isNaN(id),
     retry: false,
   });
@@ -89,6 +140,15 @@ export default function PlayerProfilePage() {
   const archetype = player.archetype as Archetype | undefined;
   const archetypeMeta = archetype ? ARCHETYPE_META[archetype] : null;
 
+  const recentMatches = (bookings ?? [])
+    .filter(b => b.match)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 6);
+
+  const winRate = player.matchesPlayed > 0
+    ? Math.round((player.wins / player.matchesPlayed) * 100)
+    : 0;
+
   return (
     <AppLayout>
       <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
@@ -105,16 +165,18 @@ export default function PlayerProfilePage() {
             {player.name[0]}
           </div>
           <div className="space-y-2 min-w-0">
-            <h1 className="text-2xl font-serif truncate">{player.name}</h1>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-2xl font-serif">{player.name}</h1>
+              {player.verified && (
+                <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 text-xs px-2">
+                  ✓ Certified
+                </Badge>
+              )}
+            </div>
             <div className="flex flex-wrap gap-2 items-center">
               <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-sm px-3">
                 {player.levelQuiz ?? player.level}
               </Badge>
-              {player.verified && (
-                <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 text-sm px-3">
-                  ✓ Certified
-                </Badge>
-              )}
               {archetypeMeta && (
                 <Badge
                   variant="outline"
@@ -138,10 +200,11 @@ export default function PlayerProfilePage() {
           </div>
         </header>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Summary stats row */}
+        <div className="grid grid-cols-3 gap-3">
           <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-center">
             <div className="text-xs text-muted-foreground mb-1">Matches</div>
-            <div className="text-3xl font-mono font-bold text-foreground">{player.matchesPlayed}</div>
+            <div className="text-3xl font-mono font-bold">{player.matchesPlayed}</div>
           </div>
           <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-center">
             <div className="text-xs text-muted-foreground mb-1">Wins</div>
@@ -149,11 +212,58 @@ export default function PlayerProfilePage() {
           </div>
           <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-center">
             <div className="text-xs text-muted-foreground mb-1">Win Rate</div>
-            <div className="text-3xl font-mono font-bold text-foreground">
-              {player.matchesPlayed > 0 ? Math.round((player.wins / player.matchesPlayed) * 100) : 0}%
-            </div>
+            <div className="text-3xl font-mono font-bold">{winRate}%</div>
           </div>
         </div>
+
+        {/* Level & Performance */}
+        <Card className="bg-card border-white/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Level & Performance</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {statsLoading ? (
+              <div className="text-sm text-muted-foreground animate-pulse">Loading stats…</div>
+            ) : !stats ? (
+              <div className="text-sm text-muted-foreground italic">No stats available.</div>
+            ) : (
+              <>
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm text-muted-foreground">Level progress</span>
+                    <span className="text-sm font-mono text-primary">{Math.round(stats.levelProgress)}%</span>
+                  </div>
+                  <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary rounded-full transition-all duration-500"
+                      style={{ width: `${Math.max(0, Math.min(100, stats.levelProgress))}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between mt-1.5">
+                    <span className="text-xs text-muted-foreground">{stats.winsToNextLevel} wins to next level</span>
+                    <span className="text-xs text-muted-foreground">Confidence: {Math.round(stats.levelConfidence)}%</span>
+                  </div>
+                </div>
+                {stats.formatBreakdown.length > 0 && (
+                  <div>
+                    <div className="text-xs text-muted-foreground mb-2">Format breakdown</div>
+                    <div className="flex flex-wrap gap-2">
+                      {stats.formatBreakdown.map(({ format, count }) => (
+                        <div
+                          key={format}
+                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/8 text-xs"
+                        >
+                          <span className={FORMAT_COLORS[format] ?? "text-foreground"}>{format}</span>
+                          <span className="text-muted-foreground font-mono">{count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Play Style */}
         {(player.levelSelf != null || player.levelQuiz || player.physicalSelf != null || player.warmupFormat) && (
@@ -180,14 +290,14 @@ export default function PlayerProfilePage() {
                 {player.physicalSelf != null && (
                   <div className="p-3 rounded-lg bg-white/5 border border-white/5 text-center">
                     <div className="text-xs text-muted-foreground mb-1">Physical</div>
-                    <div className="text-2xl font-mono text-foreground font-bold">{player.physicalSelf}</div>
+                    <div className="text-2xl font-mono font-bold">{player.physicalSelf}</div>
                     <div className="text-xs text-muted-foreground mt-0.5">/ 10</div>
                   </div>
                 )}
                 {player.warmupFormat && (
                   <div className="p-3 rounded-lg bg-white/5 border border-white/5 text-center">
                     <div className="text-xs text-muted-foreground mb-1">Warmup</div>
-                    <div className="text-sm font-medium text-foreground capitalize mt-1">{player.warmupFormat}</div>
+                    <div className="text-sm font-medium capitalize mt-1">{player.warmupFormat}</div>
                     <div className="text-xs text-muted-foreground mt-0.5">format</div>
                   </div>
                 )}
@@ -196,12 +306,61 @@ export default function PlayerProfilePage() {
           </Card>
         )}
 
+        {/* Match History */}
+        <Card className="bg-card border-white/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Match History</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {bookingsLoading ? (
+              <div className="text-sm text-muted-foreground animate-pulse">Loading matches…</div>
+            ) : recentMatches.length === 0 ? (
+              <div className="text-sm text-muted-foreground italic">No matches recorded yet.</div>
+            ) : (
+              <div className="space-y-2">
+                {recentMatches.map((booking) => {
+                  const m = booking.match!;
+                  const opponents = m.players.filter(p => p.userId !== id);
+                  const statusColor =
+                    m.status === "completed" ? "text-emerald-400" :
+                    m.status === "cancelled" ? "text-red-400/60 line-through" :
+                    "text-muted-foreground";
+                  return (
+                    <Link key={booking.id} href={`/matches/${m.id}`}>
+                      <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/8 transition-colors cursor-pointer border border-white/5">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-medium">{m.clubName}</span>
+                            <span className={cn("text-xs", FORMAT_COLORS[m.format] ?? "text-muted-foreground")}>
+                              {m.format}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-xs text-muted-foreground">{m.date} · {m.time}</span>
+                            {opponents.length > 0 && (
+                              <span className="text-xs text-muted-foreground">vs {opponents.map(p => p.name).join(", ")}</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {booking.warmUpCompleted && (
+                            <span title="Warm-up completed" className="text-orange-400 text-xs">🔥</span>
+                          )}
+                          <span className={cn("text-xs capitalize font-medium", statusColor)}>{m.status}</span>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Reliability */}
         <Card className="bg-card border-white/5">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              Reliability
-            </CardTitle>
+            <CardTitle className="text-base">Reliability</CardTitle>
           </CardHeader>
           <CardContent>
             {reliabilityLoading ? (
@@ -262,7 +421,7 @@ export default function PlayerProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Play info */}
+        {/* Details */}
         <Card className="bg-card border-white/5">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Details</CardTitle>

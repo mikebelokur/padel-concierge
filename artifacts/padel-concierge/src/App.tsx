@@ -46,6 +46,7 @@ import LevelQuiz from "@/pages/level-quiz";
 import LevelQuizResult from "@/pages/level-quiz-result";
 import LevelQuizProfile from "@/pages/level-quiz-profile";
 import LevelQuizAdmin from "@/pages/level-quiz-admin";
+import PlayerProfilePage from "@/pages/player-profile";
 
 setAuthTokenGetter(() => localStorage.getItem("token"));
 
@@ -101,6 +102,7 @@ function Router() {
 
       <Route path="/courts">{() => <ProtectedRoute component={Courts} />}</Route>
       <Route path="/members">{() => <ProtectedRoute component={Members} />}</Route>
+      <Route path="/players/:id">{() => <ProtectedRoute component={PlayerProfilePage} />}</Route>
       <Route path="/match-requests">{() => <ProtectedRoute component={MatchRequests} />}</Route>
       <Route path="/match-log/:id">{() => <ProtectedRoute component={MatchLog} allowedRoles={["coach", "admin", "owner"]} />}</Route>
       <Route path="/match-feedback/:id">{() => <ProtectedRoute component={MatchFeedback} />}</Route>

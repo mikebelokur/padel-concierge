@@ -1,4 +1,5 @@
 import { useQuery, useQueries } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -159,17 +160,66 @@ export default function Members() {
                   <div className="text-muted-foreground text-sm">Loading...</div>
                 ) : (
                   newMembers.map((u) => (
-                    <div key={u.id} className="flex items-center gap-3">
+                    <Link key={u.id} href={`/players/${u.id}`}>
+                      <div className="flex items-center gap-3 cursor-pointer rounded-lg hover:bg-white/5 transition-colors -mx-1 px-1 py-0.5">
+                        <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center text-primary text-xs font-serif flex-shrink-0">
+                          {u.name[0]}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-medium flex items-center gap-1.5 truncate">
+                            {u.name}
+                            {u.verified && <span className="text-accent text-xs">✓</span>}
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                            <span className="text-xs text-muted-foreground">{u.locationName ?? "Dubai"}</span>
+                            {u.levelSelf != null && (
+                              <span className="text-xs font-mono text-primary/70 bg-primary/10 border border-primary/15 rounded px-1">
+                                {u.levelSelf}★
+                              </span>
+                            )}
+                            {u.warmupFormat && (
+                              <span className="text-xs text-muted-foreground/70 capitalize">{u.warmupFormat}</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          {profileMap[u.id] && profileMap[u.id].behavioralFlags.length > 0 && (
+                            <span
+                              title={profileMap[u.id].behavioralFlags.join(", ")}
+                              className="inline-flex items-center gap-0.5 text-xs font-medium text-amber-400 bg-amber-400/10 border border-amber-400/20 rounded-full px-1.5 py-0.5 cursor-help"
+                            >
+                              ⚑ {profileMap[u.id].behavioralFlags.length}
+                            </span>
+                          )}
+                          {profileMap[u.id] && (
+                            <ReliabilityDot score={profileMap[u.id].reliabilityScore} />
+                          )}
+                          <Badge variant="outline" className="text-xs border-white/10 font-mono">{u.levelQuiz ?? u.level}</Badge>
+                        </div>
+                      </div>
+                    </Link>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Top Players */}
+            <Card className="bg-card border-white/5">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Top Players</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {topPlayers.map((u, i) => (
+                  <Link key={u.id} href={`/players/${u.id}`}>
+                    <div className="flex items-center gap-3 cursor-pointer rounded-lg hover:bg-white/5 transition-colors -mx-1 px-1 py-0.5">
+                      <div className="w-6 text-center text-sm font-mono text-muted-foreground">{i + 1}</div>
                       <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center text-primary text-xs font-serif flex-shrink-0">
                         {u.name[0]}
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium flex items-center gap-1.5 truncate">
-                          {u.name}
-                          {u.verified && <span className="text-accent text-xs">✓</span>}
-                        </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">{u.name}</div>
                         <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                          <span className="text-xs text-muted-foreground">{u.locationName ?? "Dubai"}</span>
+                          <span className="text-xs text-muted-foreground">{u.matchesPlayed} matches · {u.wins}W</span>
                           {u.levelSelf != null && (
                             <span className="text-xs font-mono text-primary/70 bg-primary/10 border border-primary/15 rounded px-1">
                               {u.levelSelf}★
@@ -195,52 +245,7 @@ export default function Members() {
                         <Badge variant="outline" className="text-xs border-white/10 font-mono">{u.levelQuiz ?? u.level}</Badge>
                       </div>
                     </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Top Players */}
-            <Card className="bg-card border-white/5">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Top Players</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {topPlayers.map((u, i) => (
-                  <div key={u.id} className="flex items-center gap-3">
-                    <div className="w-6 text-center text-sm font-mono text-muted-foreground">{i + 1}</div>
-                    <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center text-primary text-xs font-serif flex-shrink-0">
-                      {u.name[0]}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">{u.name}</div>
-                      <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                        <span className="text-xs text-muted-foreground">{u.matchesPlayed} matches · {u.wins}W</span>
-                        {u.levelSelf != null && (
-                          <span className="text-xs font-mono text-primary/70 bg-primary/10 border border-primary/15 rounded px-1">
-                            {u.levelSelf}★
-                          </span>
-                        )}
-                        {u.warmupFormat && (
-                          <span className="text-xs text-muted-foreground/70 capitalize">{u.warmupFormat}</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      {profileMap[u.id] && profileMap[u.id].behavioralFlags.length > 0 && (
-                        <span
-                          title={profileMap[u.id].behavioralFlags.join(", ")}
-                          className="inline-flex items-center gap-0.5 text-xs font-medium text-amber-400 bg-amber-400/10 border border-amber-400/20 rounded-full px-1.5 py-0.5 cursor-help"
-                        >
-                          ⚑ {profileMap[u.id].behavioralFlags.length}
-                        </span>
-                      )}
-                      {profileMap[u.id] && (
-                        <ReliabilityDot score={profileMap[u.id].reliabilityScore} />
-                      )}
-                      <Badge variant="outline" className="text-xs border-white/10 font-mono">{u.levelQuiz ?? u.level}</Badge>
-                    </div>
-                  </div>
+                  </Link>
                 ))}
               </CardContent>
             </Card>

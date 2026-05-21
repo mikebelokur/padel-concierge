@@ -6,6 +6,7 @@
   "scripts": {
     "hello": "tsx ./src/hello.ts",
     "seed-matchmaking": "tsx ./src/seed-matchmaking-users.ts",
+    "seed-test-accounts": "tsx ./src/seed-test-accounts.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {

@@ -87,9 +87,10 @@ export default function Members() {
 
   const queryClient = useQueryClient();
 
-  const toggleSelect = useCallback((id: number, e: React.MouseEvent) => {
+  const toggleSelect = useCallback((id: number, verified: boolean, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (verified) return;
     setSelectedIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
@@ -477,7 +478,7 @@ export default function Members() {
                           <div className="grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_auto_auto_auto_auto] gap-x-4 gap-y-0.5 px-4 py-3 hover:bg-white/5 transition-colors cursor-pointer items-center">
                             {/* Checkbox */}
                             <div
-                              onClick={e => toggleSelect(u.id, e)}
+                              onClick={e => toggleSelect(u.id, isAlreadyVerified, e)}
                               className="flex items-center justify-center w-5 flex-shrink-0"
                             >
                               {isAlreadyVerified ? (

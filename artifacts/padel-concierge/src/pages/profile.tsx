@@ -150,6 +150,47 @@ export default function Profile() {
           </Card>
         </div>
 
+        {/* Play Style */}
+        {(user?.levelSelf != null || user?.levelQuiz || user?.physicalSelf != null || user?.warmupFormat) && (
+          <Card className="bg-card border-white/5">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Play Style</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {user?.levelSelf != null && (
+                  <div className="p-3 rounded-lg bg-white/5 border border-white/5 text-center">
+                    <div className="text-xs text-muted-foreground mb-1">Self-assessed</div>
+                    <div className="text-2xl font-mono text-primary font-bold">{user.levelSelf}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">/ 5.0</div>
+                  </div>
+                )}
+                {user?.levelQuiz && (
+                  <div className="p-3 rounded-lg bg-white/5 border border-white/5 text-center">
+                    <div className="text-xs text-muted-foreground mb-1">Quiz level</div>
+                    <div className="text-2xl font-mono text-accent font-bold">{user.levelQuiz}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">certified</div>
+                  </div>
+                )}
+                {user?.physicalSelf != null && (
+                  <div className="p-3 rounded-lg bg-white/5 border border-white/5 text-center">
+                    <div className="text-xs text-muted-foreground mb-1">Physical</div>
+                    <div className="text-2xl font-mono text-foreground font-bold">{user.physicalSelf}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">/ 10</div>
+                  </div>
+                )}
+                {user?.warmupFormat && (
+                  <div className="p-3 rounded-lg bg-white/5 border border-white/5 text-center">
+                    <div className="text-xs text-muted-foreground mb-1">Warmup</div>
+                    <div className="text-sm font-medium text-foreground capitalize mt-1">{user.warmupFormat}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">format</div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Reliability + Compatibility row */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 

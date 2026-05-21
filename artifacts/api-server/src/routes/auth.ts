@@ -35,6 +35,10 @@ function formatUser(user: typeof usersTable.$inferSelect) {
     lastLogin: user.lastLogin?.toISOString() ?? null,
     archetype: user.archetype ?? null,
     warmUpPreference: user.warmUpPreference,
+    levelSelf: user.levelSelf ?? null,
+    levelQuiz: user.levelQuiz ?? null,
+    physicalSelf: user.physicalSelf ?? null,
+    warmupFormat: user.warmupFormat ?? null,
   };
 }
 

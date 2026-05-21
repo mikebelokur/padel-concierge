@@ -24,6 +24,9 @@ interface User {
   wins: number;
   locationName: string | null;
   createdAt: string;
+  levelSelf: number | null;
+  levelQuiz: string | null;
+  warmupFormat: string | null;
 }
 
 interface PlayerProfile {
@@ -165,7 +168,17 @@ export default function Members() {
                           {u.name}
                           {u.verified && <span className="text-accent text-xs">✓</span>}
                         </div>
-                        <div className="text-xs text-muted-foreground">{u.locationName ?? "Dubai"}</div>
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                          <span className="text-xs text-muted-foreground">{u.locationName ?? "Dubai"}</span>
+                          {u.levelSelf != null && (
+                            <span className="text-xs font-mono text-primary/70 bg-primary/10 border border-primary/15 rounded px-1">
+                              {u.levelSelf}★
+                            </span>
+                          )}
+                          {u.warmupFormat && (
+                            <span className="text-xs text-muted-foreground/70 capitalize">{u.warmupFormat}</span>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         {profileMap[u.id] && profileMap[u.id].behavioralFlags.length > 0 && (
@@ -179,7 +192,7 @@ export default function Members() {
                         {profileMap[u.id] && (
                           <ReliabilityDot score={profileMap[u.id].reliabilityScore} />
                         )}
-                        <Badge variant="outline" className="text-xs border-white/10 font-mono">{u.level}</Badge>
+                        <Badge variant="outline" className="text-xs border-white/10 font-mono">{u.levelQuiz ?? u.level}</Badge>
                       </div>
                     </div>
                   ))
@@ -201,7 +214,17 @@ export default function Members() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium truncate">{u.name}</div>
-                      <div className="text-xs text-muted-foreground">{u.matchesPlayed} matches · {u.wins}W</div>
+                      <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                        <span className="text-xs text-muted-foreground">{u.matchesPlayed} matches · {u.wins}W</span>
+                        {u.levelSelf != null && (
+                          <span className="text-xs font-mono text-primary/70 bg-primary/10 border border-primary/15 rounded px-1">
+                            {u.levelSelf}★
+                          </span>
+                        )}
+                        {u.warmupFormat && (
+                          <span className="text-xs text-muted-foreground/70 capitalize">{u.warmupFormat}</span>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                       {profileMap[u.id] && profileMap[u.id].behavioralFlags.length > 0 && (
@@ -215,7 +238,7 @@ export default function Members() {
                       {profileMap[u.id] && (
                         <ReliabilityDot score={profileMap[u.id].reliabilityScore} />
                       )}
-                      <Badge variant="outline" className="text-xs border-white/10 font-mono">{u.level}</Badge>
+                      <Badge variant="outline" className="text-xs border-white/10 font-mono">{u.levelQuiz ?? u.level}</Badge>
                     </div>
                   </div>
                 ))}

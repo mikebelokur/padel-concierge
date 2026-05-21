@@ -1,10 +1,10 @@
-import crypto from "crypto";
+import bcrypt from "bcryptjs";
 import pg from "pg";
 
 const { Pool } = pg;
 
-function hashPassword(password: string): string {
-  return crypto.createHash("sha256").update(password + "padel-salt").digest("hex");
+async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 10);
 }
 
 function generateSlots(count: number): string {
@@ -37,7 +37,7 @@ const users = [
 
 async function main() {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-  const passwordHash = hashPassword("test1234");
+  const passwordHash = await hashPassword("test1234");
 
   let inserted = 0;
   for (const u of users) {

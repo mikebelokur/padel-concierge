@@ -1,10 +1,14 @@
+import { useState, useMemo } from "react";
 import { useQuery, useQueries } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { apiFetch } from "@/lib/api";
 import { ReliabilityDot } from "@/components/ReliabilityDot";
+import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
 
 interface ActivityLog {
   id: number;
@@ -55,6 +59,11 @@ const ACTION_ICONS: Record<string, string> = {
   updated_availability: "📆",
 };
 
+const LEVEL_ORDER = ["D-", "D", "D+", "C-", "C", "C+", "1.0", "1.5", "2.0", "2.5", "3.0", "3.5", "4.0", "4.5", "5.0"];
+const LEVEL_INDEX = Object.fromEntries(LEVEL_ORDER.map((l, i) => [l, i]));
+
+type SortKey = "name" | "level" | "reliability" | "matches";
+
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
@@ -67,6 +76,13 @@ function timeAgo(iso: string) {
 }
 
 export default function Members() {
+  const { user: authUser } = useAuth();
+  const isStaff = ["coach", "admin", "owner"].includes(authUser?.role ?? "");
+
+  const [search, setSearch] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("reliability");
+  const [levelFilter, setLevelFilter] = useState<string>("all");
+
   const { data: activity = [], isLoading: actLoading } = useQuery({
     queryKey: ["activity", 50],
     queryFn: () => apiFetch<ActivityLog[]>("/stats/activity?limit=50"),
@@ -86,10 +102,12 @@ export default function Members() {
     .sort((a, b) => b.matchesPlayed - a.matchesPlayed)
     .slice(0, 5);
 
-  const listedIds = Array.from(new Set([...newMembers, ...topPlayers].map((u) => u.id)));
+  const sidebarIds = Array.from(new Set([...newMembers, ...topPlayers].map((u) => u.id)));
+  const rosterIds = isStaff ? players.map((u) => u.id) : [];
+  const allTrackedIds = Array.from(new Set([...sidebarIds, ...rosterIds]));
 
   const profileQueries = useQueries({
-    queries: listedIds.map((id) => ({
+    queries: allTrackedIds.map((id) => ({
       queryKey: ["player-profile", id],
       queryFn: () => apiFetch<PlayerProfile>(`/players/${id}/profile`),
       staleTime: 60_000,
@@ -97,10 +115,39 @@ export default function Members() {
   });
 
   const profileMap: Record<number, PlayerProfile> = {};
-  listedIds.forEach((id, i) => {
+  allTrackedIds.forEach((id, i) => {
     const data = profileQueries[i]?.data;
     if (data) profileMap[id] = data;
   });
+
+  const levelOptions = useMemo(() => {
+    const seen = new Set<string>();
+    players.forEach(u => seen.add(u.levelQuiz ?? u.level));
+    return Array.from(seen).sort((a, b) => (LEVEL_INDEX[a] ?? 99) - (LEVEL_INDEX[b] ?? 99));
+  }, [players]);
+
+  const filteredRoster = useMemo(() => {
+    let list = [...players];
+    const q = search.trim().toLowerCase();
+    if (q) list = list.filter(u => u.name.toLowerCase().includes(q));
+    if (levelFilter !== "all") list = list.filter(u => (u.levelQuiz ?? u.level) === levelFilter);
+    list.sort((a, b) => {
+      if (sortKey === "name") return a.name.localeCompare(b.name);
+      if (sortKey === "level") {
+        const la = LEVEL_INDEX[a.levelQuiz ?? a.level] ?? 99;
+        const lb = LEVEL_INDEX[b.levelQuiz ?? b.level] ?? 99;
+        return lb - la;
+      }
+      if (sortKey === "reliability") {
+        const ra = profileMap[a.id]?.reliabilityScore ?? 80;
+        const rb = profileMap[b.id]?.reliabilityScore ?? 80;
+        return rb - ra;
+      }
+      if (sortKey === "matches") return b.matchesPlayed - a.matchesPlayed;
+      return 0;
+    });
+    return list;
+  }, [players, search, levelFilter, sortKey, profileMap]);
 
   return (
     <AppLayout>
@@ -273,6 +320,172 @@ export default function Members() {
             </Card>
           </div>
         </div>
+
+        {/* Full Roster — coach / admin / owner only */}
+        {isStaff && (
+          <section className="space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <h2 className="text-lg font-medium">Full Roster</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {filteredRoster.length} of {players.length} players
+                </p>
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="flex flex-wrap gap-3 items-center">
+              <div className="relative flex-1 min-w-[200px] max-w-sm">
+                <svg
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                >
+                  <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+                </svg>
+                <Input
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Search by name…"
+                  className="pl-9 bg-white/5 border-white/10 focus:border-primary/50 h-9 text-sm"
+                />
+              </div>
+
+              {/* Level filter */}
+              <select
+                value={levelFilter}
+                onChange={e => setLevelFilter(e.target.value)}
+                className="h-9 px-3 rounded-md bg-white/5 border border-white/10 text-sm text-foreground focus:outline-none focus:border-primary/50 cursor-pointer"
+              >
+                <option value="all">All levels</option>
+                {levelOptions.map(l => (
+                  <option key={l} value={l}>{l}</option>
+                ))}
+              </select>
+
+              {/* Sort */}
+              <div className="flex gap-1 rounded-lg bg-white/5 border border-white/8 p-0.5">
+                {(["reliability", "level", "matches", "name"] as SortKey[]).map(key => (
+                  <button
+                    key={key}
+                    onClick={() => setSortKey(key)}
+                    className={cn(
+                      "px-3 py-1.5 text-xs rounded-md transition-colors capitalize",
+                      sortKey === key
+                        ? "bg-primary text-primary-foreground font-medium"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {key === "reliability" ? "Reliability" :
+                     key === "level" ? "Level" :
+                     key === "matches" ? "Matches" : "Name"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Roster list */}
+            {usersLoading ? (
+              <div className="text-sm text-muted-foreground animate-pulse">Loading roster…</div>
+            ) : filteredRoster.length === 0 ? (
+              <div className="text-sm text-muted-foreground italic py-4 text-center">No players match your search.</div>
+            ) : (
+              <div className="rounded-xl border border-white/8 overflow-hidden">
+                {/* Header row */}
+                <div className="hidden sm:grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 px-4 py-2 bg-white/3 border-b border-white/5 text-xs text-muted-foreground uppercase tracking-wide">
+                  <span>Player</span>
+                  <span className="text-right w-16">Level</span>
+                  <span className="text-right w-20">Reliability</span>
+                  <span className="text-right w-16">Matches</span>
+                  <span className="text-right w-12">Flags</span>
+                </div>
+
+                <div className="divide-y divide-white/5">
+                  {filteredRoster.map((u) => {
+                    const profile = profileMap[u.id];
+                    return (
+                      <Link key={u.id} href={`/players/${u.id}`}>
+                        <div className="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_auto_auto_auto_auto] gap-x-4 gap-y-0.5 px-4 py-3 hover:bg-white/5 transition-colors cursor-pointer items-center">
+                          {/* Name + meta */}
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center text-primary text-xs font-serif flex-shrink-0">
+                              {u.name[0]}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-sm font-medium flex items-center gap-1.5">
+                                <span className="truncate">{u.name}</span>
+                                {u.verified && <span className="text-accent text-xs flex-shrink-0">✓</span>}
+                              </div>
+                              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                {u.locationName && (
+                                  <span className="text-xs text-muted-foreground">{u.locationName}</span>
+                                )}
+                                {u.warmupFormat && (
+                                  <span className="text-xs text-muted-foreground/60 capitalize">{u.warmupFormat}</span>
+                                )}
+                                {u.levelSelf != null && (
+                                  <span className="text-xs font-mono text-primary/60 bg-primary/8 border border-primary/12 rounded px-1">
+                                    {u.levelSelf}★
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Mobile: right column summary */}
+                          <div className="flex sm:hidden items-center gap-2 flex-shrink-0">
+                            <Badge variant="outline" className="text-xs border-white/10 font-mono">
+                              {u.levelQuiz ?? u.level}
+                            </Badge>
+                            {profile && <ReliabilityDot score={profile.reliabilityScore} />}
+                          </div>
+
+                          {/* Desktop columns */}
+                          <div className="hidden sm:flex justify-end w-16">
+                            <Badge variant="outline" className="text-xs border-white/10 font-mono">
+                              {u.levelQuiz ?? u.level}
+                            </Badge>
+                          </div>
+
+                          <div className="hidden sm:flex justify-end items-center gap-1.5 w-20">
+                            {profile ? (
+                              <>
+                                <ReliabilityDot score={profile.reliabilityScore} />
+                                <span className="text-xs font-mono text-muted-foreground tabular-nums">
+                                  {profile.reliabilityScore}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-xs text-muted-foreground/40">—</span>
+                            )}
+                          </div>
+
+                          <div className="hidden sm:flex justify-end w-16">
+                            <span className="text-xs font-mono text-muted-foreground tabular-nums">
+                              {u.matchesPlayed}
+                            </span>
+                          </div>
+
+                          <div className="hidden sm:flex justify-end w-12">
+                            {profile && profile.behavioralFlags.length > 0 ? (
+                              <span
+                                title={profile.behavioralFlags.join(", ")}
+                                className="inline-flex items-center gap-0.5 text-xs font-medium text-amber-400 bg-amber-400/10 border border-amber-400/20 rounded-full px-1.5 py-0.5 cursor-help"
+                              >
+                                ⚑ {profile.behavioralFlags.length}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground/30">—</span>
+                            )}
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </section>
+        )}
       </div>
     </AppLayout>
   );

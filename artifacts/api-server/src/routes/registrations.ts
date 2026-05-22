@@ -19,7 +19,7 @@ router.get("/admin/registrations/count", requireAdmin, async (_req, res): Promis
 });
 
 router.put("/admin/registrations/:id/approve", requireAdmin, async (req, res): Promise<void> => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(String(req.params.id));
   const [updated] = await db.update(usersTable)
     .set({
       approvalStatus: "approved",
@@ -32,7 +32,7 @@ router.put("/admin/registrations/:id/approve", requireAdmin, async (req, res): P
 });
 
 router.put("/admin/registrations/:id/reject", requireAdmin, async (req, res): Promise<void> => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(String(req.params.id));
   const [updated] = await db.update(usersTable)
     .set({ approvalStatus: "rejected" })
     .where(eq(usersTable.id, id))
@@ -41,7 +41,7 @@ router.put("/admin/registrations/:id/reject", requireAdmin, async (req, res): Pr
 });
 
 router.delete("/admin/registrations/:id", requireAdmin, async (req, res): Promise<void> => {
-  await db.delete(usersTable).where(eq(usersTable.id, parseInt(req.params.id)));
+  await db.delete(usersTable).where(eq(usersTable.id, parseInt(String(req.params.id))));
   res.json({ message: "Deleted" });
 });
 

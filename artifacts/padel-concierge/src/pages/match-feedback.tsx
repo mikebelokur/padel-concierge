@@ -92,7 +92,7 @@ export default function MatchFeedback() {
   function updateFeedback(userId: number, field: keyof PlayerFeedback, value: PlayerFeedback[keyof PlayerFeedback]) {
     setFeedbacks(prev => ({
       ...prev,
-      [userId]: { rating: 5, traits: [], comment: "", ...prev[userId], [field]: value },
+      [userId]: { ...{ rating: 5, traits: [] as string[], comment: "" }, ...prev[userId], [field]: value },
     }));
   }
 

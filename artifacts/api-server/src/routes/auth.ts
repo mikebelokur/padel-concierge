@@ -175,7 +175,12 @@ router.post("/auth/forgot-password", async (req, res): Promise<void> => {
     const baseUrl = appUrl ? `https://${appUrl}` : "http://localhost:80";
     const resetUrl = `${baseUrl}/reset-password?token=${token}`;
 
-    await sendPasswordResetEmail(user.email, resetUrl);
+    const result = await sendPasswordResetEmail(user.email, resetUrl);
+    if (!result.sent && result.devUrl) {
+      // Dev mode — return URL in response so the browser can display it
+      res.json({ message: "If that email exists, a reset link has been sent.", devResetUrl: result.devUrl });
+      return;
+    }
   }
 
   res.json({ message: "If that email exists, a reset link has been sent." });

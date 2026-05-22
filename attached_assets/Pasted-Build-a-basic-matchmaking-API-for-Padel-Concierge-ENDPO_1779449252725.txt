@@ -1,0 +1,89 @@
+Build a basic matchmaking API for Padel Concierge.
+
+ENDPOINT:
+POST /api/matchmaking/suggest
+Auth: required (requireAuth middleware)
+Body: { 
+  userId: string,           // requesting player's ID
+  date?: string,            // optional, ISO date — if provided, only return 
+                            // candidates with availability on that date
+  count?: number            // how many candidates, default 5, max 10
+}
+
+Response: { 
+  candidates: [
+    {
+      user: { 
+        id, name, level_self, level_quiz, archetype, 
+        warmup_format, physical_self, location_name 
+      },
+      compatibility_score: number,   // 0-100
+      compatibility_breakdown: {
+        level_match: number,         // 0-100
+        physical_match: number,      // 0-100
+        archetype_match: number,     // 0-100
+        time_overlap: number,        // 0-100
+      },
+      shared_availability_slots: [
+        { start: ISO_datetime, end: ISO_datetime }
+      ]
+    }
+  ]
+}
+
+COMPATIBILITY ALGORITHM:
+
+1. level_match (compare level_quiz, scale D- D D+ C- C C+ B-):
+   - Same level: 100
+   - 1 step difference (D vs D+): 70
+   - 2 steps (D vs C-): 40
+   - 3+ steps: 0
+   
+2. physical_match (compare physical_self 1-10):
+   - Difference ≤2: 100
+   - Difference 3-4: 60
+   - Difference 5+: 20
+
+3. archetype_match:
+   - Same archetype: 100
+   - Same category (both defenders OR both attackers): 70
+   - Different: 50
+
+4. time_overlap:
+   - Find overlapping availability slots in next 7 days (or specified date)
+   - If at least one 1.5-hour overlap exists: 100
+   - If overlap is 30-60 min: 50
+   - No overlap: 0
+
+5. compatibility_score = (level_match * 0.4) + (physical_match * 0.2) 
+                       + (archetype_match * 0.2) + (time_overlap * 0.2)
+
+FILTERS:
+- Exclude requesting userId from results
+- Only active + verified users
+- Only role='player'
+- If time_overlap = 0, exclude (don't return candidates with no shared time)
+
+IMPLEMENTATION:
+- Use existing fields in users table
+- Sort by compatibility_score DESC
+- Return max 10 candidates even if more requested
+- Protect with requireAuth
+
+TEST:
+Create a test that runs as Anna K (find her ID from the seed data) and 
+verify the API returns at least 3 candidates with scores between 40-100.
+
+curl example:
+curl -X POST https://<replit-url>/api/matchmaking/suggest \
+  -H "Authorization: Bearer <jwt-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"userId":"<anna-id>","count":5}'
+
+Show me the JSON response after testing.
+
+OUT OF SCOPE for this task:
+- UI page "Find a match" (next task)
+- Notifications to players
+- Creating actual match records in DB (this is just suggestion API)
+- Court booking integration

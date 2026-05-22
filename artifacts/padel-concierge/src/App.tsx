@@ -1,9 +1,10 @@
 import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { LanguageProvider } from "@/contexts/LanguageContext";
+import { LanguageProvider, useLanguage, type Language } from "@/contexts/LanguageContext";
 import { DrawerProvider } from "@/contexts/DrawerContext";
 import { Drawer } from "@/components/layout/Drawer";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
@@ -55,6 +56,19 @@ const queryClient = new QueryClient({
     queries: { retry: 1, staleTime: 30_000 },
   },
 });
+
+/** Syncs user.language → i18n on login */
+function LanguageSync() {
+  const { user } = useAuth();
+  const { setLanguage } = useLanguage();
+  useEffect(() => {
+    const lang = user?.language;
+    if (lang === "ru" || lang === "en") {
+      setLanguage(lang as Language);
+    }
+  }, [user?.id, user?.language]);
+  return null;
+}
 
 function ProtectedRoute({
   component: Component,
@@ -142,6 +156,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         <AuthProvider>
+          <LanguageSync />
           <TooltipProvider>
             <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
               <DrawerProvider>

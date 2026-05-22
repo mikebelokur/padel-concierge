@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useGetDashboardStats, getGetDashboardStatsQueryKey } from "@workspace/api-client-react";
 import { apiFetch } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,6 +57,7 @@ function timeAgo(iso: string) {
 
 export default function Admin() {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"overview" | "registrations">("overview");
   const [search, setSearch] = useState("");
@@ -141,10 +143,10 @@ export default function Admin() {
   );
 
   const tabs = [
-    { id: "overview", label: "Overview" },
+    { id: "overview", label: t("admin.overview") },
     {
       id: "registrations",
-      label: "New Registrations",
+      label: t("admin.registrations"),
       badge: pending.length > 0 ? pending.length : null,
     },
   ] as const;
@@ -153,7 +155,7 @@ export default function Admin() {
     <AppLayout>
       <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
         <header>
-          <h1 className="text-3xl font-serif mb-1">Admin Console</h1>
+          <h1 className="text-3xl font-serif mb-1">{t("admin.title")}</h1>
           <p className="text-muted-foreground">Platform overview and user management.</p>
         </header>
 
@@ -186,10 +188,10 @@ export default function Admin() {
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: "Total Users",    value: stats?.totalUsers ?? "–",                  color: "" },
-                { label: "Online Now",     value: stats?.onlineUsers ?? "–",                 color: "text-accent" },
-                { label: "Total Matches",  value: stats?.totalMatches ?? "–",                color: "" },
-                { label: "Daily Revenue",  value: stats ? `${stats.dailyRevenue} AED` : "–", color: "text-primary" },
+                { label: t("admin.totalUsers"),   value: stats?.totalUsers ?? "–",                  color: "" },
+                { label: "Online Now",            value: stats?.onlineUsers ?? "–",                 color: "text-accent" },
+                { label: t("admin.totalMatches"), value: stats?.totalMatches ?? "–",                color: "" },
+                { label: t("admin.revenue"),      value: stats ? `${stats.dailyRevenue} AED` : "–", color: "text-primary" },
               ].map(({ label, value, color }) => (
                 <Card key={label} className="bg-card border-white/5">
                   <CardHeader className="pb-2">

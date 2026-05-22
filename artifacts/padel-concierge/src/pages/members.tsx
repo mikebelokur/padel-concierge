@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { apiFetch } from "@/lib/api";
 import { ReliabilityDot } from "@/components/ReliabilityDot";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 
 interface ActivityLog {
@@ -77,6 +78,7 @@ function timeAgo(iso: string) {
 
 export default function Members() {
   const { user: authUser } = useAuth();
+  const { t } = useLanguage();
   const isStaff = ["coach", "admin", "owner"].includes(authUser?.role ?? "");
 
   const [search, setSearch] = useState("");
@@ -183,16 +185,16 @@ export default function Members() {
     <AppLayout>
       <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-5 sm:space-y-8">
         <header>
-          <h1 className="text-3xl font-serif mb-2">Members</h1>
-          <p className="text-muted-foreground">Activity from our private community of serious padel players.</p>
+          <h1 className="text-3xl font-serif mb-2">{t("members.title")}</h1>
+          <p className="text-muted-foreground">{t("members.subtitle")}</p>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Activity Feed */}
           <div className="lg:col-span-2 space-y-4">
-            <h2 className="text-lg font-medium">Live Activity Feed</h2>
+            <h2 className="text-lg font-medium">{t("members.liveActivityFeed")}</h2>
             {actLoading ? (
-              <div className="text-muted-foreground text-sm">Loading activity...</div>
+              <div className="text-muted-foreground text-sm">{t("members.loadingActivity")}</div>
             ) : (
               <div className="space-y-2">
                 {activity.map((log) => (
@@ -230,7 +232,7 @@ export default function Members() {
             {/* New Members */}
             <Card className="bg-card border-white/5">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">New Members</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">{t("members.newMembers")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {usersLoading ? (
@@ -283,7 +285,7 @@ export default function Members() {
             {/* Top Players */}
             <Card className="bg-card border-white/5">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Top Players</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">{t("members.topPlayers")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {topPlayers.map((u, i) => (
@@ -356,7 +358,7 @@ export default function Members() {
           <section className="space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
-                <h2 className="text-lg font-medium">Full Roster</h2>
+                <h2 className="text-lg font-medium">{t("members.fullRoster")}</h2>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {filteredRoster.length} of {players.length} players
                 </p>
@@ -385,10 +387,10 @@ export default function Members() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
                       </svg>
-                      Verifying…
+                      {t("members.verifying")}
                     </>
                   ) : (
-                    <>✓ Verify selected</>
+                    <>✓ {t("members.verifySelected", { count: selectedIds.size })}</>
                   )}
                 </button>
                 <button
@@ -412,7 +414,7 @@ export default function Members() {
                 <Input
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  placeholder="Search by name…"
+                  placeholder={t("members.search")}
                   className="pl-9 bg-white/5 border-white/10 focus:border-primary/50 h-9 text-sm"
                 />
               </div>
@@ -423,7 +425,7 @@ export default function Members() {
                 onChange={e => setLevelFilter(e.target.value)}
                 className="h-9 px-3 rounded-md bg-white/5 border border-white/10 text-sm text-foreground focus:outline-none focus:border-primary/50 cursor-pointer"
               >
-                <option value="all">All levels</option>
+                <option value="all">{t("members.all")}</option>
                 {levelOptions.map(l => (
                   <option key={l} value={l}>{l}</option>
                 ))}
@@ -442,9 +444,9 @@ export default function Members() {
                         : "text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    {key === "reliability" ? "Reliability" :
-                     key === "level" ? "Level" :
-                     key === "matches" ? "Matches" : "Name"}
+                    {key === "reliability" ? t("members.reliability") :
+                     key === "level" ? t("members.level") :
+                     key === "matches" ? t("members.matches") : t("members.name")}
                   </button>
                 ))}
               </div>
@@ -460,10 +462,10 @@ export default function Members() {
                 {/* Header row */}
                 <div className="hidden sm:grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-4 px-4 py-2 bg-white/3 border-b border-white/5 text-xs text-muted-foreground uppercase tracking-wide items-center">
                   <span className="w-5" />
-                  <span>Player</span>
-                  <span className="text-right w-16">Level</span>
-                  <span className="text-right w-20">Reliability</span>
-                  <span className="text-right w-16">Matches</span>
+                  <span>{t("members.name")}</span>
+                  <span className="text-right w-16">{t("members.level")}</span>
+                  <span className="text-right w-20">{t("members.reliability")}</span>
+                  <span className="text-right w-16">{t("members.matches")}</span>
                   <span className="text-right w-12">Flags</span>
                 </div>
 

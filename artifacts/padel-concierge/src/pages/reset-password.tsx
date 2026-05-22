@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { apiFetch } from "@/lib/api";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 export default function ResetPassword() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [token, setToken] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -18,18 +20,18 @@ export default function ResetPassword() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const t = params.get("token");
-    if (t) setToken(t);
+    const tok = params.get("token");
+    if (tok) setToken(tok);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirm) {
-      toast({ title: "Passwords don't match", variant: "destructive" });
+      toast({ title: t("resetPassword.passwordsMismatch"), variant: "destructive" });
       return;
     }
     if (password.length < 8) {
-      toast({ title: "Password must be at least 8 characters", variant: "destructive" });
+      toast({ title: t("resetPassword.passwordTooShort"), variant: "destructive" });
       return;
     }
     setLoading(true);
@@ -42,8 +44,8 @@ export default function ResetPassword() {
       setTimeout(() => setLocation("/login"), 2500);
     } catch (err: any) {
       toast({
-        title: "Reset failed",
-        description: err.message || "Token may be expired or invalid.",
+        title: t("resetPassword.resetFailed"),
+        description: err.message || t("resetPassword.tokenExpired"),
         variant: "destructive",
       });
     } finally {
@@ -55,31 +57,29 @@ export default function ResetPassword() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md bg-card border-white/5">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-3xl font-serif">Set New Password</CardTitle>
+          <CardTitle className="text-3xl font-serif">{t("resetPassword.title")}</CardTitle>
           <CardDescription className="text-muted-foreground">
-            Choose a new password for your account
+            {t("resetPassword.subtitle")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {done ? (
             <div className="text-center space-y-4 py-4">
               <div className="text-4xl">✅</div>
-              <p className="text-sm text-muted-foreground">
-                Password updated successfully! Redirecting to login...
-              </p>
+              <p className="text-sm text-muted-foreground">{t("resetPassword.successText")}</p>
             </div>
           ) : !token ? (
             <div className="text-center py-4 text-sm text-destructive">
-              Invalid or missing reset token. Please request a new reset link.
+              {t("resetPassword.invalidToken")}
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="password">New Password</Label>
+                <Label htmlFor="password">{t("resetPassword.newPassword")}</Label>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="At least 8 characters"
+                  placeholder={t("resetPassword.passwordPlaceholder")}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -87,11 +87,11 @@ export default function ResetPassword() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirm">Confirm New Password</Label>
+                <Label htmlFor="confirm">{t("resetPassword.confirmPassword")}</Label>
                 <Input
                   id="confirm"
                   type="password"
-                  placeholder="Repeat your new password"
+                  placeholder={t("resetPassword.confirmPlaceholder")}
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                   required
@@ -99,7 +99,7 @@ export default function ResetPassword() {
                 />
               </div>
               <Button type="submit" className="w-full mt-2" disabled={loading}>
-                {loading ? "Updating..." : "Update Password"}
+                {loading ? t("resetPassword.updating") : t("resetPassword.updateButton")}
               </Button>
             </form>
           )}

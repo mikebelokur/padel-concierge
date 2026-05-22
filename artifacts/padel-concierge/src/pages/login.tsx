@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useLogin } from "@workspace/api-client-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +15,7 @@ export default function Login() {
   const [, setLocation] = useLocation();
   const { login: authLogin } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const loginMutation = useLogin({
     mutation: {
@@ -25,8 +27,8 @@ export default function Login() {
       },
       onError: (err: any) => {
         toast({
-          title: "Login failed",
-          description: err.message || "Invalid credentials",
+          title: t("login.loginFailed"),
+          description: err.message || t("login.invalidCredentials"),
           variant: "destructive",
         });
       },
@@ -42,15 +44,15 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md bg-card border-white/5">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-3xl font-serif">Welcome Back</CardTitle>
+          <CardTitle className="text-3xl font-serif">{t("login.title")}</CardTitle>
           <CardDescription className="text-muted-foreground">
-            Enter your credentials to access your account
+            {t("login.subtitle")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("login.email")}</Label>
               <Input
                 id="email"
                 type="text"
@@ -63,10 +65,10 @@ export default function Login() {
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t("login.password")}</Label>
                 <Link href="/forgot-password">
                   <span className="text-xs text-muted-foreground hover:text-primary cursor-pointer transition-colors">
-                    Forgot password?
+                    {t("login.forgotPassword")}
                   </span>
                 </Link>
               </div>
@@ -84,13 +86,13 @@ export default function Login() {
               className="w-full mt-6"
               disabled={loginMutation.isPending}
             >
-              {loginMutation.isPending ? "Logging in..." : "Login"}
+              {loginMutation.isPending ? t("login.loggingIn") : t("login.loginButton")}
             </Button>
             <div className="text-center pt-2">
               <span className="text-sm text-muted-foreground">
-                Not a member?{" "}
+                {t("login.notMember")}{" "}
                 <Link href="/register">
-                  <span className="text-primary hover:underline cursor-pointer">Join now</span>
+                  <span className="text-primary hover:underline cursor-pointer">{t("login.joinNow")}</span>
                 </Link>
               </span>
             </div>

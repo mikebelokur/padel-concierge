@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
-  Q1_OPTIONS, Q2_OPTIONS, Q3_OPTIONS,
   LEVEL_QUESTIONS, calcQuizLevel, downgradeLevel, generateSessionId,
 } from "@/lib/level-quiz";
 import { submitLevelQuiz } from "@/lib/level-quiz-api";
@@ -30,13 +30,13 @@ function ProgressBar({ step }: { step: number }) {
 
 export default function LevelQuiz() {
   const [, setLocation] = useLocation();
+  const { t } = useLanguage();
   const [step, setStep] = useState(1);
   const [answers, setAnswers] = useState<Answers>({});
   const [q4Extra, setQ4Extra] = useState("");
   const [showExtra, setShowExtra] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Generate or restore session ID
   const [sessionId] = useState(() => {
     const existing = sessionStorage.getItem(SESSION_KEY);
     if (existing) return existing;
@@ -45,7 +45,6 @@ export default function LevelQuiz() {
     return id;
   });
 
-  // If they already completed this session, skip to result
   useEffect(() => {
     const saved = sessionStorage.getItem("lq_result");
     if (saved) setLocation("/level-quiz/result");
@@ -73,13 +72,13 @@ export default function LevelQuiz() {
     });
     const quizLevel = calcQuizLevel(levelAnswers);
     const realLevel = downgradeLevel(quizLevel);
-    const personality = finalAnswers.q3 != null ? Q3_OPTIONS[finalAnswers.q3] : null;
+    const q3Options = t("levelQuiz.q3Options", { returnObjects: true }) as unknown as string[];
+    const personality = finalAnswers.q3 != null ? q3Options[finalAnswers.q3] : null;
 
     setLoading(true);
     try {
       const result = await submitLevelQuiz({
-        sessionId,
-        quizLevel, realLevel,
+        sessionId, quizLevel, realLevel,
         personalityType: personality,
         q1Answer: finalAnswers.q1 ?? null,
         q2Answer: finalAnswers.q2 ?? null,
@@ -104,13 +103,9 @@ export default function LevelQuiz() {
   function handleLevelAnswer(key: string, val: string, hasExtra: boolean, isLast: boolean) {
     const newAnswers = { ...answers, [key]: val };
     setAnswers(newAnswers);
-    if (hasExtra) {
-      setShowExtra(true);
-    } else if (isLast) {
-      saveAndFinish(newAnswers);
-    } else {
-      setStep(s => s + 1);
-    }
+    if (hasExtra) setShowExtra(true);
+    else if (isLast) saveAndFinish(newAnswers);
+    else setStep(s => s + 1);
   }
 
   function handleExtraContinue() {
@@ -125,16 +120,20 @@ export default function LevelQuiz() {
       <div className="min-h-screen flex items-center justify-center bg-[#080808]">
         <div className="text-center">
           <div className="text-4xl mb-4 animate-bounce">🏸</div>
-          <p className="text-[#8a8a8a]">Считаем результат...</p>
+          <p className="text-[#8a8a8a]">{t("levelQuiz.loading")}</p>
         </div>
       </div>
     );
   }
 
+  const q1Options = t("levelQuiz.q1Options", { returnObjects: true }) as unknown as string[];
+  const q2Options = t("levelQuiz.q2Options", { returnObjects: true }) as unknown as string[];
+  const q3Options = t("levelQuiz.q3Options", { returnObjects: true }) as unknown as string[];
+
   const personalitySteps = [
-    { emoji: "🎯", label: "Цель",      question: "Почему ты начал(а) играть в падел?",       options: Q1_OPTIONS, qKey: "q1" as const, selected: answers.q1 },
-    { emoji: "❤️", label: "Мотивация", question: "Что для тебя важнее на корте?",             options: Q2_OPTIONS, qKey: "q2" as const, selected: answers.q2 },
-    { emoji: "🏆", label: "Идеал",     question: "Как выглядит твоя идеальная игра?",         options: Q3_OPTIONS, qKey: "q3" as const, selected: answers.q3 },
+    { emoji: "🎯", label: t("levelQuiz.q1.label"), question: t("levelQuiz.q1.text"), options: q1Options, qKey: "q1" as const, selected: answers.q1 },
+    { emoji: "❤️", label: t("levelQuiz.q2.label"), question: t("levelQuiz.q2.text"), options: q2Options, qKey: "q2" as const, selected: answers.q2 },
+    { emoji: "🏆", label: t("levelQuiz.q3.label"), question: t("levelQuiz.q3.text"), options: q3Options, qKey: "q3" as const, selected: answers.q3 },
   ];
 
   return (
@@ -145,12 +144,10 @@ export default function LevelQuiz() {
         <div className="flex items-center gap-3 mb-8">
           {step > 1 && (
             <button onClick={handleBack} className="text-[#8a8a8a] hover:text-white transition-colors text-sm font-medium shrink-0">
-              ← Назад
+              {t("levelQuiz.back")}
             </button>
           )}
-          <div className="flex-1">
-            <ProgressBar step={step} />
-          </div>
+          <div className="flex-1"><ProgressBar step={step} /></div>
           <span className="text-[#555] text-xs shrink-0">{step}/{TOTAL}</span>
         </div>
 
@@ -188,17 +185,21 @@ export default function LevelQuiz() {
           <div className="flex-1 flex flex-col">
             <div className="mb-8">
               <div className="text-4xl mb-3">{levelQ.emoji}</div>
-              <div className="text-xs text-blue-400 font-medium uppercase tracking-widest mb-2">{levelQ.label}</div>
-              <h2 className="text-xl font-bold text-white leading-snug">{levelQ.text}</h2>
+              <div className="text-xs text-blue-400 font-medium uppercase tracking-widest mb-2">
+                {t(`levelQuiz.${levelQ.key}.label`)}
+              </div>
+              <h2 className="text-xl font-bold text-white leading-snug">
+                {t(`levelQuiz.${levelQ.key}.text`)}
+              </h2>
             </div>
 
             {showExtra ? (
               <div className="flex-1 flex flex-col gap-4">
-                <p className="text-[#8a8a8a] text-sm">Как ты обычно это делаешь?</p>
+                <p className="text-[#8a8a8a] text-sm">{t("levelQuiz.howDoYouDo")}</p>
                 <textarea
                   value={q4Extra}
                   onChange={(e) => setQ4Extra(e.target.value)}
-                  placeholder="Необязательно, но интересно..."
+                  placeholder={t("levelQuiz.optional")}
                   rows={4}
                   className="w-full px-4 py-3 bg-white/[0.03] border border-white/10 rounded-xl text-white placeholder-[#555] focus:outline-none focus:border-blue-500 transition-colors resize-none text-sm"
                 />
@@ -206,7 +207,7 @@ export default function LevelQuiz() {
                   onClick={handleExtraContinue}
                   className="w-full h-14 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-500 transition-colors"
                 >
-                  Продолжить →
+                  {t("levelQuiz.continueBtn")}
                 </button>
               </div>
             ) : (
@@ -221,7 +222,7 @@ export default function LevelQuiz() {
                         : "border-red-500/30 bg-red-500/5 text-red-400 hover:bg-red-500/10 hover:border-red-500/50 active:scale-[0.98]"
                     }`}
                   >
-                    {val === "yes" ? "✓  Да" : "✗  Нет"}
+                    {val === "yes" ? t("levelQuiz.yes") : t("levelQuiz.no")}
                   </button>
                 ))}
               </div>

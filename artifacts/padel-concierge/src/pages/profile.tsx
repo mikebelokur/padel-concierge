@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useGetPlayerStats, getGetPlayerStatsQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -57,6 +58,7 @@ function ArchetypePill({ archetype }: { archetype: string }) {
 
 export default function Profile() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { data: stats, isLoading } = useGetPlayerStats(user?.id || 0, {
     query: { enabled: !!user?.id, queryKey: getGetPlayerStatsQueryKey(user?.id || 0) }
   });
@@ -75,7 +77,7 @@ export default function Profile() {
     retry: false,
   });
 
-  if (isLoading) return <AppLayout><div className="p-8">Loading profile...</div></AppLayout>;
+  if (isLoading) return <AppLayout><div className="p-8">{t("profile.loadingProfile")}</div></AppLayout>;
 
   const archetype = user?.archetype as Archetype | undefined;
   const archetypeMeta = archetype ? ARCHETYPE_META[archetype] : null;
@@ -92,7 +94,7 @@ export default function Profile() {
             <div className="flex flex-wrap gap-2 items-center">
               <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-sm px-3">{user?.level}</Badge>
               {user?.verified && (
-                <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 text-sm px-3">✓ Certified</Badge>
+                <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 text-sm px-3">✓ {t("common.certified")}</Badge>
               )}
               {archetypeMeta && (
                 <Badge variant="outline" className={`text-sm px-3 ${archetypeMeta.color} ${archetypeMeta.bg} ${archetypeMeta.border}`}>
@@ -100,7 +102,7 @@ export default function Profile() {
                 </Badge>
               )}
               {user?.warmUpPreference && (
-                <Badge variant="outline" className="text-sm px-3 text-orange-400 bg-orange-500/10 border-orange-500/20">🔥 Разминка</Badge>
+                <Badge variant="outline" className="text-sm px-3 text-orange-400 bg-orange-500/10 border-orange-500/20">{t("profile.warmupBadge")}</Badge>
               )}
               {reliability && !reliabilityLoading && (
                 <span className="inline-flex items-center gap-1.5">
@@ -115,7 +117,7 @@ export default function Profile() {
             {!archetype && (
               <Link href="/quiz">
                 <Button variant="outline" size="sm" className="border-primary/30 text-primary hover:bg-primary/10 mt-1">
-                  🧠 Пройти тест архетипа
+                  {t("profile.takeArchetypeQuiz")}
                 </Button>
               </Link>
             )}
@@ -125,12 +127,12 @@ export default function Profile() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="bg-card border-white/5 md:col-span-2">
             <CardHeader>
-              <CardTitle>Level Progression</CardTitle>
+              <CardTitle>{t("profile.levelProgression")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-between text-sm">
-                <span>Current: {user?.level}</span>
-                <span className="text-muted-foreground">{stats?.winsToNextLevel} wins to next level</span>
+                <span>{t("profile.currentLevel")} {user?.level}</span>
+                <span className="text-muted-foreground">{stats?.winsToNextLevel} {t("profile.winsToNext")}</span>
               </div>
               <Progress value={stats?.levelProgress || 0} className="h-3 bg-white/5" />
               <div className="flex justify-between text-xs text-muted-foreground mt-2">
@@ -141,49 +143,48 @@ export default function Profile() {
 
           <Card className="bg-card border-white/5">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Level Confidence</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t("profile.levelConfidence")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-4xl font-mono text-accent">{stats?.levelConfidence || 0}%</div>
-              <p className="text-xs text-muted-foreground mt-2">Based on recent performance against verified players</p>
+              <p className="text-xs text-muted-foreground mt-2">{t("profile.confidenceDesc")}</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Play Style */}
         {(user?.levelSelf != null || user?.levelQuiz || user?.physicalSelf != null || user?.warmupFormat) && (
           <Card className="bg-card border-white/5">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Play Style</CardTitle>
+              <CardTitle className="text-base">{t("profile.playStyle")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {user?.levelSelf != null && (
                   <div className="p-3 rounded-lg bg-white/5 border border-white/5 text-center">
-                    <div className="text-xs text-muted-foreground mb-1">Self-assessed</div>
+                    <div className="text-xs text-muted-foreground mb-1">{t("profile.selfAssessed")}</div>
                     <div className="text-2xl font-mono text-primary font-bold">{user.levelSelf}</div>
                     <div className="text-xs text-muted-foreground mt-0.5">/ 5.0</div>
                   </div>
                 )}
                 {user?.levelQuiz && (
                   <div className="p-3 rounded-lg bg-white/5 border border-white/5 text-center">
-                    <div className="text-xs text-muted-foreground mb-1">Quiz level</div>
+                    <div className="text-xs text-muted-foreground mb-1">{t("profile.quizLevel")}</div>
                     <div className="text-2xl font-mono text-accent font-bold">{user.levelQuiz}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">certified</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{t("profile.certified")}</div>
                   </div>
                 )}
                 {user?.physicalSelf != null && (
                   <div className="p-3 rounded-lg bg-white/5 border border-white/5 text-center">
-                    <div className="text-xs text-muted-foreground mb-1">Physical</div>
+                    <div className="text-xs text-muted-foreground mb-1">{t("profile.physical")}</div>
                     <div className="text-2xl font-mono text-foreground font-bold">{user.physicalSelf}</div>
                     <div className="text-xs text-muted-foreground mt-0.5">/ 10</div>
                   </div>
                 )}
                 {user?.warmupFormat && (
                   <div className="p-3 rounded-lg bg-white/5 border border-white/5 text-center">
-                    <div className="text-xs text-muted-foreground mb-1">Warmup</div>
+                    <div className="text-xs text-muted-foreground mb-1">{t("profile.warmup")}</div>
                     <div className="text-sm font-medium text-foreground capitalize mt-1">{user.warmupFormat}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">format</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{t("profile.format")}</div>
                   </div>
                 )}
               </div>
@@ -191,33 +192,29 @@ export default function Profile() {
           </Card>
         )}
 
-        {/* Reliability + Compatibility row */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
           {/* Reliability */}
           <Card className="bg-card border-white/5">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2">
-                Reliability
+                {t("profile.reliability")}
                 {reliability && (
                   <span className={cn("text-sm font-normal", reliabilityColor(reliability.reliabilityScore))}>
-                    {reliability.source === "mongodb" ? "· live" : "· estimated"}
+                    · {reliability.source === "mongodb" ? t("profile.live") : t("profile.estimated")}
                   </span>
                 )}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {reliabilityLoading ? (
-                <div className="text-sm text-muted-foreground animate-pulse">Loading…</div>
+                <div className="text-sm text-muted-foreground animate-pulse">{t("common.loading")}</div>
               ) : !reliability ? (
-                <div className="text-sm text-muted-foreground italic">
-                  Behavioral data unavailable.
-                </div>
+                <div className="text-sm text-muted-foreground italic">{t("profile.behavioralUnavailable")}</div>
               ) : (
                 <div className="space-y-4">
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-muted-foreground">Reliability Score</span>
+                      <span className="text-sm text-muted-foreground">{t("profile.reliabilityScore")}</span>
                       <span className={cn("text-sm font-semibold tabular-nums", reliabilityColor(reliability.reliabilityScore))}>
                         {reliability.reliabilityScore}/100 · {reliabilityLabel(reliability.reliabilityScore)}
                       </span>
@@ -229,35 +226,29 @@ export default function Profile() {
                       />
                     </div>
                   </div>
-
                   <div className="grid grid-cols-2 gap-3">
                     <div className="p-3 rounded-lg bg-white/5 border border-white/5">
-                      <div className="text-xs text-muted-foreground mb-1">No-shows</div>
+                      <div className="text-xs text-muted-foreground mb-1">{t("profile.noShows")}</div>
                       <div className={cn("text-2xl font-bold tabular-nums", reliability.noShowCount > 0 ? "text-red-400" : "text-emerald-400")}>
                         {reliability.noShowCount}
                       </div>
-                      <div className="text-xs text-muted-foreground">total missed</div>
+                      <div className="text-xs text-muted-foreground">{t("profile.totalMissed")}</div>
                     </div>
                     <div className="p-3 rounded-lg bg-white/5 border border-white/5">
-                      <div className="text-xs text-muted-foreground mb-1">Session streak</div>
+                      <div className="text-xs text-muted-foreground mb-1">{t("profile.sessionStreak")}</div>
                       <div className={cn("text-2xl font-bold tabular-nums", reliability.sessionStreak >= 3 ? "text-emerald-400" : "text-foreground")}>
                         {reliability.sessionStreak}
                         {reliability.sessionStreak >= 3 && <span className="text-base ml-1">🔥</span>}
                       </div>
-                      <div className="text-xs text-muted-foreground">consecutive</div>
+                      <div className="text-xs text-muted-foreground">{t("profile.consecutive")}</div>
                     </div>
                   </div>
-
                   {reliability.behavioralFlags.length > 0 && (
                     <div>
-                      <div className="text-xs text-muted-foreground mb-2">Flags</div>
+                      <div className="text-xs text-muted-foreground mb-2">{t("profile.flags")}</div>
                       <div className="flex flex-wrap gap-2">
                         {reliability.behavioralFlags.map((flag) => (
-                          <Badge
-                            key={flag}
-                            variant="outline"
-                            className="text-xs border-amber-500/30 text-amber-400 bg-amber-500/10"
-                          >
+                          <Badge key={flag} variant="outline" className="text-xs border-amber-500/30 text-amber-400 bg-amber-500/10">
                             ⚑ {flag}
                           </Badge>
                         ))}
@@ -272,25 +263,23 @@ export default function Profile() {
           {/* Compatibility */}
           <Card className="bg-card border-white/5">
             <CardHeader className="pb-3">
-              <CardTitle>Top Compatibility Matches</CardTitle>
+              <CardTitle>{t("profile.topCompatibility")}</CardTitle>
             </CardHeader>
             <CardContent>
               {!archetype ? (
                 <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">
-                    Take the archetype quiz to unlock your compatibility matches.
-                  </p>
+                  <p className="text-sm text-muted-foreground">{t("profile.takeQuizUnlock")}</p>
                   <Link href="/quiz">
                     <Button variant="outline" size="sm" className="border-primary/30 text-primary hover:bg-primary/10">
-                      🧠 Take Quiz
+                      {t("profile.takeQuiz")}
                     </Button>
                   </Link>
                 </div>
               ) : matchesLoading ? (
-                <div className="text-sm text-muted-foreground animate-pulse">Loading…</div>
+                <div className="text-sm text-muted-foreground animate-pulse">{t("common.loading")}</div>
               ) : !topMatches?.matches?.length ? (
                 <div className="text-sm text-muted-foreground italic">
-                  {topMatches?.noMatchesMessage ?? "No compatible players found yet."}
+                  {topMatches?.noMatchesMessage ?? t("profile.noCompatible")}
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -301,9 +290,7 @@ export default function Profile() {
                     return (
                       <div key={match.id} className={cn(
                         "flex items-start gap-3 p-3 rounded-xl border",
-                        match.archetypeMatch
-                          ? "border-primary/25 bg-primary/5"
-                          : "border-white/5 bg-white/[0.02]"
+                        match.archetypeMatch ? "border-primary/25 bg-primary/5" : "border-white/5 bg-white/[0.02]"
                       )}>
                         <div className={cn(
                           "w-9 h-9 rounded-full flex items-center justify-center text-sm font-serif flex-shrink-0",
@@ -316,7 +303,7 @@ export default function Profile() {
                             <span className="text-sm font-medium">{match.name}</span>
                             {match.verified && <span className="text-accent text-xs">✓</span>}
                             {match.archetypeMatch && (
-                              <span className="text-xs text-primary bg-primary/10 border border-primary/20 rounded-full px-1.5 py-0.5">Совпадение</span>
+                              <span className="text-xs text-primary bg-primary/10 border border-primary/20 rounded-full px-1.5 py-0.5">{t("profile.archetypeMatch")}</span>
                             )}
                             <CompatBadge pct={match.compatibilityScore} />
                           </div>
@@ -339,9 +326,7 @@ export default function Profile() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="bg-card border-white/5">
-            <CardHeader>
-              <CardTitle>Win Trend (Last 30 Days)</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>{t("profile.winTrend")}</CardTitle></CardHeader>
             <CardContent className="h-64">
               {stats?.winTrend && (
                 <ResponsiveContainer width="100%" height="100%">
@@ -357,23 +342,12 @@ export default function Profile() {
           </Card>
 
           <Card className="bg-card border-white/5">
-            <CardHeader>
-              <CardTitle>Format Breakdown</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>{t("profile.formatBreakdown")}</CardTitle></CardHeader>
             <CardContent className="h-64 flex items-center justify-center">
               {stats?.formatBreakdown && (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie
-                      data={stats.formatBreakdown}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="count"
-                      nameKey="format"
-                    >
+                    <Pie data={stats.formatBreakdown} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="count" nameKey="format">
                       {stats.formatBreakdown.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}

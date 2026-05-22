@@ -1,5 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useDrawer } from "@/contexts/DrawerContext";
+import { useLanguage, type Language } from "@/contexts/LanguageContext";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
@@ -7,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 interface NavItem {
   href: string;
-  label: string;
+  labelKey: string;
   icon: string;
   roles?: string[];
   dividerBefore?: boolean;
@@ -15,28 +16,29 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { href: "/coach",          label: "Coach Hub",      icon: "🏆", roles: ["coach", "admin", "owner"] },
-  { href: "/clients",        label: "My Clients",     icon: "👥", roles: ["coach", "admin", "owner"] },
-  { href: "/messages",       label: "Messages",        icon: "💬", roles: ["coach", "admin", "owner"] },
-  { href: "/registrations",  label: "Registrations",  icon: "🆕", roles: ["admin", "owner"], badgeKey: "pending" },
-  { href: "/dashboard",      label: "Dashboard",       icon: "◈",  dividerBefore: true },
-  { href: "/matches",        label: "Matches",         icon: "🎾" },
-  { href: "/match-requests", label: "Requests",        icon: "📨" },
-  { href: "/bookings",       label: "Bookings",        icon: "📅" },
-  { href: "/courts",         label: "Courts",          icon: "🏟️" },
-  { href: "/members",        label: "Members",         icon: "👤" },
-  { href: "/assessment",     label: "Assessment",      icon: "📊" },
-  { href: "/video-analysis", label: "Video Analysis",  icon: "🎬" },
-  { href: "/rules",          label: "Padel Rules",     icon: "📖", dividerBefore: true },
-  { href: "/news",           label: "News & Tips",     icon: "📰" },
-  { href: "/settings",       label: "Settings",        icon: "⚙️",  dividerBefore: true },
-  { href: "/admin",          label: "Admin Panel",     icon: "🔧", roles: ["admin", "owner"] },
+  { href: "/coach",          labelKey: "nav.coachHub",      icon: "🏆", roles: ["coach", "admin", "owner"] },
+  { href: "/clients",        labelKey: "nav.myClients",     icon: "👥", roles: ["coach", "admin", "owner"] },
+  { href: "/messages",       labelKey: "nav.messages",      icon: "💬", roles: ["coach", "admin", "owner"] },
+  { href: "/registrations",  labelKey: "nav.registrations", icon: "🆕", roles: ["admin", "owner"], badgeKey: "pending" },
+  { href: "/dashboard",      labelKey: "nav.dashboard",     icon: "◈",  dividerBefore: true },
+  { href: "/matches",        labelKey: "nav.matches",       icon: "🎾" },
+  { href: "/match-requests", labelKey: "nav.requests",      icon: "📨" },
+  { href: "/bookings",       labelKey: "nav.bookings",      icon: "📅" },
+  { href: "/courts",         labelKey: "nav.courts",        icon: "🏟️" },
+  { href: "/members",        labelKey: "nav.members",       icon: "👤" },
+  { href: "/assessment",     labelKey: "nav.assessment",    icon: "📊" },
+  { href: "/video-analysis", labelKey: "nav.videoAnalysis", icon: "🎬" },
+  { href: "/rules",          labelKey: "nav.padelRules",    icon: "📖", dividerBefore: true },
+  { href: "/news",           labelKey: "nav.newsAndTips",   icon: "📰" },
+  { href: "/settings",       labelKey: "nav.settings",      icon: "⚙️",  dividerBefore: true },
+  { href: "/admin",          labelKey: "nav.adminPanel",    icon: "🔧", roles: ["admin", "owner"] },
 ];
 
 export function Drawer() {
   const [location] = useLocation();
   const { user, logout } = useAuth();
   const { open, openDrawer, closeDrawer } = useDrawer();
+  const { language, setLanguage, t } = useLanguage();
 
   const isOwnerOrAdmin = user?.role === "owner" || user?.role === "admin";
   const isOwner = user?.role === "owner";
@@ -51,6 +53,44 @@ export function Drawer() {
 
   const visibleItems = navItems.filter(
     (item) => !item.roles || (user?.role && item.roles.includes(user.role))
+  );
+
+  const handleLanguageSwitch = (lang: Language) => {
+    setLanguage(lang);
+    if (user?.id) {
+      apiFetch(`/users/${user.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ language: lang }),
+      }).catch(() => {});
+    }
+  };
+
+  const LangToggle = () => (
+    <div className="flex items-center gap-0.5 bg-white/5 rounded-md px-1 py-0.5">
+      <button
+        onClick={() => handleLanguageSwitch("en")}
+        className={cn(
+          "px-2 py-0.5 rounded text-xs font-semibold transition-colors",
+          language === "en"
+            ? "bg-primary text-white"
+            : "text-muted-foreground hover:text-foreground"
+        )}
+      >
+        EN
+      </button>
+      <span className="text-white/20 text-xs">|</span>
+      <button
+        onClick={() => handleLanguageSwitch("ru")}
+        className={cn(
+          "px-2 py-0.5 rounded text-xs font-semibold transition-colors",
+          language === "ru"
+            ? "bg-primary text-white"
+            : "text-muted-foreground hover:text-foreground"
+        )}
+      >
+        RU
+      </button>
+    </div>
   );
 
   return (
@@ -78,10 +118,13 @@ export function Drawer() {
           <Link href="/registrations">
             <div className="lg:hidden flex items-center gap-1.5 bg-yellow-500/10 border border-yellow-500/30 rounded-full px-2.5 py-1 cursor-pointer">
               <span className="text-yellow-400 text-xs font-bold">{pendingCount}</span>
-              <span className="text-yellow-400 text-xs">new</span>
+              <span className="text-yellow-400 text-xs">{t("common.new")}</span>
             </div>
           </Link>
         )}
+
+        {/* Language toggle — always visible in top bar */}
+        <LangToggle />
 
         {/* Avatar — mobile */}
         <button
@@ -97,16 +140,17 @@ export function Drawer() {
 
       {/* ── DESKTOP SIDEBAR ─────────────────────────── */}
       <aside className="hidden lg:flex flex-col fixed top-0 left-0 h-screen w-64 bg-card border-r border-white/5 z-30">
-        <div className="h-14 flex items-center px-5 border-b border-white/5 flex-shrink-0">
+        <div className="h-14 flex items-center justify-between px-5 border-b border-white/5 flex-shrink-0">
           <div>
             <div className="font-serif text-base tracking-tight">Padel Concierge</div>
             <div className="text-xs text-muted-foreground">Private Members Club · Dubai</div>
           </div>
+          <LangToggle />
         </div>
         <nav className="flex-1 overflow-y-auto py-2 px-3">
-          <NavList items={visibleItems} location={location} pendingCount={pendingCount} />
+          <NavList items={visibleItems} location={location} pendingCount={pendingCount} t={t} />
         </nav>
-        <UserFooter user={user} isOwner={isOwner} logout={logout} />
+        <UserFooter user={user} isOwner={isOwner} logout={logout} t={t} />
       </aside>
 
       {/* ── MOBILE OVERLAY ──────────────────────────── */}
@@ -136,9 +180,9 @@ export function Drawer() {
           </button>
         </div>
         <nav className="flex-1 overflow-y-auto py-2 px-3">
-          <NavList items={visibleItems} location={location} pendingCount={pendingCount} />
+          <NavList items={visibleItems} location={location} pendingCount={pendingCount} t={t} />
         </nav>
-        <UserFooter user={user} isOwner={isOwner} logout={logout} />
+        <UserFooter user={user} isOwner={isOwner} logout={logout} t={t} />
       </aside>
     </>
   );
@@ -148,10 +192,12 @@ function NavList({
   items,
   location,
   pendingCount,
+  t,
 }: {
   items: NavItem[];
   location: string;
   pendingCount: number;
+  t: (key: string) => string;
 }) {
   return (
     <>
@@ -178,7 +224,7 @@ function NavList({
                 )}
               >
                 <span className="text-base w-5 text-center leading-none flex-shrink-0">{item.icon}</span>
-                <span className="flex-1">{item.label}</span>
+                <span className="flex-1">{t(item.labelKey)}</span>
                 {badge !== null && (
                   <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-yellow-500 text-black text-xs font-bold flex items-center justify-center">
                     {badge}
@@ -193,7 +239,17 @@ function NavList({
   );
 }
 
-function UserFooter({ user, isOwner, logout }: { user: any; isOwner: boolean; logout: () => void }) {
+function UserFooter({
+  user,
+  isOwner,
+  logout,
+  t,
+}: {
+  user: any;
+  isOwner: boolean;
+  logout: () => void;
+  t: (key: string) => string;
+}) {
   return (
     <div className="p-4 border-t border-white/5 flex-shrink-0">
       <div className="flex items-center gap-3 mb-3">
@@ -219,7 +275,7 @@ function UserFooter({ user, isOwner, logout }: { user: any; isOwner: boolean; lo
         onClick={logout}
         className="w-full text-left text-xs text-muted-foreground hover:text-foreground px-2 py-1.5 rounded hover:bg-white/5 transition-colors"
       >
-        Sign out
+        {t("common.signOut")}
       </button>
     </div>
   );

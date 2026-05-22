@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { apiFetch } from "@/lib/api";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +14,7 @@ export default function ForgotPassword() {
   const [sent, setSent] = useState(false);
   const [devResetUrl, setDevResetUrl] = useState<string | null>(null);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,8 +28,8 @@ export default function ForgotPassword() {
       setSent(true);
     } catch {
       toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
+        title: t("common.error"),
+        description: t("forgotPassword.errorMsg"),
         variant: "destructive",
       });
     } finally {
@@ -39,9 +41,9 @@ export default function ForgotPassword() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md bg-card border-white/5">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-3xl font-serif">Forgot Password</CardTitle>
+          <CardTitle className="text-3xl font-serif">{t("forgotPassword.title")}</CardTitle>
           <CardDescription className="text-muted-foreground">
-            Enter your email and we'll send you a reset link
+            {t("forgotPassword.subtitle")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -50,14 +52,13 @@ export default function ForgotPassword() {
               <div className="text-4xl">{devResetUrl ? "🔧" : "📧"}</div>
 
               {devResetUrl ? (
-                /* Dev mode — email not configured, show link directly */
                 <div className="space-y-3 text-left">
                   <p className="text-sm text-muted-foreground text-center">
-                    Email not configured — dev mode active.
+                    {t("forgotPassword.devNotConfigured")}
                   </p>
                   <div className="rounded-lg bg-amber-500/10 border border-amber-500/25 p-4 space-y-2">
                     <p className="text-xs font-semibold text-amber-400 uppercase tracking-wide">
-                      Dev reset link
+                      {t("forgotPassword.devTitle")}
                     </p>
                     <a
                       href={devResetUrl}
@@ -66,34 +67,33 @@ export default function ForgotPassword() {
                       {devResetUrl}
                     </a>
                     <p className="text-xs text-muted-foreground">
-                      This link is also printed in the server console. Expires in 1 hour.
+                      {t("forgotPassword.devNote")}
                     </p>
                   </div>
                   <Link href={devResetUrl}>
                     <Button className="w-full bg-amber-500/80 hover:bg-amber-500 text-black font-semibold">
-                      Open Reset Page →
+                      {t("forgotPassword.openResetPage")}
                     </Button>
                   </Link>
                 </div>
               ) : (
-                /* Production — email sent */
                 <p className="text-sm text-muted-foreground">
-                  If an account exists for{" "}
-                  <strong className="text-foreground">{email}</strong>, a reset
-                  link has been sent. Check your inbox.
+                  {t("forgotPassword.sentPrefix")}{" "}
+                  <strong className="text-foreground">{email}</strong>{" "}
+                  {t("forgotPassword.sentSuffix")}
                 </p>
               )}
 
               <Link href="/login">
                 <Button variant="outline" className="w-full border-white/10">
-                  Back to Login
+                  {t("forgotPassword.backToLogin")}
                 </Button>
               </Link>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="email">{t("forgotPassword.emailLabel")}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -105,12 +105,12 @@ export default function ForgotPassword() {
                 />
               </div>
               <Button type="submit" className="w-full mt-2" disabled={loading}>
-                {loading ? "Sending..." : "Send Reset Link"}
+                {loading ? t("forgotPassword.sending") : t("forgotPassword.sendButton")}
               </Button>
               <div className="text-center">
                 <Link href="/login">
                   <span className="text-sm text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
-                    Back to Login
+                    {t("forgotPassword.backToLogin")}
                   </span>
                 </Link>
               </div>

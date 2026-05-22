@@ -1,61 +1,39 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from "react";
+import i18n from "../i18n";
 
-type Language = 'en' | 'ru' | 'ar';
+export type Language = "en" | "ru";
 
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, options?: Record<string, unknown>) => string;
 }
-
-const translations: Record<Language, Record<string, string>> = {
-  en: {
-    'nav.dashboard': 'Dashboard',
-    'nav.matches': 'Matches',
-    'nav.bookings': 'Bookings',
-    'nav.profile': 'Profile',
-    'nav.videoAnalysis': 'Video Analysis',
-    'nav.settings': 'Settings',
-  },
-  ru: {
-    'nav.dashboard': 'Панель',
-    'nav.matches': 'Матчи',
-    'nav.bookings': 'Бронирования',
-    'nav.profile': 'Профиль',
-    'nav.videoAnalysis': 'Видео Анализ',
-    'nav.settings': 'Настройки',
-  },
-  ar: {
-    'nav.dashboard': 'لوحة القيادة',
-    'nav.matches': 'المباريات',
-    'nav.bookings': 'الحجوزات',
-    'nav.profile': 'الملف الشخصي',
-    'nav.videoAnalysis': 'تحليل الفيديو',
-    'nav.settings': 'الإعدادات',
-  }
-};
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<Language>(() => {
-    const saved = localStorage.getItem('language');
-    return (saved as Language) || 'en';
+    const saved = localStorage.getItem("language");
+    if (saved === "ru") return "ru";
+    if (saved === "en") return "en";
+    const browser = navigator.language.slice(0, 2).toLowerCase();
+    return browser === "ru" ? "ru" : "en";
   });
 
   const setLanguage = (lang: Language) => {
+    i18n.changeLanguage(lang);
+    localStorage.setItem("language", lang);
     setLanguageState(lang);
-    localStorage.setItem('language', lang);
+    document.documentElement.lang = lang;
   };
 
   useEffect(() => {
+    i18n.changeLanguage(language);
     document.documentElement.lang = language;
-    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
-  }, [language]);
+  }, []);
 
-  const t = (key: string) => {
-    return translations[language]?.[key] || key;
-  };
+  const t = (key: string, options?: Record<string, unknown>): string =>
+    i18n.t(key, options) as string;
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>
@@ -67,7 +45,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 export function useLanguage() {
   const context = useContext(LanguageContext);
   if (context === undefined) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
+    throw new Error("useLanguage must be used within a LanguageProvider");
   }
   return context;
 }

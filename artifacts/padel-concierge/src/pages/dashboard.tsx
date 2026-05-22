@@ -1,4 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useGetPlayerStats, useListBookings, useGetActivityLog, getGetPlayerStatsQueryKey, getListBookingsQueryKey, getGetActivityLogQueryKey } from "@workspace/api-client-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,10 +9,10 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "rec
 import { Link } from "wouter";
 import { ARCHETYPE_META, type Archetype } from "@/lib/archetypes";
 
-function levelLabel(level: string) {
+function levelLabel(level: string, t: (k: string) => string) {
   const n = parseFloat(level);
   if (isNaN(n)) return level;
-  if (n < 2.0) return "Beginner";
+  if (n < 2.0) return t("quiz.levels.D");
   if (n < 3.0) return "Intermediate";
   if (n < 4.0) return "Advanced";
   return "Elite";
@@ -19,6 +20,7 @@ function levelLabel(level: string) {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const userId = user?.id ?? 0;
 
   const { data: stats } = useGetPlayerStats(userId, {
@@ -53,32 +55,32 @@ export default function Dashboard() {
         <header className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h1 className="text-2xl sm:text-3xl font-serif mb-1 truncate">
-              Welcome back, {user?.name?.split(" ")[0] || "Player"}
+              {t("dashboard.welcomeBack")}, {user?.name?.split(" ")[0] || t("dashboard.player")}
             </h1>
             <div className="flex flex-wrap items-center gap-2 mt-2">
               <Badge className="bg-primary/20 text-primary border-primary/30 text-xs sm:text-sm px-2 sm:px-3 py-1">
                 WPT {user?.level ?? "—"}
               </Badge>
-              <span className="text-muted-foreground text-sm">{levelLabel(user?.level ?? "")}</span>
+              <span className="text-muted-foreground text-sm">{levelLabel(user?.level ?? "", t)}</span>
               {user?.verified && (
                 <Badge className="bg-accent/20 text-accent border-accent/30 text-xs sm:text-sm">
-                  ✓ Certified
+                  ✓ {t("common.certified")}
                 </Badge>
               )}
             </div>
           </div>
           <Link href="/matches/suggest">
-            <Button size="sm" className="shadow-lg shadow-primary/20 shrink-0 text-sm sm:text-base sm:h-10">Find Match</Button>
+            <Button size="sm" className="shadow-lg shadow-primary/20 shrink-0 text-sm sm:text-base sm:h-10">{t("dashboard.findMatch")}</Button>
           </Link>
         </header>
 
         {/* Stats Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: "Matches Played", value: user?.matchesPlayed ?? 0, color: "text-foreground" },
-            { label: "Wins", value: user?.wins ?? 0, color: "text-accent" },
-            { label: "Win Rate", value: `${winRatePct}%`, color: "text-primary" },
-            { label: "WPT Level", value: user?.level ?? "—", color: "text-primary" },
+            { label: t("dashboard.matchesPlayed"), value: user?.matchesPlayed ?? 0, color: "text-foreground" },
+            { label: t("dashboard.wins"), value: user?.wins ?? 0, color: "text-accent" },
+            { label: t("dashboard.winRate"), value: `${winRatePct}%`, color: "text-primary" },
+            { label: t("dashboard.wptLevel"), value: user?.level ?? "—", color: "text-primary" },
           ].map((s) => (
             <Card key={s.label} className="bg-card border-white/5">
               <CardHeader className="pb-1 pt-4 px-5">
@@ -97,29 +99,24 @@ export default function Dashboard() {
           {/* Win Trend Chart */}
           <Card className="bg-card border-white/5 lg:col-span-2">
             <CardHeader>
-              <CardTitle className="text-base font-medium">Win Rate Trend</CardTitle>
+              <CardTitle className="text-base font-medium">{t("dashboard.winRateTrend")}</CardTitle>
             </CardHeader>
             <CardContent className="h-52">
               {stats?.winTrend ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={stats.winTrend}>
-                    <XAxis
-                      dataKey="date"
-                      stroke="#6b7a99"
-                      fontSize={11}
-                      tickFormatter={(v) => v.slice(5)}
-                    />
+                    <XAxis dataKey="date" stroke="#6b7a99" fontSize={11} tickFormatter={(v) => v.slice(5)} />
                     <YAxis stroke="#6b7a99" fontSize={11} domain={[0, 1]} tickFormatter={(v) => `${Math.round(v * 100)}%`} />
                     <Tooltip
                       contentStyle={{ backgroundColor: "#0d1420", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px" }}
-                      formatter={(v: number) => [`${Math.round(v * 100)}%`, "Win Rate"]}
+                      formatter={(v: number) => [`${Math.round(v * 100)}%`, t("dashboard.winRate")]}
                     />
                     <Line type="monotone" dataKey="winRate" stroke="#2d7dff" strokeWidth={2} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
                 <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-                  Play more matches to see your trend
+                  {t("dashboard.playMoreMatches")}
                 </div>
               )}
             </CardContent>
@@ -128,15 +125,15 @@ export default function Dashboard() {
           {/* Quick Actions */}
           <Card className="bg-card border-white/5">
             <CardHeader>
-              <CardTitle className="text-base font-medium">Quick Actions</CardTitle>
+              <CardTitle className="text-base font-medium">{t("dashboard.quickActions")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {[
-                { href: "/matches/suggest", label: "Find a Match", icon: "🎾" },
-                { href: "/courts", label: "Book a Court", icon: "🏟️" },
-                { href: "/match-requests", label: "Match Requests", icon: "📨" },
-                { href: "/assessment", label: "Skill Assessment", icon: "📊" },
-                { href: "/video-analysis", label: "Video Analysis", icon: "🎬" },
+                { href: "/matches/suggest", label: t("dashboard.findAMatch"), icon: "🎾" },
+                { href: "/courts", label: t("dashboard.bookACourt"), icon: "🏟️" },
+                { href: "/match-requests", label: t("dashboard.matchRequests"), icon: "📨" },
+                { href: "/assessment", label: t("dashboard.skillAssessment"), icon: "📊" },
+                { href: "/video-analysis", label: t("dashboard.videoAnalysis"), icon: "🎬" },
               ].map((a) => (
                 <Link key={a.href} href={a.href}>
                   <div className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-white/5 cursor-pointer transition-colors text-sm">
@@ -153,14 +150,14 @@ export default function Dashboard() {
           {/* Upcoming Matches */}
           <Card className="bg-card border-white/5">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base font-medium">Upcoming Matches</CardTitle>
+              <CardTitle className="text-base font-medium">{t("dashboard.upcomingMatches")}</CardTitle>
               <Link href="/bookings">
-                <span className="text-xs text-primary hover:underline cursor-pointer">View all</span>
+                <span className="text-xs text-primary hover:underline cursor-pointer">{t("common.viewAll")}</span>
               </Link>
             </CardHeader>
             <CardContent className="space-y-3">
               {upcoming.length === 0 ? (
-                <div className="text-muted-foreground text-sm py-4 text-center">No upcoming matches</div>
+                <div className="text-muted-foreground text-sm py-4 text-center">{t("dashboard.noUpcomingMatches")}</div>
               ) : (
                 upcoming.map((b) => (
                   <Link key={b.id} href={`/matches/${b.matchId}`}>
@@ -176,7 +173,7 @@ export default function Dashboard() {
               )}
               {upcoming.length === 0 && (
                 <Link href="/matches/suggest">
-                  <Button variant="outline" className="w-full border-white/10 text-sm mt-1">Find a Match</Button>
+                  <Button variant="outline" className="w-full border-white/10 text-sm mt-1">{t("dashboard.findAMatch")}</Button>
                 </Link>
               )}
             </CardContent>
@@ -185,9 +182,9 @@ export default function Dashboard() {
           {/* Activity Feed */}
           <Card className="bg-card border-white/5">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base font-medium">Recent Activity</CardTitle>
+              <CardTitle className="text-base font-medium">{t("dashboard.recentActivity")}</CardTitle>
               <Link href="/members">
-                <span className="text-xs text-primary hover:underline cursor-pointer">See all</span>
+                <span className="text-xs text-primary hover:underline cursor-pointer">{t("common.seeAll")}</span>
               </Link>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -199,9 +196,7 @@ export default function Dashboard() {
                   <div className="min-w-0">
                     <div className="text-sm">
                       <span className="font-medium">{log.userName}</span>{" "}
-                      <span className="text-muted-foreground">
-                        {log.action?.replace(/_/g, " ")}
-                      </span>
+                      <span className="text-muted-foreground">{log.action?.replace(/_/g, " ")}</span>
                     </div>
                     {log.details && (
                       <div className="text-xs text-muted-foreground truncate">{log.details}</div>
@@ -226,12 +221,12 @@ export default function Dashboard() {
                     <div className={`font-serif text-lg mb-1 ${meta.color}`}>{meta.nameRu}</div>
                     <div className="text-muted-foreground text-sm max-w-md">{meta.desc}</div>
                     {user?.warmUpPreference && (
-                      <div className="text-xs text-orange-400 mt-1.5">🔥 Предпочитает разминку перед игрой</div>
+                      <div className="text-xs text-orange-400 mt-1.5">🔥 {t("dashboard.preferWarmup")}</div>
                     )}
                   </div>
                   <Link href="/quiz">
                     <Button variant="outline" className="shrink-0 border-white/10 text-muted-foreground hover:text-foreground">
-                      Пересдать
+                      {t("dashboard.retake")}
                     </Button>
                   </Link>
                 </CardContent>
@@ -243,15 +238,11 @@ export default function Dashboard() {
               <CardContent className="p-6 flex items-center justify-between gap-4">
                 <div>
                   <div className="text-xl mb-0.5">🧠</div>
-                  <div className="font-serif text-lg mb-1">Узнай свой архетип игрока</div>
-                  <div className="text-muted-foreground text-sm">
-                    6 вопросов — психология и стиль игры. Поможет находить совместимых партнёров.
-                  </div>
+                  <div className="font-serif text-lg mb-1">{t("dashboard.knowYourArchetype")}</div>
+                  <div className="text-muted-foreground text-sm">{t("dashboard.archetypeDesc")}</div>
                 </div>
                 <Link href="/quiz">
-                  <Button className="shrink-0 bg-primary shadow-lg shadow-primary/20">
-                    Пройти тест
-                  </Button>
+                  <Button className="shrink-0 bg-primary shadow-lg shadow-primary/20">{t("dashboard.takeQuiz")}</Button>
                 </Link>
               </CardContent>
             </Card>
@@ -263,14 +254,12 @@ export default function Dashboard() {
           <Card className="bg-gradient-to-r from-primary/10 to-accent/5 border-primary/20">
             <CardContent className="p-6 flex items-center justify-between">
               <div>
-                <div className="font-serif text-lg mb-1">Get Your Certified Level</div>
-                <div className="text-muted-foreground text-sm">
-                  Complete the 10-question skill assessment to earn your official WPT rating badge.
-                </div>
+                <div className="font-serif text-lg mb-1">{t("dashboard.getCertifiedLevel")}</div>
+                <div className="text-muted-foreground text-sm">{t("dashboard.certifiedDesc")}</div>
               </div>
               <Link href="/assessment">
                 <Button variant="outline" className="border-primary text-primary hover:bg-primary/10 shrink-0 ml-4">
-                  Take Assessment
+                  {t("dashboard.takeAssessment")}
                 </Button>
               </Link>
             </CardContent>

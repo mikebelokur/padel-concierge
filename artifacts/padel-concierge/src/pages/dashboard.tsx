@@ -74,6 +74,33 @@ export default function Dashboard() {
           </Link>
         </header>
 
+        {/* Find a Partner CTA */}
+        {(() => {
+          const tomorrow = new Date();
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          const tomorrowStr = tomorrow.toISOString().slice(0, 10);
+          return (
+            <Link href={`/find-match?date=${tomorrowStr}`}>
+              <Card className="bg-gradient-to-r from-yellow-500/10 via-primary/10 to-transparent border-yellow-500/30 hover:border-yellow-500/50 transition-colors cursor-pointer">
+                <CardContent className="p-5 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="text-2xl flex-shrink-0">🎯</div>
+                    <div className="min-w-0">
+                      <div className="text-sm sm:text-base font-medium truncate">
+                        {t("dashboard.findPartnerTomorrow")}
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {t("dashboard.findPartnerHint")}
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-yellow-400 text-xl">→</span>
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })()}
+
         {/* Stats Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[

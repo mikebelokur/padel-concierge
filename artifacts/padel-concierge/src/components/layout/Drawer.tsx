@@ -21,6 +21,7 @@ const navItems: NavItem[] = [
   { href: "/messages",       labelKey: "nav.messages",      icon: "💬", roles: ["coach", "admin", "owner"] },
   { href: "/registrations",  labelKey: "nav.registrations", icon: "🆕", roles: ["admin", "owner"], badgeKey: "pending" },
   { href: "/dashboard",      labelKey: "nav.dashboard",     icon: "◈",  dividerBefore: true },
+  { href: "/find-match",     labelKey: "nav.findMatch",     icon: "🎯" },
   { href: "/matches",        labelKey: "nav.matches",       icon: "🎾" },
   { href: "/match-requests", labelKey: "nav.requests",      icon: "📨" },
   { href: "/bookings",       labelKey: "nav.bookings",      icon: "📅" },

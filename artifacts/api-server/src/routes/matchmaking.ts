@@ -132,9 +132,6 @@ function computeTimeOverlap(
 
 // ─── Request schema ──────────────────────────────────────────────────────────
 const SuggestBodySchema = z.object({
-  userId: z
-    .union([z.string(), z.number()])
-    .transform((v) => Number(v)),
   date: z.string().optional(),
   count: z.number().min(1).max(10).default(5),
 });
@@ -147,7 +144,10 @@ router.post("/matchmaking/suggest", async (req, res): Promise<void> => {
     return;
   }
 
-  const { userId, date, count } = parsed.data;
+  // Always use the authenticated user's id — never trust client-supplied userId.
+  const auth = (req as any).auth as { userId: number };
+  const userId = auth.userId;
+  const { date, count } = parsed.data;
 
   const allUsers = await db.select().from(usersTable);
   const me = allUsers.find((u) => u.id === userId);
@@ -168,6 +168,7 @@ router.post("/matchmaking/suggest", async (req, res): Promise<void> => {
       warmup_format: string | null;
       physical_self: number | null;
       location_name: string | null;
+      goal: string | null;
     };
     compatibility_score: number;
     compatibility_breakdown: {
@@ -205,6 +206,7 @@ router.post("/matchmaking/suggest", async (req, res): Promise<void> => {
         warmup_format: u.warmupFormat,
         physical_self: u.physicalSelf,
         location_name: u.locationName,
+        goal: u.goal,
       },
       compatibility_score: score,
       compatibility_breakdown: {

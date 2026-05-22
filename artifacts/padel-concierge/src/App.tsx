@@ -48,6 +48,7 @@ import LevelQuizResult from "@/pages/level-quiz-result";
 import LevelQuizProfile from "@/pages/level-quiz-profile";
 import LevelQuizAdmin from "@/pages/level-quiz-admin";
 import PlayerProfilePage from "@/pages/player-profile";
+import FindMatch from "@/pages/find-match";
 
 setAuthTokenGetter(() => localStorage.getItem("token"));
 
@@ -106,6 +107,7 @@ function Router() {
       <Route path="/reset-password" component={ResetPassword} />
 
       <Route path="/dashboard">{() => <ProtectedRoute component={Dashboard} />}</Route>
+      <Route path="/find-match">{() => <ProtectedRoute component={FindMatch} />}</Route>
 
       <Route path="/matches/suggest">{() => <ProtectedRoute component={MatchSuggest} />}</Route>
       <Route path="/matches/:id">{() => <ProtectedRoute component={MatchDetail} />}</Route>

@@ -1,0 +1,82 @@
+Build the "Find a Match" page for Padel Concierge players.
+
+CONTEXT:
+The matchmaking API already exists at POST /api/matchmaking/suggest.
+It returns candidates with compatibility scores. We need a UI page 
+that calls this API and displays results beautifully.
+
+PAGE ROUTE: /find-match
+AUTH: requires logged-in player
+
+LAYOUT REQUIREMENTS:
+
+1. HEADER:
+   - Title: "Найти партнёра" / "Find a Match"
+   - Subtitle: "Игроки, которые подходят твоему уровню и времени" / 
+     "Players who match your level and availability"
+
+2. FILTERS (top of page):
+   - Date picker (default: today, range: next 14 days)
+   - Count selector: 3 / 5 / 10 candidates (default 5)
+   - Apply button
+
+3. RESULT CARDS — for each candidate display:
+   - Avatar placeholder (use initials if no photo)
+   - Name + age + nationality
+   - Level badge: D / D+ / C- etc — large, bold, color-coded
+   - Archetype label: "Patient Defender" etc
+   - Physical bar 1-10 (visual indicator)
+   - Compatibility score — BIG number in circular progress ring 
+     (golden ring for 80+, silver for 60-79, gray for <60)
+   - Breakdown subtitle: "Level 70 · Physical 100 · Style 100 · Time 100"
+   - Shared availability: "Доступны вместе: 23, 25, 27 мая" / "Available together: May 23, 25, 27"
+   - Action button: "Предложить матч" / "Suggest a Match" 
+     (button shows alert "Coming soon" on click for now)
+
+4. WARNINGS displayed on cards (IMPORTANT — these are Mike's requirements):
+   - If candidate has NOT completed archetype quiz:
+     yellow tag "Архетип не определён — может быть несовместимость" / 
+     "Archetype not set — possible mismatch"
+   - If physicalSelf differs by >3 from current user:
+     "Большая разница в физике" / "Big physical difference"  
+   - If goal differs (Compete vs Casual):
+     "Разные цели игры" / "Different game goals"
+
+5. EMPTY STATE:
+   - When no candidates: friendly message
+   - "Пока никого подходящего" / "No matches found yet"
+   - "Попробуй расширить даты или вернись завтра" / "Try widening dates or check back tomorrow"
+
+6. LOADING STATE:
+   - Show 3 skeleton cards while API loads
+
+7. ERROR STATE:
+   - If API fails: friendly error + Retry button
+
+8. VISUAL DESIGN:
+   - Dark theme matching existing app (Mikhail Bear brand)
+   - Golden accents for high scores
+   - Smooth fade-in animation on card load
+   - Mobile-first responsive
+
+9. NAVIGATION:
+   - Add menu item "Найти матч" / "Find a Match" in main nav (between Dashboard and Profile)
+   - Add prominent CTA on dashboard: "Найти партнёра на завтра →" / "Find a partner for tomorrow →"
+
+DATA FLOW:
+- On page load: call POST /api/matchmaking/suggest with current user's ID
+- Pass selected date and count from filters
+- Render results sorted by compatibility_score DESC
+- All text BILINGUAL using existing i18n (en.json + ru.json)
+
+OUT OF SCOPE for this task:
+- Match creation flow (button just shows "Coming soon" toast)
+- Direct messaging to candidate
+- Court booking integration
+- Push notifications
+
+After completion show me:
+- Screenshot of /find-match page with at least 3 candidate cards rendered
+- Confirmation that compatibility scores match what API returns
+- Confirmation that EN/RU switching works on this new page
+- Confirmation that the new menu item and dashboard CTA both link correctly

@@ -196,7 +196,14 @@
     "emptyTitle": "No matches found yet",
     "emptyHint": "Try widening dates or check back tomorrow",
     "errorTitle": "Something went wrong",
-    "retry": "Retry"
+    "retry": "Retry",
+    "dialogTitle": "Suggest a Match",
+    "dialogDate": "Proposed Date",
+    "dialogTime": "Proposed Time",
+    "dialogMessage": "Personal Message (optional)",
+    "dialogMessagePlaceholder": "Let them know your goals, preferred format…",
+    "dialogSend": "Send Suggestion",
+    "dialogCancel": "Cancel"
   },
   "profile": {
     "loadingProfile": "Loading profile...",

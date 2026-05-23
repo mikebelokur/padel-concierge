@@ -196,7 +196,14 @@
     "emptyTitle": "Пока никого подходящего",
     "emptyHint": "Попробуй расширить даты или вернись завтра",
     "errorTitle": "Что-то пошло не так",
-    "retry": "Повторить"
+    "retry": "Повторить",
+    "dialogTitle": "Предложить матч",
+    "dialogDate": "Дата",
+    "dialogTime": "Время",
+    "dialogMessage": "Сообщение (необязательно)",
+    "dialogMessagePlaceholder": "Расскажи о своих целях, предпочтительном формате…",
+    "dialogSend": "Отправить",
+    "dialogCancel": "Отмена"
   },
   "profile": {
     "loadingProfile": "Загрузка профиля...",

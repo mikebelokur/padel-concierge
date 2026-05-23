@@ -4,7 +4,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { apiFetch } from "@/lib/api";
-import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
 interface Candidate {
@@ -134,25 +133,41 @@ export default function FindMatch() {
   const [candidates, setCandidates] = useState<Candidate[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [suggestingId, setSuggestingId] = useState<number | null>(null);
 
-  async function handleSuggest(candidateUserId: number) {
-    if (!user?.id || suggestingId !== null) return;
-    setSuggestingId(candidateUserId);
+  const [suggestTarget, setSuggestTarget] = useState<{ id: number; name: string } | null>(null);
+  const [dialogDate, setDialogDate] = useState("");
+  const [dialogTime, setDialogTime] = useState("");
+  const [dialogMessage, setDialogMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
+
+  const maxDate = useMemo(() => { const d = new Date(); d.setDate(d.getDate() + 14); return toDateInput(d); }, []);
+  const minDate = useMemo(() => toDateInput(new Date()), []);
+
+  function openSuggestDialog(candidateId: number, candidateName: string) {
+    setSuggestTarget({ id: candidateId, name: candidateName });
+    setDialogDate(date);
+    setDialogTime("");
+    setDialogMessage("");
+  }
+
+  async function confirmSuggest() {
+    if (!suggestTarget || isSending) return;
+    setIsSending(true);
     try {
       await apiFetch("/match-requests", {
         method: "POST",
         body: JSON.stringify({
-          toUserId: candidateUserId,
-          message: null,
-          proposedDate: date || null,
-          proposedTime: null,
+          toUserId: suggestTarget.id,
+          message: dialogMessage || null,
+          proposedDate: dialogDate || null,
+          proposedTime: dialogTime || null,
         }),
       });
       toast({
         title: t("findMatch.suggestSent"),
         description: t("findMatch.suggestSentDesc"),
       });
+      setSuggestTarget(null);
       navigate("/match-requests");
     } catch (e: any) {
       toast({
@@ -161,12 +176,9 @@ export default function FindMatch() {
         variant: "destructive",
       });
     } finally {
-      setSuggestingId(null);
+      setIsSending(false);
     }
   }
-
-  const maxDate = useMemo(() => { const d = new Date(); d.setDate(d.getDate() + 14); return toDateInput(d); }, []);
-  const minDate = useMemo(() => toDateInput(new Date()), []);
 
   async function load() {
     if (!user?.id) return;
@@ -317,14 +329,115 @@ export default function FindMatch() {
                 language={language}
                 t={t}
                 index={idx}
-                onSuggest={() => handleSuggest(c.user.id)}
-                isSuggesting={suggestingId === c.user.id}
+                onSuggest={() => openSuggestDialog(c.user.id, c.user.name)}
+                isSuggesting={suggestTarget?.id === c.user.id}
                 onView={() => navigate(`/players/${c.user.id}`)}
               />
             ))}
           </div>
         )}
       </div>
+
+      {/* ── SUGGEST DIALOG ── */}
+      {suggestTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+          style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)" }}
+          onClick={(e) => { if (e.target === e.currentTarget && !isSending) setSuggestTarget(null); }}
+        >
+          <div
+            className="w-full max-w-lg rounded-t-[28px] sm:rounded-[28px] p-6"
+            style={{
+              background: "hsl(220 20% 10%)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              paddingBottom: "max(24px, env(safe-area-inset-bottom))",
+            }}
+          >
+            {/* Drag handle (mobile) */}
+            <div className="w-10 h-1 rounded-full mx-auto mb-5 sm:hidden" style={{ background: "rgba(255,255,255,0.2)" }} />
+
+            <h2 className="font-serif font-bold text-white mb-0.5" style={{ fontSize: "20px" }}>
+              {t("findMatch.dialogTitle")}
+            </h2>
+            <p className="mb-5" style={{ fontSize: "14px", color: "rgba(255,255,255,0.5)" }}>
+              → {suggestTarget.name}
+            </p>
+
+            <div className="space-y-4">
+              {/* Proposed Date */}
+              <div>
+                <label className="block mb-2" style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  {t("findMatch.dialogDate")}
+                </label>
+                <input
+                  type="date"
+                  value={dialogDate}
+                  min={minDate}
+                  max={maxDate}
+                  onChange={(e) => setDialogDate(e.target.value)}
+                  className="w-full rounded-[12px] border text-white outline-none px-4 bg-transparent"
+                  style={{ height: "48px", fontSize: "16px", borderColor: "rgba(255,255,255,0.15)", colorScheme: "dark" }}
+                />
+              </div>
+
+              {/* Proposed Time */}
+              <div>
+                <label className="block mb-2" style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  {t("findMatch.dialogTime")}
+                </label>
+                <input
+                  type="time"
+                  value={dialogTime}
+                  onChange={(e) => setDialogTime(e.target.value)}
+                  className="w-full rounded-[12px] border text-white outline-none px-4 bg-transparent"
+                  style={{ height: "48px", fontSize: "16px", borderColor: "rgba(255,255,255,0.15)", colorScheme: "dark" }}
+                />
+              </div>
+
+              {/* Optional Message */}
+              <div>
+                <label className="block mb-2" style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  {t("findMatch.dialogMessage")}
+                </label>
+                <textarea
+                  value={dialogMessage}
+                  onChange={(e) => setDialogMessage(e.target.value)}
+                  placeholder={t("findMatch.dialogMessagePlaceholder")}
+                  rows={3}
+                  className="w-full rounded-[12px] border text-white outline-none px-4 py-3 resize-none bg-transparent placeholder:text-white/20"
+                  style={{ fontSize: "15px", borderColor: "rgba(255,255,255,0.15)" }}
+                />
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setSuggestTarget(null)}
+                disabled={isSending}
+                className="flex-1 rounded-[14px] font-medium transition-all disabled:opacity-50"
+                style={{
+                  height: "52px",
+                  fontSize: "16px",
+                  background: "rgba(255,255,255,0.07)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  color: "rgba(255,255,255,0.7)",
+                }}
+              >
+                {t("findMatch.dialogCancel")}
+              </button>
+              <button
+                onClick={confirmSuggest}
+                disabled={isSending}
+                className="flex-1 rounded-[14px] font-semibold transition-all disabled:opacity-60"
+                style={{ height: "52px", fontSize: "16px", background: "#D4AF37", color: "#000" }}
+              >
+                {isSending ? t("findMatch.suggesting") : t("findMatch.dialogSend")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 }
@@ -470,7 +583,7 @@ function CandidateCard({
         </div>
       )}
 
-      {/* Actions — single full-width primary button + secondary text link */}
+      {/* Actions */}
       <div className="space-y-3">
         <button
           onClick={onSuggest}
@@ -478,7 +591,7 @@ function CandidateCard({
           className="w-full rounded-[14px] bg-primary text-black font-semibold transition-all disabled:opacity-60"
           style={{ height: "56px", fontSize: "17px" }}
         >
-          {isSuggesting ? t("findMatch.suggesting") : t("findMatch.suggest")}
+          {isSuggesting ? "…" : t("findMatch.suggest")}
         </button>
         <button
           onClick={onView}

@@ -24,12 +24,12 @@ type BehavioralProfile = {
 };
 
 const PRESET_FLAGS = [
-  "Chronic no-show",
-  "Late payer",
-  "Cancels last minute",
-  "Aggressive on court",
-  "Poor sportsmanship",
-  "Payment dispute",
+  "Хронический прогульщик",
+  "Задерживает оплату",
+  "Отменяет в последний момент",
+  "Агрессивен на корте",
+  "Слабый спортивный дух",
+  "Спор по оплате",
 ];
 
 function LevelBadge({ level }: { level: string }) {
@@ -38,7 +38,7 @@ function LevelBadge({ level }: { level: string }) {
       className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border flex-shrink-0"
       style={{ color: "#D4AF37", borderColor: "rgba(212,175,55,0.30)", background: "rgba(212,175,55,0.08)" }}
     >
-      Level {level}
+      Уровень {level}
     </span>
   );
 }
@@ -155,13 +155,13 @@ function BehavioralStats({
       <div className="px-5 pt-4 pb-2 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="flex items-center gap-2">
           <span className="font-medium text-muted-foreground uppercase tracking-wider" style={{ fontSize: "11px" }}>
-            📊 Behavioral Stats
+            📊 Поведенческая статистика
           </span>
           {data?.source === "mongodb" && (
-            <span style={{ fontSize: "11px", color: "#4ade80" }}>live</span>
+            <span style={{ fontSize: "11px", color: "#4ade80" }}>в эфире</span>
           )}
           {data?.source === "default" && (
-            <span style={{ fontSize: "11px", color: "#fbbf24" }}>estimated</span>
+            <span style={{ fontSize: "11px", color: "#fbbf24" }}>оценочно</span>
           )}
         </div>
         {canEdit && !loading && data && !editing && (
@@ -170,7 +170,7 @@ function BehavioralStats({
             style={{ border: "1px solid rgba(255,255,255,0.10)", height: "28px", paddingLeft: "10px", paddingRight: "10px", fontSize: "12px", background: "transparent" }}
             onClick={openEdit}
           >
-            ✏ Edit / Flag
+            ✏ Изменить / Метки
           </button>
         )}
         {editing && (
@@ -179,22 +179,22 @@ function BehavioralStats({
             style={{ height: "28px", paddingLeft: "10px", paddingRight: "10px", fontSize: "12px", background: "transparent" }}
             onClick={() => setEditing(false)}
           >
-            ✕ Cancel
+            ✕ Отмена
           </button>
         )}
       </div>
       <div className="px-5 pb-5 pt-4">
         {loading ? (
-          <div className="text-muted-foreground animate-pulse" style={{ fontSize: "14px" }}>Loading…</div>
+          <div className="text-muted-foreground animate-pulse" style={{ fontSize: "14px" }}>Загрузка…</div>
         ) : !data ? (
           <div className="text-muted-foreground italic" style={{ fontSize: "14px" }}>
-            Analytics unavailable — behavioral data service is offline.
+            Аналитика недоступна — служба поведенческих данных не отвечает.
           </div>
         ) : editing ? (
           <div className="space-y-4">
             <div>
               <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px" }}>
-                Override Reliability Score (0–100)
+                Установить индекс надёжности (0–100)
               </div>
               <div className="flex items-center gap-3">
                 <input
@@ -223,7 +223,7 @@ function BehavioralStats({
             </div>
 
             <div>
-              <div className="text-muted-foreground mb-2" style={{ fontSize: "12px" }}>Behavioral Flags</div>
+              <div className="text-muted-foreground mb-2" style={{ fontSize: "12px" }}>Поведенческие метки</div>
               <div className="flex flex-wrap gap-2 mb-2">
                 {PRESET_FLAGS.map(flag => (
                   <button
@@ -245,7 +245,7 @@ function BehavioralStats({
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="Custom flag…"
+                  placeholder="Своя метка…"
                   value={customFlag}
                   onChange={e => setCustomFlag(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && addCustom()}
@@ -265,7 +265,7 @@ function BehavioralStats({
                   onClick={addCustom}
                   disabled={!customFlag.trim()}
                 >
-                  Add
+                  Добавить
                 </button>
               </div>
               {pendingFlags.filter(f => !PRESET_FLAGS.includes(f)).length > 0 && (
@@ -291,14 +291,14 @@ function BehavioralStats({
               onClick={() => saveFlags.mutate()}
               disabled={saveFlags.isPending}
             >
-              {saveFlags.isPending ? "Saving…" : "Save Changes"}
+              {saveFlags.isPending ? "Сохраняем…" : "Сохранить изменения"}
             </button>
           </div>
         ) : (
           <div className="space-y-4">
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-muted-foreground" style={{ fontSize: "13px" }}>Reliability Score</span>
+                <span className="text-muted-foreground" style={{ fontSize: "13px" }}>Индекс надёжности</span>
                 <span className={cn("font-semibold tabular-nums", reliabilityColor(data.reliabilityScore))} style={{ fontSize: "13px" }}>
                   {data.reliabilityScore}/100 · {reliabilityLabel(data.reliabilityScore)}
                 </span>
@@ -316,28 +316,28 @@ function BehavioralStats({
                 className="p-3 rounded-xl"
                 style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
               >
-                <div className="text-muted-foreground mb-1" style={{ fontSize: "12px" }}>No-shows</div>
+                <div className="text-muted-foreground mb-1" style={{ fontSize: "12px" }}>Пропуски</div>
                 <div className={cn("font-bold tabular-nums", data.noShowCount > 0 ? "text-red-400" : "text-emerald-400")} style={{ fontSize: "22px" }}>
                   {data.noShowCount}
                 </div>
-                <div className="text-muted-foreground" style={{ fontSize: "11px" }}>total missed</div>
+                <div className="text-muted-foreground" style={{ fontSize: "11px" }}>всего пропущено</div>
               </div>
               <div
                 className="p-3 rounded-xl"
                 style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
               >
-                <div className="text-muted-foreground mb-1" style={{ fontSize: "12px" }}>Session streak</div>
+                <div className="text-muted-foreground mb-1" style={{ fontSize: "12px" }}>Серия занятий</div>
                 <div className={cn("font-bold tabular-nums", data.sessionStreak >= 3 ? "text-emerald-400" : "text-white")} style={{ fontSize: "22px" }}>
                   {data.sessionStreak}
                   {data.sessionStreak >= 3 && <span style={{ fontSize: "18px" }} className="ml-1">🔥</span>}
                 </div>
-                <div className="text-muted-foreground" style={{ fontSize: "11px" }}>consecutive</div>
+                <div className="text-muted-foreground" style={{ fontSize: "11px" }}>подряд</div>
               </div>
             </div>
 
             {data.behavioralFlags.length > 0 && (
               <div>
-                <div className="text-muted-foreground mb-2" style={{ fontSize: "12px" }}>Flags</div>
+                <div className="text-muted-foreground mb-2" style={{ fontSize: "12px" }}>Метки</div>
                 <div className="flex flex-wrap gap-2">
                   {data.behavioralFlags.map((flag) => (
                     <span
@@ -369,7 +369,7 @@ function BehavioralStats({
   );
 }
 
-const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAY_NAMES = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
 
 export default function ClientProfile() {
   const [, params] = useRoute("/clients/:id");
@@ -491,7 +491,7 @@ export default function ClientProfile() {
     return Array.from(map.entries())
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([month, count]) => ({
-        month: new Date(month + "-01").toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
+        month: new Date(month + "-01").toLocaleDateString("ru-RU", { month: "short", year: "2-digit" }),
         count,
       }));
   }, [allSessions]);
@@ -511,8 +511,8 @@ export default function ClientProfile() {
     return Array.from(set).slice(0, 8);
   }, [allSessions]);
 
-  if (isLoading) return <AppLayout><div className="p-8 text-muted-foreground">Loading…</div></AppLayout>;
-  if (!data) return <AppLayout><div className="p-8 text-muted-foreground">Client not found</div></AppLayout>;
+  if (isLoading) return <AppLayout><div className="p-8 text-muted-foreground">Загрузка…</div></AppLayout>;
+  if (!data) return <AppLayout><div className="p-8 text-muted-foreground">Клиент не найден</div></AppLayout>;
 
   const { client, sessions, notes, messages, recurring } = data as any;
 
@@ -536,13 +536,13 @@ export default function ClientProfile() {
                   className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border"
                   style={{ color: "#D4AF37", borderColor: "rgba(212,175,55,0.30)", background: "rgba(212,175,55,0.08)" }}
                 >
-                  Level {client.level}
+                  Уровень {client.level}
                 </span>
                 {client.phone && <span className="text-muted-foreground" style={{ fontSize: "13px" }}>📱 {client.phone}</span>}
                 {client.email && <span className="text-muted-foreground" style={{ fontSize: "13px" }}>✉ {client.email}</span>}
               </div>
               <div className="text-muted-foreground mt-1 capitalize" style={{ fontSize: "13px" }}>
-                {client.bookingPattern.replace("_", " ")} · {client.pricePerSession} AED/session · {client.totalSessions} sessions total
+                {client.bookingPattern === "on_demand" ? "По запросу" : "Регулярные"} · {client.pricePerSession} AED/зан. · {client.totalSessions} занятий
               </div>
             </div>
           </div>
@@ -551,7 +551,7 @@ export default function ClientProfile() {
               className="inline-flex items-center justify-center rounded-xl font-medium text-white transition-all hover:bg-white/[0.06] active:scale-[0.97] flex-shrink-0"
               style={{ border: "1px solid rgba(255,255,255,0.12)", height: "44px", paddingLeft: "16px", paddingRight: "16px", fontSize: "14px", background: "transparent" }}
             >
-              ← Back
+              ← Назад
             </button>
           </Link>
         </div>
@@ -563,7 +563,7 @@ export default function ClientProfile() {
             style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
           >
             <div className="text-muted-foreground uppercase tracking-wider mb-3" style={{ fontSize: "11px" }}>
-              Recurring Slots
+              Регулярные слоты
             </div>
             <div className="flex flex-wrap gap-2">
               {recurring.map((s: any) => (
@@ -660,7 +660,7 @@ export default function ClientProfile() {
             className="p-4 rounded-[20px] mb-5"
             style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.18)", fontSize: "14px" }}
           >
-            <span style={{ color: "#D4AF37", fontWeight: 600 }}>📋 Next Session Plan: </span>
+            <span style={{ color: "#D4AF37", fontWeight: 600 }}>📋 План следующего занятия: </span>
             <span className="text-white">{client.nextSessionPlan}</span>
           </div>
         )}
@@ -682,10 +682,10 @@ export default function ClientProfile() {
         <div className="flex gap-2 mb-4 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
           {(["sessions", "progress", "notes", "chat"] as const).map((t) => {
             const labels: Record<string, string> = {
-              sessions: `Sessions (${sessions.length})`,
-              progress: "Progress",
-              notes: `Notes (${notes.length})`,
-              chat: `Chat (${messages.length})`,
+              sessions: `Занятия (${sessions.length})`,
+              progress: "Прогресс",
+              notes: `Заметки (${notes.length})`,
+              chat: `Чат (${messages.length})`,
             };
             return (
               <button
@@ -718,7 +718,7 @@ export default function ClientProfile() {
                   className="w-full inline-flex items-center justify-center rounded-[20px] font-semibold text-black transition-all active:scale-[0.97]"
                   style={{ background: "#D4AF37", height: "48px", fontSize: "15px" }}
                 >
-                  + Log Session
+                  + Записать занятие
                 </button>
               ) : (
                 <div
@@ -726,7 +726,7 @@ export default function ClientProfile() {
                   style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(212,175,55,0.25)" }}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold text-white" style={{ fontSize: "15px" }}>Log Session #{sessions.length + 1}</span>
+                    <span className="font-semibold text-white" style={{ fontSize: "15px" }}>Занятие #{sessions.length + 1}</span>
                     <button
                       onClick={() => setShowSessionForm(false)}
                       className="text-muted-foreground hover:text-white transition-colors"
@@ -737,7 +737,7 @@ export default function ClientProfile() {
                   {/* Date + Time */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px" }}>Date</div>
+                      <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px" }}>Дата</div>
                       <input
                         type="date"
                         value={sessionDate}
@@ -751,7 +751,7 @@ export default function ClientProfile() {
                       />
                     </div>
                     <div>
-                      <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px" }}>Time</div>
+                      <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px" }}>Время</div>
                       <input
                         type="time"
                         value={sessionTime}
@@ -768,10 +768,10 @@ export default function ClientProfile() {
 
                   {/* Topic */}
                   <div>
-                    <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px" }}>Topic / Focus Area</div>
+                    <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px" }}>Тема / Акцент занятия</div>
                     <input
                       type="text"
-                      placeholder="e.g. Forehand technique, Net play…"
+                      placeholder="напр. Техника форхенда, Игра у сетки…"
                       value={sessionTopic}
                       onChange={(e) => setSessionTopic(e.target.value)}
                       className="w-full text-white placeholder-muted-foreground outline-none rounded-xl"
@@ -784,9 +784,9 @@ export default function ClientProfile() {
 
                   {/* Coach Notes */}
                   <div>
-                    <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px" }}>Session Notes</div>
+                    <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px" }}>Заметки о занятии</div>
                     <textarea
-                      placeholder="What happened in this session? Progress observed, areas to improve…"
+                      placeholder="Что было на занятии? Прогресс, зоны роста…"
                       value={sessionNotes}
                       onChange={(e) => setSessionNotes(e.target.value)}
                       rows={3}
@@ -800,7 +800,7 @@ export default function ClientProfile() {
 
                   {/* Drills covered */}
                   <div>
-                    <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px" }}>Drills Covered</div>
+                    <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px" }}>Упражнения</div>
                     {sessionDrills.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-2">
                         {sessionDrills.map((d) => (
@@ -835,7 +835,7 @@ export default function ClientProfile() {
                     <div className="flex gap-2">
                       <input
                         type="text"
-                        placeholder="Add drill (e.g. cross-court rally)…"
+                        placeholder="Добавить упражнение (напр. диагональ)…"
                         value={newDrill}
                         onChange={(e) => setNewDrill(e.target.value)}
                         onKeyDown={(e) => {
@@ -855,16 +855,16 @@ export default function ClientProfile() {
                         disabled={!newDrill.trim()}
                         className="inline-flex items-center justify-center rounded-xl text-white disabled:opacity-40 transition-all hover:bg-white/[0.08]"
                         style={{ border: "1px solid rgba(255,255,255,0.12)", height: "44px", paddingLeft: "16px", paddingRight: "16px", fontSize: "14px", background: "transparent" }}
-                      >Add</button>
+                      >Добавить</button>
                     </div>
                   </div>
 
                   {/* Next session focus */}
                   <div>
-                    <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px" }}>Next Session Focus</div>
+                    <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px" }}>Фокус следующего занятия</div>
                     <input
                       type="text"
-                      placeholder="e.g. Work on backhand off the glass…"
+                      placeholder="напр. Бэкхенд от стекла…"
                       value={sessionFocus}
                       onChange={(e) => setSessionFocus(e.target.value)}
                       className="w-full text-white placeholder-muted-foreground outline-none rounded-xl"
@@ -881,14 +881,14 @@ export default function ClientProfile() {
                     className="w-full inline-flex items-center justify-center rounded-xl font-semibold text-black transition-all active:scale-[0.97] disabled:opacity-40"
                     style={{ background: "#D4AF37", height: "48px", fontSize: "15px" }}
                   >
-                    {addSession.isPending ? "Saving…" : "Save Session"}
+                    {addSession.isPending ? "Сохраняем…" : "Сохранить занятие"}
                   </button>
                 </div>
               )}
             </div>
 
             {sessions.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground" style={{ fontSize: "14px" }}>No sessions yet — log the first one above</div>
+              <div className="text-center py-12 text-muted-foreground" style={{ fontSize: "14px" }}>Занятий пока нет — запишите первое выше</div>
             ) : (
               <div
                 className="rounded-[20px] overflow-hidden"
@@ -941,7 +941,7 @@ export default function ClientProfile() {
                       </p>
                     )}
                     {s.nextSessionFocus && (
-                      <div className="mt-2" style={{ fontSize: "12px", color: "#D4AF37" }}>→ Next: {s.nextSessionFocus}</div>
+                      <div className="mt-2" style={{ fontSize: "12px", color: "#D4AF37" }}>→ Далее: {s.nextSessionFocus}</div>
                     )}
                   </div>
                 ))}
@@ -955,15 +955,15 @@ export default function ClientProfile() {
               {/* Stats row */}
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { label: "Total Sessions", value: sessions.length },
+                  { label: "Всего занятий", value: sessions.length },
                   {
-                    label: "Avg / Month",
+                    label: "В месяц",
                     value: sessionsByMonth.length > 0
                       ? (sessions.length / sessionsByMonth.length).toFixed(1)
                       : "—",
                   },
                   {
-                    label: "Top Topic",
+                    label: "Главная тема",
                     value: topicFrequency[0]?.[0] ?? "—",
                     small: true,
                   },
@@ -990,10 +990,10 @@ export default function ClientProfile() {
                 style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
               >
                 <div className="text-muted-foreground uppercase tracking-wider mb-4" style={{ fontSize: "11px" }}>
-                  📅 Session Frequency
+                  📅 Частота занятий
                 </div>
                 {sessionsByMonth.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground" style={{ fontSize: "14px" }}>No session data yet</div>
+                  <div className="text-center py-8 text-muted-foreground" style={{ fontSize: "14px" }}>Данных о занятиях пока нет</div>
                 ) : (
                   <ResponsiveContainer width="100%" height={160}>
                     <BarChart data={sessionsByMonth} barSize={24} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
@@ -1018,7 +1018,7 @@ export default function ClientProfile() {
                           fontSize: "13px",
                           color: "white",
                         }}
-                        formatter={(v: number) => [v, "Sessions"]}
+                        formatter={(v: number) => [v, "Занятий"]}
                       />
                       <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                         {sessionsByMonth.map((_, idx) => (
@@ -1040,7 +1040,7 @@ export default function ClientProfile() {
                   style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
                 >
                   <div className="text-muted-foreground uppercase tracking-wider mb-4" style={{ fontSize: "11px" }}>
-                    🎯 Topics Covered
+                    🎯 Пройденные темы
                   </div>
                   <div className="space-y-3">
                     {topicFrequency.map(([topic, count]) => {
@@ -1051,7 +1051,7 @@ export default function ClientProfile() {
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-white" style={{ fontSize: "13px" }}>{topic}</span>
                             <span className="text-muted-foreground tabular-nums" style={{ fontSize: "12px" }}>
-                              {count} session{count !== 1 ? "s" : ""}
+                              {count} зан.
                             </span>
                           </div>
                           <div className="w-full rounded-full overflow-hidden" style={{ height: "5px", background: "rgba(255,255,255,0.08)" }}>
@@ -1074,7 +1074,7 @@ export default function ClientProfile() {
                   style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
                 >
                   <div className="text-muted-foreground uppercase tracking-wider mb-3" style={{ fontSize: "11px" }}>
-                    🏸 Drills in Rotation
+                    🏸 Применяемые упражнения
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {allDrills.map((d) => (
@@ -1103,9 +1103,9 @@ export default function ClientProfile() {
               className="rounded-[20px] p-5 space-y-3"
               style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
             >
-              <div className="font-medium text-white" style={{ fontSize: "14px" }}>Record Post-Match Question</div>
+              <div className="font-medium text-white" style={{ fontSize: "14px" }}>Записать вопрос с корта</div>
               <textarea
-                placeholder="Question asked on court (e.g. How to improve volley technique?)"
+                placeholder="Вопрос, заданный на корте (напр. Как улучшить технику воллея?)"
                 value={newQuestion}
                 onChange={(e) => setNewQuestion(e.target.value)}
                 rows={2}
@@ -1121,12 +1121,12 @@ export default function ClientProfile() {
                 onClick={() => newQuestion.trim() && addNote.mutate(newQuestion.trim())}
                 disabled={!newQuestion.trim() || addNote.isPending}
               >
-                Record Question
+                Записать вопрос
               </button>
             </div>
 
             {notes.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground" style={{ fontSize: "14px" }}>No questions recorded yet</div>
+              <div className="text-center py-8 text-muted-foreground" style={{ fontSize: "14px" }}>Вопросов пока не записано</div>
             ) : (
               <div
                 className="rounded-[20px] overflow-hidden"
@@ -1141,7 +1141,7 @@ export default function ClientProfile() {
                     <div>
                       <p className="font-medium text-white" style={{ fontSize: "14px" }}>❓ {note.question}</p>
                       <p className="text-muted-foreground mt-0.5" style={{ fontSize: "12px" }}>
-                        {new Date(note.recordedAt).toLocaleDateString("en-GB")} · {note.category}
+                        {new Date(note.recordedAt).toLocaleDateString("ru-RU")} · {note.category}
                       </p>
                     </div>
                     {note.coachResponse ? (
@@ -1154,7 +1154,7 @@ export default function ClientProfile() {
                     ) : (
                       <div className="space-y-2">
                         <textarea
-                          placeholder="Add your coaching response…"
+                          placeholder="Добавьте ваш ответ тренера…"
                           value={noteResponse[note.id] ?? ""}
                           onChange={(e) => setNoteResponse(prev => ({ ...prev, [note.id]: e.target.value }))}
                           rows={2}
@@ -1170,7 +1170,7 @@ export default function ClientProfile() {
                           onClick={() => updateNote.mutate({ noteId: note.id, coachResponse: noteResponse[note.id] ?? "" })}
                           disabled={!noteResponse[note.id] || updateNote.isPending}
                         >
-                          Save Response
+                          Сохранить ответ
                         </button>
                       </div>
                     )}
@@ -1191,7 +1191,7 @@ export default function ClientProfile() {
                 className="px-5 py-3 flex items-center gap-2"
                 style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
               >
-                <span className="font-medium text-white" style={{ fontSize: "14px" }}>💬 WhatsApp History</span>
+                <span className="font-medium text-white" style={{ fontSize: "14px" }}>💬 История WhatsApp</span>
                 <span
                   className="inline-flex items-center rounded-full border"
                   style={{ fontSize: "11px", padding: "2px 8px", color: "#4ade80", borderColor: "rgba(74,222,128,0.25)", background: "rgba(74,222,128,0.08)" }}
@@ -1202,7 +1202,7 @@ export default function ClientProfile() {
               <div className="p-4">
                 <div className="space-y-2 overflow-y-auto mb-4" style={{ maxHeight: "320px" }}>
                   {messages.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground" style={{ fontSize: "14px" }}>No messages yet</div>
+                    <div className="text-center py-8 text-muted-foreground" style={{ fontSize: "14px" }}>Сообщений пока нет</div>
                   ) : (
                     messages.map((msg: any) => (
                       <div
@@ -1221,7 +1221,7 @@ export default function ClientProfile() {
                         >
                           <p>{msg.content}</p>
                           <p style={{ fontSize: "11px", marginTop: "4px", color: msg.direction === "out" ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.4)" }}>
-                            {msg.direction === "out" ? "Misha" : client.name} · {new Date(msg.sentAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                            {msg.direction === "out" ? "Misha" : client.name} · {new Date(msg.sentAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}
                           </p>
                         </div>
                       </div>
@@ -1231,7 +1231,7 @@ export default function ClientProfile() {
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="Type a message…"
+                    placeholder="Введите сообщение…"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && newMessage.trim() && sendMessage.mutate(newMessage.trim())}
@@ -1251,7 +1251,7 @@ export default function ClientProfile() {
                     onClick={() => newMessage.trim() && sendMessage.mutate(newMessage.trim())}
                     disabled={!newMessage.trim() || sendMessage.isPending}
                   >
-                    Send
+                    Отправить
                   </button>
                 </div>
               </div>

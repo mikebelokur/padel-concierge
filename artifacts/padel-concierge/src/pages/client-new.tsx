@@ -56,26 +56,26 @@ export default function ClientNew() {
         <div className="flex items-center gap-3">
           <Link href="/clients">
             <button className="text-muted-foreground hover:text-foreground text-sm transition-colors">
-              ← Back to Clients
+              ← К клиентам
             </button>
           </Link>
         </div>
 
         <header>
-          <h1 className="text-3xl font-serif mb-1">New Client</h1>
-          <p className="text-muted-foreground">Add a new coaching client to your roster.</p>
+          <h1 className="text-3xl font-serif mb-1">Новый клиент</h1>
+          <p className="text-muted-foreground">Добавьте нового ученика в ваш список.</p>
         </header>
 
         <div className="rounded-[20px] bg-card border border-white/5">
           <div className="px-6 pt-5 pb-3">
-            <div className="text-base font-medium">Client Details</div>
+            <div className="text-base font-medium">Данные клиента</div>
           </div>
           <div className="px-6 pb-6 space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Full Name <span className="text-red-400">*</span></Label>
+                <Label>Имя <span className="text-red-400">*</span></Label>
                 <Input
-                  placeholder="e.g. Oleg Ivanov"
+                  placeholder="напр. Олег Иванов"
                   value={form.name}
                   onChange={(e) => set("name", e.target.value)}
                   className="bg-background border-white/10"
@@ -95,7 +95,7 @@ export default function ClientNew() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Phone</Label>
+                <Label>Телефон</Label>
                 <Input
                   placeholder="+971 50 000 0000"
                   value={form.phone}
@@ -104,7 +104,7 @@ export default function ClientNew() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Level</Label>
+                <Label>Уровень</Label>
                 <Select value={form.level} onValueChange={(v) => set("level", v)}>
                   <SelectTrigger className="bg-background border-white/10">
                     <SelectValue />
@@ -120,19 +120,19 @@ export default function ClientNew() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Booking Pattern</Label>
+                <Label>Формат занятий</Label>
                 <Select value={form.bookingPattern} onValueChange={(v) => set("bookingPattern", v)}>
                   <SelectTrigger className="bg-background border-white/10">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-card border-white/10">
-                    <SelectItem value="on_demand">On Demand</SelectItem>
-                    <SelectItem value="recurring">Recurring (Weekly)</SelectItem>
+                    <SelectItem value="on_demand">По запросу</SelectItem>
+                    <SelectItem value="recurring">Регулярные (еженедельно)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Price per Session (AED)</Label>
+                <Label>Цена за занятие (AED)</Label>
                 <Input
                   type="number"
                   min="0"
@@ -146,9 +146,9 @@ export default function ClientNew() {
             </div>
 
             <div className="space-y-2">
-              <Label>Notes</Label>
+              <Label>Примечания</Label>
               <Input
-                placeholder="Any initial notes about this client…"
+                placeholder="Начальные заметки о клиенте…"
                 value={form.notes}
                 onChange={(e) => set("notes", e.target.value)}
                 className="bg-background border-white/10"
@@ -160,7 +160,7 @@ export default function ClientNew() {
         <div className="flex gap-3 justify-end">
           <Link href="/clients">
             <button className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent font-medium text-foreground px-5 h-11 text-sm transition-all hover:bg-white/5">
-              Cancel
+              Отмена
             </button>
           </Link>
           <button
@@ -168,7 +168,7 @@ export default function ClientNew() {
             disabled={!canSubmit || createMutation.isPending}
             className="inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-5 h-11 text-sm transition-all hover:bg-primary/90 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {createMutation.isPending ? "Adding…" : "Add Client"}
+            {createMutation.isPending ? "Добавляем…" : "Добавить клиента"}
           </button>
         </div>
       </div>

@@ -30,7 +30,7 @@ import {
 const WPT_LEVELS = ["1.0","1.5","2.0","2.5","3.0","3.5","4.0","4.5","5.0"];
 
 function fmtDate(iso: string) {
-  return new Date(iso).toLocaleString("en-GB", {
+  return new Date(iso).toLocaleString("ru-RU", {
     day: "numeric", month: "short", year: "numeric",
     hour: "2-digit", minute: "2-digit",
   });
@@ -39,11 +39,11 @@ function fmtDate(iso: string) {
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60000);
-  if (m < 1) return "just now";
-  if (m < 60) return `${m}m ago`;
+  if (m < 1) return "только что";
+  if (m < 60) return `${m} мин. назад`;
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
+  if (h < 24) return `${h} ч. назад`;
+  return `${Math.floor(h / 24)} д. назад`;
 }
 
 const ROLE_BADGE_STYLE: Record<string, { color: string; bg: string; border: string }> = {
@@ -155,7 +155,7 @@ export default function Admin() {
 
         <header className="mb-6">
           <h1 className="font-serif font-bold text-white mb-0.5" style={{ fontSize: "28px" }}>{t("admin.title")}</h1>
-          <p className="text-muted-foreground" style={{ fontSize: "14px" }}>Platform overview and user management.</p>
+          <p className="text-muted-foreground" style={{ fontSize: "14px" }}>Обзор платформы и управление пользователями.</p>
         </header>
 
         {/* Tabs */}
@@ -192,7 +192,7 @@ export default function Admin() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
                 { label: t("admin.totalUsers"),   value: stats?.totalUsers ?? "–",                  gold: false },
-                { label: "Online Now",            value: stats?.onlineUsers ?? "–",                 gold: false },
+                { label: "Онлайн сейчас",           value: stats?.onlineUsers ?? "–",                 gold: false },
                 { label: t("admin.totalMatches"), value: stats?.totalMatches ?? "–",                gold: false },
                 { label: t("admin.revenue"),      value: stats ? `${stats.dailyRevenue} AED` : "–", gold: true  },
               ].map(({ label, value, gold }) => (
@@ -225,7 +225,7 @@ export default function Admin() {
                 style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
               >
                 <div className="px-5 pt-5 pb-3">
-                  <div className="font-medium text-white" style={{ fontSize: "15px" }}>WPT Level Distribution</div>
+                  <div className="font-medium text-white" style={{ fontSize: "15px" }}>Распределение по уровням WPT</div>
                 </div>
                 <div className="px-5 pb-5" style={{ height: "192px" }}>
                   <ResponsiveContainer width="100%" height="100%">
@@ -246,13 +246,13 @@ export default function Admin() {
             {/* User management */}
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-serif font-bold text-white" style={{ fontSize: "20px" }}>User Management</h2>
-                <span className="text-muted-foreground" style={{ fontSize: "13px" }}>{filteredUsers.length} users</span>
+                <h2 className="font-serif font-bold text-white" style={{ fontSize: "20px" }}>Управление пользователями</h2>
+                <span className="text-muted-foreground" style={{ fontSize: "13px" }}>{filteredUsers.length} польз.</span>
               </div>
               <div className="mb-4">
                 <input
                   type="text"
-                  placeholder="Search by name or email…"
+                  placeholder="Поиск по имени или email…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="text-white placeholder-muted-foreground outline-none rounded-xl max-w-sm w-full"
@@ -268,7 +268,7 @@ export default function Admin() {
               </div>
 
               {usersLoading ? (
-                <div className="text-center py-16 text-muted-foreground" style={{ fontSize: "14px" }}>Loading users…</div>
+                <div className="text-center py-16 text-muted-foreground" style={{ fontSize: "14px" }}>Загрузка пользователей…</div>
               ) : (
                 <div
                   className="rounded-[20px] overflow-hidden"
@@ -299,7 +299,7 @@ export default function Admin() {
                             </div>
                             <div className="text-muted-foreground truncate" style={{ fontSize: "12px" }}>{u.email}</div>
                             <div className="text-muted-foreground" style={{ fontSize: "11px" }}>
-                              {u.matchesPlayed} matches · {u.wins} wins
+                              {u.matchesPlayed} матчей · {u.wins} побед
                             </div>
                           </div>
                         </div>
@@ -344,7 +344,7 @@ export default function Admin() {
                                 onClick={() => setLevelMutation.mutate({ id: u.id, level: editingLevel[u.id] })}
                                 disabled={setLevelMutation.isPending}
                               >
-                                Save
+                                Сохранить
                               </button>
                             )}
                           </div>
@@ -356,21 +356,21 @@ export default function Admin() {
                                 className="inline-flex items-center justify-center rounded-xl transition-colors hover:bg-red-500/10"
                                 style={{ color: "#f87171", height: "44px", paddingLeft: "14px", paddingRight: "14px", fontSize: "13px", background: "transparent" }}
                               >
-                                Delete
+                                Удалить
                               </button>
                             </AlertDialogTrigger>
                             <AlertDialogContent className="bg-card border-white/10">
                               <AlertDialogHeader>
-                                <AlertDialogTitle>Delete {u.name}?</AlertDialogTitle>
+                                <AlertDialogTitle>Удалить {u.name}?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  This will permanently remove their account, bookings, and all associated data.
+                                  Это безвозвратно удалит аккаунт, бронирования и все связанные данные.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel className="border-white/10">Cancel</AlertDialogCancel>
+                                <AlertDialogCancel className="border-white/10">Отмена</AlertDialogCancel>
                                 <AlertDialogAction className="bg-destructive text-destructive-foreground"
                                   onClick={() => userDeleteMutation.mutate(u.id)}>
-                                  Delete User
+                                  Удалить пользователя
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
@@ -396,17 +396,17 @@ export default function Admin() {
                     className="inline-flex items-center rounded-full border"
                     style={{ padding: "4px 12px", fontSize: "13px", color: "#D4AF37", borderColor: "rgba(212,175,55,0.30)", background: "rgba(212,175,55,0.08)" }}
                   >
-                    {pending.length} pending approval
+                    {pending.length} ожидают одобрения
                   </span>
                 ) : (
                   <span
                     className="inline-flex items-center rounded-full border"
                     style={{ padding: "4px 12px", fontSize: "13px", color: "#4ade80", borderColor: "rgba(74,222,128,0.25)", background: "rgba(74,222,128,0.08)" }}
                   >
-                    ✅ All clear
+                    ✅ Всё в порядке
                   </span>
                 )}
-                <span className="text-muted-foreground" style={{ fontSize: "12px" }}>Updates every 30s</span>
+                <span className="text-muted-foreground" style={{ fontSize: "12px" }}>Обновляется каждые 30с</span>
               </div>
               <button
                 className="inline-flex items-center justify-center gap-2 rounded-xl font-medium text-white transition-all hover:bg-white/[0.06] active:scale-[0.97] disabled:opacity-50"
@@ -414,20 +414,20 @@ export default function Admin() {
                 onClick={() => refetchRegs()}
                 disabled={regsRefetching}
               >
-                {regsRefetching ? "⟳ Refreshing…" : "⟳ Refresh"}
+                {regsRefetching ? "⟳ Обновление…" : "⟳ Обновить"}
               </button>
             </div>
 
             {regsLoading ? (
-              <div className="text-center py-16 text-muted-foreground" style={{ fontSize: "14px" }}>Loading registrations…</div>
+              <div className="text-center py-16 text-muted-foreground" style={{ fontSize: "14px" }}>Загрузка заявок…</div>
             ) : pending.length === 0 && rejected.length === 0 ? (
               <div
                 className="rounded-[20px] text-center py-16"
                 style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
               >
                 <div style={{ fontSize: "40px", marginBottom: "12px" }}>✅</div>
-                <div className="font-medium text-white mb-1" style={{ fontSize: "16px" }}>All caught up</div>
-                <div className="text-muted-foreground" style={{ fontSize: "14px" }}>No pending or rejected registrations.</div>
+                <div className="font-medium text-white mb-1" style={{ fontSize: "16px" }}>Всё обработано</div>
+                <div className="text-muted-foreground" style={{ fontSize: "14px" }}>Нет ожидающих или отклонённых заявок.</div>
               </div>
             ) : (
               <div className="space-y-6">
@@ -435,7 +435,7 @@ export default function Admin() {
                 {pending.length > 0 && (
                   <div>
                     <div className="text-muted-foreground uppercase tracking-wider mb-3 px-1" style={{ fontSize: "11px" }}>
-                      Pending ({pending.length})
+                      На рассмотрении ({pending.length})
                     </div>
                     <div
                       className="rounded-[20px] overflow-hidden"
@@ -482,7 +482,7 @@ export default function Admin() {
                               onClick={() => approveMutation.mutate(r.id)}
                               disabled={approveMutation.isPending}
                             >
-                              ✅ Approve
+                              ✅ Одобрить
                             </button>
                             <button
                               className="inline-flex items-center justify-center rounded-xl font-medium transition-all hover:bg-red-500/10 active:scale-[0.97] disabled:opacity-50"
@@ -490,7 +490,7 @@ export default function Admin() {
                               onClick={() => rejectMutation.mutate(r.id)}
                               disabled={rejectMutation.isPending}
                             >
-                              ❌ Reject
+                              ❌ Отклонить
                             </button>
                           </div>
                         </div>
@@ -503,7 +503,7 @@ export default function Admin() {
                 {rejected.length > 0 && (
                   <div className="opacity-70">
                     <div className="text-muted-foreground uppercase tracking-wider mb-3 px-1" style={{ fontSize: "11px" }}>
-                      Rejected ({rejected.length})
+                      Отклонённые ({rejected.length})
                     </div>
                     <div
                       className="rounded-[20px] overflow-hidden"
@@ -541,7 +541,7 @@ export default function Admin() {
                               onClick={() => approveMutation.mutate(r.id)}
                               disabled={approveMutation.isPending}
                             >
-                              Approve
+                              Одобрить
                             </button>
                             <button
                               className="inline-flex items-center justify-center rounded-xl transition-all hover:bg-red-500/10 active:scale-[0.97] disabled:opacity-50"
@@ -549,7 +549,7 @@ export default function Admin() {
                               onClick={() => deleteMutation.mutate(r.id)}
                               disabled={deleteMutation.isPending}
                             >
-                              Delete
+                              Удалить
                             </button>
                           </div>
                         </div>

@@ -64,8 +64,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('token', newToken);
   };
 
+  // Stay in loading state while a token exists but the user hasn't been
+  // populated yet (covers the render-cycle gap between useGetMe resolving and
+  // the useEffect that syncs `me` → `user` running, as well as cached responses
+  // that return meLoading=false on the very first render).
+  const authLoading = !!token && (meLoading || (!user && !error));
+
   return (
-    <AuthContext.Provider value={{ user, token, isLoading: !!token && meLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, token, isLoading: authLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

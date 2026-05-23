@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { LEVEL_ORDER, LEVEL_DESCRIPTIONS, type Level, Q1_OPTIONS, Q2_OPTIONS, Q3_OPTIONS } from "@/lib/level-quiz";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function LevelQuizResult() {
   const [, setLocation] = useLocation();
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [answers, setAnswers] = useState<Record<string, unknown> | null>(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const r = sessionStorage.getItem("lq_result");
@@ -46,7 +48,7 @@ export default function LevelQuizResult() {
             className="font-medium uppercase tracking-widest mb-4"
             style={{ fontSize: "11px", color: "#D4AF37" }}
           >
-            Твой уровень
+            {t("levelQuizResult.yourLevel")}
           </div>
           <div
             className="font-black leading-none mb-4"
@@ -63,7 +65,7 @@ export default function LevelQuizResult() {
           </p>
           {quizLevel !== realLevel && (
             <p className="mt-2 text-muted-foreground" style={{ fontSize: "13px" }}>
-              Тест: {quizLevel} → Рабочий: {realLevel}
+              {t("levelQuizResult.quizVsReal", { quizLevel, realLevel })}
             </p>
           )}
         </div>
@@ -78,7 +80,7 @@ export default function LevelQuizResult() {
           }}
         >
           <p className="text-white/80 leading-relaxed" style={{ fontSize: "15px" }}>
-            Это твой уровень в идеальных условиях. В реальной игре сложнее: партнёр влияет на половину розыгрышей, эмоции не всегда стабильны, техника под давлением работает иначе. Рабочий уровень — на ступень ниже. Это не плохо — это честно. Именно отсюда начинается настоящий рост.
+            {t("levelQuizResult.honestMessage")}
           </p>
         </div>
 
@@ -91,7 +93,7 @@ export default function LevelQuizResult() {
             className="uppercase tracking-widest mb-5"
             style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)" }}
           >
-            Шкала развития
+            {t("levelQuizResult.developmentScale")}
           </div>
           <div className="flex items-end gap-2">
             {LEVEL_ORDER.map((lvl, i) => (
@@ -132,24 +134,24 @@ export default function LevelQuizResult() {
               className="uppercase tracking-widest mb-5"
               style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)" }}
             >
-              Профиль игрока
+              {t("levelQuizResult.playerProfile")}
             </div>
             <div className="space-y-4">
               {q1 && (
                 <div className="flex gap-4">
-                  <span className="text-muted-foreground flex-shrink-0" style={{ fontSize: "14px", minWidth: "90px" }}>Бэкграунд</span>
+                  <span className="text-muted-foreground flex-shrink-0" style={{ fontSize: "14px", minWidth: "90px" }}>{t("levelQuizResult.background")}</span>
                   <span className="text-white" style={{ fontSize: "14px" }}>{q1}</span>
                 </div>
               )}
               {q2 && (
                 <div className="flex gap-4">
-                  <span className="text-muted-foreground flex-shrink-0" style={{ fontSize: "14px", minWidth: "90px" }}>Мотивация</span>
+                  <span className="text-muted-foreground flex-shrink-0" style={{ fontSize: "14px", minWidth: "90px" }}>{t("levelQuizResult.motivation")}</span>
                   <span className="text-white" style={{ fontSize: "14px" }}>{q2}</span>
                 </div>
               )}
               {q3 && (
                 <div className="flex gap-4">
-                  <span className="text-muted-foreground flex-shrink-0" style={{ fontSize: "14px", minWidth: "90px" }}>Стиль</span>
+                  <span className="text-muted-foreground flex-shrink-0" style={{ fontSize: "14px", minWidth: "90px" }}>{t("levelQuizResult.style")}</span>
                   <span className="text-white" style={{ fontSize: "14px" }}>{q3}</span>
                 </div>
               )}
@@ -163,7 +165,7 @@ export default function LevelQuizResult() {
           className="w-full rounded-[14px] font-semibold text-black transition-all"
           style={{ height: "56px", fontSize: "17px", background: "#D4AF37", boxShadow: "0 4px 20px rgba(212,175,55,0.3)" }}
         >
-          Перейти в профиль →
+          {t("levelQuizResult.goToProfile")}
         </button>
 
         <button
@@ -171,7 +173,7 @@ export default function LevelQuizResult() {
           className="w-full rounded-[14px] border font-medium text-muted-foreground hover:text-white hover:border-white/25 transition-colors"
           style={{ height: "50px", fontSize: "15px", borderColor: "rgba(255,255,255,0.1)" }}
         >
-          Пройти тест заново
+          {t("levelQuizResult.retakeQuiz")}
         </button>
       </div>
     </div>

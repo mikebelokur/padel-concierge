@@ -369,6 +369,18 @@
     "lq6": { "text": "Court position is more important than shot power?" },
     "lq7": { "text": "Against weak opponents you can relax and stop thinking about tactics?" }
   },
+  "levelQuizResult": {
+    "yourLevel": "Your level",
+    "quizVsReal": "Quiz: {{quizLevel}} → Working: {{realLevel}}",
+    "honestMessage": "This is your level under ideal conditions. In real play it's harder: your partner affects half of all rallies, emotions aren't always stable, and technique under pressure works differently. Your working level is one step down. That's not bad — that's honest. This is exactly where real growth begins.",
+    "developmentScale": "Development scale",
+    "playerProfile": "Player profile",
+    "background": "Background",
+    "motivation": "Motivation",
+    "style": "Style",
+    "goToProfile": "Go to profile →",
+    "retakeQuiz": "Retake quiz"
+  },
   "levelQuiz": {
     "back": "Back",
     "loading": "Calculating result...",

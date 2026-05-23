@@ -192,7 +192,7 @@ export default function Admin() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
                 { label: t("admin.totalUsers"),   value: stats?.totalUsers ?? "–",                  gold: false },
-                { label: "Онлайн сейчас",           value: stats?.onlineUsers ?? "–",                 gold: false },
+                { label: t("admin.onlineNow"),      value: stats?.onlineUsers ?? "–",                 gold: false },
                 { label: t("admin.totalMatches"), value: stats?.totalMatches ?? "–",                gold: false },
                 { label: t("admin.revenue"),      value: stats ? `${stats.dailyRevenue} AED` : "–", gold: true  },
               ].map(({ label, value, gold }) => (
@@ -225,7 +225,7 @@ export default function Admin() {
                 style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
               >
                 <div className="px-5 pt-5 pb-3">
-                  <div className="font-medium text-white" style={{ fontSize: "15px" }}>Распределение по уровням WPT</div>
+                  <div className="font-medium text-white" style={{ fontSize: "15px" }}>{t("admin.wptLevelDistribution")}</div>
                 </div>
                 <div className="px-5 pb-5" style={{ height: "192px" }}>
                   <ResponsiveContainer width="100%" height="100%">
@@ -246,13 +246,13 @@ export default function Admin() {
             {/* User management */}
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-serif font-bold text-white" style={{ fontSize: "20px" }}>Управление пользователями</h2>
+                <h2 className="font-serif font-bold text-white" style={{ fontSize: "20px" }}>{t("admin.userManagement")}</h2>
                 <span className="text-muted-foreground" style={{ fontSize: "13px" }}>{filteredUsers.length} польз.</span>
               </div>
               <div className="mb-4">
                 <input
                   type="text"
-                  placeholder="Поиск по имени или email…"
+                  placeholder={t("admin.searchPlaceholder")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="text-white placeholder-muted-foreground outline-none rounded-xl max-w-sm w-full"
@@ -361,16 +361,16 @@ export default function Admin() {
                             </AlertDialogTrigger>
                             <AlertDialogContent className="bg-card border-white/10">
                               <AlertDialogHeader>
-                                <AlertDialogTitle>Удалить {u.name}?</AlertDialogTitle>
+                                <AlertDialogTitle>{t("admin.deleteUserTitle", { name: u.name })}</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Это безвозвратно удалит аккаунт, бронирования и все связанные данные.
+                                  {t("admin.deleteUserDesc")}
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel className="border-white/10">Отмена</AlertDialogCancel>
+                                <AlertDialogCancel className="border-white/10">{t("common.cancel")}</AlertDialogCancel>
                                 <AlertDialogAction className="bg-destructive text-destructive-foreground"
                                   onClick={() => userDeleteMutation.mutate(u.id)}>
-                                  Удалить пользователя
+                                  {t("admin.deleteUserButton")}
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
@@ -406,7 +406,7 @@ export default function Admin() {
                     ✅ Всё в порядке
                   </span>
                 )}
-                <span className="text-muted-foreground" style={{ fontSize: "12px" }}>Обновляется каждые 30с</span>
+                <span className="text-muted-foreground" style={{ fontSize: "12px" }}>{t("admin.updatesEvery30s")}</span>
               </div>
               <button
                 className="inline-flex items-center justify-center gap-2 rounded-xl font-medium text-white transition-all hover:bg-white/[0.06] active:scale-[0.97] disabled:opacity-50"

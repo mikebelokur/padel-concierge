@@ -283,17 +283,25 @@
     "overview": "Overview",
     "registrations": "Registrations",
     "totalUsers": "Total Users",
+    "onlineNow": "Online Now",
     "totalMatches": "Total Matches",
     "revenue": "Revenue",
     "pendingApproval": "Pending",
     "search": "Search users...",
+    "searchPlaceholder": "Search by name or email…",
     "approve": "Approve",
     "reject": "Reject",
     "activityFeed": "Activity Feed",
     "levelDistribution": "Level Distribution",
+    "wptLevelDistribution": "WPT Level Distribution",
     "recentActivity": "Recent Activity",
     "verified": "Verified",
-    "notVerified": "Not verified"
+    "notVerified": "Not verified",
+    "userManagement": "User Management",
+    "updatesEvery30s": "Updates every 30s",
+    "deleteUserTitle": "Delete {{name}}?",
+    "deleteUserDesc": "This will permanently remove the account, bookings, and all associated data.",
+    "deleteUserButton": "Delete User"
   },
   "quiz": {
     "intro": {

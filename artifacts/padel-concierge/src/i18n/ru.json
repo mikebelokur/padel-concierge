@@ -283,17 +283,25 @@
     "overview": "Обзор",
     "registrations": "Регистрации",
     "totalUsers": "Всего пользователей",
+    "onlineNow": "Онлайн сейчас",
     "totalMatches": "Всего матчей",
     "revenue": "Выручка",
     "pendingApproval": "Ожидает",
     "search": "Поиск...",
+    "searchPlaceholder": "Поиск по имени или email…",
     "approve": "Одобрить",
     "reject": "Отклонить",
     "activityFeed": "Лента активности",
     "levelDistribution": "Распределение по уровням",
+    "wptLevelDistribution": "Распределение по уровням WPT",
     "recentActivity": "Последние события",
     "verified": "Верифицирован",
-    "notVerified": "Не верифицирован"
+    "notVerified": "Не верифицирован",
+    "userManagement": "Управление пользователями",
+    "updatesEvery30s": "Обновляется каждые 30с",
+    "deleteUserTitle": "Удалить {{name}}?",
+    "deleteUserDesc": "Это безвозвратно удалит аккаунт, бронирования и все связанные данные.",
+    "deleteUserButton": "Удалить пользователя"
   },
   "quiz": {
     "intro": {

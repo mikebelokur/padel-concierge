@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useGetMe, useLogin, useRegister, getGetMeQueryKey } from '@workspace/api-client-react';
+import { setSessionExpiredHandler as setApiFetchExpiredHandler } from '@/lib/api';
+import { setSessionExpiredHandler } from '@workspace/api-client-react';
+import { toast } from '@/hooks/use-toast';
 
 type User = any; // Adjust based on API schema
 
@@ -36,16 +39,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [me, error]);
 
-  const login = (newToken: string, newUser: User) => {
-    setToken(newToken);
-    setUser(newUser);
-    localStorage.setItem('token', newToken);
-  };
-
   const logout = () => {
     setToken(null);
     setUser(null);
     localStorage.removeItem('token');
+  };
+
+  useEffect(() => {
+    const handler = () => {
+      logout();
+      toast({
+        title: 'Сессия истекла. Пожалуйста, войдите снова.',
+        variant: 'destructive',
+      });
+      window.location.href = '/login';
+    };
+    setSessionExpiredHandler(handler);
+    setApiFetchExpiredHandler(handler);
+  }, []);
+
+  const login = (newToken: string, newUser: User) => {
+    setToken(newToken);
+    setUser(newUser);
+    localStorage.setItem('token', newToken);
   };
 
   return (

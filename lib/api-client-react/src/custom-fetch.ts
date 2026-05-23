@@ -18,6 +18,20 @@ const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 let _baseUrl: string | null = null;
 let _authTokenGetter: AuthTokenGetter | null = null;
 
+type SessionExpiredHandler = () => void;
+let _sessionExpiredHandler: SessionExpiredHandler | null = null;
+let _sessionExpiredFiring = false;
+
+/**
+ * Register a callback invoked when a 401 or 403 response is received.
+ * The handler is called at most once per "session expired event" —
+ * concurrent 401/403 responses are deduplicated so the handler fires once.
+ */
+export function setSessionExpiredHandler(handler: SessionExpiredHandler | null): void {
+  _sessionExpiredHandler = handler;
+  _sessionExpiredFiring = false;
+}
+
 /**
  * Set a base URL that is prepended to every relative request URL
  * (i.e. paths that start with `/`).
@@ -363,6 +377,10 @@ export async function customFetch<T = unknown>(
   const response = await fetch(input, { ...init, method, headers });
 
   if (!response.ok) {
+    if ((response.status === 401 || response.status === 403) && _sessionExpiredHandler && !_sessionExpiredFiring) {
+      _sessionExpiredFiring = true;
+      _sessionExpiredHandler();
+    }
     const errorData = await parseErrorBody(response, method);
     throw new ApiError(response, errorData, requestInfo);
   }

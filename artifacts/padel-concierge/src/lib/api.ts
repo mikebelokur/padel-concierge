@@ -1,3 +1,11 @@
+type SessionExpiredHandler = () => void;
+
+let sessionExpiredHandler: SessionExpiredHandler | null = null;
+
+export function setSessionExpiredHandler(handler: SessionExpiredHandler) {
+  sessionExpiredHandler = handler;
+}
+
 export async function apiFetch<T = unknown>(
   path: string,
   options: RequestInit = {}
@@ -12,6 +20,9 @@ export async function apiFetch<T = unknown>(
     },
   });
   if (!res.ok) {
+    if (res.status === 401 || res.status === 403) {
+      sessionExpiredHandler?.();
+    }
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error((err as any).error || res.statusText);
   }

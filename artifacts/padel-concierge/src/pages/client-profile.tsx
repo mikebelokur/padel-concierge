@@ -92,11 +92,11 @@ function BehavioralStats({
     onSuccess: (updated, flag) => {
       onUpdated(updated);
       toast({
-        title: `Flag removed: "${flag}"`,
-        description: "Tap Undo to restore it.",
+        title: `Метка удалена: "${flag}"`,
+        description: "Нажмите «Отменить» для восстановления.",
         action: (
-          <ToastAction altText="Undo" onClick={() => restoreFlag.mutate(flag)}>
-            Undo
+          <ToastAction altText="Отменить" onClick={() => restoreFlag.mutate(flag)}>
+            Отменить
           </ToastAction>
         ),
       });
@@ -114,7 +114,7 @@ function BehavioralStats({
       }),
     onSuccess: (updated) => {
       onUpdated(updated);
-      toast({ title: "Flag restored" });
+      toast({ title: "Метка восстановлена" });
     },
     onError: (err: unknown) => {
       toast({ title: "Ошибка", description: translateError(err).message, variant: "destructive" });
@@ -140,7 +140,7 @@ function BehavioralStats({
     onSuccess: (updated) => {
       onUpdated(updated);
       setEditing(false);
-      toast({ title: "Behavioral record updated" });
+      toast({ title: "Запись обновлена" });
     },
     onError: (err: unknown) => {
       toast({ title: "Ошибка", description: translateError(err).message, variant: "destructive" });
@@ -419,7 +419,7 @@ export default function ClientProfile() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["client-profile", id] });
       setNewQuestion("");
-      toast({ title: "Question recorded" });
+      toast({ title: "Вопрос записан" });
     },
   });
 
@@ -428,7 +428,7 @@ export default function ClientProfile() {
       apiFetch(`/coaching/notes/${noteId}`, { method: "PUT", body: JSON.stringify({ coachResponse }) }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["client-profile", id] });
-      toast({ title: "Response saved" });
+      toast({ title: "Ответ сохранён" });
     },
   });
 
@@ -475,7 +475,7 @@ export default function ClientProfile() {
       qc.invalidateQueries({ queryKey: ["client-profile", id] });
       setShowSessionForm(false);
       setSessionTopic(""); setSessionNotes(""); setSessionDrills([]); setSessionFocus(""); setNewDrill("");
-      toast({ title: "Session logged ✓" });
+      toast({ title: "Занятие записано ✓" });
     },
     onError: (e: unknown) => toast({ title: "Ошибка", description: translateError(e).message, variant: "destructive" }),
   });

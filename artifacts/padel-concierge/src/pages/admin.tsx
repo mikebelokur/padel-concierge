@@ -89,7 +89,7 @@ export default function Admin() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["registrations"] });
       queryClient.invalidateQueries({ queryKey: ["pending-count"] });
-      toast({ title: "✅ Player approved", description: "They now have full access." });
+      toast({ title: "✅ Игрок одобрен", description: "Теперь у него полный доступ." });
     },
   });
 
@@ -98,7 +98,7 @@ export default function Admin() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["registrations"] });
       queryClient.invalidateQueries({ queryKey: ["pending-count"] });
-      toast({ title: "Registration rejected" });
+      toast({ title: "Заявка отклонена" });
     },
   });
 
@@ -106,7 +106,7 @@ export default function Admin() {
     mutationFn: (id: number) => apiFetch(`/admin/registrations/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["registrations"] });
-      toast({ title: "Registration deleted" });
+      toast({ title: "Заявка удалена" });
     },
   });
 
@@ -115,7 +115,7 @@ export default function Admin() {
       apiFetch(`/admin/users/${id}/level`, { method: "PUT", body: JSON.stringify({ level }) }),
     onSuccess: (updated: any) => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-      toast({ title: `Level updated to WPT ${updated.level} for ${updated.name}` });
+      toast({ title: `Уровень WPT ${updated.level} установлен для ${updated.name}` });
       setEditingLevel((prev) => { const n = { ...prev }; delete n[updated.id]; return n; });
     },
     onError: (e: unknown) => toast({ title: "Ошибка", description: translateError(e).message, variant: "destructive" }),

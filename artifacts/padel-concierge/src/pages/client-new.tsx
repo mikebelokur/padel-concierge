@@ -40,7 +40,7 @@ export default function ClientNew() {
         }),
       }),
     onSuccess: (client: any) => {
-      toast({ title: "Client added", description: `${form.name} has been added to your roster.` });
+      toast({ title: "Клиент добавлен", description: `${form.name} добавлен в ваш список.` });
       qc.invalidateQueries({ queryKey: ["coaching-clients"] });
       setLocation(`/clients/${client.id}`);
     },

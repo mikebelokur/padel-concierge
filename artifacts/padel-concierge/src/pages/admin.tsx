@@ -7,6 +7,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recha
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { translateError } from "@/lib/errorMessages";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -117,20 +118,20 @@ export default function Admin() {
       toast({ title: `Level updated to WPT ${updated.level} for ${updated.name}` });
       setEditingLevel((prev) => { const n = { ...prev }; delete n[updated.id]; return n; });
     },
-    onError: () => toast({ title: "Failed to update level", variant: "destructive" }),
+    onError: (e: unknown) => toast({ title: "Ошибка", description: translateError(e).message, variant: "destructive" }),
   });
 
   const setRoleMutation = useMutation({
     mutationFn: ({ id, role }: { id: number; role: string }) =>
       apiFetch(`/admin/users/${id}/role`, { method: "PUT", body: JSON.stringify({ role }) }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin-users"] }); toast({ title: "Role updated" }); },
-    onError: () => toast({ title: "Failed to update role", variant: "destructive" }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin-users"] }); toast({ title: "Роль обновлена" }); },
+    onError: (e: unknown) => toast({ title: "Ошибка", description: translateError(e).message, variant: "destructive" }),
   });
 
   const userDeleteMutation = useMutation({
     mutationFn: (id: number) => apiFetch(`/admin/users/${id}`, { method: "DELETE" }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin-users"] }); toast({ title: "User deleted" }); },
-    onError: () => toast({ title: "Failed to delete user", variant: "destructive" }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin-users"] }); toast({ title: "Пользователь удалён" }); },
+    onError: (e: unknown) => toast({ title: "Ошибка", description: translateError(e).message, variant: "destructive" }),
   });
 
   const filteredUsers = (users as any[]).filter((u: any) =>

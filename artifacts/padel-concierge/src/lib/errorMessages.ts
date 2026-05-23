@@ -65,6 +65,29 @@ const ERROR_MAP: Array<{
     },
   },
   {
+    match: (err) => {
+      const msg = String((err as any)?.message ?? "").toLowerCase();
+      return (
+        msg.includes("not found") ||
+        (err as any)?.status === 404
+      );
+    },
+    result: { message: "Запись не найдена. Возможно, она была удалена." },
+  },
+  {
+    match: (err) => {
+      const msg = String((err as any)?.message ?? "").toLowerCase();
+      return (
+        msg.includes("bad request") ||
+        msg.includes("validation") ||
+        msg.includes("invalid") ||
+        (err as any)?.status === 400 ||
+        (err as any)?.status === 422
+      );
+    },
+    result: { message: "Некорректные данные. Проверьте введённые значения и попробуйте снова." },
+  },
+  {
     match: (err) => (err as any)?.status >= 500,
     result: { message: "Ошибка сервера. Попробуйте позже." },
   },

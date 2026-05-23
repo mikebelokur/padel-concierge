@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/api";
+import { translateError } from "@/lib/errorMessages";
 
 interface Court {
   id: number;
@@ -79,7 +80,7 @@ export default function Courts() {
       setShowModal(false);
       setBookTime("");
     },
-    onError: (e: Error) => toast({ title: "Booking failed", description: e.message, variant: "destructive" }),
+    onError: (e: unknown) => toast({ title: "Ошибка", description: translateError(e).message, variant: "destructive" }),
   });
 
   const cancelMutation = useMutation({

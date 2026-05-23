@@ -5,6 +5,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { translateError } from "@/lib/errorMessages";
 
 export default function ResetPassword() {
   const [, setLocation] = useLocation();
@@ -40,10 +41,10 @@ export default function ResetPassword() {
       });
       setDone(true);
       setTimeout(() => setLocation("/login"), 2500);
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: t("resetPassword.resetFailed"),
-        description: err.message || t("resetPassword.tokenExpired"),
+        description: translateError(err).message,
         variant: "destructive",
       });
     } finally {

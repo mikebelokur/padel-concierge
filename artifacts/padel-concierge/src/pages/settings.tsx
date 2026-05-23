@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { ARCHETYPE_META, type Archetype } from "@/lib/archetypes";
+import { translateError } from "@/lib/errorMessages";
 
 export default function Settings() {
   const { user } = useAuth();
@@ -38,8 +39,8 @@ export default function Settings() {
       onSuccess: () => {
         toast({ title: t("settings.settingsUpdated"), description: t("settings.profileSaved") });
       },
-      onError: () => {
-        toast({ title: t("settings.updateFailed"), variant: "destructive" });
+      onError: (e: unknown) => {
+        toast({ title: t("settings.updateFailed"), description: translateError(e).message, variant: "destructive" });
       }
     });
   };

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
+import { translateError } from "@/lib/errorMessages";
 
 const LEVELS = ["D", "D+", "C-", "C", "C+", "B", "B+", "A"];
 
@@ -43,8 +44,8 @@ export default function ClientNew() {
       qc.invalidateQueries({ queryKey: ["coaching-clients"] });
       setLocation(`/clients/${client.id}`);
     },
-    onError: (e: Error) =>
-      toast({ title: "Failed to add client", description: e.message, variant: "destructive" }),
+    onError: (e: unknown) =>
+      toast({ title: "Ошибка", description: translateError(e).message, variant: "destructive" }),
   });
 
   const canSubmit = form.name.trim().length > 0 && form.email.trim().length > 0;

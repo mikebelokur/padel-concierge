@@ -12,6 +12,7 @@ import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { ARCHETYPE_META, archetypeCompatibility, type Archetype } from "@/lib/archetypes";
 import { ReliabilityDot, CompatBadge } from "@/components/ReliabilityBadge";
+import { translateError } from "@/lib/errorMessages";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -384,7 +385,7 @@ export default function MatchRequests() {
       setSelectedPlayer(null);
       setMessage(""); setProposedDate(""); setProposedTime("");
     },
-    onError: (e: Error) => toast({ title: "Ошибка", description: e.message, variant: "destructive" }),
+    onError: (e: unknown) => toast({ title: "Ошибка", description: translateError(e).message, variant: "destructive" }),
   });
 
   const trainerRequestMutation = useMutation({
@@ -404,7 +405,7 @@ export default function MatchRequests() {
       qc.invalidateQueries({ queryKey: ["trainer-match-requests"] });
       setTrDate(""); setTrNotes(""); setTrTime("18:00");
     },
-    onError: (e: Error) => toast({ title: "Ошибка", description: e.message, variant: "destructive" }),
+    onError: (e: unknown) => toast({ title: "Ошибка", description: translateError(e).message, variant: "destructive" }),
   });
 
   const assignMutation = useMutation({
@@ -435,7 +436,7 @@ export default function MatchRequests() {
       setAssignTarget(null);
       setSelectedCandidates([]);
     },
-    onError: (e: Error) => toast({ title: "Ошибка", description: e.message, variant: "destructive" }),
+    onError: (e: unknown) => toast({ title: "Ошибка", description: translateError(e).message, variant: "destructive" }),
   });
 
   function toggleCandidate(id: number) {

@@ -5,6 +5,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { apiFetch } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { translateError } from "@/lib/errorMessages";
 
 interface Candidate {
   user: {
@@ -169,10 +170,10 @@ export default function FindMatch() {
       });
       setSuggestTarget(null);
       navigate("/match-requests");
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast({
         title: t("findMatch.suggestError"),
-        description: e.message || "Network error",
+        description: translateError(e).message,
         variant: "destructive",
       });
     } finally {
@@ -191,8 +192,8 @@ export default function FindMatch() {
       });
       const sorted = [...res.candidates].sort((a, b) => b.compatibility_score - a.compatibility_score);
       setCandidates(sorted);
-    } catch (e: any) {
-      setError(e.message || "Network error");
+    } catch (e: unknown) {
+      setError(translateError(e).message);
     } finally {
       setLoading(false);
     }

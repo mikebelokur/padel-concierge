@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { translateError } from "@/lib/errorMessages";
 
 export default function VideoAnalysisList() {
   const { user } = useAuth();
@@ -38,8 +39,8 @@ export default function VideoAnalysisList() {
         setFormData({ videoUrl: "", playerShirtColor: "", analysisQuery: "" });
         refetch();
       },
-      onError: () => {
-        toast({ title: t("videoAnalysis.toastError"), variant: "destructive" });
+      onError: (e: unknown) => {
+        toast({ title: t("videoAnalysis.toastError"), description: translateError(e).message, variant: "destructive" });
       }
     });
   };

@@ -13,6 +13,7 @@ import {
   reliabilityBarColor,
   reliabilityLabel,
 } from "@/components/ReliabilityBadge";
+import { translateError } from "@/lib/errorMessages";
 
 type BehavioralProfile = {
   reliabilityScore: number;
@@ -100,8 +101,8 @@ function BehavioralStats({
         ),
       });
     },
-    onError: (err: Error) => {
-      toast({ title: "Failed to remove flag", description: err.message, variant: "destructive" });
+    onError: (err: unknown) => {
+      toast({ title: "Ошибка", description: translateError(err).message, variant: "destructive" });
     },
   });
 
@@ -115,8 +116,8 @@ function BehavioralStats({
       onUpdated(updated);
       toast({ title: "Flag restored" });
     },
-    onError: (err: Error) => {
-      toast({ title: "Failed to restore flag", description: err.message, variant: "destructive" });
+    onError: (err: unknown) => {
+      toast({ title: "Ошибка", description: translateError(err).message, variant: "destructive" });
     },
   });
 
@@ -141,8 +142,8 @@ function BehavioralStats({
       setEditing(false);
       toast({ title: "Behavioral record updated" });
     },
-    onError: (err: Error) => {
-      toast({ title: "Failed to save", description: err.message, variant: "destructive" });
+    onError: (err: unknown) => {
+      toast({ title: "Ошибка", description: translateError(err).message, variant: "destructive" });
     },
   });
 
@@ -476,7 +477,7 @@ export default function ClientProfile() {
       setSessionTopic(""); setSessionNotes(""); setSessionDrills([]); setSessionFocus(""); setNewDrill("");
       toast({ title: "Session logged ✓" });
     },
-    onError: (e: Error) => toast({ title: "Failed to log session", description: e.message, variant: "destructive" }),
+    onError: (e: unknown) => toast({ title: "Ошибка", description: translateError(e).message, variant: "destructive" }),
   });
 
   const allSessions: any[] = (data as any)?.sessions ?? [];

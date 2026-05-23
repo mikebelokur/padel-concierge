@@ -483,6 +483,8 @@
   "assessment": {
     "title": "Оценка уровня",
     "subtitle": "Ответь на 10 вопросов, чтобы рассчитать официальный уровень WPT.",
+    "incompleteRegistrationTitle": "Ещё один шаг — и профиль готов",
+    "incompleteRegistrationBody": "Ты зарегистрировался, но не прошёл оценку уровня. Пройди её сейчас, чтобы мы могли подобрать партнёров специально для тебя.",
     "questionOf": "Вопрос {{current}} из {{total}}",
     "percentComplete": "{{percent}}% пройдено",
     "back": "Назад",

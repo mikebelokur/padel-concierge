@@ -483,6 +483,8 @@
   "assessment": {
     "title": "Skill Assessment",
     "subtitle": "Answer 10 questions to calculate your official WPT level.",
+    "incompleteRegistrationTitle": "One more step to complete your profile",
+    "incompleteRegistrationBody": "You registered but didn't finish the skill assessment. Complete it now so we can find the right matches for you.",
     "questionOf": "Question {{current}} of {{total}}",
     "percentComplete": "{{percent}}% complete",
     "back": "Back",

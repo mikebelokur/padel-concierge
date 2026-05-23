@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -34,7 +34,9 @@ export default function Assessment() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const search = useSearch();
   const { t } = useLanguage();
+  const isIncompleteRegistration = new URLSearchParams(search).get("reason") === "incomplete";
 
   const QUESTIONS: Question[] = [
     {
@@ -229,6 +231,22 @@ export default function Assessment() {
   return (
     <AppLayout>
       <div className="p-4 sm:p-8 max-w-2xl mx-auto space-y-5 sm:space-y-8">
+        {isIncompleteRegistration && (
+          <div
+            className="rounded-[16px] border border-primary/30 p-4 flex gap-3 items-start"
+            style={{ background: "rgba(212,175,55,0.08)" }}
+          >
+            <span className="text-xl leading-none mt-0.5">🎾</span>
+            <div>
+              <p className="font-semibold text-primary text-sm mb-1">
+                {t("assessment.incompleteRegistrationTitle")}
+              </p>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                {t("assessment.incompleteRegistrationBody")}
+              </p>
+            </div>
+          </div>
+        )}
         <header>
           <h1 className="text-3xl font-serif mb-2">{t("assessment.title")}</h1>
           <p className="text-muted-foreground">{t("assessment.subtitle")}</p>

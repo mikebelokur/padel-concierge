@@ -66,6 +66,8 @@ export interface User {
   createdAt: string;
   /** @nullable */
   lastLogin?: string | null;
+  /** @nullable */
+  archetype?: string | null;
 }
 
 export interface AuthResponse {

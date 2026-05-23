@@ -777,6 +777,8 @@ components:
           type: string
         lastLogin:
           type: ["string", "null"]
+        archetype:
+          type: ["string", "null"]
       required:
         - id
         - name

@@ -70,6 +70,7 @@ export const LoginResponse = zod.object({
     lastActive: zod.string().nullish(),
     createdAt: zod.string(),
     lastLogin: zod.string().nullish(),
+    archetype: zod.string().nullish(),
   }),
 });
 
@@ -105,6 +106,7 @@ export const GetMeResponse = zod.object({
   lastActive: zod.string().nullish(),
   createdAt: zod.string(),
   lastLogin: zod.string().nullish(),
+  archetype: zod.string().nullish(),
 });
 
 /**
@@ -139,6 +141,7 @@ export const ListUsersResponseItem = zod.object({
   lastActive: zod.string().nullish(),
   createdAt: zod.string(),
   lastLogin: zod.string().nullish(),
+  archetype: zod.string().nullish(),
 });
 export const ListUsersResponse = zod.array(ListUsersResponseItem);
 
@@ -178,6 +181,7 @@ export const GetUserResponse = zod.object({
   lastActive: zod.string().nullish(),
   createdAt: zod.string(),
   lastLogin: zod.string().nullish(),
+  archetype: zod.string().nullish(),
 });
 
 /**
@@ -229,6 +233,7 @@ export const UpdateUserResponse = zod.object({
   lastActive: zod.string().nullish(),
   createdAt: zod.string(),
   lastLogin: zod.string().nullish(),
+  archetype: zod.string().nullish(),
 });
 
 /**
@@ -276,6 +281,7 @@ export const UpdateAvailabilityResponse = zod.object({
   lastActive: zod.string().nullish(),
   createdAt: zod.string(),
   lastLogin: zod.string().nullish(),
+  archetype: zod.string().nullish(),
 });
 
 /**
@@ -318,6 +324,7 @@ export const AddFavouriteResponse = zod.object({
   lastActive: zod.string().nullish(),
   createdAt: zod.string(),
   lastLogin: zod.string().nullish(),
+  archetype: zod.string().nullish(),
 });
 
 /**
@@ -360,6 +367,7 @@ export const RemoveFavouriteResponse = zod.object({
   lastActive: zod.string().nullish(),
   createdAt: zod.string(),
   lastLogin: zod.string().nullish(),
+  archetype: zod.string().nullish(),
 });
 
 /**
@@ -398,6 +406,7 @@ export const VerifyUserResponse = zod.object({
   lastActive: zod.string().nullish(),
   createdAt: zod.string(),
   lastLogin: zod.string().nullish(),
+  archetype: zod.string().nullish(),
 });
 
 /**
@@ -1088,6 +1097,7 @@ export const ListCoachPlayersResponseItem = zod.object({
   lastActive: zod.string().nullish(),
   createdAt: zod.string(),
   lastLogin: zod.string().nullish(),
+  archetype: zod.string().nullish(),
 });
 export const ListCoachPlayersResponse = zod.array(ListCoachPlayersResponseItem);
 

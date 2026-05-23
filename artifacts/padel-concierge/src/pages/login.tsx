@@ -20,6 +20,7 @@ export default function Login() {
         authLogin(data.token, data.user);
         if (data.user.role === "owner" || data.user.role === "admin") setLocation("/admin");
         else if (data.user.role === "coach") setLocation("/coach");
+        else if (!data.user.archetype) setLocation("/assessment?reason=incomplete");
         else setLocation("/dashboard");
       },
       onError: (err: unknown) => {

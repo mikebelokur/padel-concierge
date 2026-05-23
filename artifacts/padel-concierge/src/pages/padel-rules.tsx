@@ -3,6 +3,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { apiFetch } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Lang = "ru" | "en" | "ar";
 
@@ -19,6 +20,7 @@ const CATEGORY_ICONS: Record<string, string> = {
 export default function PadelRules() {
   const [lang, setLang] = useState<Lang>("ru");
   const [search, setSearch] = useState("");
+  const { t } = useLanguage();
 
   const { data: rules = [], isLoading } = useQuery({
     queryKey: ["padel-rules", search],
@@ -40,7 +42,7 @@ export default function PadelRules() {
       <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-4 sm:space-y-6">
         <div>
           <h1 className="text-3xl font-serif mb-1">Правила Падела</h1>
-          <p className="text-muted-foreground">Official padel rules reference</p>
+          <p className="text-muted-foreground">{t("rules.subtitle")}</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -64,7 +66,7 @@ export default function PadelRules() {
         </div>
 
         {isLoading ? (
-          <div className="text-center py-16 text-muted-foreground">Loading rules…</div>
+          <div className="text-center py-16 text-muted-foreground">{t("rules.loading")}</div>
         ) : (
           Object.entries(grouped).map(([category, catRules]: [string, any[]]) => (
             <div key={category}>
@@ -72,7 +74,7 @@ export default function PadelRules() {
                 <span className="text-lg">{CATEGORY_ICONS[category] ?? "📋"}</span>
                 <h2 className="text-lg font-serif capitalize">{category}</h2>
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs border border-white/10 text-muted-foreground">
-                  {catRules.length} rules
+                  {t("rules.rulesCount", { count: catRules.length })}
                 </span>
               </div>
               <div className="space-y-3">

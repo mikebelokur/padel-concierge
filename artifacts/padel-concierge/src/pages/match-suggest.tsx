@@ -3,6 +3,7 @@ import { useGetMatchSuggestions, getGetMatchSuggestionsQueryKey } from "@workspa
 import { useQueries } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ARCHETYPE_META, type Archetype } from "@/lib/archetypes";
@@ -30,7 +31,7 @@ function ArchetypePill({ archetype }: { archetype?: string | null }) {
   );
 }
 
-function RiskWarning({ profile }: { profile?: PlayerProfile }) {
+function RiskWarning({ profile, warningLabel }: { profile?: PlayerProfile; warningLabel: string }) {
   if (!profile) return null;
   const isLowScore = profile.reliabilityScore < 60;
   const hasFlags = profile.behavioralFlags.length > 0;
@@ -45,13 +46,14 @@ function RiskWarning({ profile }: { profile?: PlayerProfile }) {
       title={`Предупреждение: ${parts.join(" · ")}`}
       className="inline-flex items-center gap-1 text-xs font-medium text-amber-400 bg-amber-400/10 border border-amber-400/20 rounded-full px-2 py-0.5 cursor-help"
     >
-      ⚠ Риск
+      ⚠ {warningLabel}
     </span>
   );
 }
 
 export default function MatchSuggest() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { data: suggestions, isLoading } = useGetMatchSuggestions(
     { userId: user?.id || 0 },
     { query: { enabled: !!user?.id, queryKey: getGetMatchSuggestionsQueryKey({ userId: user?.id || 0 }) } }
@@ -89,10 +91,10 @@ export default function MatchSuggest() {
         {isLocked && (
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 text-center border border-white/10 rounded-[20px]">
             <Lock className="w-8 h-8 text-muted-foreground mb-4" />
-            <h3 className="font-serif text-xl mb-2">Verification Required</h3>
-            <p className="text-sm text-muted-foreground mb-6">Play 1 verification match to unlock Best Match suggestions.</p>
+            <h3 className="font-serif text-xl mb-2">{t("matchSuggest.verificationRequired")}</h3>
+            <p className="text-sm text-muted-foreground mb-6">{t("matchSuggest.verificationDesc")}</p>
             <button className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent font-medium text-foreground px-4 h-9 text-sm transition-all hover:bg-white/5">
-              Learn More
+              {t("matchSuggest.learnMore")}
             </button>
           </div>
         )}
@@ -100,18 +102,18 @@ export default function MatchSuggest() {
         <div className="px-5 pt-5 pb-4 border-b border-white/5 flex items-center justify-between">
           <span className="font-medium text-base">{title}</span>
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border bg-primary/10 text-primary border-primary/20">
-            {match.balanceScore}% Match
+            {t("matchSuggest.matchScore", { score: match.balanceScore })}
           </span>
         </div>
 
         <div className="p-5 flex-1 flex flex-col justify-between space-y-5">
           <div>
             <div className="font-serif text-xl mb-1">{match.clubName}</div>
-            <div className="text-sm text-muted-foreground">{match.date} at {match.time}</div>
+            <div className="text-sm text-muted-foreground">{match.date} {t("matchSuggest.at")} {match.time}</div>
           </div>
 
           <div className="space-y-3">
-            <div className="text-sm text-muted-foreground mb-1">Players</div>
+            <div className="text-sm text-muted-foreground mb-1">{t("matchSuggest.players")}</div>
             {match.players.map((p: any) => {
               const profile = profileMap[p.userId];
               return (
@@ -119,7 +121,7 @@ export default function MatchSuggest() {
                   <div className="flex justify-between items-center text-sm gap-2">
                     <div className="flex items-center gap-2 flex-wrap min-w-0">
                       <span className="font-medium">{p.name}</span>
-                      <RiskWarning profile={profile} />
+                      <RiskWarning profile={profile} warningLabel="Риск" />
                     </div>
                     <span className="font-mono text-muted-foreground text-xs shrink-0">{p.level}</span>
                   </div>
@@ -141,7 +143,7 @@ export default function MatchSuggest() {
 
           <Link href={`/matches/${match.id}`}>
             <button className="w-full inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold h-11 text-sm transition-all hover:bg-primary/90">
-              View Match
+              {t("matchSuggest.viewMatch")}
             </button>
           </Link>
         </div>
@@ -149,14 +151,14 @@ export default function MatchSuggest() {
     );
   };
 
-  if (isLoading) return <AppLayout><div className="p-8">Analyzing player network...</div></AppLayout>;
+  if (isLoading) return <AppLayout><div className="p-8">{t("matchSuggest.loading")}</div></AppLayout>;
 
   return (
     <AppLayout>
       <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-5 sm:space-y-8">
         <header>
-          <h1 className="text-3xl font-serif mb-2">Smart Match Suggestions</h1>
-          <p className="text-muted-foreground">Curated games based on your level, archetype, and history.</p>
+          <h1 className="text-3xl font-serif mb-2">{t("matchSuggest.title")}</h1>
+          <p className="text-muted-foreground">{t("matchSuggest.subtitle")}</p>
         </header>
 
         {!user?.archetype && (
@@ -185,10 +187,10 @@ export default function MatchSuggest() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
-          {renderCard("Best Match", suggestions?.best, "best")}
-          {renderCard("Balanced", suggestions?.balanced, "balanced")}
-          {renderCard("Challenging", suggestions?.challenging, "challenging")}
-          {renderCard("Easy", suggestions?.easy, "easy")}
+          {renderCard(t("matchSuggest.cardBest"), suggestions?.best, "best")}
+          {renderCard(t("matchSuggest.cardBalanced"), suggestions?.balanced, "balanced")}
+          {renderCard(t("matchSuggest.cardChallenging"), suggestions?.challenging, "challenging")}
+          {renderCard(t("matchSuggest.cardEasy"), suggestions?.easy, "easy")}
         </div>
       </div>
     </AppLayout>

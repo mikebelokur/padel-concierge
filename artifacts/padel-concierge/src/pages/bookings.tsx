@@ -4,6 +4,7 @@ import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useListBookings } from "@workspace/api-client-react";
 import { Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const PAYMENT_STATUS_STYLES: Record<string, { bg: string; border: string; color: string }> = {
   completed: { bg: "rgba(34,197,94,0.12)",  border: "rgba(34,197,94,0.3)",  color: "#4ade80" },
@@ -30,7 +31,6 @@ function BookingCardSkeleton({ upcoming = false }: { upcoming?: boolean }) {
         border: `1px solid ${upcoming ? "rgba(212,175,55,0.12)" : "rgba(255,255,255,0.06)"}`,
       }}
     >
-      {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1">
           <div
@@ -47,8 +47,6 @@ function BookingCardSkeleton({ upcoming = false }: { upcoming?: boolean }) {
           style={{ background: "rgba(255,255,255,0.07)", height: "26px", width: "82px" }}
         />
       </div>
-
-      {/* Footer */}
       <div
         className="flex items-center justify-between pt-3"
         style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
@@ -77,6 +75,7 @@ function BookingCardSkeleton({ upcoming = false }: { upcoming?: boolean }) {
 
 export default function Bookings() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { data: bookings, isLoading, refetch } = useListBookings({ userId: user?.id });
   const { pullY, isRefreshing } = usePullToRefresh(refetch);
 
@@ -96,19 +95,17 @@ export default function Bookings() {
             transition: pullY === 0 ? "transform 0.4s cubic-bezier(0.34,1.56,0.64,1)" : "none",
           }}
         >
-          {/* ── HEADER ── */}
           <header className="mb-6">
             <h1 className="font-serif font-bold text-white mb-1" style={{ fontSize: "26px" }}>
-              My Bookings
+              {t("bookings.title")}
             </h1>
             <p className="text-muted-foreground" style={{ fontSize: "15px" }}>
-              Your upcoming and past matches.
+              {t("bookings.subtitle")}
             </p>
           </header>
 
           {isLoading ? (
             <div className="space-y-6">
-              {/* Upcoming skeleton section */}
               <section>
                 <div
                   className="rounded animate-pulse mb-3"
@@ -118,7 +115,6 @@ export default function Bookings() {
                   {[1, 2].map(i => <BookingCardSkeleton key={i} upcoming />)}
                 </div>
               </section>
-              {/* Past skeleton section */}
               <section>
                 <div
                   className="rounded animate-pulse mb-3"
@@ -135,9 +131,9 @@ export default function Bookings() {
               style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.07)" }}
             >
               <div className="text-3xl mb-3">📅</div>
-              <div className="text-white font-medium mb-1">No bookings yet</div>
+              <div className="text-white font-medium mb-1">{t("bookings.emptyTitle")}</div>
               <div className="text-muted-foreground mb-4" style={{ fontSize: "14px" }}>
-                Join a match to see your bookings here.
+                {t("bookings.emptyHint")}
               </div>
               <Link href="/matches">
                 <button
@@ -150,21 +146,20 @@ export default function Bookings() {
                     color: "#000",
                   }}
                 >
-                  Find a Match
+                  {t("bookings.findMatch")}
                 </button>
               </Link>
             </div>
           ) : (
             <div className="space-y-6">
 
-              {/* ── UPCOMING ── */}
               {upcoming.length > 0 && (
                 <section>
                   <div
                     className="uppercase font-semibold mb-3"
                     style={{ fontSize: "11px", letterSpacing: "0.08em", color: "rgba(255,255,255,0.4)" }}
                   >
-                    Upcoming
+                    {t("bookings.upcoming")}
                   </div>
                   <div className="space-y-3">
                     {upcoming.map(booking => {
@@ -206,7 +201,7 @@ export default function Bookings() {
                                 className="rounded-full px-3 py-1.5 font-semibold"
                                 style={{ fontSize: "13px", background: "#D4AF37", color: "#000" }}
                               >
-                                View Details
+                                {t("bookings.viewDetails")}
                               </span>
                               <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "20px", lineHeight: 1 }}>›</span>
                             </div>
@@ -218,14 +213,13 @@ export default function Bookings() {
                 </section>
               )}
 
-              {/* ── PAST ── */}
               {past.length > 0 && (
                 <section>
                   <div
                     className="uppercase font-semibold mb-3"
                     style={{ fontSize: "11px", letterSpacing: "0.08em", color: "rgba(255,255,255,0.4)" }}
                   >
-                    Past
+                    {t("bookings.past")}
                   </div>
                   <div className="space-y-3">
                     {past.map(booking => {

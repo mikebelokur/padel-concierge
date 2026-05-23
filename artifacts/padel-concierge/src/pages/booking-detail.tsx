@@ -4,6 +4,7 @@ import { useParams } from "wouter";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const PAYMENT_STATUS_STYLES: Record<string, { bg: string; border: string; color: string }> = {
   completed: { bg: "rgba(34,197,94,0.12)",   border: "rgba(34,197,94,0.3)",   color: "#4ade80" },
@@ -35,6 +36,7 @@ export default function BookingDetail() {
   const params = useParams();
   const bookingId = Number(params.id);
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
   const { data: booking, isLoading } = useGetBooking(bookingId, {
     query: { enabled: !!bookingId, queryKey: getGetBookingQueryKey(bookingId) },
   });
@@ -55,10 +57,10 @@ export default function BookingDetail() {
         id: bookingId,
         data: { paymentIntentId: intent.paymentIntentId },
       });
-      toast({ title: "Payment Successful", description: "Your spot is secured." });
+      toast({ title: t("bookingDetail.toastSuccess"), description: t("bookingDetail.toastSuccessDesc") });
       queryClient.invalidateQueries({ queryKey: getGetBookingQueryKey(bookingId) });
     } catch {
-      toast({ title: "Payment Failed", variant: "destructive" });
+      toast({ title: t("bookingDetail.toastFailed"), variant: "destructive" });
     } finally {
       setIsPaying(false);
     }
@@ -81,7 +83,7 @@ export default function BookingDetail() {
       <AppLayout>
         <div className="max-w-2xl mx-auto px-6 text-center" style={{ paddingTop: "80px" }}>
           <div className="text-3xl mb-3">📅</div>
-          <div className="text-white font-medium">Booking not found</div>
+          <div className="text-white font-medium">{t("bookingDetail.notFound")}</div>
         </div>
       </AppLayout>
     );
@@ -98,7 +100,7 @@ export default function BookingDetail() {
         <header className="mb-6">
           <div className="flex items-start justify-between gap-3 mb-2">
             <h1 className="font-serif font-bold text-white leading-tight" style={{ fontSize: "26px" }}>
-              Booking #{booking.id}
+              {t("bookingDetail.title", { id: booking.id })}
             </h1>
             <span
               className="rounded-full px-3 py-1 font-medium capitalize flex-shrink-0"
@@ -124,20 +126,20 @@ export default function BookingDetail() {
             className="uppercase font-semibold mb-3"
             style={{ fontSize: "11px", letterSpacing: "0.08em", color: "rgba(255,255,255,0.4)" }}
           >
-            Match Details
+            {t("bookingDetail.matchDetails")}
           </div>
           <div
             className="rounded-[20px] overflow-hidden"
             style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.07)" }}
           >
-            <InfoRow label="Date" value={booking.match?.date} />
-            <InfoRow label="Time" value={booking.match?.time} />
-            <InfoRow label="Format" value={booking.match?.format} />
+            <InfoRow label={t("bookingDetail.date")} value={booking.match?.date} />
+            <InfoRow label={t("bookingDetail.time")} value={booking.match?.time} />
+            <InfoRow label={t("bookingDetail.format")} value={booking.match?.format} />
             <div
               className="flex items-center justify-between px-5"
               style={{ minHeight: "56px" }}
             >
-              <span className="font-semibold text-white" style={{ fontSize: "16px" }}>Total</span>
+              <span className="font-semibold text-white" style={{ fontSize: "16px" }}>{t("bookingDetail.total")}</span>
               <span
                 className="font-mono font-bold"
                 style={{ fontSize: "20px", color: "#D4AF37" }}
@@ -167,8 +169,8 @@ export default function BookingDetail() {
               ✓
             </div>
             <div>
-              <div style={{ fontSize: "15px", color: "#4ade80", fontWeight: 600 }}>Payment Complete</div>
-              <div className="text-muted-foreground" style={{ fontSize: "13px" }}>Your spot is secured. See you on the court!</div>
+              <div style={{ fontSize: "15px", color: "#4ade80", fontWeight: 600 }}>{t("bookingDetail.paymentComplete")}</div>
+              <div className="text-muted-foreground" style={{ fontSize: "13px" }}>{t("bookingDetail.spotSecured")}</div>
             </div>
           </div>
         )}
@@ -179,7 +181,7 @@ export default function BookingDetail() {
             style={{ minHeight: "52px", fontSize: "15px", background: "hsl(220 20% 10%)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.85)" }}
             onClick={() => {}}
           >
-            📆 Add to Calendar
+            {t("bookingDetail.addToCalendar")}
           </button>
         )}
 
@@ -190,15 +192,14 @@ export default function BookingDetail() {
               className="uppercase font-semibold mb-3"
               style={{ fontSize: "11px", letterSpacing: "0.08em", color: "rgba(255,255,255,0.4)" }}
             >
-              Payment
+              {t("bookingDetail.payment")}
             </div>
             <div
               className="rounded-[20px] p-5 space-y-4"
               style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.07)" }}
             >
-              {/* Card number */}
               <div>
-                <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px", letterSpacing: "0.04em" }}>Card Number</div>
+                <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px", letterSpacing: "0.04em" }}>{t("bookingDetail.cardNumber")}</div>
                 <input
                   type="text"
                   placeholder="4242 4242 4242 4242"
@@ -216,10 +217,9 @@ export default function BookingDetail() {
                 />
               </div>
 
-              {/* Expiry + CVC */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px", letterSpacing: "0.04em" }}>Expiry</div>
+                  <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px", letterSpacing: "0.04em" }}>{t("bookingDetail.expiry")}</div>
                   <input
                     type="text"
                     placeholder="MM/YY"
@@ -237,7 +237,7 @@ export default function BookingDetail() {
                   />
                 </div>
                 <div>
-                  <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px", letterSpacing: "0.04em" }}>CVC</div>
+                  <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px", letterSpacing: "0.04em" }}>{t("bookingDetail.cvc")}</div>
                   <input
                     type="text"
                     placeholder="123"
@@ -257,11 +257,10 @@ export default function BookingDetail() {
               </div>
 
               <p className="text-muted-foreground" style={{ fontSize: "11px" }}>
-                Test card: 4242 4242 4242 4242 · Any future date · Any CVC
+                {t("bookingDetail.testCard")}
               </p>
             </div>
 
-            {/* Pay CTA */}
             <button
               className="w-full rounded-[20px] font-semibold transition-all hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 mt-4"
               style={{
@@ -274,7 +273,7 @@ export default function BookingDetail() {
               onClick={handlePayment}
               disabled={isPaying}
             >
-              {isPaying ? "Processing…" : `Pay ${booking.match?.price} AED`}
+              {isPaying ? t("bookingDetail.processing") : t("bookingDetail.pay", { price: booking.match?.price })}
             </button>
           </section>
         )}

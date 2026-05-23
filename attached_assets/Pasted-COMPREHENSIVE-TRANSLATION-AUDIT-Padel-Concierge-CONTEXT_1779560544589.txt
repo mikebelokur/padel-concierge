@@ -1,0 +1,123 @@
+COMPREHENSIVE TRANSLATION AUDIT — Padel Concierge.
+
+CONTEXT:
+Real user Lena reported that some pages stay in English even 
+when RU is selected. We fixed matches.tsx today (task #88), 
+but more pages have the same issue. Instead of fixing them 
+one-by-one, do a complete audit and fix everything in one task.
+
+GOAL:
+100% of user-visible strings on ALL pages must be translatable 
+via useLanguage()/t() and have both EN and RU values in 
+en.json and ru.json.
+
+PAGES TO AUDIT (confirmed broken or potentially broken):
+- /assessment (the 10-question level quiz — "Question 1 of 10", 
+  "How long have you been playing padel?", "Less than 6 months", 
+  "Next Question", "Your level can be verified..." etc.)
+- /matches (already fixed in task #88 — verify still good)
+- /match-requests
+- /match-detail/[id]
+- /find-match  
+- /booking
+- /news
+- /rules
+- /profile
+- /settings
+- /venue-selector
+- /time-picker
+- Any page that user can reach after login
+
+WHAT TO DO:
+
+1. AUDIT — grep the entire codebase for hardcoded English in JSX:
+   - Search artifacts/padel-concierge/src/**/*.tsx
+   - Look for English text in: 
+     <h1>, <h2>, <h3>, <p>, <button>, <label>, <span>, <div>, 
+     placeholder="", title="", aria-label=""
+   - Look for hardcoded strings in toast notifications, error 
+     messages, success messages
+   - Look for option labels in <select>, radio groups, checkboxes
+   - Look for tab labels, breadcrumb labels
+
+2. EXTRACT all found English strings into i18n keys.
+   Naming convention: pageName.section.element (camelCase)
+   Examples:
+   - assessment.title → "Level Assessment" / "Оценка уровня"
+   - assessment.progressLabel → "Question {{current}} of {{total}}" / 
+     "Вопрос {{current}} из {{total}}"
+   - assessment.questions.experience → "How long have you been 
+     playing padel?" / "Как давно ты играешь в падел?"
+   - assessment.answers.lessThan6Months → "Less than 6 months" / 
+     "Меньше 6 месяцев"
+   - assessment.answers.6to12months → "6–12 months" / 
+     "6–12 месяцев"
+   - assessment.answers.1to3years → "1–3 years" / "1–3 года"
+   - assessment.answers.3to5years → "3–5 years" / "3–5 лет"
+   - assessment.answers.5plusYears → "5+ years" / "5+ лет"
+   - assessment.nextButton → "Next Question" / "Следующий вопрос"
+   - assessment.disclaimer → "Your level can be verified and 
+     adjusted by a certified coach after your first match." / 
+     "Твой уровень может быть подтверждён и скорректирован 
+     сертифицированным тренером после первого матча."
+
+3. ADD all extracted strings to BOTH en.json and ru.json.
+   Russian translation principles:
+   - Natural conversational Russian, not literal translation
+   - Use "ты" form (informal — Tamara is Mike's neighbor, not 
+     a business client)
+   - Padel terminology stays in original where standard 
+     (bandeja, víbora, smash) but explained in tooltips
+   - Numbers: 6–12 месяцев (use en-dash, not hyphen)
+   - Time units: месяц/месяца/месяцев (correct plurals)
+
+4. RUSSIAN TRANSLATIONS for the assessment page specifically:
+   - "Question 1 of 10" → "Вопрос 1 из 10"
+   - "0% complete" → "0% пройдено"
+   - "How long have you been playing padel?" → 
+     "Как давно ты играешь в падел?"
+   - "Less than 6 months" → "Меньше 6 месяцев"
+   - "6–12 months" → "6–12 месяцев"
+   - "1–3 years" → "1–3 года"
+   - "3–5 years" → "3–5 лет"
+   - "5+ years" → "5+ лет"
+   - "Next Question" → "Следующий вопрос"
+   - "Your level can be verified and adjusted by a certified 
+     coach after your first match." → 
+     "Твой уровень подтвердит и при необходимости скорректирует 
+     сертифицированный тренер после первого матча."
+
+5. APPLY useLanguage() hook to every page that uses hardcoded 
+   strings. Pattern:
+```tsx
+   const { t } = useLanguage();
+   ...
+   <h1>{t('assessment.title')}</h1>
+```
+
+6. VERIFY:
+   - After all changes, grep for common hardcoded English: 
+     "Match", "Player", "Loading", "Error", "Save", "Cancel", 
+     "Next", "Previous", "Submit", "Confirm", "Settings"
+   - Should return ZERO matches in src/**/*.tsx files (only 
+     in i18n JSON files)
+   - Test by switching language toggle on EVERY page
+
+7. TYPECHECK:
+   - Run pnpm typecheck — must pass
+   - Run pnpm build — must pass
+
+After completion show me:
+- Screenshot of /assessment in RU on iPhone (390pt)
+- Screenshot of /assessment in EN on iPhone
+- Screenshot of /matches in RU (verify still works)
+- List of every page audited
+- Total count of new i18n keys added
+- Confirmation that grep for hardcoded English returns zero 
+  matches in src components
+
+DO NOT:
+- Touch UI design — only text content
+- Touch business logic — only i18n
+- Cancel/modify any other queued tasks
+- Take more than 30 minutes — focus on speed

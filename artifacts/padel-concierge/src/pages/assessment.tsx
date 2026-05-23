@@ -5,107 +5,17 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/api";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Question {
   text: string;
   options: { label: string; points: number }[];
 }
 
-const QUESTIONS: Question[] = [
-  {
-    text: "How long have you been playing padel?",
-    options: [
-      { label: "Less than 6 months", points: 0 },
-      { label: "6–12 months", points: 1 },
-      { label: "1–3 years", points: 2 },
-      { label: "3–5 years", points: 3 },
-      { label: "5+ years", points: 4 },
-    ],
-  },
-  {
-    text: "How often do you play per week?",
-    options: [
-      { label: "Less than once a week", points: 0 },
-      { label: "Once a week", points: 1 },
-      { label: "2–3 times a week", points: 2 },
-      { label: "4–5 times a week", points: 3 },
-      { label: "Daily or more", points: 4 },
-    ],
-  },
-  {
-    text: "Have you participated in padel tournaments?",
-    options: [
-      { label: "Never", points: 0 },
-      { label: "Local / club tournaments", points: 1 },
-      { label: "Regional competitions", points: 2 },
-      { label: "National events", points: 3 },
-      { label: "International / WPT events", points: 4 },
-    ],
-  },
-  {
-    text: "How consistent is your forehand drive?",
-    options: [
-      { label: "I'm still learning it", points: 0 },
-      { label: "I can do it but it's inconsistent", points: 1 },
-      { label: "Reliable in normal rallies", points: 2 },
-      { label: "Controlled with power & direction", points: 3 },
-    ],
-  },
-  {
-    text: "How confident are you with your backhand?",
-    options: [
-      { label: "Very uncomfortable", points: 0 },
-      { label: "Basic slice only", points: 1 },
-      { label: "Consistent slice and drive", points: 2 },
-      { label: "Advanced — slice, drive, and counter", points: 3 },
-    ],
-  },
-  {
-    text: "Rate your net volley control:",
-    options: [
-      { label: "I avoid the net", points: 0 },
-      { label: "Comfortable with basic volleys", points: 1 },
-      { label: "Good volley placement", points: 2 },
-      { label: "Aggressive, precise volleys under pressure", points: 3 },
-    ],
-  },
-  {
-    text: "Can you execute a bandeja?",
-    options: [
-      { label: "What is a bandeja?", points: 0 },
-      { label: "I know it but can't execute it yet", points: 1 },
-      { label: "Yes, in open situations", points: 2 },
-      { label: "Yes, reliably under pressure", points: 3 },
-    ],
-  },
-  {
-    text: "How do you handle pressure in close matches?",
-    options: [
-      { label: "I fall apart under pressure", points: 0 },
-      { label: "I get nervous but manage", points: 1 },
-      { label: "I stay composed most of the time", points: 2 },
-      { label: "I raise my level under pressure", points: 3 },
-    ],
-  },
-  {
-    text: "How would you describe your tactical understanding?",
-    options: [
-      { label: "I just try to return the ball", points: 0 },
-      { label: "Basic patterns (cross, lob)", points: 1 },
-      { label: "I use positions and patterns intentionally", points: 2 },
-      { label: "Deep tactical game — control the point structure", points: 3 },
-    ],
-  },
-  {
-    text: "What is your strongest aspect of the game?",
-    options: [
-      { label: "I don't have a clear strength yet", points: 0 },
-      { label: "Defense — I keep the ball in play", points: 1 },
-      { label: "One specific shot (serve, volley, etc.)", points: 2 },
-      { label: "All-round — comfortable in all areas", points: 3 },
-    ],
-  },
-];
+const LEVEL_KEYS: Record<string, string> = {
+  "1.0": "lv10", "1.5": "lv15", "2.0": "lv20", "2.5": "lv25",
+  "3.0": "lv30", "3.5": "lv35", "4.0": "lv40", "4.5": "lv45", "5.0": "lv50",
+};
 
 function scoreToLevel(score: number): string {
   if (score <= 4) return "1.0";
@@ -119,25 +29,115 @@ function scoreToLevel(score: number): string {
   return "5.0";
 }
 
-function levelDescription(level: string) {
-  const descriptions: Record<string, { label: string; desc: string }> = {
-    "1.0": { label: "Newcomer", desc: "You're just starting your padel journey. Focus on fundamentals." },
-    "1.5": { label: "Beginner", desc: "You have basic shots. Consistency will come with regular practice." },
-    "2.0": { label: "Novice", desc: "You're building your game. Work on positioning and net play." },
-    "2.5": { label: "Developing", desc: "Good fundamentals. Start developing tactical patterns." },
-    "3.0": { label: "Intermediate", desc: "Solid all-round game. Focus on pressure situations and advanced shots." },
-    "3.5": { label: "Upper Intermediate", desc: "Strong player with good tactical awareness. Push toward competitive play." },
-    "4.0": { label: "Advanced", desc: "Excellent player ready for serious competition." },
-    "4.5": { label: "Elite Amateur", desc: "Near-professional level. You dominate most amateur games." },
-    "5.0": { label: "Professional", desc: "Professional or near-professional standard. Exceptional all-round game." },
-  };
-  return descriptions[level] ?? { label: "Player", desc: "" };
-}
-
 export default function Assessment() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const { t } = useLanguage();
+
+  const QUESTIONS: Question[] = [
+    {
+      text: t("assessment.q1.text"),
+      options: [
+        { label: t("assessment.q1.opt0"), points: 0 },
+        { label: t("assessment.q1.opt1"), points: 1 },
+        { label: t("assessment.q1.opt2"), points: 2 },
+        { label: t("assessment.q1.opt3"), points: 3 },
+        { label: t("assessment.q1.opt4"), points: 4 },
+      ],
+    },
+    {
+      text: t("assessment.q2.text"),
+      options: [
+        { label: t("assessment.q2.opt0"), points: 0 },
+        { label: t("assessment.q2.opt1"), points: 1 },
+        { label: t("assessment.q2.opt2"), points: 2 },
+        { label: t("assessment.q2.opt3"), points: 3 },
+        { label: t("assessment.q2.opt4"), points: 4 },
+      ],
+    },
+    {
+      text: t("assessment.q3.text"),
+      options: [
+        { label: t("assessment.q3.opt0"), points: 0 },
+        { label: t("assessment.q3.opt1"), points: 1 },
+        { label: t("assessment.q3.opt2"), points: 2 },
+        { label: t("assessment.q3.opt3"), points: 3 },
+        { label: t("assessment.q3.opt4"), points: 4 },
+      ],
+    },
+    {
+      text: t("assessment.q4.text"),
+      options: [
+        { label: t("assessment.q4.opt0"), points: 0 },
+        { label: t("assessment.q4.opt1"), points: 1 },
+        { label: t("assessment.q4.opt2"), points: 2 },
+        { label: t("assessment.q4.opt3"), points: 3 },
+      ],
+    },
+    {
+      text: t("assessment.q5.text"),
+      options: [
+        { label: t("assessment.q5.opt0"), points: 0 },
+        { label: t("assessment.q5.opt1"), points: 1 },
+        { label: t("assessment.q5.opt2"), points: 2 },
+        { label: t("assessment.q5.opt3"), points: 3 },
+      ],
+    },
+    {
+      text: t("assessment.q6.text"),
+      options: [
+        { label: t("assessment.q6.opt0"), points: 0 },
+        { label: t("assessment.q6.opt1"), points: 1 },
+        { label: t("assessment.q6.opt2"), points: 2 },
+        { label: t("assessment.q6.opt3"), points: 3 },
+      ],
+    },
+    {
+      text: t("assessment.q7.text"),
+      options: [
+        { label: t("assessment.q7.opt0"), points: 0 },
+        { label: t("assessment.q7.opt1"), points: 1 },
+        { label: t("assessment.q7.opt2"), points: 2 },
+        { label: t("assessment.q7.opt3"), points: 3 },
+      ],
+    },
+    {
+      text: t("assessment.q8.text"),
+      options: [
+        { label: t("assessment.q8.opt0"), points: 0 },
+        { label: t("assessment.q8.opt1"), points: 1 },
+        { label: t("assessment.q8.opt2"), points: 2 },
+        { label: t("assessment.q8.opt3"), points: 3 },
+      ],
+    },
+    {
+      text: t("assessment.q9.text"),
+      options: [
+        { label: t("assessment.q9.opt0"), points: 0 },
+        { label: t("assessment.q9.opt1"), points: 1 },
+        { label: t("assessment.q9.opt2"), points: 2 },
+        { label: t("assessment.q9.opt3"), points: 3 },
+      ],
+    },
+    {
+      text: t("assessment.q10.text"),
+      options: [
+        { label: t("assessment.q10.opt0"), points: 0 },
+        { label: t("assessment.q10.opt1"), points: 1 },
+        { label: t("assessment.q10.opt2"), points: 2 },
+        { label: t("assessment.q10.opt3"), points: 3 },
+      ],
+    },
+  ];
+
+  function levelDescription(level: string) {
+    const key = LEVEL_KEYS[level] ?? "lv10";
+    return {
+      label: t(`assessment.levelLabels.${key}`),
+      desc: t(`assessment.levelDescs.${key}`),
+    };
+  }
 
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
@@ -148,11 +148,11 @@ export default function Assessment() {
     mutationFn: (data: { userId: number; answers: number[]; score: number }) =>
       apiFetch("/assessments", { method: "POST", body: JSON.stringify(data) }),
     onSuccess: () => {
-      toast({ title: "Assessment saved!", description: "Your WPT level has been updated." });
+      toast({ title: t("assessment.toastTitle"), description: t("assessment.toastDesc") });
       setTimeout(() => setLocation("/dashboard"), 2500);
     },
     onError: (e: Error) =>
-      toast({ title: "Could not save", description: e.message, variant: "destructive" }),
+      toast({ title: t("assessment.toastError"), description: e.message, variant: "destructive" }),
   });
 
   const handleNext = () => {
@@ -193,22 +193,26 @@ export default function Assessment() {
               </div>
             </div>
             <div>
-              <div className="text-muted-foreground text-sm mb-2 tracking-widest uppercase">Your WPT Level</div>
+              <div className="text-muted-foreground text-sm mb-2 tracking-widest uppercase">
+                {t("assessment.resultWptLevel")}
+              </div>
               <h1 className="text-4xl font-serif mb-3">{label}</h1>
               <p className="text-muted-foreground max-w-sm mx-auto">{desc}</p>
             </div>
-            <span className="inline-flex items-center px-4 py-1.5 rounded-full border text-sm"
-              style={{ background: "rgba(0,212,255,0.1)", borderColor: "rgba(0,212,255,0.25)", color: "#00d4ff" }}>
-              WPT {result} — Assessment Complete
+            <span
+              className="inline-flex items-center px-4 py-1.5 rounded-full border text-sm"
+              style={{ background: "rgba(0,212,255,0.1)", borderColor: "rgba(0,212,255,0.25)", color: "#00d4ff" }}
+            >
+              {t("assessment.resultComplete", { level: result })}
             </span>
             <div className="text-sm text-muted-foreground">
-              {submitMutation.isPending ? "Saving your level..." : "Your profile has been updated. Redirecting to dashboard..."}
+              {submitMutation.isPending ? t("assessment.saving") : t("assessment.saved")}
             </div>
             <button
               onClick={() => setLocation("/dashboard")}
               className="inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-6 h-11 text-sm transition-all hover:bg-primary/90 shadow-lg shadow-primary/20"
             >
-              Go to Dashboard
+              {t("assessment.goToDashboard")}
             </button>
           </div>
         </div>
@@ -217,21 +221,20 @@ export default function Assessment() {
   }
 
   const q = QUESTIONS[step];
-  const progress = ((step) / QUESTIONS.length) * 100;
+  const progress = (step / QUESTIONS.length) * 100;
 
   return (
     <AppLayout>
       <div className="p-4 sm:p-8 max-w-2xl mx-auto space-y-5 sm:space-y-8">
         <header>
-          <h1 className="text-3xl font-serif mb-2">Skill Assessment</h1>
-          <p className="text-muted-foreground">Answer 10 questions to calculate your official WPT level.</p>
+          <h1 className="text-3xl font-serif mb-2">{t("assessment.title")}</h1>
+          <p className="text-muted-foreground">{t("assessment.subtitle")}</p>
         </header>
 
-        {/* Progress */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm text-muted-foreground">
-            <span>Question {step + 1} of {QUESTIONS.length}</span>
-            <span>{Math.round(progress)}% complete</span>
+            <span>{t("assessment.questionOf", { current: step + 1, total: QUESTIONS.length })}</span>
+            <span>{t("assessment.percentComplete", { percent: Math.round(progress) })}</span>
           </div>
           <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
             <div
@@ -241,7 +244,6 @@ export default function Assessment() {
           </div>
         </div>
 
-        {/* Question */}
         <div className="rounded-[20px] bg-card border border-white/5">
           <div className="p-8 space-y-6">
             <h2 className="text-xl font-serif leading-relaxed">{q.text}</h2>
@@ -274,7 +276,7 @@ export default function Assessment() {
                   onClick={handleBack}
                   className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent font-medium text-muted-foreground px-4 h-11 text-sm transition-all hover:bg-white/5 hover:text-foreground"
                 >
-                  Back
+                  {t("assessment.back")}
                 </button>
               )}
               <button
@@ -282,14 +284,14 @@ export default function Assessment() {
                 disabled={selected === null}
                 onClick={handleNext}
               >
-                {step === QUESTIONS.length - 1 ? "See My Level" : "Next Question"}
+                {step === QUESTIONS.length - 1 ? t("assessment.seeMyLevel") : t("assessment.nextQuestion")}
               </button>
             </div>
           </div>
         </div>
 
         <p className="text-center text-xs text-muted-foreground">
-          Your level can be verified and adjusted by a certified coach after your first match.
+          {t("assessment.disclaimer")}
         </p>
       </div>
     </AppLayout>

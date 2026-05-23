@@ -4,13 +4,9 @@ import { useLocation, useParams, Link } from "wouter";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-const phases = [
-  { title: "Baseline Defence", duration: 180, desc: "Depth, sending ball deep" },
-  { title: "Glass Defence",    duration: 180, desc: "Rebounds, high ball control" },
-  { title: "Volley Play",      duration: 120, desc: "Clean strikes, soft hands" },
-  { title: "Smash / Bandeja", duration: 120, desc: "Aggressive overhead shots" },
-];
+const PHASE_DURATIONS = [180, 180, 120, 120];
 
 const FORMAT_COLORS: Record<string, { bg: string; border: string; color: string }> = {
   classic:    { bg: "rgba(212,175,55,0.12)",  border: "rgba(212,175,55,0.35)",  color: "#D4AF37" },
@@ -34,20 +30,28 @@ export default function MatchDetail() {
     },
   });
   const [phase, setPhase] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(phases[0].duration);
+  const [timeLeft, setTimeLeft] = useState(PHASE_DURATIONS[0]);
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const createBooking = useCreateBooking();
   const { toast } = useToast();
+  const { t } = useLanguage();
+
+  const phases = [
+    { title: t("matchDetail.warmupPhase1Title"), duration: PHASE_DURATIONS[0], desc: t("matchDetail.warmupPhase1Desc") },
+    { title: t("matchDetail.warmupPhase2Title"), duration: PHASE_DURATIONS[1], desc: t("matchDetail.warmupPhase2Desc") },
+    { title: t("matchDetail.warmupPhase3Title"), duration: PHASE_DURATIONS[2], desc: t("matchDetail.warmupPhase3Desc") },
+    { title: t("matchDetail.warmupPhase4Title"), duration: PHASE_DURATIONS[3], desc: t("matchDetail.warmupPhase4Desc") },
+  ];
 
   useEffect(() => {
     if (timeLeft > 0) {
-      const timer = setTimeout(() => setTimeLeft(t => t - 1), 1000);
+      const timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
       return () => clearTimeout(timer);
     } else if (phase < phases.length - 1) {
       const next = phase + 1;
       setPhase(next);
-      setTimeLeft(phases[next].duration);
+      setTimeLeft(PHASE_DURATIONS[next]);
     }
     return undefined;
   }, [timeLeft, phase]);
@@ -56,7 +60,7 @@ export default function MatchDetail() {
     if (!user) return;
     createBooking.mutate({ data: { userId: user.id, matchId } }, {
       onSuccess: (booking) => {
-        toast({ title: "Booking created", description: "Redirecting to payment…" });
+        toast({ title: t("matchDetail.toastBooked"), description: t("matchDetail.toastBookedDesc") });
         setLocation(`/bookings/${booking.id}`);
       },
     });
@@ -79,7 +83,7 @@ export default function MatchDetail() {
       <AppLayout>
         <div className="max-w-2xl mx-auto px-6 text-center" style={{ paddingTop: "80px" }}>
           <div className="text-3xl mb-3">🎾</div>
-          <div className="text-white font-medium">Match not found</div>
+          <div className="text-white font-medium">{t("matchDetail.notFound")}</div>
         </div>
       </AppLayout>
     );
@@ -127,7 +131,8 @@ export default function MatchDetail() {
             className="uppercase font-semibold mb-3"
             style={{ fontSize: "11px", letterSpacing: "0.08em", color: "rgba(255,255,255,0.4)" }}
           >
-            Players ({playerCount}/4) {spotsLeft > 0 && `· ${spotsLeft} spot${spotsLeft !== 1 ? "s" : ""} left`}
+            {t("matchDetail.playersSection", { current: playerCount })}
+            {spotsLeft > 0 && ` ${t(spotsLeft === 1 ? "matchDetail.spotsLeft_one" : "matchDetail.spotsLeft_other", { count: spotsLeft })}`}
           </div>
 
           <div
@@ -165,7 +170,7 @@ export default function MatchDetail() {
                     className="rounded-full px-2.5 py-0.5 flex-shrink-0"
                     style={{ fontSize: "11px", background: "rgba(74,222,128,0.12)", border: "1px solid rgba(74,222,128,0.25)", color: "#4ade80" }}
                   >
-                    Confirmed
+                    {t("matchDetail.confirmedBadge")}
                   </span>
                 )}
               </div>
@@ -190,7 +195,7 @@ export default function MatchDetail() {
                     border: "1.5px dashed rgba(255,255,255,0.15)",
                   }}
                 />
-                <div className="text-muted-foreground" style={{ fontSize: "14px", opacity: 0.5 }}>Open slot</div>
+                <div className="text-muted-foreground" style={{ fontSize: "14px", opacity: 0.5 }}>{t("matchDetail.openSlot")}</div>
               </div>
             ))}
           </div>
@@ -202,7 +207,7 @@ export default function MatchDetail() {
             className="uppercase font-semibold mb-3"
             style={{ fontSize: "11px", letterSpacing: "0.08em", color: "rgba(255,255,255,0.4)" }}
           >
-            Warm-up Protocol
+            {t("matchDetail.warmupProtocol")}
           </div>
           <div
             className="rounded-[20px] p-5"
@@ -244,10 +249,10 @@ export default function MatchDetail() {
           >
             <div className="flex items-center gap-2 mb-1.5">
               <span style={{ fontSize: "16px" }}>⏱</span>
-              <span style={{ fontSize: "14px", color: "#f87171", fontWeight: 600 }}>Latecomers Rule</span>
+              <span style={{ fontSize: "14px", color: "#f87171", fontWeight: 600 }}>{t("matchDetail.latecomersRule")}</span>
             </div>
             <p className="text-muted-foreground leading-relaxed" style={{ fontSize: "13px" }}>
-              Strict 5-minute grace period. After 5 minutes, you must join without warm-up. This ensures the quality and intensity of the match for all confirmed players.
+              {t("matchDetail.latecomersDesc")}
             </p>
           </div>
         </section>
@@ -266,10 +271,10 @@ export default function MatchDetail() {
           disabled={createBooking.isPending || isFull}
         >
           {createBooking.isPending
-            ? "Confirming…"
+            ? t("matchDetail.confirming")
             : isFull
-            ? "Match Full"
-            : "Confirm Booking"}
+            ? t("matchDetail.matchFull")
+            : t("matchDetail.confirmBooking")}
         </button>
 
         {/* ── SECONDARY ACTIONS ── */}
@@ -285,7 +290,7 @@ export default function MatchDetail() {
               >
                 <div className="flex items-center gap-3">
                   <span style={{ fontSize: "18px" }}>📋</span>
-                  <span style={{ fontSize: "15px", color: "rgba(255,255,255,0.85)" }}>Fill match results</span>
+                  <span style={{ fontSize: "15px", color: "rgba(255,255,255,0.85)" }}>{t("matchDetail.fillResults")}</span>
                 </div>
                 <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "20px", lineHeight: 1 }}>›</span>
               </div>
@@ -298,7 +303,7 @@ export default function MatchDetail() {
             >
               <div className="flex items-center gap-3">
                 <span style={{ fontSize: "18px" }}>⭐</span>
-                <span style={{ fontSize: "15px", color: "rgba(255,255,255,0.85)" }}>Leave partner feedback</span>
+                <span style={{ fontSize: "15px", color: "rgba(255,255,255,0.85)" }}>{t("matchDetail.leaveFeedback")}</span>
               </div>
               <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "20px", lineHeight: 1 }}>›</span>
             </div>

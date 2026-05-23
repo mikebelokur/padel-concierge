@@ -1,3 +1,4 @@
+import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDrawer } from "@/contexts/DrawerContext";
 import { useLanguage, type Language } from "@/contexts/LanguageContext";
@@ -35,11 +36,12 @@ const navItems: NavItem[] = [
   { href: "/admin",          labelKey: "nav.adminPanel",    icon: "🔧", roles: ["admin", "owner"] },
 ];
 
-const BOTTOM_TABS = [
-  { href: "/dashboard",  icon: TabHome,     labelKey: "nav.dashboard" },
-  { href: "/find-match", icon: TabSearch,   labelKey: "nav.findMatch" },
-  { href: "/matches",    icon: TabMatches,  labelKey: "nav.matches" },
-  { href: "/settings",   icon: TabSettings, labelKey: "nav.settings" },
+const BOTTOM_TABS: { href: string; icon: (p: { active: boolean }) => React.ReactElement; labelKey: string; badgeKey?: string }[] = [
+  { href: "/dashboard",      icon: TabHome,     labelKey: "nav.dashboard" },
+  { href: "/find-match",     icon: TabSearch,   labelKey: "nav.findMatch" },
+  { href: "/matches",        icon: TabMatches,  labelKey: "nav.matches" },
+  { href: "/match-requests", icon: TabRequests, labelKey: "nav.requests", badgeKey: "pendingRequests" },
+  { href: "/settings",       icon: TabSettings, labelKey: "nav.settings" },
 ];
 
 export function Drawer() {
@@ -219,8 +221,10 @@ export function Drawer() {
             paddingBottom: "env(safe-area-inset-bottom, 0px)",
           }}
         >
-          {BOTTOM_TABS.map(({ href, icon: Icon, labelKey }) => {
+          {BOTTOM_TABS.map(({ href, icon: Icon, labelKey, badgeKey }) => {
             const active = location === href || (href !== "/dashboard" && location.startsWith(href));
+            const badgeCount =
+              badgeKey === "pendingRequests" ? pendingRequestsCount : 0;
             return (
               <Link key={href} href={href}>
                 <div
@@ -232,7 +236,28 @@ export function Drawer() {
                     minWidth: 0,
                   }}
                 >
-                  <Icon active={active} />
+                  <div className="relative">
+                    <Icon active={active} />
+                    {badgeCount > 0 && (
+                      <span
+                        className="absolute flex items-center justify-center font-bold"
+                        style={{
+                          top: "-3px",
+                          right: "-5px",
+                          minWidth: "16px",
+                          height: "16px",
+                          padding: "0 4px",
+                          borderRadius: "8px",
+                          fontSize: "9px",
+                          background: "#D4AF37",
+                          color: "#000",
+                          lineHeight: 1,
+                        }}
+                      >
+                        {badgeCount > 9 ? "9+" : badgeCount}
+                      </span>
+                    )}
+                  </div>
                   <span
                     className="mt-1 font-medium leading-none"
                     style={{
@@ -393,6 +418,26 @@ function TabMatches({ active }: { active: boolean }) {
       <path d="M12 3C12 3 9 7 9 12C9 17 12 21 12 21" stroke={color} strokeWidth={active ? "1.5" : "1"} />
       <path d="M12 3C12 3 15 7 15 12C15 17 12 21 12 21" stroke={color} strokeWidth={active ? "1.5" : "1"} />
       <path d="M3 12H21" stroke={color} strokeWidth={active ? "1.5" : "1"} />
+    </svg>
+  );
+}
+
+function TabRequests({ active }: { active: boolean }) {
+  const color = active ? "#D4AF37" : "rgba(255,255,255,0.4)";
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <rect
+        x="3" y="5" width="18" height="14" rx="2"
+        stroke={color}
+        strokeWidth={active ? "2" : "1.5"}
+        fill={active ? `${color}15` : "none"}
+      />
+      <path
+        d="M3 9L10.5 13.5C11.4 14.1 12.6 14.1 13.5 13.5L21 9"
+        stroke={color}
+        strokeWidth={active ? "1.5" : "1.2"}
+        strokeLinecap="round"
+      />
     </svg>
   );
 }

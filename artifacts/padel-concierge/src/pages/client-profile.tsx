@@ -1,12 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRoute, Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { apiFetch } from "@/lib/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ToastAction } from "@/components/ui/toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -194,9 +192,9 @@ function BehavioralStats({
         ) : editing ? (
           <div className="space-y-4">
             <div>
-              <Label className="text-muted-foreground mb-1.5 block" style={{ fontSize: "12px" }}>
+              <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px" }}>
                 Override Reliability Score (0–100)
-              </Label>
+              </div>
               <div className="flex items-center gap-3">
                 <input
                   type="number"
@@ -224,7 +222,7 @@ function BehavioralStats({
             </div>
 
             <div>
-              <Label className="text-muted-foreground mb-2 block" style={{ fontSize: "12px" }}>Behavioral Flags</Label>
+              <div className="text-muted-foreground mb-2" style={{ fontSize: "12px" }}>Behavioral Flags</div>
               <div className="flex flex-wrap gap-2 mb-2">
                 {PRESET_FLAGS.map(flag => (
                   <button
@@ -380,6 +378,15 @@ export default function ClientProfile() {
   const { user } = useAuth();
   const canEditBehavior = user?.role === "coach" || user?.role === "admin" || user?.role === "owner";
 
+  const [activeTab, setActiveTab] = useState<"sessions" | "progress" | "notes" | "chat">("sessions");
+  const [showSessionForm, setShowSessionForm] = useState(false);
+  const [sessionDate, setSessionDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [sessionTime, setSessionTime] = useState("09:30");
+  const [sessionTopic, setSessionTopic] = useState("");
+  const [sessionNotes, setSessionNotes] = useState("");
+  const [sessionDrills, setSessionDrills] = useState<string[]>([]);
+  const [sessionFocus, setSessionFocus] = useState("");
+  const [newDrill, setNewDrill] = useState("");
   const [newQuestion, setNewQuestion] = useState("");
   const [newMessage, setNewMessage] = useState("");
   const [noteResponse, setNoteResponse] = useState<Record<number, string>>({});
@@ -445,6 +452,63 @@ export default function ClientProfile() {
       setNewMessage("");
     },
   });
+
+  const addSession = useMutation({
+    mutationFn: () => {
+      const nextNumber = (sessions?.length ?? 0) + 1;
+      return apiFetch("/coaching/sessions", {
+        method: "POST",
+        body: JSON.stringify({
+          clientId: parseInt(id!),
+          sessionNumber: nextNumber,
+          topic: sessionTopic.trim(),
+          date: sessionDate,
+          time: sessionTime,
+          coachNotes: sessionNotes.trim(),
+          drillsCovered: sessionDrills,
+          nextSessionFocus: sessionFocus.trim(),
+        }),
+      });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["client-profile", id] });
+      setShowSessionForm(false);
+      setSessionTopic(""); setSessionNotes(""); setSessionDrills([]); setSessionFocus(""); setNewDrill("");
+      toast({ title: "Session logged ✓" });
+    },
+    onError: (e: Error) => toast({ title: "Failed to log session", description: e.message, variant: "destructive" }),
+  });
+
+  const allSessions: any[] = (data as any)?.sessions ?? [];
+
+  const sessionsByMonth = useMemo(() => {
+    const map = new Map<string, number>();
+    allSessions.forEach((s) => {
+      const key = s.date?.slice(0, 7);
+      if (key) map.set(key, (map.get(key) ?? 0) + 1);
+    });
+    return Array.from(map.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, count]) => ({
+        month: new Date(month + "-01").toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
+        count,
+      }));
+  }, [allSessions]);
+
+  const topicFrequency = useMemo(() => {
+    const map = new Map<string, number>();
+    allSessions.forEach((s) => {
+      const t = s.topic?.trim();
+      if (t) map.set(t, (map.get(t) ?? 0) + 1);
+    });
+    return Array.from(map.entries()).sort(([, a], [, b]) => b - a).slice(0, 6);
+  }, [allSessions]);
+
+  const allDrills = useMemo(() => {
+    const set = new Set<string>();
+    allSessions.forEach((s) => (s.drillsCovered ?? []).forEach((d: string) => set.add(d)));
+    return Array.from(set).slice(0, 8);
+  }, [allSessions]);
 
   if (isLoading) return <AppLayout><div className="p-8 text-muted-foreground">Loading…</div></AppLayout>;
   if (!data) return <AppLayout><div className="p-8 text-muted-foreground">Client not found</div></AppLayout>;
@@ -613,23 +677,223 @@ export default function ClientProfile() {
           />
         </div>
 
-        <Tabs defaultValue="sessions">
-          <TabsList className="bg-card border-white/5">
-            <TabsTrigger value="sessions">Sessions ({sessions.length})</TabsTrigger>
-            <TabsTrigger value="notes">Post-Match Notes ({notes.length})</TabsTrigger>
-            <TabsTrigger value="chat">Chat ({messages.length})</TabsTrigger>
-          </TabsList>
+        {/* Native tab pills */}
+        <div className="flex gap-2 mb-4 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+          {(["sessions", "progress", "notes", "chat"] as const).map((t) => {
+            const labels: Record<string, string> = {
+              sessions: `Sessions (${sessions.length})`,
+              progress: "Progress",
+              notes: `Notes (${notes.length})`,
+              chat: `Chat (${messages.length})`,
+            };
+            return (
+              <button
+                key={t}
+                onClick={() => setActiveTab(t)}
+                className="flex-shrink-0 rounded-full font-medium transition-all"
+                style={{
+                  height: "36px",
+                  paddingLeft: "16px",
+                  paddingRight: "16px",
+                  fontSize: "13px",
+                  background: activeTab === t ? "#D4AF37" : "rgba(255,255,255,0.06)",
+                  color: activeTab === t ? "#000" : "rgba(255,255,255,0.6)",
+                  border: activeTab === t ? "none" : "1px solid rgba(255,255,255,0.08)",
+                }}
+              >
+                {labels[t]}
+              </button>
+            );
+          })}
+        </div>
 
           {/* SESSIONS */}
-          <TabsContent value="sessions" className="mt-4">
+          {activeTab === "sessions" && (<>
+            {/* Log Session button / form */}
+            <div className="mb-4">
+              {!showSessionForm ? (
+                <button
+                  onClick={() => setShowSessionForm(true)}
+                  className="w-full inline-flex items-center justify-center rounded-[20px] font-semibold text-black transition-all active:scale-[0.97]"
+                  style={{ background: "#D4AF37", height: "48px", fontSize: "15px" }}
+                >
+                  + Log Session
+                </button>
+              ) : (
+                <div
+                  className="rounded-[20px] p-5 space-y-4"
+                  style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(212,175,55,0.25)" }}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-white" style={{ fontSize: "15px" }}>Log Session #{sessions.length + 1}</span>
+                    <button
+                      onClick={() => setShowSessionForm(false)}
+                      className="text-muted-foreground hover:text-white transition-colors"
+                      style={{ fontSize: "18px", lineHeight: 1 }}
+                    >×</button>
+                  </div>
+
+                  {/* Date + Time */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px" }}>Date</div>
+                      <input
+                        type="date"
+                        value={sessionDate}
+                        onChange={(e) => setSessionDate(e.target.value)}
+                        className="w-full text-white outline-none rounded-xl"
+                        style={{
+                          height: "44px", paddingLeft: "12px", paddingRight: "12px",
+                          background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.10)", fontSize: "14px",
+                          colorScheme: "dark",
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px" }}>Time</div>
+                      <input
+                        type="time"
+                        value={sessionTime}
+                        onChange={(e) => setSessionTime(e.target.value)}
+                        className="w-full text-white outline-none rounded-xl"
+                        style={{
+                          height: "44px", paddingLeft: "12px", paddingRight: "12px",
+                          background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.10)", fontSize: "14px",
+                          colorScheme: "dark",
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Topic */}
+                  <div>
+                    <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px" }}>Topic / Focus Area</div>
+                    <input
+                      type="text"
+                      placeholder="e.g. Forehand technique, Net play…"
+                      value={sessionTopic}
+                      onChange={(e) => setSessionTopic(e.target.value)}
+                      className="w-full text-white placeholder-muted-foreground outline-none rounded-xl"
+                      style={{
+                        height: "44px", paddingLeft: "14px", paddingRight: "14px",
+                        background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.10)", fontSize: "14px",
+                      }}
+                    />
+                  </div>
+
+                  {/* Coach Notes */}
+                  <div>
+                    <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px" }}>Session Notes</div>
+                    <textarea
+                      placeholder="What happened in this session? Progress observed, areas to improve…"
+                      value={sessionNotes}
+                      onChange={(e) => setSessionNotes(e.target.value)}
+                      rows={3}
+                      className="w-full text-white placeholder-muted-foreground outline-none rounded-xl resize-none"
+                      style={{
+                        padding: "12px 14px",
+                        background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.10)", fontSize: "14px",
+                      }}
+                    />
+                  </div>
+
+                  {/* Drills covered */}
+                  <div>
+                    <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px" }}>Drills Covered</div>
+                    {sessionDrills.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {sessionDrills.map((d) => (
+                          <button
+                            key={d}
+                            type="button"
+                            onClick={() => setSessionDrills((prev) => prev.filter((x) => x !== d))}
+                            className="rounded-full border border-amber-500/50 bg-amber-500/10 text-amber-400 hover:bg-red-500/10 hover:border-red-500/40 hover:text-red-400 transition-colors"
+                            style={{ fontSize: "12px", padding: "4px 10px" }}
+                          >
+                            {d} ×
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {/* Quick-add from past drills */}
+                    {allDrills.filter((d) => !sessionDrills.includes(d)).length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-2">
+                        {allDrills.filter((d) => !sessionDrills.includes(d)).map((d) => (
+                          <button
+                            key={d}
+                            type="button"
+                            onClick={() => setSessionDrills((prev) => [...prev, d])}
+                            className="rounded-full border border-white/10 bg-white/5 text-muted-foreground hover:border-white/20 transition-colors"
+                            style={{ fontSize: "12px", padding: "3px 9px" }}
+                          >
+                            + {d}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Add drill (e.g. cross-court rally)…"
+                        value={newDrill}
+                        onChange={(e) => setNewDrill(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && newDrill.trim()) {
+                            setSessionDrills((prev) => [...prev, newDrill.trim()]);
+                            setNewDrill("");
+                          }
+                        }}
+                        className="flex-1 text-white placeholder-muted-foreground outline-none rounded-xl"
+                        style={{
+                          height: "44px", paddingLeft: "14px", paddingRight: "14px",
+                          background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.10)", fontSize: "14px",
+                        }}
+                      />
+                      <button
+                        onClick={() => { if (newDrill.trim()) { setSessionDrills((prev) => [...prev, newDrill.trim()]); setNewDrill(""); } }}
+                        disabled={!newDrill.trim()}
+                        className="inline-flex items-center justify-center rounded-xl text-white disabled:opacity-40 transition-all hover:bg-white/[0.08]"
+                        style={{ border: "1px solid rgba(255,255,255,0.12)", height: "44px", paddingLeft: "16px", paddingRight: "16px", fontSize: "14px", background: "transparent" }}
+                      >Add</button>
+                    </div>
+                  </div>
+
+                  {/* Next session focus */}
+                  <div>
+                    <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px" }}>Next Session Focus</div>
+                    <input
+                      type="text"
+                      placeholder="e.g. Work on backhand off the glass…"
+                      value={sessionFocus}
+                      onChange={(e) => setSessionFocus(e.target.value)}
+                      className="w-full text-white placeholder-muted-foreground outline-none rounded-xl"
+                      style={{
+                        height: "44px", paddingLeft: "14px", paddingRight: "14px",
+                        background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.10)", fontSize: "14px",
+                      }}
+                    />
+                  </div>
+
+                  <button
+                    onClick={() => addSession.mutate()}
+                    disabled={!sessionTopic.trim() || addSession.isPending}
+                    className="w-full inline-flex items-center justify-center rounded-xl font-semibold text-black transition-all active:scale-[0.97] disabled:opacity-40"
+                    style={{ background: "#D4AF37", height: "48px", fontSize: "15px" }}
+                  >
+                    {addSession.isPending ? "Saving…" : "Save Session"}
+                  </button>
+                </div>
+              )}
+            </div>
+
             {sessions.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground" style={{ fontSize: "14px" }}>No sessions yet</div>
+              <div className="text-center py-12 text-muted-foreground" style={{ fontSize: "14px" }}>No sessions yet — log the first one above</div>
             ) : (
               <div
                 className="rounded-[20px] overflow-hidden"
                 style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
               >
-                {sessions.map((s: any, i: number) => (
+                {[...sessions].reverse().map((s: any, i: number) => (
                   <div
                     key={s.id}
                     className="px-5 py-4"
@@ -642,7 +906,7 @@ export default function ClientProfile() {
                             className="font-mono rounded font-medium"
                             style={{ fontSize: "11px", padding: "2px 8px", color: "#D4AF37", background: "rgba(212,175,55,0.10)" }}
                           >
-                            Session {s.sessionNumber}
+                            #{s.sessionNumber}
                           </span>
                           <span className="font-medium text-white" style={{ fontSize: "14px" }}>{s.topic}</span>
                         </div>
@@ -657,15 +921,15 @@ export default function ClientProfile() {
                         {s.status}
                       </span>
                     </div>
-                    {s.subtopics?.length > 0 && (
+                    {s.drillsCovered?.length > 0 && (
                       <div className="flex flex-wrap gap-1 mb-2">
-                        {s.subtopics.map((t: string) => (
+                        {s.drillsCovered.map((d: string) => (
                           <span
-                            key={t}
+                            key={d}
                             className="text-muted-foreground rounded"
                             style={{ fontSize: "11px", padding: "2px 8px", background: "rgba(255,255,255,0.05)" }}
                           >
-                            {t}
+                            {d}
                           </span>
                         ))}
                       </div>
@@ -682,21 +946,173 @@ export default function ClientProfile() {
                 ))}
               </div>
             )}
-          </TabsContent>
+          </>)}
+
+          {/* PROGRESS */}
+          {activeTab === "progress" && (
+            <div className="space-y-5">
+              {/* Stats row */}
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { label: "Total Sessions", value: sessions.length },
+                  {
+                    label: "Avg / Month",
+                    value: sessionsByMonth.length > 0
+                      ? (sessions.length / sessionsByMonth.length).toFixed(1)
+                      : "—",
+                  },
+                  {
+                    label: "Top Topic",
+                    value: topicFrequency[0]?.[0] ?? "—",
+                    small: true,
+                  },
+                ].map(({ label, value, small }) => (
+                  <div
+                    key={label}
+                    className="rounded-[20px] p-4 flex flex-col"
+                    style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
+                  >
+                    <div className="text-muted-foreground mb-1" style={{ fontSize: "11px" }}>{label}</div>
+                    <div
+                      className="font-bold text-white leading-tight"
+                      style={{ fontSize: small ? "13px" : "22px", fontVariantNumeric: "tabular-nums" }}
+                    >
+                      {value}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Session frequency bar chart */}
+              <div
+                className="rounded-[20px] p-5"
+                style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
+              >
+                <div className="text-muted-foreground uppercase tracking-wider mb-4" style={{ fontSize: "11px" }}>
+                  📅 Session Frequency
+                </div>
+                {sessionsByMonth.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground" style={{ fontSize: "14px" }}>No session data yet</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={160}>
+                    <BarChart data={sessionsByMonth} barSize={24} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+                      <XAxis
+                        dataKey="month"
+                        tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        allowDecimals={false}
+                        tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <Tooltip
+                        cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                        contentStyle={{
+                          background: "hsl(220 20% 8%)",
+                          border: "1px solid rgba(255,255,255,0.10)",
+                          borderRadius: "12px",
+                          fontSize: "13px",
+                          color: "white",
+                        }}
+                        formatter={(v: number) => [v, "Sessions"]}
+                      />
+                      <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                        {sessionsByMonth.map((_, idx) => (
+                          <Cell
+                            key={idx}
+                            fill={idx === sessionsByMonth.length - 1 ? "#D4AF37" : "rgba(212,175,55,0.40)"}
+                          />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+
+              {/* Topic frequency */}
+              {topicFrequency.length > 0 && (
+                <div
+                  className="rounded-[20px] p-5"
+                  style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
+                >
+                  <div className="text-muted-foreground uppercase tracking-wider mb-4" style={{ fontSize: "11px" }}>
+                    🎯 Topics Covered
+                  </div>
+                  <div className="space-y-3">
+                    {topicFrequency.map(([topic, count]) => {
+                      const maxCount = topicFrequency[0][1];
+                      const pct = Math.round((count / maxCount) * 100);
+                      return (
+                        <div key={topic}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-white" style={{ fontSize: "13px" }}>{topic}</span>
+                            <span className="text-muted-foreground tabular-nums" style={{ fontSize: "12px" }}>
+                              {count} session{count !== 1 ? "s" : ""}
+                            </span>
+                          </div>
+                          <div className="w-full rounded-full overflow-hidden" style={{ height: "5px", background: "rgba(255,255,255,0.08)" }}>
+                            <div
+                              className="h-full rounded-full"
+                              style={{ width: `${pct}%`, background: "#D4AF37", transition: "width 0.5s ease" }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* All drills ever run */}
+              {allDrills.length > 0 && (
+                <div
+                  className="rounded-[20px] p-5"
+                  style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
+                >
+                  <div className="text-muted-foreground uppercase tracking-wider mb-3" style={{ fontSize: "11px" }}>
+                    🏸 Drills in Rotation
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {allDrills.map((d) => (
+                      <span
+                        key={d}
+                        className="rounded-full"
+                        style={{
+                          fontSize: "12px", padding: "4px 12px",
+                          background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.09)",
+                          color: "rgba(255,255,255,0.7)",
+                        }}
+                      >
+                        {d}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* POST-MATCH NOTES */}
-          <TabsContent value="notes" className="mt-4 space-y-4">
+          {activeTab === "notes" && (
+            <div className="space-y-4">
             <div
               className="rounded-[20px] p-5 space-y-3"
               style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
             >
-              <Label className="font-medium text-white block" style={{ fontSize: "14px" }}>Record Post-Match Question</Label>
-              <Textarea
-                placeholder="Question asked on court (e.g. Как улучшить технику виоловки?)"
+              <div className="font-medium text-white" style={{ fontSize: "14px" }}>Record Post-Match Question</div>
+              <textarea
+                placeholder="Question asked on court (e.g. How to improve volley technique?)"
                 value={newQuestion}
                 onChange={(e) => setNewQuestion(e.target.value)}
-                className="bg-background border-white/10 resize-none"
                 rows={2}
+                className="w-full text-white placeholder-muted-foreground outline-none rounded-xl resize-none"
+                style={{
+                  padding: "10px 14px",
+                  background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.10)", fontSize: "14px",
+                }}
               />
               <button
                 className="inline-flex items-center justify-center rounded-xl font-semibold text-black transition-all active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed"
@@ -736,12 +1152,16 @@ export default function ClientProfile() {
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        <Textarea
+                        <textarea
                           placeholder="Add your coaching response…"
                           value={noteResponse[note.id] ?? ""}
                           onChange={(e) => setNoteResponse(prev => ({ ...prev, [note.id]: e.target.value }))}
-                          className="bg-background border-white/10 resize-none text-sm"
                           rows={2}
+                          className="w-full text-white placeholder-muted-foreground outline-none rounded-xl resize-none"
+                          style={{
+                            padding: "10px 14px",
+                            background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.10)", fontSize: "14px",
+                          }}
                         />
                         <button
                           className="inline-flex items-center justify-center rounded-xl font-medium text-white transition-all hover:bg-white/[0.06] active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed"
@@ -757,10 +1177,11 @@ export default function ClientProfile() {
                 ))}
               </div>
             )}
-          </TabsContent>
+            </div>
+          )}
 
           {/* CHAT HISTORY */}
-          <TabsContent value="chat" className="mt-4">
+          {activeTab === "chat" && (
             <div
               className="rounded-[20px] overflow-hidden"
               style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
@@ -834,8 +1255,7 @@ export default function ClientProfile() {
                 </div>
               </div>
             </div>
-          </TabsContent>
-        </Tabs>
+          )}
       </div>
     </AppLayout>
   );

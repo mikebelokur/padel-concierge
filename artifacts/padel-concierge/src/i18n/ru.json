@@ -393,6 +393,33 @@
     "goToProfile": "Перейти в профиль →",
     "retakeQuiz": "Пройти тест заново"
   },
+  "levelQuizProfile": {
+    "myProfile": "Мой профиль",
+    "level": "Уровень",
+    "progress": "Прогресс",
+    "nextLevel": "Следующий уровень:",
+    "playerProfile": "Профиль игрока",
+    "stats": "Статистика",
+    "matchesPlayed": "Матчей сыграно",
+    "quizCompleted": "Квиз пройден",
+    "quizYes": "✅ Да",
+    "nextStep": "Следующий шаг",
+    "findFirstGame": "Найти первую игру",
+    "viewResult": "← Посмотреть результат теста"
+  },
+  "levelQuizAdmin": {
+    "errorLoading": "Ошибка загрузки",
+    "totalCompletions": "Всего прохождений:",
+    "refresh": "Обновить",
+    "levelDistribution": "Распределение уровней",
+    "noResults": "Нет результатов",
+    "colWorking": "Рабочий",
+    "colQuiz": "Квиз",
+    "colBackground": "Бэкграунд",
+    "colMotivation": "Мотивация",
+    "colStyle": "Стиль",
+    "colDate": "Дата"
+  },
   "levelQuiz": {
     "back": "Назад",
     "loading": "Считаем результат...",

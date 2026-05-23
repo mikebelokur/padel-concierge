@@ -15,9 +15,14 @@ interface Row {
   completed_at: string | null;
 }
 
-function fmt(d: string | null) {
+const LOCALE_MAP: Record<string, string> = {
+  en: "en-GB",
+  ru: "ru-RU",
+};
+
+function fmtDate(d: string | null, locale: string) {
   if (!d) return "—";
-  return new Date(d).toLocaleString("ru-RU", {
+  return new Date(d).toLocaleString(locale, {
     day: "2-digit", month: "2-digit", year: "numeric",
     hour: "2-digit", minute: "2-digit",
   });
@@ -44,18 +49,20 @@ export default function LevelQuizAdmin() {
   const [data, setData] = useState<{ results: Row[]; total: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+
+  const locale = LOCALE_MAP[language] ?? "en-GB";
 
   useEffect(() => {
     getLevelQuizAdmin()
       .then(setData)
-      .catch(() => setError("Ошибка загрузки"))
+      .catch(() => setError(t("levelQuizAdmin.errorLoading")))
       .finally(() => setLoading(false));
   }, []);
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="text-[#555]">Загрузка...</div>
+      <div className="text-[#555]">{t("common.loading")}</div>
     </div>
   );
 
@@ -65,27 +72,36 @@ export default function LevelQuizAdmin() {
     </div>
   );
 
+  const headers = [
+    t("levelQuizAdmin.colWorking"),
+    t("levelQuizAdmin.colQuiz"),
+    t("levelQuizAdmin.colBackground"),
+    t("levelQuizAdmin.colMotivation"),
+    t("levelQuizAdmin.colStyle"),
+    t("levelQuizAdmin.colDate"),
+  ];
+
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-bold text-white">Level Quiz — Results</h1>
           <p className="text-[#8a8a8a] text-sm mt-0.5">
-            Всего прохождений: <span className="text-white font-semibold">{data?.total ?? 0}</span>
+            {t("levelQuizAdmin.totalCompletions")} <span className="text-white font-semibold">{data?.total ?? 0}</span>
           </p>
         </div>
         <button
           onClick={() => window.location.reload()}
           className="h-9 px-4 bg-white/[0.04] border border-white/10 text-[#8a8a8a] text-sm rounded-lg hover:text-white hover:border-white/20 transition-colors"
         >
-          Обновить
+          {t("levelQuizAdmin.refresh")}
         </button>
       </div>
 
       {/* Level distribution */}
       {data && data.results.length > 0 && (
         <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4 mb-6">
-          <div className="text-xs text-[#555] uppercase tracking-widest mb-3">Распределение уровней</div>
+          <div className="text-xs text-[#555] uppercase tracking-widest mb-3">{t("levelQuizAdmin.levelDistribution")}</div>
           <div className="flex gap-3 flex-wrap">
             {LEVEL_ORDER.map(lvl => {
               const count = data.results.filter(r => r.real_level === lvl).length;
@@ -106,7 +122,7 @@ export default function LevelQuizAdmin() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-white/10">
-              {["Рабочий", "Квиз", "Бэкграунд", "Мотивация", "Стиль", "Дата"].map(h => (
+              {headers.map(h => (
                 <th key={h} className="text-left px-4 py-3 text-xs font-medium text-[#555] uppercase tracking-widest whitespace-nowrap">{h}</th>
               ))}
             </tr>
@@ -122,11 +138,11 @@ export default function LevelQuizAdmin() {
                 <td className="px-4 py-3 text-[#8a8a8a] text-xs">{row.q1_answer != null ? t(`levelQuiz.q1Options.${row.q1_answer}`) : "—"}</td>
                 <td className="px-4 py-3 text-[#8a8a8a] text-xs">{row.q2_answer != null ? t(`levelQuiz.q2Options.${row.q2_answer}`) : "—"}</td>
                 <td className="px-4 py-3 text-[#8a8a8a] text-xs">{row.q3_answer != null ? t(`levelQuiz.q3Options.${row.q3_answer}`) : "—"}</td>
-                <td className="px-4 py-3 text-[#555] text-xs whitespace-nowrap">{fmt(row.completed_at)}</td>
+                <td className="px-4 py-3 text-[#555] text-xs whitespace-nowrap">{fmtDate(row.completed_at, locale)}</td>
               </tr>
             ))}
             {!data?.results.length && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-[#555]">Нет результатов</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-[#555]">{t("levelQuizAdmin.noResults")}</td></tr>
             )}
           </tbody>
         </table>

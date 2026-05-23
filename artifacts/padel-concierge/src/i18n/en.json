@@ -393,6 +393,33 @@
     "goToProfile": "Go to profile →",
     "retakeQuiz": "Retake quiz"
   },
+  "levelQuizProfile": {
+    "myProfile": "My Profile",
+    "level": "Level",
+    "progress": "Progress",
+    "nextLevel": "Next level:",
+    "playerProfile": "Player Profile",
+    "stats": "Stats",
+    "matchesPlayed": "Matches played",
+    "quizCompleted": "Quiz completed",
+    "quizYes": "✅ Yes",
+    "nextStep": "Next step",
+    "findFirstGame": "Find your first game",
+    "viewResult": "← View quiz result"
+  },
+  "levelQuizAdmin": {
+    "errorLoading": "Error loading",
+    "totalCompletions": "Total completions:",
+    "refresh": "Refresh",
+    "levelDistribution": "Level distribution",
+    "noResults": "No results",
+    "colWorking": "Working",
+    "colQuiz": "Quiz",
+    "colBackground": "Background",
+    "colMotivation": "Motivation",
+    "colStyle": "Style",
+    "colDate": "Date"
+  },
   "levelQuiz": {
     "back": "Back",
     "loading": "Calculating result...",

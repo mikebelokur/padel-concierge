@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /coach
+Disallow: /clients
+Disallow: /messages
+Disallow: /registrations
+Disallow: /settings
+Disallow: /api/
+
+Sitemap: https://padelconcierge.com/sitemap.xml

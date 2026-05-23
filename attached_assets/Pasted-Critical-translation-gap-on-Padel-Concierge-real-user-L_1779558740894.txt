@@ -1,0 +1,68 @@
+Critical translation gap on Padel Concierge — real user Lena 
+reported that the /find-match page (and possibly related match 
+components) is still in English even when RU is selected. 
+Other pages translate fine.
+
+PROBLEM (from Lena's screenshots, 23 May 20:50):
+On /find-match page in RU mode, these strings are still English:
+- "Available Matches"
+- "Find the right game for your level."
+- "Smart Suggestions"  
+- "AI-matched by archetype & level"
+- "No matches yet"
+- "Check back soon or use Smart Suggestions."
+
+These strings are hardcoded in components — they bypass the i18n 
+system. Other pages (Dashboard "Найти матч", Match Requests 
+"Запросы на матч") translate correctly.
+
+WHAT TO DO:
+
+1. Audit ALL pages and components for hardcoded English strings:
+   - artifacts/padel-concierge/src/pages/find-match.tsx
+   - artifacts/padel-concierge/src/components/matches/* 
+   - artifacts/padel-concierge/src/components/available-matches/* (if exists)
+   - All other pages where users navigate after login
+   - Any "empty state" messages
+   - Any loading messages
+   - Any error messages
+   - Any button labels
+   - Any card titles and subtitles
+
+2. Move every English string to i18n keys in en.json and ru.json.
+   Use semantic keys like:
+   - findMatch.title
+   - findMatch.subtitle  
+   - findMatch.smartSuggestions.title
+   - findMatch.smartSuggestions.subtitle
+   - findMatch.empty.title
+   - findMatch.empty.subtitle
+
+3. Russian translations to use:
+   - "Available Matches" → "Доступные матчи"
+   - "Find the right game for your level." → "Найди подходящую игру под свой уровень"
+   - "Smart Suggestions" → "Умный подбор"
+   - "AI-matched by archetype & level" → "Подобрано ИИ по архетипу и уровню"
+   - "No matches yet" → "Пока нет матчей"
+   - "Check back soon or use Smart Suggestions." → "Загляни позже или попробуй Умный подбор"
+
+4. Verify by searching the entire codebase for English-only strings 
+   in JSX (use grep for common English words: "Find", "Match", 
+   "Player", "Game", "Smart", "Loading", "Error", "No", "Available")
+
+5. After fix, both EN and RU modes should be 100% complete on:
+   - /find-match
+   - /dashboard
+   - /matches  
+   - /profile
+   - /quiz
+   - /level-quiz
+   - /login
+   - /register
+
+After completion show me:
+- Screenshot of /find-match in RU on iPhone (390pt width)
+- Screenshot of /find-match in EN on iPhone
+- List of every file that was modified
+- Confirmation that grep for hardcoded English strings returns no 
+  matches in components/pages

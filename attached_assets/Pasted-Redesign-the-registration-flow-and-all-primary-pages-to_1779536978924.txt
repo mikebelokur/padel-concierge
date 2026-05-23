@@ -1,0 +1,142 @@
+Redesign the registration flow and all primary pages to follow 
+Apple Human Interface Guidelines for iOS. The app must feel 
+native on iPhone and iPad. Currently the design is too desktop-
+oriented with small fonts and tight spacing.
+
+CONTEXT:
+The app is used primarily on iPhone (Safari mobile) by real users 
+on padel courts and at home. Current registration page has fields 
+too small, text too tight, doesn't feel premium on mobile.
+
+PRINCIPLES (apply everywhere):
+
+1. TYPOGRAPHY:
+   - Body text minimum 17pt (1.0625rem) — never smaller
+   - Labels: 15pt (0.9375rem) semibold
+   - Headings (H1): 32pt bold
+   - Subheadings: 20pt regular
+   - Use system font stack: -apple-system, BlinkMacSystemFont, 
+     'SF Pro', 'Inter', sans-serif
+   - Line height: 1.4-1.5 for readability
+
+2. SPACING (8-point grid system):
+   - Page horizontal padding: 24pt
+   - Vertical spacing between sections: 32pt
+   - Between form fields: 20pt
+   - Inside cards: 24pt padding
+   - Button margin from previous element: 32pt minimum
+
+3. INPUT FIELDS:
+   - Height: 56pt (44pt absolute minimum)
+   - Border radius: 12pt
+   - Internal padding: 16pt horizontal, 16pt vertical
+   - Font: 17pt
+   - Background: subtle dark (#1a1a1a or rgba(255,255,255,0.05))
+   - Border on focus: 2pt golden accent (#D4AF37) with smooth transition
+   - Label above field, 8pt spacing
+
+4. BUTTONS:
+   - Primary button height: 56pt
+   - Border radius: 14pt
+   - Font: 17pt semibold
+   - Full width on mobile (calc(100% - 48pt))
+   - Primary: golden gradient or solid #D4AF37 with dark text
+   - Disabled state: 30% opacity, no shadow
+   - Active state: scale 0.97 on press for tactile feel
+
+5. CARDS / CONTAINERS:
+   - Border radius: 20pt (large, iOS-style)
+   - Background: deep black (#000) for body, slightly elevated 
+     dark (#0a0a0a) for cards
+   - No heavy borders — use subtle shadows instead
+   - Padding inside cards: 24pt
+
+6. COLOR PALETTE:
+   - Background: #000 (true black for OLED)
+   - Cards: #0a0a0a or #111
+   - Primary accent: #D4AF37 (gold)
+   - Text primary: #fff
+   - Text secondary: #999
+   - Text tertiary: #666
+   - Success: #34C759 (Apple green)
+   - Danger: #FF3B30 (Apple red)
+   - Border subtle: rgba(255,255,255,0.08)
+
+7. RESPONSIVENESS:
+   - Mobile-first: design for 375pt width (iPhone SE) FIRST
+   - Tablet: 768pt — wider container but same generous spacing
+   - Desktop: 1024pt+ — content max-width 480pt, centered
+   - NEVER use desktop-grid layouts on mobile
+   - Touch targets 44pt minimum, always
+
+8. SAFE AREAS:
+   - Respect iOS safe-area-insets (notch, home indicator)
+   - Use env(safe-area-inset-top) and env(safe-area-inset-bottom)
+   - Bottom buttons must clear the home indicator
+
+9. INTERACTIONS:
+   - Smooth transitions between registration steps (slide, 300ms)
+   - Loading states with proper spinner (not blank screens)
+   - Haptic-feel: button :active { transform: scale(0.97); }
+   - Focus rings on inputs (golden, 2pt)
+
+PAGES TO REDESIGN (in this priority):
+
+PRIORITY 1 — Registration flow (/register):
+   - 3 steps with iOS-style progress bar at top
+   - Each field stacked vertically with generous spacing
+   - Continue button always visible at bottom, sticky if needed
+   - On step 2, level slider 1.0-5.0 should be a big iOS-style 
+     slider with the current value shown in large text
+   - On step 3, availability time picker should be friendly 
+     toggleable chips, not a desktop calendar
+
+PRIORITY 2 — Login (/login):
+   - Single centered card
+   - Large welcome message
+   - Email + password fields, generous size
+   - "Forgot password?" link below
+   - "Don't have account? Sign up" at bottom
+
+PRIORITY 3 — Quiz (/quiz and /level-quiz):
+   - One question per screen on mobile (no scrolling needed)
+   - Answer options as large tappable cards, 80pt height minimum
+   - Progress bar at top showing current question / total
+   - Big Next button at bottom
+   - Smooth slide animation between questions
+
+PRIORITY 4 — Dashboard (/):
+   - Greeting at top with player's name
+   - 3 main cards stacked: Find a Match (golden CTA), 
+     Upcoming Sessions, Player Card preview
+   - Each card 200pt tall, full width with 24pt padding
+   - Bottom tab bar for navigation (4-5 icons) — iOS style
+
+PRIORITY 5 — Find Match (/find-match):
+   - Filter chips at top (date, count) — horizontal scroll if needed
+   - Result cards full-width, stacked vertically
+   - Compatibility score as a circular ring, large and prominent
+   - Action button at bottom of each card, full-width
+
+DELIVERABLES:
+- All pages should look stunning on iPhone 14/15 (390pt width)
+- Test on iPad portrait (768pt width)
+- Ensure RU translations are complete (this was a bug — fix 
+  "Join Padel Concierge", "Full Name", "Continue", etc.)
+- Fix the placeholder issue: "Alexei Petrov" should be a 
+  proper placeholder in gray, not pre-filled text
+- Change subtitle from "private members club for SERIOUS padel 
+  players" to a more inclusive message: 
+  EN: "Find your game, find your people"
+  RU: "Найди свою игру, найди своих людей"
+- Remove the "DEV" badge from production view (or hide it 
+  unless logged in as admin)
+
+After completion show me:
+- Screenshot of /register step 1 on iPhone (390pt) in RU
+- Screenshot of /register step 2 on iPhone in RU
+- Screenshot of /register step 3 on iPhone in RU
+- Screenshot of /dashboard on iPhone
+- Screenshot of /find-match on iPhone
+- Confirmation that all 5 priority pages are mobile-optimized
+- Confirmation that all text is properly translated to RU

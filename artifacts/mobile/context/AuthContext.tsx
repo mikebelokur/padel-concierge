@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { setAuthTokenGetter } from "@workspace/api-client-react";
+import { setAuthTokenGetter, setSessionExpiredHandler } from "@workspace/api-client-react";
 import type { User } from "@workspace/api-client-react";
+import { router } from "expo-router";
 import {
   createContext,
   useCallback,
@@ -9,6 +10,7 @@ import {
   useState,
 } from "react";
 import type { ReactNode } from "react";
+import { Alert } from "react-native";
 
 const TOKEN_KEY = "pc_auth_token";
 const USER_KEY = "pc_auth_user";
@@ -68,6 +70,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setAuthTokenGetter(() => null);
   }, []);
+
+  useEffect(() => {
+    setSessionExpiredHandler(() => {
+      logout()
+        .then(() => {
+          router.replace("/login");
+          Alert.alert(
+            "Session Expired",
+            "Your session has expired. Please sign in again.",
+          );
+        })
+        .catch(() => {});
+    });
+
+    return () => {
+      setSessionExpiredHandler(null);
+    };
+  }, [logout]);
 
   const updateUser = useCallback((newUser: User) => {
     setUser(newUser);

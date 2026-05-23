@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
-import { useRegister } from "@workspace/api-client-react";
+import { useRegister, useUpdateUser } from "@workspace/api-client-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { translateError } from "@/lib/errorMessages";
 
 const LEVELS = [
   { value: 0, label: "1.0", desc: "Complete Beginner" },
@@ -34,9 +35,14 @@ export default function Register() {
   const [step, setStep] = useState(1);
   const [slideDir, setSlideDir] = useState<"right" | "left">("right");
   const [, setLocation] = useLocation();
-  const { login: authLogin } = useAuth();
+  const { user, login: authLogin } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
+
+  const [regError, setRegError] = useState<{
+    message: string;
+    action?: { label: string; href: string };
+  } | null>(null);
 
   const [levelIdx, setLevelIdx] = useState(2);
   const [availability, setAvailability] = useState<Set<string>>(new Set());
@@ -53,6 +59,12 @@ export default function Register() {
     locationName: "Dubai",
   });
 
+  useEffect(() => {
+    if (user && localStorage.getItem("token")) {
+      setLocation("/dashboard");
+    }
+  }, [user]);
+
   const update = (k: string, v: string) => setFormData((p) => ({ ...p, [k]: v }));
 
   const toggleAvailability = (id: string) => {
@@ -64,23 +76,55 @@ export default function Register() {
     });
   };
 
+  const updateUserMutation = useUpdateUser({
+    mutation: {
+      onSuccess: () => {
+        setRegError(null);
+        setLocation("/assessment");
+      },
+      onError: (err: unknown) => {
+        const translated = translateError(err);
+        setRegError(translated);
+      },
+    },
+  });
+
   const registerMutation = useRegister({
     mutation: {
       onSuccess: (data) => {
+        setRegError(null);
         authLogin(data.token, data.user);
         toast({ title: t("register.welcomeToast"), description: t("register.welcomeToastDesc") });
         setLocation("/assessment");
       },
-      onError: (err: any) =>
-        toast({ title: t("register.registrationFailed"), description: err?.message ?? "", variant: "destructive" }),
+      onError: (err: unknown) => {
+        const translated = translateError(err);
+        setRegError(translated);
+      },
     },
   });
 
   const handleSubmit = () => {
+    const existingToken = localStorage.getItem("token");
+    if (existingToken && user?.id) {
+      const { confirmPassword: _c, password: _p, email: _e, name: _n, phone: _ph, ...profileFields } = formData;
+      updateUserMutation.mutate({
+        id: user.id,
+        data: {
+          name: formData.name || undefined,
+          level: profileFields.level,
+          goal: profileFields.goal,
+          intensity: profileFields.intensity,
+          locationName: profileFields.locationName,
+        },
+      });
+      return;
+    }
     if (formData.password !== formData.confirmPassword) {
       toast({ title: t("register.passwordsMismatch"), variant: "destructive" });
       return;
     }
+    setRegError(null);
     const { confirmPassword, ...rest } = formData;
     registerMutation.mutate({ data: { ...rest, phone: rest.phone || "N/A" } });
   };
@@ -89,6 +133,8 @@ export default function Register() {
     setSlideDir(next > step ? "right" : "left");
     setStep(next);
   };
+
+  const isPending = registerMutation.isPending || updateUserMutation.isPending;
 
   const selectedLevel = LEVELS[levelIdx];
 
@@ -134,7 +180,7 @@ export default function Register() {
         </div>
       </div>
 
-      {/* Scrollable step content — no CTA inside */}
+      {/* Scrollable step content */}
       <div className="flex-1 overflow-y-auto px-6 pb-4">
         <div
           key={step}
@@ -282,6 +328,28 @@ export default function Register() {
                 </div>
               </div>
 
+              {/* Error banner */}
+              {regError && (
+                <div
+                  className="rounded-[14px] p-4 border"
+                  style={{ background: "rgba(220,38,38,0.08)", borderColor: "rgba(220,38,38,0.3)" }}
+                >
+                  <p className="text-red-400 font-medium" style={{ fontSize: "14px" }}>
+                    {regError.message}
+                  </p>
+                  {regError.action && (
+                    <Link href={regError.action.href}>
+                      <span
+                        className="inline-block mt-2 px-4 py-1.5 rounded-lg font-semibold text-black cursor-pointer"
+                        style={{ background: "#D4AF37", fontSize: "14px" }}
+                      >
+                        {regError.action.label}
+                      </span>
+                    </Link>
+                  )}
+                </div>
+              )}
+
               <div
                 className="rounded-[16px] p-4 border"
                 style={{ background: "rgba(212,175,55,0.06)", borderColor: "rgba(212,175,55,0.2)" }}
@@ -348,8 +416,8 @@ export default function Register() {
             >
               {t("register.back")}
             </button>
-            <IosButton onClick={handleSubmit} disabled={registerMutation.isPending} gold>
-              {registerMutation.isPending ? t("register.creatingAccount") : t("register.createAccount")}
+            <IosButton onClick={handleSubmit} disabled={isPending} gold>
+              {isPending ? t("register.creatingAccount") : t("register.createAccount")}
             </IosButton>
           </div>
         )}

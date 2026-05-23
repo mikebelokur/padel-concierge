@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { translateError } from "@/lib/errorMessages";
 
 interface Question {
   text: string;
@@ -151,8 +152,10 @@ export default function Assessment() {
       toast({ title: t("assessment.toastTitle"), description: t("assessment.toastDesc") });
       setTimeout(() => setLocation("/dashboard"), 2500);
     },
-    onError: (e: Error) =>
-      toast({ title: t("assessment.toastError"), description: e.message, variant: "destructive" }),
+    onError: (e: unknown) => {
+      const translated = translateError(e);
+      toast({ title: t("assessment.toastError"), description: translated.message, variant: "destructive" });
+    },
   });
 
   const handleNext = () => {

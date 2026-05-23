@@ -4,6 +4,7 @@ import { useLogin } from "@workspace/api-client-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
+import { translateError } from "@/lib/errorMessages";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -21,10 +22,11 @@ export default function Login() {
         else if (data.user.role === "coach") setLocation("/coach");
         else setLocation("/dashboard");
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
+        const translated = translateError(err);
         toast({
           title: t("login.loginFailed"),
-          description: err.message || t("login.invalidCredentials"),
+          description: translated.message,
           variant: "destructive",
         });
       },

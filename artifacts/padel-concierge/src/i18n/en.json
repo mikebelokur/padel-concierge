@@ -420,6 +420,20 @@
     "colStyle": "Style",
     "colDate": "Date"
   },
+  "matches": {
+    "availableTitle": "Available Matches",
+    "availableSubtitle": "Find the right game for your level.",
+    "smartTitle": "Smart Suggestions",
+    "smartSubtitle": "AI-matched by archetype & level",
+    "emptyTitle": "No matches yet",
+    "emptyHint": "Check back soon or use Smart Suggestions.",
+    "colLevel": "Level",
+    "colPrice": "Price",
+    "colPlayers": "Players",
+    "spotsLeft": "{{count}} spot left",
+    "spotsLeft_other": "{{count}} spots left",
+    "full": "Full"
+  },
   "levelQuiz": {
     "back": "Back",
     "loading": "Calculating result...",

@@ -420,6 +420,20 @@
     "colStyle": "Стиль",
     "colDate": "Дата"
   },
+  "matches": {
+    "availableTitle": "Доступные матчи",
+    "availableSubtitle": "Найди подходящую игру под свой уровень",
+    "smartTitle": "Умный подбор",
+    "smartSubtitle": "Подобрано ИИ по архетипу и уровню",
+    "emptyTitle": "Пока нет матчей",
+    "emptyHint": "Загляни позже или попробуй Умный подбор",
+    "colLevel": "Уровень",
+    "colPrice": "Цена",
+    "colPlayers": "Игроки",
+    "spotsLeft": "{{count}} место",
+    "spotsLeft_other": "{{count}} места",
+    "full": "Занято"
+  },
   "levelQuiz": {
     "back": "Назад",
     "loading": "Считаем результат...",

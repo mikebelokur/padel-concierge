@@ -3,6 +3,7 @@ import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useListMatches } from "@workspace/api-client-react";
 import { Link } from "wouter";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const FORMAT_COLORS: Record<string, { bg: string; border: string; color: string }> = {
   classic:    { bg: "rgba(212,175,55,0.12)",  border: "rgba(212,175,55,0.35)",  color: "#D4AF37" },
@@ -76,6 +77,7 @@ function MatchCardSkeleton() {
 export default function Matches() {
   const { data: matches, isLoading, refetch } = useListMatches();
   const { pullY, isRefreshing } = usePullToRefresh(refetch);
+  const { t } = useLanguage();
 
   return (
     <AppLayout>
@@ -93,10 +95,10 @@ export default function Matches() {
           {/* ── HEADER ── */}
           <header className="mb-6">
             <h1 className="font-serif font-bold text-white mb-1" style={{ fontSize: "26px" }}>
-              Available Matches
+              {t("matches.availableTitle")}
             </h1>
             <p className="text-muted-foreground" style={{ fontSize: "15px" }}>
-              Find the right game for your level.
+              {t("matches.availableSubtitle")}
             </p>
           </header>
 
@@ -113,10 +115,10 @@ export default function Matches() {
                 <div>
                   <div className="text-xl mb-1">🎯</div>
                   <div className="font-serif font-semibold text-white" style={{ fontSize: "16px" }}>
-                    Smart Suggestions
+                    {t("matches.smartTitle")}
                   </div>
                   <div className="text-muted-foreground" style={{ fontSize: "13px" }}>
-                    AI-matched by archetype &amp; level
+                    {t("matches.smartSubtitle")}
                   </div>
                 </div>
                 <div
@@ -142,9 +144,9 @@ export default function Matches() {
                   style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.07)" }}
                 >
                   <div className="text-3xl mb-3">🎾</div>
-                  <div className="text-white font-medium mb-1">No matches yet</div>
+                  <div className="text-white font-medium mb-1">{t("matches.emptyTitle")}</div>
                   <div className="text-muted-foreground" style={{ fontSize: "14px" }}>
-                    Check back soon or use Smart Suggestions.
+                    {t("matches.emptyHint")}
                   </div>
                 </div>
               )}
@@ -188,19 +190,19 @@ export default function Matches() {
                       {/* Stats row */}
                       <div className="flex items-center gap-4 mb-4">
                         <div className="flex-1">
-                          <div className="text-muted-foreground mb-0.5" style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em" }}>Level</div>
+                          <div className="text-muted-foreground mb-0.5" style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em" }}>{t("matches.colLevel")}</div>
                           <div className="font-mono font-semibold text-white" style={{ fontSize: "14px" }}>
                             {match.levelMin} – {match.levelMax}
                           </div>
                         </div>
                         <div className="flex-1">
-                          <div className="text-muted-foreground mb-0.5" style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em" }}>Price</div>
+                          <div className="text-muted-foreground mb-0.5" style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em" }}>{t("matches.colPrice")}</div>
                           <div className="font-mono font-semibold text-white" style={{ fontSize: "14px" }}>
                             {match.price} AED
                           </div>
                         </div>
                         <div className="flex-1">
-                          <div className="text-muted-foreground mb-0.5" style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em" }}>Players</div>
+                          <div className="text-muted-foreground mb-0.5" style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.06em" }}>{t("matches.colPlayers")}</div>
                           <div className="font-mono font-semibold" style={{ fontSize: "14px", color: playerCount >= 4 ? "#ef4444" : "#D4AF37" }}>
                             {playerCount}/4
                           </div>
@@ -211,9 +213,9 @@ export default function Matches() {
                       <div className="flex items-center justify-between pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                         <div style={{ fontSize: "13px" }}>
                           {spotsLeft > 0 ? (
-                            <span style={{ color: "#D4AF37" }}>{spotsLeft} spot{spotsLeft !== 1 ? "s" : ""} left</span>
+                            <span style={{ color: "#D4AF37" }}>{t("matches.spotsLeft", { count: spotsLeft })}</span>
                           ) : (
-                            <span className="text-muted-foreground">Full</span>
+                            <span className="text-muted-foreground">{t("matches.full")}</span>
                           )}
                         </div>
                         <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "20px", lineHeight: 1 }}>›</span>

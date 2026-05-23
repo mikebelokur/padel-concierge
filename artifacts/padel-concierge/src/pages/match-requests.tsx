@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useQueries, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Input } from "@/components/ui/input";
@@ -264,6 +264,11 @@ export default function MatchRequests() {
   const [selectedCandidates, setSelectedCandidates] = useState<number[]>([]);
 
   const today = new Date().toISOString().split("T")[0];
+
+  useEffect(() => {
+    localStorage.setItem("matchRequestsLastVisit", new Date().toISOString());
+    qc.invalidateQueries({ queryKey: ["pending-requests-count"] });
+  }, []);
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ["match-requests", user?.id],

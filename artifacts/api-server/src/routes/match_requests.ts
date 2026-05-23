@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, matchRequestsTable, usersTable, activityLogsTable } from "@workspace/db";
-import { eq, or } from "drizzle-orm";
+import { and, eq, gt, or } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth";
 
 const router: IRouter = Router();
@@ -23,6 +23,23 @@ async function formatRequest(r: typeof matchRequestsTable.$inferSelect) {
     toUser: toUser ? { id: toUser.id, name: toUser.name, level: toUser.level, avatar: toUser.avatar ?? null, verified: toUser.verified } : null,
   };
 }
+
+router.get("/match-requests/pending-count", async (req, res): Promise<void> => {
+  const authUserId: number = (req as any).auth.userId;
+  const since = req.query.since ? new Date(String(req.query.since)) : null;
+
+  const conditions = [
+    eq(matchRequestsTable.toUserId, authUserId),
+    eq(matchRequestsTable.status, "pending"),
+    ...(since ? [gt(matchRequestsTable.createdAt, since)] : []),
+  ];
+
+  const requests = await db.select({ id: matchRequestsTable.id })
+    .from(matchRequestsTable)
+    .where(and(...conditions));
+
+  res.json({ count: requests.length });
+});
 
 router.get("/match-requests", async (req, res): Promise<void> => {
   const userId = req.query.userId ? parseInt(String(req.query.userId), 10) : null;

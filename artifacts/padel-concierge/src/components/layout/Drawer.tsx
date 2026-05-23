@@ -23,7 +23,7 @@ const navItems: NavItem[] = [
   { href: "/dashboard",      labelKey: "nav.dashboard",     icon: "◈",  dividerBefore: true },
   { href: "/find-match",     labelKey: "nav.findMatch",     icon: "🎯" },
   { href: "/matches",        labelKey: "nav.matches",       icon: "🎾" },
-  { href: "/match-requests", labelKey: "nav.requests",      icon: "📨" },
+  { href: "/match-requests", labelKey: "nav.requests",      icon: "📨", badgeKey: "pendingRequests" },
   { href: "/bookings",       labelKey: "nav.bookings",      icon: "📅" },
   { href: "/courts",         labelKey: "nav.courts",        icon: "🏟️" },
   { href: "/members",        labelKey: "nav.members",       icon: "👤" },
@@ -58,6 +58,20 @@ export function Drawer() {
     refetchInterval: 30000,
   });
   const pendingCount = (pendingData as any)?.count ?? 0;
+
+  const getLastVisit = () => localStorage.getItem("matchRequestsLastVisit") ?? "";
+
+  const { data: pendingRequestsData } = useQuery({
+    queryKey: ["pending-requests-count", user?.id],
+    queryFn: () => {
+      const since = getLastVisit();
+      const qs = since ? `?since=${encodeURIComponent(since)}` : "";
+      return apiFetch<{ count: number }>(`/match-requests/pending-count${qs}`);
+    },
+    enabled: !!user?.id,
+    refetchInterval: 30000,
+  });
+  const pendingRequestsCount = (pendingRequestsData as any)?.count ?? 0;
 
   const visibleItems = navItems.filter(
     (item) => !item.roles || (user?.role && item.roles.includes(user.role))
@@ -156,7 +170,7 @@ export function Drawer() {
           <LangToggle />
         </div>
         <nav className="flex-1 overflow-y-auto py-2 px-3">
-          <NavList items={visibleItems} location={location} pendingCount={pendingCount} t={t} />
+          <NavList items={visibleItems} location={location} pendingCount={pendingCount} pendingRequestsCount={pendingRequestsCount} t={t} />
         </nav>
         <UserFooter user={user} isOwner={isOwner} logout={logout} t={t} />
       </aside>
@@ -188,7 +202,7 @@ export function Drawer() {
           </button>
         </div>
         <nav className="flex-1 overflow-y-auto py-2 px-3">
-          <NavList items={visibleItems} location={location} pendingCount={pendingCount} t={t} />
+          <NavList items={visibleItems} location={location} pendingCount={pendingCount} pendingRequestsCount={pendingRequestsCount} t={t} />
         </nav>
         <UserFooter user={user} isOwner={isOwner} logout={logout} t={t} />
       </aside>
@@ -242,11 +256,13 @@ function NavList({
   items,
   location,
   pendingCount,
+  pendingRequestsCount,
   t,
 }: {
   items: NavItem[];
   location: string;
   pendingCount: number;
+  pendingRequestsCount: number;
   t: (key: string) => string;
 }) {
   return (
@@ -259,7 +275,10 @@ function NavList({
             item.href !== "/registrations" &&
             location.startsWith(item.href));
 
-        const badge = item.badgeKey === "pending" && pendingCount > 0 ? pendingCount : null;
+        const badge =
+          item.badgeKey === "pending" && pendingCount > 0 ? pendingCount :
+          item.badgeKey === "pendingRequests" && pendingRequestsCount > 0 ? pendingRequestsCount :
+          null;
 
         return (
           <div key={item.href}>

@@ -1,122 +1,284 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useGetBooking, useCreatePaymentIntent, useConfirmPayment, getGetBookingQueryKey } from "@workspace/api-client-react";
 import { useParams } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+
+const PAYMENT_STATUS_STYLES: Record<string, { bg: string; border: string; color: string }> = {
+  completed: { bg: "rgba(34,197,94,0.12)",   border: "rgba(34,197,94,0.3)",   color: "#4ade80" },
+  pending:   { bg: "rgba(234,179,8,0.12)",   border: "rgba(234,179,8,0.3)",   color: "#facc15" },
+  failed:    { bg: "rgba(239,68,68,0.10)",   border: "rgba(239,68,68,0.25)",  color: "#f87171" },
+  cancelled: { bg: "rgba(255,255,255,0.05)", border: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)" },
+};
+
+function paymentStyle(status: string) {
+  return PAYMENT_STATUS_STYLES[status] ?? PAYMENT_STATUS_STYLES.pending;
+}
+
+function InfoRow({ label, value, last }: { label: string; value: string | undefined; last?: boolean }) {
+  return (
+    <div
+      className="flex items-center justify-between px-5"
+      style={{
+        minHeight: "52px",
+        borderBottom: last ? "none" : "1px solid rgba(255,255,255,0.06)",
+      }}
+    >
+      <span className="text-muted-foreground" style={{ fontSize: "14px" }}>{label}</span>
+      <span className="text-white font-medium" style={{ fontSize: "14px" }}>{value ?? "—"}</span>
+    </div>
+  );
+}
 
 export default function BookingDetail() {
   const params = useParams();
   const bookingId = Number(params.id);
   const queryClient = useQueryClient();
-  const { data: booking, isLoading } = useGetBooking(bookingId, { 
-    query: { enabled: !!bookingId, queryKey: getGetBookingQueryKey(bookingId) } 
+  const { data: booking, isLoading } = useGetBooking(bookingId, {
+    query: { enabled: !!bookingId, queryKey: getGetBookingQueryKey(bookingId) },
   });
-  
+
   const createIntent = useCreatePaymentIntent();
   const confirmPayment = useConfirmPayment();
   const { toast } = useToast();
   const [isPaying, setIsPaying] = useState(false);
+  const [cardNumber, setCardNumber] = useState("");
+  const [expiry, setExpiry] = useState("");
+  const [cvc, setCvc] = useState("");
 
   const handlePayment = async () => {
     setIsPaying(true);
     try {
       const intent = await createIntent.mutateAsync({ id: bookingId });
-      await confirmPayment.mutateAsync({ 
-        id: bookingId, 
-        data: { paymentIntentId: intent.paymentIntentId } 
+      await confirmPayment.mutateAsync({
+        id: bookingId,
+        data: { paymentIntentId: intent.paymentIntentId },
       });
       toast({ title: "Payment Successful", description: "Your spot is secured." });
       queryClient.invalidateQueries({ queryKey: getGetBookingQueryKey(bookingId) });
-    } catch (e) {
+    } catch {
       toast({ title: "Payment Failed", variant: "destructive" });
     } finally {
       setIsPaying(false);
     }
   };
 
-  if (isLoading) return <AppLayout><div className="p-8">Loading...</div></AppLayout>;
-  if (!booking) return <AppLayout><div className="p-8">Booking not found</div></AppLayout>;
+  if (isLoading) {
+    return (
+      <AppLayout>
+        <div className="max-w-2xl mx-auto px-6 space-y-4" style={{ paddingTop: "28px" }}>
+          {[1, 2].map(i => (
+            <div key={i} className="rounded-[20px] animate-pulse" style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)", minHeight: "200px" }} />
+          ))}
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (!booking) {
+    return (
+      <AppLayout>
+        <div className="max-w-2xl mx-auto px-6 text-center" style={{ paddingTop: "80px" }}>
+          <div className="text-3xl mb-3">📅</div>
+          <div className="text-white font-medium">Booking not found</div>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  const ps = paymentStyle(booking.paymentStatus ?? "pending");
+  const isPaid = booking.paymentStatus === "completed";
 
   return (
     <AppLayout>
-      <div className="p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto space-y-5 sm:space-y-8">
-        <header className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-serif mb-2">Booking #{booking.id}</h1>
-            <p className="text-muted-foreground">{booking.match?.clubName} • {booking.match?.date}</p>
+      <div className="max-w-2xl mx-auto px-6 animate-fade-up" style={{ paddingTop: "28px", paddingBottom: "40px" }}>
+
+        {/* ── HEADER ── */}
+        <header className="mb-6">
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <h1 className="font-serif font-bold text-white leading-tight" style={{ fontSize: "26px" }}>
+              Booking #{booking.id}
+            </h1>
+            <span
+              className="rounded-full px-3 py-1 font-medium capitalize flex-shrink-0"
+              style={{
+                fontSize: "12px",
+                background: ps.bg,
+                border: `1px solid ${ps.border}`,
+                color: ps.color,
+                marginTop: "6px",
+              }}
+            >
+              {booking.paymentStatus}
+            </span>
           </div>
-          <Badge variant="outline" className={
-            booking.paymentStatus === 'completed' ? "bg-green-500/10 text-green-400" : "bg-yellow-500/10 text-yellow-400"
-          }>
-            {booking.paymentStatus}
-          </Badge>
+          <p className="text-muted-foreground" style={{ fontSize: "14px" }}>
+            {booking.match?.clubName} · {booking.match?.date}
+          </p>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Card className="bg-card border-white/5">
-            <CardHeader>
-              <CardTitle>Match Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between py-2 border-b border-white/5">
-                <span className="text-muted-foreground">Date</span>
-                <span>{booking.match?.date}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-white/5">
-                <span className="text-muted-foreground">Time</span>
-                <span>{booking.match?.time}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-white/5">
-                <span className="text-muted-foreground">Format</span>
-                <span>{booking.match?.format}</span>
-              </div>
-              <div className="flex justify-between py-2 font-medium text-lg">
-                <span>Total</span>
-                <span>{booking.match?.price} AED</span>
-              </div>
-              {booking.paymentStatus === 'completed' && (
-                <Button variant="outline" className="w-full mt-4">Add to Calendar</Button>
-              )}
-            </CardContent>
-          </Card>
+        {/* ── MATCH DETAILS ── */}
+        <section className="mb-4">
+          <div
+            className="uppercase font-semibold mb-3"
+            style={{ fontSize: "11px", letterSpacing: "0.08em", color: "rgba(255,255,255,0.4)" }}
+          >
+            Match Details
+          </div>
+          <div
+            className="rounded-[20px] overflow-hidden"
+            style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.07)" }}
+          >
+            <InfoRow label="Date" value={booking.match?.date} />
+            <InfoRow label="Time" value={booking.match?.time} />
+            <InfoRow label="Format" value={booking.match?.format} />
+            <div
+              className="flex items-center justify-between px-5"
+              style={{ minHeight: "56px" }}
+            >
+              <span className="font-semibold text-white" style={{ fontSize: "16px" }}>Total</span>
+              <span
+                className="font-mono font-bold"
+                style={{ fontSize: "20px", color: "#D4AF37" }}
+              >
+                {booking.match?.price} AED
+              </span>
+            </div>
+          </div>
+        </section>
 
-          {booking.paymentStatus !== 'completed' && (
-            <Card className="bg-card border-white/5">
-              <CardHeader>
-                <CardTitle>Payment</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Card Number</Label>
-                  <Input placeholder="4242 4242 4242 4242" className="bg-background border-white/10 font-mono" />
+        {/* ── PAYMENT COMPLETE STATE ── */}
+        {isPaid && (
+          <div
+            className="rounded-[20px] p-5 mb-4 flex items-center gap-4"
+            style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}
+          >
+            <div
+              className="flex items-center justify-center flex-shrink-0"
+              style={{
+                width: "44px",
+                height: "44px",
+                borderRadius: "50%",
+                background: "rgba(34,197,94,0.2)",
+                fontSize: "22px",
+              }}
+            >
+              ✓
+            </div>
+            <div>
+              <div style={{ fontSize: "15px", color: "#4ade80", fontWeight: 600 }}>Payment Complete</div>
+              <div className="text-muted-foreground" style={{ fontSize: "13px" }}>Your spot is secured. See you on the court!</div>
+            </div>
+          </div>
+        )}
+
+        {isPaid && (
+          <button
+            className="w-full rounded-[20px] font-semibold transition-all hover:scale-[1.01] active:scale-[0.98]"
+            style={{ minHeight: "52px", fontSize: "15px", background: "hsl(220 20% 10%)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.85)" }}
+            onClick={() => {}}
+          >
+            📆 Add to Calendar
+          </button>
+        )}
+
+        {/* ── PAYMENT FORM ── */}
+        {!isPaid && (
+          <section className="mb-4">
+            <div
+              className="uppercase font-semibold mb-3"
+              style={{ fontSize: "11px", letterSpacing: "0.08em", color: "rgba(255,255,255,0.4)" }}
+            >
+              Payment
+            </div>
+            <div
+              className="rounded-[20px] p-5 space-y-4"
+              style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.07)" }}
+            >
+              {/* Card number */}
+              <div>
+                <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px", letterSpacing: "0.04em" }}>Card Number</div>
+                <input
+                  type="text"
+                  placeholder="4242 4242 4242 4242"
+                  value={cardNumber}
+                  onChange={e => setCardNumber(e.target.value)}
+                  className="w-full rounded-[12px] font-mono outline-none transition-colors"
+                  style={{
+                    height: "48px",
+                    padding: "0 16px",
+                    fontSize: "15px",
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    color: "#fff",
+                  }}
+                />
+              </div>
+
+              {/* Expiry + CVC */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px", letterSpacing: "0.04em" }}>Expiry</div>
+                  <input
+                    type="text"
+                    placeholder="MM/YY"
+                    value={expiry}
+                    onChange={e => setExpiry(e.target.value)}
+                    className="w-full rounded-[12px] outline-none transition-colors"
+                    style={{
+                      height: "48px",
+                      padding: "0 16px",
+                      fontSize: "15px",
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      color: "#fff",
+                    }}
+                  />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Expiry</Label>
-                    <Input placeholder="MM/YY" className="bg-background border-white/10" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>CVC</Label>
-                    <Input placeholder="123" className="bg-background border-white/10" />
-                  </div>
+                <div>
+                  <div className="text-muted-foreground mb-1.5" style={{ fontSize: "12px", letterSpacing: "0.04em" }}>CVC</div>
+                  <input
+                    type="text"
+                    placeholder="123"
+                    value={cvc}
+                    onChange={e => setCvc(e.target.value)}
+                    className="w-full rounded-[12px] outline-none transition-colors"
+                    style={{
+                      height: "48px",
+                      padding: "0 16px",
+                      fontSize: "15px",
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      color: "#fff",
+                    }}
+                  />
                 </div>
-                <Button 
-                  className="w-full mt-6" 
-                  onClick={handlePayment}
-                  disabled={isPaying}
-                >
-                  {isPaying ? "Processing..." : `Pay ${booking.match?.price} AED`}
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+              </div>
+
+              <p className="text-muted-foreground" style={{ fontSize: "11px" }}>
+                Test card: 4242 4242 4242 4242 · Any future date · Any CVC
+              </p>
+            </div>
+
+            {/* Pay CTA */}
+            <button
+              className="w-full rounded-[20px] font-semibold transition-all hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 mt-4"
+              style={{
+                minHeight: "56px",
+                fontSize: "17px",
+                background: "#D4AF37",
+                color: "#000",
+                cursor: isPaying ? "wait" : "pointer",
+              }}
+              onClick={handlePayment}
+              disabled={isPaying}
+            >
+              {isPaying ? "Processing…" : `Pay ${booking.match?.price} AED`}
+            </button>
+          </section>
+        )}
+
       </div>
     </AppLayout>
   );

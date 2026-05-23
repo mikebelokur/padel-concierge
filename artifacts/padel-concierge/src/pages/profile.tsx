@@ -3,12 +3,8 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useGetPlayerStats, getGetPlayerStatsQueryKey } from "@workspace/api-client-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
 import { ARCHETYPE_META, archetypeCompatibility, type Archetype } from "@/lib/archetypes";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -20,7 +16,7 @@ import {
   CompatBadge,
 } from "@/components/ReliabilityBadge";
 
-const COLORS = ['#2d7dff', '#00d4ff', '#6b7a99'];
+const CHART_COLORS = ["#D4AF37", "#64b4ff", "#6b7a99"];
 
 interface PlayerProfile {
   userId: number;
@@ -46,13 +42,61 @@ interface FindMatchesResponse {
   noMatchesMessage: string | null;
 }
 
-function ArchetypePill({ archetype }: { archetype: string }) {
-  const meta = ARCHETYPE_META[archetype as Archetype];
-  if (!meta) return null;
+function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className={cn("inline-flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded-full border", meta.color, meta.bg, meta.border)}>
-      {meta.icon} {meta.nameRu}
-    </span>
+    <div
+      className="uppercase font-semibold mb-3"
+      style={{ fontSize: "11px", letterSpacing: "0.08em", color: "rgba(255,255,255,0.4)" }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div
+      className="rounded-[20px]"
+      style={{
+        background: "hsl(220 20% 6%)",
+        border: "1px solid rgba(255,255,255,0.07)",
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function SettingsRow({
+  icon,
+  label,
+  value,
+  last,
+  accent,
+}: {
+  icon?: string;
+  label: string;
+  value?: React.ReactNode;
+  last?: boolean;
+  accent?: boolean;
+}) {
+  return (
+    <div
+      className="flex items-center justify-between px-5"
+      style={{
+        minHeight: "52px",
+        borderBottom: last ? "none" : "1px solid rgba(255,255,255,0.06)",
+      }}
+    >
+      <div className="flex items-center gap-3">
+        {icon && <span style={{ fontSize: "17px" }}>{icon}</span>}
+        <span style={{ fontSize: "15px", color: accent ? "#D4AF37" : "rgba(255,255,255,0.85)" }}>{label}</span>
+      </div>
+      {value !== undefined && (
+        <span style={{ fontSize: "14px", color: "rgba(255,255,255,0.45)" }}>{value}</span>
+      )}
+    </div>
   );
 }
 
@@ -60,7 +104,7 @@ export default function Profile() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const { data: stats, isLoading } = useGetPlayerStats(user?.id || 0, {
-    query: { enabled: !!user?.id, queryKey: getGetPlayerStatsQueryKey(user?.id || 0) }
+    query: { enabled: !!user?.id, queryKey: getGetPlayerStatsQueryKey(user?.id || 0) },
   });
 
   const { data: reliability, isLoading: reliabilityLoading } = useQuery({
@@ -77,288 +121,441 @@ export default function Profile() {
     retry: false,
   });
 
-  if (isLoading) return <AppLayout><div className="p-8">{t("profile.loadingProfile")}</div></AppLayout>;
+  if (isLoading) {
+    return (
+      <AppLayout>
+        <div className="max-w-2xl mx-auto px-6 space-y-4" style={{ paddingTop: "28px" }}>
+          {[1, 2, 3].map(i => (
+            <div key={i} className="rounded-[20px] animate-pulse" style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)", minHeight: "96px" }} />
+          ))}
+        </div>
+      </AppLayout>
+    );
+  }
 
   const archetype = user?.archetype as Archetype | undefined;
   const archetypeMeta = archetype ? ARCHETYPE_META[archetype] : null;
 
   return (
     <AppLayout>
-      <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-5 sm:space-y-8">
-        <header className="flex items-center gap-6">
-          <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center text-primary font-serif text-3xl border border-primary/30">
-            {user?.name?.[0]}
-          </div>
-          <div className="space-y-2">
-            <h1 className="text-3xl font-serif">{user?.name}</h1>
-            <div className="flex flex-wrap gap-2 items-center">
-              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-sm px-3">{user?.level}</Badge>
-              {user?.verified && (
-                <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 text-sm px-3">✓ {t("common.certified")}</Badge>
-              )}
-              {archetypeMeta && (
-                <Badge variant="outline" className={`text-sm px-3 ${archetypeMeta.color} ${archetypeMeta.bg} ${archetypeMeta.border}`}>
-                  {archetypeMeta.icon} {archetypeMeta.nameRu}
-                </Badge>
-              )}
-              {user?.warmUpPreference && (
-                <Badge variant="outline" className="text-sm px-3 text-orange-400 bg-orange-500/10 border-orange-500/20">{t("profile.warmupBadge")}</Badge>
-              )}
+      <div className="max-w-2xl mx-auto px-6 animate-fade-up" style={{ paddingTop: "28px", paddingBottom: "40px" }}>
+
+        {/* ── AVATAR + NAME ── */}
+        <header className="mb-8">
+          <div className="flex items-center gap-5">
+            {/* Avatar */}
+            <div
+              className="flex items-center justify-center flex-shrink-0 font-serif"
+              style={{
+                width: "72px",
+                height: "72px",
+                borderRadius: "50%",
+                background: "rgba(212,175,55,0.18)",
+                border: "1.5px solid rgba(212,175,55,0.3)",
+                color: "#D4AF37",
+                fontSize: "28px",
+              }}
+            >
+              {user?.name?.[0]}
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <h1 className="font-serif font-bold text-white truncate" style={{ fontSize: "24px" }}>
+                {user?.name}
+              </h1>
+
+              {/* Badges row */}
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {/* Level */}
+                <span
+                  className="rounded-full px-2.5 py-0.5 font-mono font-semibold"
+                  style={{ fontSize: "12px", background: "rgba(212,175,55,0.15)", border: "1px solid rgba(212,175,55,0.3)", color: "#D4AF37" }}
+                >
+                  {user?.level}
+                </span>
+
+                {/* Verified */}
+                {user?.verified && (
+                  <span
+                    className="rounded-full px-2.5 py-0.5"
+                    style={{ fontSize: "12px", background: "rgba(100,180,255,0.12)", border: "1px solid rgba(100,180,255,0.25)", color: "#64b4ff" }}
+                  >
+                    ✓ {t("common.certified")}
+                  </span>
+                )}
+
+                {/* Archetype */}
+                {archetypeMeta && (
+                  <span
+                    className={cn("rounded-full px-2.5 py-0.5", archetypeMeta.color, archetypeMeta.bg, archetypeMeta.border)}
+                    style={{ fontSize: "12px" }}
+                  >
+                    {archetypeMeta.icon} {archetypeMeta.nameRu}
+                  </span>
+                )}
+
+                {/* Warm-up */}
+                {user?.warmUpPreference && (
+                  <span
+                    className="rounded-full px-2.5 py-0.5"
+                    style={{ fontSize: "12px", background: "rgba(251,146,60,0.12)", border: "1px solid rgba(251,146,60,0.25)", color: "#fb923c" }}
+                  >
+                    {t("profile.warmupBadge")}
+                  </span>
+                )}
+              </div>
+
+              {/* Reliability inline */}
               {reliability && !reliabilityLoading && (
-                <span className="inline-flex items-center gap-1.5">
-                  <span className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0", reliabilityDotClass(reliability.reliabilityScore))} />
-                  <span className={cn("text-sm font-semibold tabular-nums", reliabilityColor(reliability.reliabilityScore))}>
+                <div className="flex items-center gap-1.5 mt-2">
+                  <span className={cn("w-2 h-2 rounded-full flex-shrink-0", reliabilityDotClass(reliability.reliabilityScore))} />
+                  <span className={cn("font-semibold tabular-nums", reliabilityColor(reliability.reliabilityScore))} style={{ fontSize: "13px" }}>
                     {reliability.reliabilityScore} · {reliabilityLabel(reliability.reliabilityScore)}
                   </span>
-                </span>
+                </div>
               )}
-              {user?.locationName && <span className="text-muted-foreground text-sm">{user.locationName}</span>}
             </div>
-            {!archetype && (
-              <Link href="/quiz">
-                <Button variant="outline" size="sm" className="border-primary/30 text-primary hover:bg-primary/10 mt-1">
-                  {t("profile.takeArchetypeQuiz")}
-                </Button>
-              </Link>
-            )}
           </div>
+
+          {/* Take quiz CTA */}
+          {!archetype && (
+            <Link href="/quiz">
+              <div
+                className="rounded-[20px] p-4 mt-4 flex items-center justify-between cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.98]"
+                style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.2)" }}
+              >
+                <div>
+                  <div style={{ fontSize: "15px", color: "#D4AF37", fontWeight: 600 }}>{t("profile.takeArchetypeQuiz")}</div>
+                  <div className="text-muted-foreground" style={{ fontSize: "12px" }}>Unlock archetype & smart matchmaking</div>
+                </div>
+                <span style={{ color: "#D4AF37", fontSize: "20px" }}>›</span>
+              </div>
+            </Link>
+          )}
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="bg-card border-white/5 md:col-span-2">
-            <CardHeader>
-              <CardTitle>{t("profile.levelProgression")}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between text-sm">
-                <span>{t("profile.currentLevel")} {user?.level}</span>
-                <span className="text-muted-foreground">{stats?.winsToNextLevel} {t("profile.winsToNext")}</span>
+        {/* ── LEVEL PROGRESSION ── */}
+        <section className="mb-4">
+          <SectionLabel>{t("profile.levelProgression")}</SectionLabel>
+          <Card>
+            <div className="p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-white font-medium" style={{ fontSize: "15px" }}>
+                  {t("profile.currentLevel")} {user?.level}
+                </span>
+                <span className="text-muted-foreground" style={{ fontSize: "13px" }}>
+                  {stats?.winsToNextLevel} {t("profile.winsToNext")}
+                </span>
               </div>
-              <Progress value={stats?.levelProgress || 0} className="h-3 bg-white/5" />
-              <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                <span>D-</span><span>D</span><span>D+</span><span>C-</span><span>C</span><span>C+</span>
+
+              {/* Custom progress bar */}
+              <div className="w-full rounded-full overflow-hidden" style={{ height: "6px", background: "rgba(255,255,255,0.08)" }}>
+                <div
+                  className="h-full rounded-full transition-all duration-700"
+                  style={{ width: `${stats?.levelProgress ?? 0}%`, background: "#D4AF37" }}
+                />
               </div>
-            </CardContent>
-          </Card>
 
-          <Card className="bg-card border-white/5">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{t("profile.levelConfidence")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-4xl font-mono text-accent">{stats?.levelConfidence || 0}%</div>
-              <p className="text-xs text-muted-foreground mt-2">{t("profile.confidenceDesc")}</p>
-            </CardContent>
-          </Card>
-        </div>
+              <div className="flex justify-between" style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)" }}>
+                {["D-", "D", "D+", "C-", "C", "C+"].map(l => <span key={l}>{l}</span>)}
+              </div>
+            </div>
 
+            {/* Level confidence */}
+            <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="flex items-center justify-between px-5" style={{ minHeight: "60px" }}>
+                <span className="text-muted-foreground" style={{ fontSize: "13px" }}>{t("profile.levelConfidence")}</span>
+                <span className="font-mono font-bold" style={{ fontSize: "24px", color: "#64b4ff" }}>
+                  {stats?.levelConfidence ?? 0}%
+                </span>
+              </div>
+            </div>
+          </Card>
+        </section>
+
+        {/* ── PLAY STYLE ── */}
         {(user?.levelSelf != null || user?.levelQuiz || user?.physicalSelf != null || user?.warmupFormat) && (
-          <Card className="bg-card border-white/5">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">{t("profile.playStyle")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {user?.levelSelf != null && (
-                  <div className="p-3 rounded-lg bg-white/5 border border-white/5 text-center">
-                    <div className="text-xs text-muted-foreground mb-1">{t("profile.selfAssessed")}</div>
-                    <div className="text-2xl font-mono text-primary font-bold">{user.levelSelf}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">/ 5.0</div>
-                  </div>
-                )}
-                {user?.levelQuiz && (
-                  <div className="p-3 rounded-lg bg-white/5 border border-white/5 text-center">
-                    <div className="text-xs text-muted-foreground mb-1">{t("profile.quizLevel")}</div>
-                    <div className="text-2xl font-mono text-accent font-bold">{user.levelQuiz}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">{t("profile.certified")}</div>
-                  </div>
-                )}
-                {user?.physicalSelf != null && (
-                  <div className="p-3 rounded-lg bg-white/5 border border-white/5 text-center">
-                    <div className="text-xs text-muted-foreground mb-1">{t("profile.physical")}</div>
-                    <div className="text-2xl font-mono text-foreground font-bold">{user.physicalSelf}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">/ 10</div>
-                  </div>
-                )}
-                {user?.warmupFormat && (
-                  <div className="p-3 rounded-lg bg-white/5 border border-white/5 text-center">
-                    <div className="text-xs text-muted-foreground mb-1">{t("profile.warmup")}</div>
-                    <div className="text-sm font-medium text-foreground capitalize mt-1">{user.warmupFormat}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">{t("profile.format")}</div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <section className="mb-4">
+            <SectionLabel>{t("profile.playStyle")}</SectionLabel>
+            <div className="grid grid-cols-2 gap-3">
+              {user?.levelSelf != null && (
+                <div
+                  className="rounded-[16px] p-4 text-center"
+                  style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.07)" }}
+                >
+                  <div className="text-muted-foreground mb-1" style={{ fontSize: "11px" }}>{t("profile.selfAssessed")}</div>
+                  <div className="font-mono font-bold" style={{ fontSize: "28px", color: "#D4AF37" }}>{user.levelSelf}</div>
+                  <div className="text-muted-foreground" style={{ fontSize: "11px" }}>/ 5.0</div>
+                </div>
+              )}
+              {user?.levelQuiz && (
+                <div
+                  className="rounded-[16px] p-4 text-center"
+                  style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(100,180,255,0.15)" }}
+                >
+                  <div className="text-muted-foreground mb-1" style={{ fontSize: "11px" }}>{t("profile.quizLevel")}</div>
+                  <div className="font-mono font-bold" style={{ fontSize: "28px", color: "#64b4ff" }}>{user.levelQuiz}</div>
+                  <div className="text-muted-foreground" style={{ fontSize: "11px" }}>{t("profile.certified")}</div>
+                </div>
+              )}
+              {user?.physicalSelf != null && (
+                <div
+                  className="rounded-[16px] p-4 text-center"
+                  style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.07)" }}
+                >
+                  <div className="text-muted-foreground mb-1" style={{ fontSize: "11px" }}>{t("profile.physical")}</div>
+                  <div className="font-mono font-bold text-white" style={{ fontSize: "28px" }}>{user.physicalSelf}</div>
+                  <div className="text-muted-foreground" style={{ fontSize: "11px" }}>/ 10</div>
+                </div>
+              )}
+              {user?.warmupFormat && (
+                <div
+                  className="rounded-[16px] p-4 text-center"
+                  style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.07)" }}
+                >
+                  <div className="text-muted-foreground mb-1" style={{ fontSize: "11px" }}>{t("profile.warmup")}</div>
+                  <div className="text-white font-medium capitalize" style={{ fontSize: "16px", marginTop: "6px" }}>{user.warmupFormat}</div>
+                  <div className="text-muted-foreground" style={{ fontSize: "11px" }}>{t("profile.format")}</div>
+                </div>
+              )}
+            </div>
+          </section>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Reliability */}
-          <Card className="bg-card border-white/5">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2">
-                {t("profile.reliability")}
-                {reliability && (
-                  <span className={cn("text-sm font-normal", reliabilityColor(reliability.reliabilityScore))}>
-                    · {reliability.source === "mongodb" ? t("profile.live") : t("profile.estimated")}
-                  </span>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {reliabilityLoading ? (
-                <div className="text-sm text-muted-foreground animate-pulse">{t("common.loading")}</div>
-              ) : !reliability ? (
-                <div className="text-sm text-muted-foreground italic">{t("profile.behavioralUnavailable")}</div>
-              ) : (
-                <div className="space-y-4">
+        {/* ── RELIABILITY ── */}
+        <section className="mb-4">
+          <SectionLabel>{t("profile.reliability")}</SectionLabel>
+          <Card>
+            {reliabilityLoading ? (
+              <div className="p-5 animate-pulse text-muted-foreground" style={{ fontSize: "14px" }}>{t("common.loading")}</div>
+            ) : !reliability ? (
+              <div className="p-5 text-muted-foreground italic" style={{ fontSize: "14px" }}>{t("profile.behavioralUnavailable")}</div>
+            ) : (
+              <div className="p-5 space-y-4">
+                {/* Score bar */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-muted-foreground" style={{ fontSize: "13px" }}>{t("profile.reliabilityScore")}</span>
+                    <span className={cn("font-semibold tabular-nums", reliabilityColor(reliability.reliabilityScore))} style={{ fontSize: "14px" }}>
+                      {reliability.reliabilityScore}/100 · {reliabilityLabel(reliability.reliabilityScore)}
+                    </span>
+                  </div>
+                  <div className="w-full rounded-full overflow-hidden" style={{ height: "6px", background: "rgba(255,255,255,0.08)" }}>
+                    <div
+                      className={cn("h-full rounded-full transition-all duration-700", reliabilityBarColor(reliability.reliabilityScore))}
+                      style={{ width: `${Math.max(0, Math.min(100, reliability.reliabilityScore))}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Stat cells */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div
+                    className="rounded-[14px] p-4 text-center"
+                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+                  >
+                    <div className="text-muted-foreground mb-1" style={{ fontSize: "11px" }}>{t("profile.noShows")}</div>
+                    <div
+                      className={cn("font-bold tabular-nums", reliability.noShowCount > 0 ? "text-red-400" : "text-emerald-400")}
+                      style={{ fontSize: "28px" }}
+                    >
+                      {reliability.noShowCount}
+                    </div>
+                    <div className="text-muted-foreground" style={{ fontSize: "11px" }}>{t("profile.totalMissed")}</div>
+                  </div>
+                  <div
+                    className="rounded-[14px] p-4 text-center"
+                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+                  >
+                    <div className="text-muted-foreground mb-1" style={{ fontSize: "11px" }}>{t("profile.sessionStreak")}</div>
+                    <div
+                      className={cn("font-bold tabular-nums", reliability.sessionStreak >= 3 ? "text-emerald-400" : "text-white")}
+                      style={{ fontSize: "28px" }}
+                    >
+                      {reliability.sessionStreak}
+                      {reliability.sessionStreak >= 3 && <span style={{ fontSize: "18px", marginLeft: "4px" }}>🔥</span>}
+                    </div>
+                    <div className="text-muted-foreground" style={{ fontSize: "11px" }}>{t("profile.consecutive")}</div>
+                  </div>
+                </div>
+
+                {/* Flags */}
+                {reliability.behavioralFlags.length > 0 && (
                   <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-muted-foreground">{t("profile.reliabilityScore")}</span>
-                      <span className={cn("text-sm font-semibold tabular-nums", reliabilityColor(reliability.reliabilityScore))}>
-                        {reliability.reliabilityScore}/100 · {reliabilityLabel(reliability.reliabilityScore)}
-                      </span>
+                    <div className="text-muted-foreground mb-2" style={{ fontSize: "12px" }}>{t("profile.flags")}</div>
+                    <div className="flex flex-wrap gap-2">
+                      {reliability.behavioralFlags.map(flag => (
+                        <span
+                          key={flag}
+                          className="rounded-full px-2.5 py-0.5"
+                          style={{ fontSize: "12px", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", color: "#fbbf24" }}
+                        >
+                          ⚑ {flag}
+                        </span>
+                      ))}
                     </div>
-                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                  </div>
+                )}
+              </div>
+            )}
+          </Card>
+        </section>
+
+        {/* ── TOP COMPATIBILITY ── */}
+        <section className="mb-4">
+          <SectionLabel>{t("profile.topCompatibility")}</SectionLabel>
+          <Card>
+            {!archetype ? (
+              <div className="p-5">
+                <p className="text-muted-foreground mb-4" style={{ fontSize: "14px" }}>{t("profile.takeQuizUnlock")}</p>
+                <Link href="/quiz">
+                  <button
+                    className="rounded-full font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    style={{ height: "44px", padding: "0 20px", fontSize: "14px", background: "#D4AF37", color: "#000" }}
+                  >
+                    {t("profile.takeQuiz")}
+                  </button>
+                </Link>
+              </div>
+            ) : matchesLoading ? (
+              <div className="p-5 animate-pulse text-muted-foreground" style={{ fontSize: "14px" }}>{t("common.loading")}</div>
+            ) : !topMatches?.matches?.length ? (
+              <div className="p-5 text-muted-foreground italic" style={{ fontSize: "14px" }}>
+                {topMatches?.noMatchesMessage ?? t("profile.noCompatible")}
+              </div>
+            ) : (
+              <div>
+                {topMatches.matches.map((match, i) => {
+                  const compatNote = archetype && match.archetype
+                    ? archetypeCompatibility(archetype, match.archetype as Archetype)
+                    : null;
+                  const isLast = i === topMatches.matches.length - 1;
+                  return (
+                    <div
+                      key={match.id}
+                      className="flex items-start gap-3 px-5 py-4"
+                      style={{
+                        borderBottom: isLast ? "none" : "1px solid rgba(255,255,255,0.06)",
+                        background: match.archetypeMatch ? "rgba(212,175,55,0.04)" : "transparent",
+                      }}
+                    >
                       <div
-                        className={cn("h-full rounded-full transition-all duration-500", reliabilityBarColor(reliability.reliabilityScore))}
-                        style={{ width: `${Math.max(0, Math.min(100, reliability.reliabilityScore))}%` }}
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 rounded-lg bg-white/5 border border-white/5">
-                      <div className="text-xs text-muted-foreground mb-1">{t("profile.noShows")}</div>
-                      <div className={cn("text-2xl font-bold tabular-nums", reliability.noShowCount > 0 ? "text-red-400" : "text-emerald-400")}>
-                        {reliability.noShowCount}
+                        className="flex items-center justify-center flex-shrink-0 font-serif"
+                        style={{
+                          width: "40px",
+                          height: "40px",
+                          borderRadius: "50%",
+                          background: match.archetypeMatch ? "rgba(212,175,55,0.18)" : "rgba(255,255,255,0.08)",
+                          color: match.archetypeMatch ? "#D4AF37" : "rgba(255,255,255,0.7)",
+                          fontSize: "16px",
+                        }}
+                      >
+                        {match.name[0]}
                       </div>
-                      <div className="text-xs text-muted-foreground">{t("profile.totalMissed")}</div>
-                    </div>
-                    <div className="p-3 rounded-lg bg-white/5 border border-white/5">
-                      <div className="text-xs text-muted-foreground mb-1">{t("profile.sessionStreak")}</div>
-                      <div className={cn("text-2xl font-bold tabular-nums", reliability.sessionStreak >= 3 ? "text-emerald-400" : "text-foreground")}>
-                        {reliability.sessionStreak}
-                        {reliability.sessionStreak >= 3 && <span className="text-base ml-1">🔥</span>}
-                      </div>
-                      <div className="text-xs text-muted-foreground">{t("profile.consecutive")}</div>
-                    </div>
-                  </div>
-                  {reliability.behavioralFlags.length > 0 && (
-                    <div>
-                      <div className="text-xs text-muted-foreground mb-2">{t("profile.flags")}</div>
-                      <div className="flex flex-wrap gap-2">
-                        {reliability.behavioralFlags.map((flag) => (
-                          <Badge key={flag} variant="outline" className="text-xs border-amber-500/30 text-amber-400 bg-amber-500/10">
-                            ⚑ {flag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Compatibility */}
-          <Card className="bg-card border-white/5">
-            <CardHeader className="pb-3">
-              <CardTitle>{t("profile.topCompatibility")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {!archetype ? (
-                <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">{t("profile.takeQuizUnlock")}</p>
-                  <Link href="/quiz">
-                    <Button variant="outline" size="sm" className="border-primary/30 text-primary hover:bg-primary/10">
-                      {t("profile.takeQuiz")}
-                    </Button>
-                  </Link>
-                </div>
-              ) : matchesLoading ? (
-                <div className="text-sm text-muted-foreground animate-pulse">{t("common.loading")}</div>
-              ) : !topMatches?.matches?.length ? (
-                <div className="text-sm text-muted-foreground italic">
-                  {topMatches?.noMatchesMessage ?? t("profile.noCompatible")}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {topMatches.matches.map((match) => {
-                    const compatNote = archetype && match.archetype
-                      ? archetypeCompatibility(archetype, match.archetype as Archetype)
-                      : null;
-                    return (
-                      <div key={match.id} className={cn(
-                        "flex items-start gap-3 p-3 rounded-xl border",
-                        match.archetypeMatch ? "border-primary/25 bg-primary/5" : "border-white/5 bg-white/[0.02]"
-                      )}>
-                        <div className={cn(
-                          "w-9 h-9 rounded-full flex items-center justify-center text-sm font-serif flex-shrink-0",
-                          match.archetypeMatch ? "bg-primary/20 text-primary" : "bg-white/10 text-foreground"
-                        )}>
-                          {match.name[0]}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-medium">{match.name}</span>
-                            {match.verified && <span className="text-accent text-xs">✓</span>}
-                            {match.archetypeMatch && (
-                              <span className="text-xs text-primary bg-primary/10 border border-primary/20 rounded-full px-1.5 py-0.5">{t("profile.archetypeMatch")}</span>
-                            )}
-                            <CompatBadge pct={match.compatibilityScore} />
-                          </div>
-                          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                            <span className="text-xs text-muted-foreground font-mono">{match.level}</span>
-                            {match.archetype && <ArchetypePill archetype={match.archetype} />}
-                          </div>
-                          {compatNote && (
-                            <div className="text-xs text-muted-foreground/60 mt-0.5 truncate">{compatNote}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                          <span className="text-white font-medium" style={{ fontSize: "15px" }}>{match.name}</span>
+                          {match.verified && <span style={{ fontSize: "12px", color: "#64b4ff" }}>✓</span>}
+                          {match.archetypeMatch && (
+                            <span
+                              className="rounded-full px-2 py-0.5"
+                              style={{ fontSize: "11px", background: "rgba(212,175,55,0.12)", border: "1px solid rgba(212,175,55,0.25)", color: "#D4AF37" }}
+                            >
+                              {t("profile.archetypeMatch")}
+                            </span>
                           )}
+                          <CompatBadge pct={match.compatibilityScore} />
                         </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-mono text-muted-foreground" style={{ fontSize: "12px" }}>{match.level}</span>
+                          {match.archetype && (() => {
+                            const meta = ARCHETYPE_META[match.archetype as Archetype];
+                            return meta ? (
+                              <span
+                                className={cn("rounded-full px-2 py-0.5 text-xs border", meta.color, meta.bg, meta.border)}
+                                style={{ fontSize: "11px" }}
+                              >
+                                {meta.icon} {meta.nameRu}
+                              </span>
+                            ) : null;
+                          })()}
+                        </div>
+                        {compatNote && (
+                          <div className="text-muted-foreground/60 truncate mt-0.5" style={{ fontSize: "11px" }}>{compatNote}</div>
+                        )}
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </Card>
-        </div>
+        </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="bg-card border-white/5">
-            <CardHeader><CardTitle>{t("profile.winTrend")}</CardTitle></CardHeader>
-            <CardContent className="h-64">
-              {stats?.winTrend && (
+        {/* ── CHARTS ── */}
+        <section className="mb-4">
+          <SectionLabel>{t("profile.winTrend")}</SectionLabel>
+          <Card style={{ padding: "20px" }}>
+            <div style={{ height: "200px" }}>
+              {stats?.winTrend ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={stats.winTrend}>
-                    <XAxis dataKey="date" stroke="#6b7a99" fontSize={12} />
-                    <YAxis stroke="#6b7a99" fontSize={12} />
-                    <Tooltip contentStyle={{backgroundColor: '#0d1420', border: '1px solid rgba(255,255,255,0.1)'}} />
-                    <Line type="monotone" dataKey="winRate" stroke="#2d7dff" strokeWidth={3} dot={false} />
+                    <XAxis dataKey="date" stroke="rgba(255,255,255,0.2)" fontSize={11} />
+                    <YAxis stroke="rgba(255,255,255,0.2)" fontSize={11} />
+                    <Tooltip contentStyle={{ backgroundColor: "hsl(220 20% 8%)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "12px", fontSize: "12px" }} />
+                    <Line type="monotone" dataKey="winRate" stroke="#D4AF37" strokeWidth={2.5} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground" style={{ fontSize: "14px" }}>
+                  No data yet
+                </div>
               )}
-            </CardContent>
+            </div>
           </Card>
+        </section>
 
-          <Card className="bg-card border-white/5">
-            <CardHeader><CardTitle>{t("profile.formatBreakdown")}</CardTitle></CardHeader>
-            <CardContent className="h-64 flex items-center justify-center">
-              {stats?.formatBreakdown && (
+        <section className="mb-4">
+          <SectionLabel>{t("profile.formatBreakdown")}</SectionLabel>
+          <Card style={{ padding: "20px" }}>
+            <div style={{ height: "200px" }}>
+              {stats?.formatBreakdown ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={stats.formatBreakdown} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="count" nameKey="format">
-                      {stats.formatBreakdown.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Pie
+                      data={stats.formatBreakdown}
+                      cx="50%" cy="50%"
+                      innerRadius={55} outerRadius={75}
+                      paddingAngle={4}
+                      dataKey="count"
+                      nameKey="format"
+                    >
+                      {stats.formatBreakdown.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={{backgroundColor: '#0d1420', border: '1px solid rgba(255,255,255,0.1)'}} />
+                    <Tooltip contentStyle={{ backgroundColor: "hsl(220 20% 8%)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "12px", fontSize: "12px" }} />
                   </PieChart>
                 </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground" style={{ fontSize: "14px" }}>
+                  No data yet
+                </div>
               )}
-            </CardContent>
+            </div>
           </Card>
-        </div>
+        </section>
+
+        {/* ── SETTINGS ROW — account actions ── */}
+        <section className="mb-4">
+          <SectionLabel>Account</SectionLabel>
+          <Card>
+            <Link href="/quiz">
+              <SettingsRow icon="🧠" label="Retake Archetype Quiz" last />
+            </Link>
+          </Card>
+        </section>
+
       </div>
     </AppLayout>
   );

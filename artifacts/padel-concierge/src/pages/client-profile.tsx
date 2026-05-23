@@ -6,7 +6,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ToastAction } from "@/components/ui/toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -33,6 +32,17 @@ const PRESET_FLAGS = [
   "Poor sportsmanship",
   "Payment dispute",
 ];
+
+function LevelBadge({ level }: { level: string }) {
+  return (
+    <span
+      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border flex-shrink-0"
+      style={{ color: "#D4AF37", borderColor: "rgba(212,175,55,0.30)", background: "rgba(212,175,55,0.08)" }}
+    >
+      Level {level}
+    </span>
+  );
+}
 
 function BehavioralStats({
   loading,
@@ -139,66 +149,82 @@ function BehavioralStats({
   });
 
   return (
-    <div className="rounded-[20px] bg-card border border-white/5">
-      <div className="px-4 pt-4 pb-2">
-        <div className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-          📊 Behavioral Stats
+    <div
+      className="rounded-[20px] overflow-hidden"
+      style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
+    >
+      <div className="px-5 pt-4 pb-2 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-muted-foreground uppercase tracking-wider" style={{ fontSize: "11px" }}>
+            📊 Behavioral Stats
+          </span>
           {data?.source === "mongodb" && (
-            <span className="text-xs font-normal text-emerald-400/70 normal-case tracking-normal">live</span>
+            <span style={{ fontSize: "11px", color: "#4ade80" }}>live</span>
           )}
           {data?.source === "default" && (
-            <span className="text-xs font-normal text-amber-400/70 normal-case tracking-normal">estimated</span>
-          )}
-          {canEdit && !loading && data && !editing && (
-            <button
-              className="ml-auto inline-flex items-center justify-center rounded-lg border border-white/10 bg-transparent text-muted-foreground hover:text-foreground px-2 h-6 text-xs transition-colors"
-              onClick={openEdit}
-            >
-              ✏ Edit / Flag
-            </button>
-          )}
-          {editing && (
-            <button
-              className="ml-auto inline-flex items-center justify-center rounded-lg bg-transparent text-muted-foreground hover:text-foreground px-2 h-6 text-xs transition-colors"
-              onClick={() => setEditing(false)}
-            >
-              ✕ Cancel
-            </button>
+            <span style={{ fontSize: "11px", color: "#fbbf24" }}>estimated</span>
           )}
         </div>
+        {canEdit && !loading && data && !editing && (
+          <button
+            className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-white transition-colors"
+            style={{ border: "1px solid rgba(255,255,255,0.10)", height: "28px", paddingLeft: "10px", paddingRight: "10px", fontSize: "12px", background: "transparent" }}
+            onClick={openEdit}
+          >
+            ✏ Edit / Flag
+          </button>
+        )}
+        {editing && (
+          <button
+            className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-white transition-colors"
+            style={{ height: "28px", paddingLeft: "10px", paddingRight: "10px", fontSize: "12px", background: "transparent" }}
+            onClick={() => setEditing(false)}
+          >
+            ✕ Cancel
+          </button>
+        )}
       </div>
-      <div className="px-4 pb-4">
+      <div className="px-5 pb-5 pt-4">
         {loading ? (
-          <div className="text-sm text-muted-foreground animate-pulse">Loading…</div>
+          <div className="text-muted-foreground animate-pulse" style={{ fontSize: "14px" }}>Loading…</div>
         ) : !data ? (
-          <div className="text-sm text-muted-foreground italic">
+          <div className="text-muted-foreground italic" style={{ fontSize: "14px" }}>
             Analytics unavailable — behavioral data service is offline.
           </div>
         ) : editing ? (
           <div className="space-y-4">
-            {/* Score override */}
             <div>
-              <Label className="text-xs text-muted-foreground mb-1.5 block">Override Reliability Score (0–100)</Label>
+              <Label className="text-muted-foreground mb-1.5 block" style={{ fontSize: "12px" }}>
+                Override Reliability Score (0–100)
+              </Label>
               <div className="flex items-center gap-3">
-                <Input
+                <input
                   type="number"
                   min={0}
                   max={100}
                   value={scoreInput}
                   onChange={e => setScoreInput(e.target.value)}
-                  className="bg-background border-white/10 text-sm w-24 tabular-nums"
+                  className="text-white outline-none tabular-nums rounded-xl"
+                  style={{
+                    width: "96px",
+                    height: "44px",
+                    paddingLeft: "12px",
+                    paddingRight: "12px",
+                    background: "rgba(0,0,0,0.4)",
+                    border: "1px solid rgba(255,255,255,0.10)",
+                    fontSize: "14px",
+                  }}
                 />
                 {scoreInput !== "" && !isNaN(parseInt(scoreInput, 10)) && (
-                  <span className={cn("text-sm font-semibold tabular-nums", reliabilityColor(parseInt(scoreInput, 10)))}>
+                  <span className={cn("font-semibold tabular-nums", reliabilityColor(parseInt(scoreInput, 10)))} style={{ fontSize: "14px" }}>
                     {reliabilityLabel(parseInt(scoreInput, 10))}
                   </span>
                 )}
               </div>
             </div>
 
-            {/* Preset flags */}
             <div>
-              <Label className="text-xs text-muted-foreground mb-2 block">Behavioral Flags</Label>
+              <Label className="text-muted-foreground mb-2 block" style={{ fontSize: "12px" }}>Behavioral Flags</Label>
               <div className="flex flex-wrap gap-2 mb-2">
                 {PRESET_FLAGS.map(flag => (
                   <button
@@ -206,34 +232,43 @@ function BehavioralStats({
                     type="button"
                     onClick={() => togglePreset(flag)}
                     className={cn(
-                      "text-xs px-2.5 py-1 rounded-full border transition-colors",
+                      "rounded-full border transition-colors",
                       pendingFlags.includes(flag)
                         ? "border-amber-500/60 bg-amber-500/15 text-amber-400"
                         : "border-white/10 bg-white/5 text-muted-foreground hover:border-white/20"
                     )}
+                    style={{ fontSize: "12px", padding: "4px 10px" }}
                   >
                     {pendingFlags.includes(flag) ? "⚑ " : "+ "}{flag}
                   </button>
                 ))}
               </div>
-              {/* Custom flag */}
               <div className="flex gap-2">
-                <Input
+                <input
+                  type="text"
                   placeholder="Custom flag…"
                   value={customFlag}
                   onChange={e => setCustomFlag(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && addCustom()}
-                  className="bg-background border-white/10 text-sm h-8"
+                  className="flex-1 text-white placeholder-muted-foreground outline-none rounded-xl"
+                  style={{
+                    height: "44px",
+                    paddingLeft: "14px",
+                    paddingRight: "14px",
+                    background: "rgba(0,0,0,0.4)",
+                    border: "1px solid rgba(255,255,255,0.10)",
+                    fontSize: "14px",
+                  }}
                 />
                 <button
-                  className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-transparent text-foreground px-3 h-8 text-xs transition-colors hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center justify-center rounded-xl text-white transition-colors hover:bg-white/[0.08] disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{ border: "1px solid rgba(255,255,255,0.12)", height: "44px", paddingLeft: "16px", paddingRight: "16px", fontSize: "14px", background: "transparent" }}
                   onClick={addCustom}
                   disabled={!customFlag.trim()}
                 >
                   Add
                 </button>
               </div>
-              {/* Active custom flags not in preset list */}
               {pendingFlags.filter(f => !PRESET_FLAGS.includes(f)).length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
                   {pendingFlags.filter(f => !PRESET_FLAGS.includes(f)).map(f => (
@@ -241,7 +276,8 @@ function BehavioralStats({
                       key={f}
                       type="button"
                       onClick={() => setPendingFlags(prev => prev.filter(p => p !== f))}
-                      className="text-xs px-2.5 py-1 rounded-full border border-amber-500/60 bg-amber-500/15 text-amber-400 hover:bg-red-500/15 hover:border-red-500/40 hover:text-red-400 transition-colors"
+                      className="rounded-full border border-amber-500/60 bg-amber-500/15 text-amber-400 hover:bg-red-500/15 hover:border-red-500/40 hover:text-red-400 transition-colors"
+                      style={{ fontSize: "12px", padding: "4px 10px" }}
                     >
                       ⚑ {f} ×
                     </button>
@@ -251,7 +287,8 @@ function BehavioralStats({
             </div>
 
             <button
-              className="w-full inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold h-9 text-sm transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full inline-flex items-center justify-center rounded-xl font-semibold text-black transition-all active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ background: "#D4AF37", height: "44px", fontSize: "15px" }}
               onClick={() => saveFlags.mutate()}
               disabled={saveFlags.isPending}
             >
@@ -260,15 +297,14 @@ function BehavioralStats({
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Reliability score */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-sm text-muted-foreground">Reliability Score</span>
-                <span className={cn("text-sm font-semibold tabular-nums", reliabilityColor(data.reliabilityScore))}>
+                <span className="text-muted-foreground" style={{ fontSize: "13px" }}>Reliability Score</span>
+                <span className={cn("font-semibold tabular-nums", reliabilityColor(data.reliabilityScore))} style={{ fontSize: "13px" }}>
                   {data.reliabilityScore}/100 · {reliabilityLabel(data.reliabilityScore)}
                 </span>
               </div>
-              <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+              <div className="w-full rounded-full overflow-hidden" style={{ height: "6px", background: "rgba(255,255,255,0.10)" }}>
                 <div
                   className={cn("h-full rounded-full transition-all duration-500", reliabilityBarColor(data.reliabilityScore))}
                   style={{ width: `${Math.max(0, Math.min(100, data.reliabilityScore))}%` }}
@@ -276,34 +312,39 @@ function BehavioralStats({
               </div>
             </div>
 
-            {/* Stats row */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-lg bg-white/5 border border-white/5">
-                <div className="text-xs text-muted-foreground mb-1">No-shows</div>
-                <div className={cn("text-xl font-bold tabular-nums", data.noShowCount > 0 ? "text-red-400" : "text-emerald-400")}>
+              <div
+                className="p-3 rounded-xl"
+                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+              >
+                <div className="text-muted-foreground mb-1" style={{ fontSize: "12px" }}>No-shows</div>
+                <div className={cn("font-bold tabular-nums", data.noShowCount > 0 ? "text-red-400" : "text-emerald-400")} style={{ fontSize: "22px" }}>
                   {data.noShowCount}
                 </div>
-                <div className="text-xs text-muted-foreground">total missed</div>
+                <div className="text-muted-foreground" style={{ fontSize: "11px" }}>total missed</div>
               </div>
-              <div className="p-3 rounded-lg bg-white/5 border border-white/5">
-                <div className="text-xs text-muted-foreground mb-1">Session streak</div>
-                <div className={cn("text-xl font-bold tabular-nums", data.sessionStreak >= 3 ? "text-emerald-400" : "text-foreground")}>
+              <div
+                className="p-3 rounded-xl"
+                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+              >
+                <div className="text-muted-foreground mb-1" style={{ fontSize: "12px" }}>Session streak</div>
+                <div className={cn("font-bold tabular-nums", data.sessionStreak >= 3 ? "text-emerald-400" : "text-white")} style={{ fontSize: "22px" }}>
                   {data.sessionStreak}
-                  {data.sessionStreak >= 3 && <span className="text-base ml-1">🔥</span>}
+                  {data.sessionStreak >= 3 && <span style={{ fontSize: "18px" }} className="ml-1">🔥</span>}
                 </div>
-                <div className="text-xs text-muted-foreground">consecutive</div>
+                <div className="text-muted-foreground" style={{ fontSize: "11px" }}>consecutive</div>
               </div>
             </div>
 
-            {/* Behavioral flags */}
             {data.behavioralFlags.length > 0 && (
               <div>
-                <div className="text-xs text-muted-foreground mb-2">Flags</div>
+                <div className="text-muted-foreground mb-2" style={{ fontSize: "12px" }}>Flags</div>
                 <div className="flex flex-wrap gap-2">
                   {data.behavioralFlags.map((flag) => (
                     <span
                       key={flag}
-                      className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border border-amber-500/30 text-amber-400 bg-amber-500/10"
+                      className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 text-amber-400"
+                      style={{ fontSize: "12px", padding: "4px 10px", background: "rgba(245,158,11,0.10)" }}
                     >
                       ⚑ {flag}
                       {canEdit && (
@@ -329,11 +370,6 @@ function BehavioralStats({
   );
 }
 
-const LEVEL_COLORS: Record<string, string> = {
-  "C+": "text-blue-400 bg-blue-500/10 border-blue-500/20",
-  "C":  "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
-  "B":  "text-green-400 bg-green-500/10 border-green-500/20",
-};
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function ClientProfile() {
@@ -417,29 +453,39 @@ export default function ClientProfile() {
 
   return (
     <AppLayout>
-      <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-4 sm:space-y-6">
+      <div className="px-4 sm:px-6 max-w-4xl mx-auto" style={{ paddingTop: "24px", paddingBottom: "40px" }}>
+
         {/* Header */}
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-primary font-serif text-2xl">
+            <div
+              className="rounded-full flex items-center justify-center font-serif flex-shrink-0"
+              style={{ width: "64px", height: "64px", background: "rgba(212,175,55,0.12)", color: "#D4AF37", fontSize: "24px" }}
+            >
               {client.avatarInitials}
             </div>
             <div>
-              <h1 className="text-2xl font-serif">{client.name}</h1>
-              <div className="flex items-center gap-2 mt-1">
-                <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border", LEVEL_COLORS[client.level] ?? "border-white/10 text-muted-foreground")}>
+              <h1 className="font-serif font-bold text-white mb-1" style={{ fontSize: "24px" }}>{client.name}</h1>
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border"
+                  style={{ color: "#D4AF37", borderColor: "rgba(212,175,55,0.30)", background: "rgba(212,175,55,0.08)" }}
+                >
                   Level {client.level}
                 </span>
-                {client.phone && <span className="text-sm text-muted-foreground">📱 {client.phone}</span>}
-                {client.email && <span className="text-sm text-muted-foreground">✉ {client.email}</span>}
+                {client.phone && <span className="text-muted-foreground" style={{ fontSize: "13px" }}>📱 {client.phone}</span>}
+                {client.email && <span className="text-muted-foreground" style={{ fontSize: "13px" }}>✉ {client.email}</span>}
               </div>
-              <div className="text-sm text-muted-foreground mt-1 capitalize">
+              <div className="text-muted-foreground mt-1 capitalize" style={{ fontSize: "13px" }}>
                 {client.bookingPattern.replace("_", " ")} · {client.pricePerSession} AED/session · {client.totalSessions} sessions total
               </div>
             </div>
           </div>
           <Link href="/clients">
-            <button className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent text-foreground px-3 h-9 text-sm font-medium transition-all hover:bg-white/5">
+            <button
+              className="inline-flex items-center justify-center rounded-xl font-medium text-white transition-all hover:bg-white/[0.06] active:scale-[0.97] flex-shrink-0"
+              style={{ border: "1px solid rgba(255,255,255,0.12)", height: "44px", paddingLeft: "16px", paddingRight: "16px", fontSize: "14px", background: "transparent" }}
+            >
               ← Back
             </button>
           </Link>
@@ -447,16 +493,29 @@ export default function ClientProfile() {
 
         {/* Recurring schedule */}
         {recurring.length > 0 && (
-          <div className="rounded-[20px] bg-card border border-white/5">
-            <div className="p-4">
-              <div className="text-sm font-medium mb-2 text-muted-foreground uppercase tracking-wider text-xs">Recurring Slots</div>
-              <div className="flex flex-wrap gap-2">
-                {recurring.map((s: any) => (
-                  <span key={s.id} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border bg-primary/10 text-primary border-primary/20">
-                    {DAY_NAMES[s.dayOfWeek]} {s.startTime}–{s.endTime}
-                  </span>
-                ))}
-              </div>
+          <div
+            className="rounded-[20px] mb-5 p-5"
+            style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
+          >
+            <div className="text-muted-foreground uppercase tracking-wider mb-3" style={{ fontSize: "11px" }}>
+              Recurring Slots
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {recurring.map((s: any) => (
+                <span
+                  key={s.id}
+                  className="inline-flex items-center rounded-full border font-medium"
+                  style={{
+                    padding: "4px 12px",
+                    fontSize: "13px",
+                    color: "#D4AF37",
+                    borderColor: "rgba(212,175,55,0.25)",
+                    background: "rgba(212,175,55,0.08)",
+                  }}
+                >
+                  {DAY_NAMES[s.dayOfWeek]} {s.startTime}–{s.endTime}
+                </span>
+              ))}
             </div>
           </div>
         )}
@@ -469,59 +528,54 @@ export default function ClientProfile() {
           const pct = Math.min(100, (used / total) * 100);
           const exhausted = remaining <= 0;
           return (
-            <div className={cn(
-              "p-4 rounded-xl border",
-              exhausted
-                ? "bg-amber-500/5 border-amber-500/20"
-                : "bg-primary/5 border-primary/20"
-            )}>
+            <div
+              className="p-5 rounded-[20px] mb-5"
+              style={{
+                background: exhausted ? "rgba(245,158,11,0.06)" : "rgba(212,175,55,0.06)",
+                border: exhausted ? "1px solid rgba(245,158,11,0.20)" : "1px solid rgba(212,175,55,0.20)",
+              }}
+            >
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">Пакет сессий</div>
-                  <div className="font-semibold text-foreground">
-                    Сессий использовано: <span className={exhausted ? "text-amber-400" : "text-primary"}>{used}</span> / {total}
+                  <div className="text-muted-foreground uppercase tracking-wider mb-0.5" style={{ fontSize: "11px" }}>Пакет сессий</div>
+                  <div className="font-semibold text-white" style={{ fontSize: "15px" }}>
+                    Сессий использовано:{" "}
+                    <span style={{ color: exhausted ? "#fbbf24" : "#D4AF37" }}>{used}</span> / {total}
                   </div>
                   {!exhausted && (
-                    <div className="text-xs text-muted-foreground mt-0.5">Осталось: {remaining}</div>
+                    <div className="text-muted-foreground mt-0.5" style={{ fontSize: "12px" }}>Осталось: {remaining}</div>
                   )}
                 </div>
-                {!exhausted ? (
+                {!exhausted && (
                   <button
-                    className="inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-3 h-9 text-sm transition-all hover:bg-primary/90 disabled:opacity-50 shrink-0"
+                    className="inline-flex items-center justify-center rounded-xl font-semibold text-black transition-all active:scale-[0.97] disabled:opacity-40 flex-shrink-0"
+                    style={{ background: "#D4AF37", height: "44px", paddingLeft: "14px", paddingRight: "14px", fontSize: "13px" }}
                     onClick={() => markSession.mutate()}
                     disabled={markSession.isPending}
                   >
                     {markSession.isPending ? "…" : "+ Отметить тренировку"}
                   </button>
-                ) : null}
+                )}
               </div>
-
-              {/* Progress bar */}
-              <div className="w-full h-2.5 bg-white/10 rounded-full overflow-hidden mb-2">
+              <div className="w-full rounded-full overflow-hidden mb-2" style={{ height: "8px", background: "rgba(255,255,255,0.10)" }}>
                 <div
-                  className={cn(
-                    "h-full rounded-full transition-all duration-500",
-                    exhausted ? "bg-amber-500" : "bg-primary"
-                  )}
-                  style={{ width: `${pct}%` }}
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${pct}%`, background: exhausted ? "#f59e0b" : "#D4AF37" }}
                 />
               </div>
-
-              {/* Confirmation flash */}
               {justMarked !== null && (
-                <div className="mt-2 text-sm text-emerald-400 font-medium">
+                <div className="mt-2 font-medium" style={{ fontSize: "14px", color: "#4ade80" }}>
                   ✓ Тренировка {justMarked} отмечена
                 </div>
               )}
-
-              {/* Exhausted CTA */}
               {exhausted && (
                 <div className="mt-2 flex items-center justify-between">
-                  <span className="text-sm text-amber-400 font-medium">
+                  <span className="font-medium" style={{ fontSize: "14px", color: "#fbbf24" }}>
                     Пакет завершён. Предложить продление?
                   </span>
                   <button
-                    className="inline-flex items-center justify-center rounded-xl border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 bg-transparent font-medium px-3 h-9 text-sm transition-all shrink-0"
+                    className="inline-flex items-center justify-center rounded-xl font-medium transition-all hover:bg-amber-500/10 active:scale-[0.97] flex-shrink-0"
+                    style={{ border: "1px solid rgba(245,158,11,0.30)", color: "#fbbf24", height: "44px", paddingLeft: "14px", paddingRight: "14px", fontSize: "13px", background: "transparent" }}
                     onClick={() => {
                       const msg = `Привет! Твой пакет из ${total} тренировок завершён. Готов продолжить? 💪`;
                       window.open(`https://wa.me/${client.phone?.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`);
@@ -537,22 +591,27 @@ export default function ClientProfile() {
 
         {/* Next session plan */}
         {client.nextSessionPlan && (
-          <div className="p-4 rounded-xl bg-accent/5 border border-accent/20 text-sm">
-            <span className="text-accent font-medium">📋 Next Session Plan: </span>
-            <span className="text-foreground">{client.nextSessionPlan}</span>
+          <div
+            className="p-4 rounded-[20px] mb-5"
+            style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.18)", fontSize: "14px" }}
+          >
+            <span style={{ color: "#D4AF37", fontWeight: 600 }}>📋 Next Session Plan: </span>
+            <span className="text-white">{client.nextSessionPlan}</span>
           </div>
         )}
 
         {/* Behavioral Stats */}
-        <BehavioralStats
-          loading={behavioralLoading}
-          data={behavioralData ?? null}
-          playerId={id!}
-          canEdit={canEditBehavior}
-          onUpdated={(updated) => {
-            qc.setQueryData(["player-profile", id], updated);
-          }}
-        />
+        <div className="mb-5">
+          <BehavioralStats
+            loading={behavioralLoading}
+            data={behavioralData ?? null}
+            playerId={id!}
+            canEdit={canEditBehavior}
+            onUpdated={(updated) => {
+              qc.setQueryData(["player-profile", id], updated);
+            }}
+          />
+        </div>
 
         <Tabs defaultValue="sessions">
           <TabsList className="bg-card border-white/5">
@@ -562,85 +621,117 @@ export default function ClientProfile() {
           </TabsList>
 
           {/* SESSIONS */}
-          <TabsContent value="sessions" className="mt-4 space-y-3">
+          <TabsContent value="sessions" className="mt-4">
             {sessions.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground text-sm">No sessions yet</div>
+              <div className="text-center py-12 text-muted-foreground" style={{ fontSize: "14px" }}>No sessions yet</div>
             ) : (
-              sessions.map((s: any) => (
-                <div key={s.id} className="rounded-[20px] bg-card border border-white/5">
-                  <div className="p-4">
-                    <div className="flex items-start justify-between mb-3">
+              <div
+                className="rounded-[20px] overflow-hidden"
+                style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
+              >
+                {sessions.map((s: any, i: number) => (
+                  <div
+                    key={s.id}
+                    className="px-5 py-4"
+                    style={{ borderBottom: i < sessions.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none" }}
+                  >
+                    <div className="flex items-start justify-between mb-2">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs text-muted-foreground font-mono bg-primary/10 text-primary px-2 py-0.5 rounded">
+                          <span
+                            className="font-mono rounded font-medium"
+                            style={{ fontSize: "11px", padding: "2px 8px", color: "#D4AF37", background: "rgba(212,175,55,0.10)" }}
+                          >
                             Session {s.sessionNumber}
                           </span>
-                          <span className="font-medium">{s.topic}</span>
+                          <span className="font-medium text-white" style={{ fontSize: "14px" }}>{s.topic}</span>
                         </div>
-                        <div className="text-xs text-muted-foreground">{s.date} · {s.time} · {s.durationMinutes} min{s.court ? ` · ${s.court}` : ""}</div>
+                        <div className="text-muted-foreground" style={{ fontSize: "12px" }}>
+                          {s.date} · {s.time} · {s.durationMinutes} min{s.court ? ` · ${s.court}` : ""}
+                        </div>
                       </div>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border border-white/10 text-muted-foreground capitalize">
+                      <span
+                        className="inline-flex items-center rounded-full border capitalize text-muted-foreground flex-shrink-0"
+                        style={{ fontSize: "11px", padding: "2px 8px", border: "1px solid rgba(255,255,255,0.10)" }}
+                      >
                         {s.status}
                       </span>
                     </div>
                     {s.subtopics?.length > 0 && (
                       <div className="flex flex-wrap gap-1 mb-2">
                         {s.subtopics.map((t: string) => (
-                          <span key={t} className="text-xs px-2 py-0.5 rounded bg-white/5 text-muted-foreground">{t}</span>
+                          <span
+                            key={t}
+                            className="text-muted-foreground rounded"
+                            style={{ fontSize: "11px", padding: "2px 8px", background: "rgba(255,255,255,0.05)" }}
+                          >
+                            {t}
+                          </span>
                         ))}
                       </div>
                     )}
                     {s.coachNotes && (
-                      <p className="text-sm text-muted-foreground mt-2 border-t border-white/5 pt-2">{s.coachNotes}</p>
+                      <p className="text-muted-foreground mt-2 pt-2" style={{ fontSize: "13px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                        {s.coachNotes}
+                      </p>
                     )}
                     {s.nextSessionFocus && (
-                      <div className="mt-2 text-xs text-accent">→ Next: {s.nextSessionFocus}</div>
+                      <div className="mt-2" style={{ fontSize: "12px", color: "#D4AF37" }}>→ Next: {s.nextSessionFocus}</div>
                     )}
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </TabsContent>
 
           {/* POST-MATCH NOTES */}
-          <TabsContent value="notes" className="mt-4 space-y-3">
-            {/* Add new question */}
-            <div className="rounded-[20px] bg-card border border-white/5">
-              <div className="p-4 space-y-3">
-                <Label className="text-sm font-medium">Record Post-Match Question</Label>
-                <Textarea
-                  placeholder="Question asked on court (e.g. Как улучшить технику виоловки?)"
-                  value={newQuestion}
-                  onChange={(e) => setNewQuestion(e.target.value)}
-                  className="bg-background border-white/10 resize-none"
-                  rows={2}
-                />
-                <button
-                  className="inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-4 h-9 text-sm transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={() => newQuestion.trim() && addNote.mutate(newQuestion.trim())}
-                  disabled={!newQuestion.trim() || addNote.isPending}
-                >
-                  Record Question
-                </button>
-              </div>
+          <TabsContent value="notes" className="mt-4 space-y-4">
+            <div
+              className="rounded-[20px] p-5 space-y-3"
+              style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
+            >
+              <Label className="font-medium text-white block" style={{ fontSize: "14px" }}>Record Post-Match Question</Label>
+              <Textarea
+                placeholder="Question asked on court (e.g. Как улучшить технику виоловки?)"
+                value={newQuestion}
+                onChange={(e) => setNewQuestion(e.target.value)}
+                className="bg-background border-white/10 resize-none"
+                rows={2}
+              />
+              <button
+                className="inline-flex items-center justify-center rounded-xl font-semibold text-black transition-all active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ background: "#D4AF37", height: "44px", paddingLeft: "20px", paddingRight: "20px", fontSize: "14px" }}
+                onClick={() => newQuestion.trim() && addNote.mutate(newQuestion.trim())}
+                disabled={!newQuestion.trim() || addNote.isPending}
+              >
+                Record Question
+              </button>
             </div>
 
             {notes.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground text-sm">No questions recorded yet</div>
+              <div className="text-center py-8 text-muted-foreground" style={{ fontSize: "14px" }}>No questions recorded yet</div>
             ) : (
-              notes.map((note: any) => (
-                <div key={note.id} className="rounded-[20px] bg-card border border-white/5">
-                  <div className="p-4 space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="font-medium text-sm">❓ {note.question}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {new Date(note.recordedAt).toLocaleDateString("en-GB")} · {note.category}
-                        </p>
-                      </div>
+              <div
+                className="rounded-[20px] overflow-hidden"
+                style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
+              >
+                {notes.map((note: any, i: number) => (
+                  <div
+                    key={note.id}
+                    className="px-5 py-4 space-y-3"
+                    style={{ borderBottom: i < notes.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none" }}
+                  >
+                    <div>
+                      <p className="font-medium text-white" style={{ fontSize: "14px" }}>❓ {note.question}</p>
+                      <p className="text-muted-foreground mt-0.5" style={{ fontSize: "12px" }}>
+                        {new Date(note.recordedAt).toLocaleDateString("en-GB")} · {note.category}
+                      </p>
                     </div>
                     {note.coachResponse ? (
-                      <div className="p-3 rounded-lg bg-primary/5 border border-primary/10 text-sm text-foreground">
+                      <div
+                        className="rounded-xl p-3 text-white"
+                        style={{ fontSize: "13px", background: "rgba(212,175,55,0.07)", border: "1px solid rgba(212,175,55,0.15)" }}
+                      >
                         💡 {note.coachResponse}
                       </div>
                     ) : (
@@ -653,7 +744,8 @@ export default function ClientProfile() {
                           rows={2}
                         />
                         <button
-                          className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent text-foreground font-medium px-4 h-9 text-sm transition-all hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="inline-flex items-center justify-center rounded-xl font-medium text-white transition-all hover:bg-white/[0.06] active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed"
+                          style={{ border: "1px solid rgba(255,255,255,0.12)", height: "44px", paddingLeft: "16px", paddingRight: "16px", fontSize: "14px", background: "transparent" }}
                           onClick={() => updateNote.mutate({ noteId: note.id, coachResponse: noteResponse[note.id] ?? "" })}
                           disabled={!noteResponse[note.id] || updateNote.isPending}
                         >
@@ -662,53 +754,78 @@ export default function ClientProfile() {
                       </div>
                     )}
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </TabsContent>
 
           {/* CHAT HISTORY */}
           <TabsContent value="chat" className="mt-4">
-            <div className="rounded-[20px] bg-card border border-white/5">
-              <div className="px-4 pt-4 pb-2 border-b border-white/5 flex items-center gap-2">
-                <span className="text-sm font-medium">💬 WhatsApp History</span>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border border-green-500/30 text-green-400 bg-green-500/10">
+            <div
+              className="rounded-[20px] overflow-hidden"
+              style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
+            >
+              <div
+                className="px-5 py-3 flex items-center gap-2"
+                style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+              >
+                <span className="font-medium text-white" style={{ fontSize: "14px" }}>💬 WhatsApp History</span>
+                <span
+                  className="inline-flex items-center rounded-full border"
+                  style={{ fontSize: "11px", padding: "2px 8px", color: "#4ade80", borderColor: "rgba(74,222,128,0.25)", background: "rgba(74,222,128,0.08)" }}
+                >
                   WhatsApp
                 </span>
               </div>
               <div className="p-4">
-                <div className="space-y-2 max-h-80 overflow-y-auto mb-4">
+                <div className="space-y-2 overflow-y-auto mb-4" style={{ maxHeight: "320px" }}>
                   {messages.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground text-sm">No messages yet</div>
+                    <div className="text-center py-8 text-muted-foreground" style={{ fontSize: "14px" }}>No messages yet</div>
                   ) : (
                     messages.map((msg: any) => (
                       <div
                         key={msg.id}
-                        className={cn(
-                          "max-w-xs px-3 py-2 rounded-xl text-sm",
-                          msg.direction === "out"
-                            ? "ml-auto bg-primary/20 text-foreground rounded-br-sm"
-                            : "bg-white/5 text-foreground rounded-bl-sm"
-                        )}
+                        className={cn("flex", msg.direction === "out" ? "justify-end" : "justify-start")}
                       >
-                        <p>{msg.content}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {msg.direction === "out" ? "Misha" : client.name} · {new Date(msg.sentAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
-                        </p>
+                        <div
+                          style={{
+                            maxWidth: "260px",
+                            padding: "8px 12px",
+                            borderRadius: msg.direction === "out" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+                            background: msg.direction === "out" ? "#D4AF37" : "rgba(255,255,255,0.08)",
+                            color: msg.direction === "out" ? "#000" : "white",
+                            fontSize: "13px",
+                          }}
+                        >
+                          <p>{msg.content}</p>
+                          <p style={{ fontSize: "11px", marginTop: "4px", color: msg.direction === "out" ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.4)" }}>
+                            {msg.direction === "out" ? "Misha" : client.name} · {new Date(msg.sentAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
                       </div>
                     ))
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <Input
+                  <input
+                    type="text"
                     placeholder="Type a message…"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && newMessage.trim() && sendMessage.mutate(newMessage.trim())}
-                    className="bg-background border-white/10 text-sm"
+                    className="flex-1 text-white placeholder-muted-foreground outline-none rounded-xl"
+                    style={{
+                      background: "rgba(0,0,0,0.4)",
+                      border: "1px solid rgba(255,255,255,0.10)",
+                      height: "44px",
+                      paddingLeft: "14px",
+                      paddingRight: "14px",
+                      fontSize: "14px",
+                    }}
                   />
                   <button
-                    className="inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-4 h-9 text-sm transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex items-center justify-center rounded-xl font-semibold text-black transition-all active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                    style={{ background: "#D4AF37", height: "44px", paddingLeft: "18px", paddingRight: "18px", fontSize: "14px" }}
                     onClick={() => newMessage.trim() && sendMessage.mutate(newMessage.trim())}
                     disabled={!newMessage.trim() || sendMessage.isPending}
                   >

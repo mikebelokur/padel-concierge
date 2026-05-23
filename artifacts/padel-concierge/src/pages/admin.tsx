@@ -3,7 +3,6 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useGetDashboardStats, getGetDashboardStatsQueryKey } from "@workspace/api-client-react";
 import { apiFetch } from "@/lib/api";
-import { Input } from "@/components/ui/input";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -28,12 +27,6 @@ import {
 } from "@/components/ui/select";
 
 const WPT_LEVELS = ["1.0","1.5","2.0","2.5","3.0","3.5","4.0","4.5","5.0"];
-const ROLE_COLORS: Record<string, string> = {
-  owner: "text-yellow-400 border-yellow-500/30 bg-yellow-500/10",
-  admin: "text-primary border-primary/30 bg-primary/10",
-  coach: "text-accent border-accent/30 bg-accent/10",
-  player: "text-muted-foreground border-white/10 bg-white/5",
-};
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleString("en-GB", {
@@ -51,6 +44,13 @@ function timeAgo(iso: string) {
   if (h < 24) return `${h}h ago`;
   return `${Math.floor(h / 24)}d ago`;
 }
+
+const ROLE_BADGE_STYLE: Record<string, { color: string; bg: string; border: string }> = {
+  owner:  { color: "#D4AF37", bg: "rgba(212,175,55,0.10)", border: "rgba(212,175,55,0.30)" },
+  admin:  { color: "#818cf8", bg: "rgba(129,140,248,0.10)", border: "rgba(129,140,248,0.25)" },
+  coach:  { color: "#fb923c", bg: "rgba(251,146,60,0.10)", border: "rgba(251,146,60,0.25)" },
+  player: { color: "rgba(255,255,255,0.50)", bg: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.10)" },
+};
 
 export default function Admin() {
   const { toast } = useToast();
@@ -150,28 +150,33 @@ export default function Admin() {
 
   return (
     <AppLayout>
-      <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
-        <header>
-          <h1 className="text-3xl font-serif mb-1">{t("admin.title")}</h1>
-          <p className="text-muted-foreground">Platform overview and user management.</p>
+      <div className="px-4 sm:px-6 max-w-7xl mx-auto" style={{ paddingTop: "24px", paddingBottom: "40px" }}>
+
+        <header className="mb-6">
+          <h1 className="font-serif font-bold text-white mb-0.5" style={{ fontSize: "28px" }}>{t("admin.title")}</h1>
+          <p className="text-muted-foreground" style={{ fontSize: "14px" }}>Platform overview and user management.</p>
         </header>
 
         {/* Tabs */}
-        <div className="flex gap-1 p-1 bg-white/5 rounded-lg w-fit">
+        <div className="flex gap-1 p-1 rounded-xl mb-6 w-fit" style={{ background: "rgba(255,255,255,0.05)" }}>
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors",
+                "flex items-center gap-2 rounded-lg font-medium transition-colors",
                 activeTab === tab.id
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-card text-white shadow-sm"
+                  : "text-muted-foreground hover:text-white"
               )}
+              style={{ padding: "8px 16px", fontSize: "14px", minHeight: "44px" }}
             >
               {tab.label}
               {"badge" in tab && tab.badge != null && (
-                <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-yellow-500 text-black text-xs font-bold flex items-center justify-center">
+                <span
+                  className="inline-flex items-center justify-center rounded-full font-bold text-black"
+                  style={{ minWidth: "20px", height: "20px", padding: "0 6px", fontSize: "11px", background: "#D4AF37" }}
+                >
                   {tab.badge}
                 </span>
               )}
@@ -183,19 +188,30 @@ export default function Admin() {
         {activeTab === "overview" && (
           <div className="space-y-6">
             {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
-                { label: t("admin.totalUsers"),   value: stats?.totalUsers ?? "–",                  color: "" },
-                { label: "Online Now",            value: stats?.onlineUsers ?? "–",                 color: "text-accent" },
-                { label: t("admin.totalMatches"), value: stats?.totalMatches ?? "–",                color: "" },
-                { label: t("admin.revenue"),      value: stats ? `${stats.dailyRevenue} AED` : "–", color: "text-primary" },
-              ].map(({ label, value, color }) => (
-                <div key={label} className="rounded-[20px] bg-card border border-white/5">
-                  <div className="px-5 pt-4 pb-1">
-                    <div className="text-xs font-medium text-muted-foreground">{label}</div>
+                { label: t("admin.totalUsers"),   value: stats?.totalUsers ?? "–",                  gold: false },
+                { label: "Online Now",            value: stats?.onlineUsers ?? "–",                 gold: false },
+                { label: t("admin.totalMatches"), value: stats?.totalMatches ?? "–",                gold: false },
+                { label: t("admin.revenue"),      value: stats ? `${stats.dailyRevenue} AED` : "–", gold: true  },
+              ].map(({ label, value, gold }) => (
+                <div
+                  key={label}
+                  className="rounded-[20px]"
+                  style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
+                >
+                  <div className="px-5 pt-5 pb-1">
+                    <div className="text-muted-foreground" style={{ fontSize: "11px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      {label}
+                    </div>
                   </div>
-                  <div className="px-5 pb-4">
-                    <div className={`text-2xl font-mono ${color}`}>{value}</div>
+                  <div className="px-5 pb-5">
+                    <div
+                      className="font-mono font-semibold"
+                      style={{ fontSize: "26px", color: gold ? "#D4AF37" : "white" }}
+                    >
+                      {value}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -203,20 +219,23 @@ export default function Admin() {
 
             {/* Level chart */}
             {stats?.levelDistribution && (
-              <div className="rounded-[20px] bg-card border border-white/5">
+              <div
+                className="rounded-[20px]"
+                style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
+              >
                 <div className="px-5 pt-5 pb-3">
-                  <div className="text-sm font-medium">WPT Level Distribution</div>
+                  <div className="font-medium text-white" style={{ fontSize: "15px" }}>WPT Level Distribution</div>
                 </div>
-                <div className="px-5 pb-5 h-48">
+                <div className="px-5 pb-5" style={{ height: "192px" }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={stats.levelDistribution}>
                       <XAxis dataKey="level" stroke="#6b7a99" tick={{ fontSize: 11 }} />
                       <YAxis stroke="#6b7a99" tick={{ fontSize: 11 }} allowDecimals={false} />
                       <Tooltip
-                        cursor={{ fill: "rgba(255,255,255,0.05)" }}
-                        contentStyle={{ backgroundColor: "#0d1420", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8 }}
+                        cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                        contentStyle={{ backgroundColor: "#0a0a0a", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12 }}
                       />
-                      <Bar dataKey="count" fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="count" fill="#D4AF37" radius={[6, 6, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -226,46 +245,72 @@ export default function Admin() {
             {/* User management */}
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-serif">User Management</h2>
-                <span className="text-sm text-muted-foreground">{filteredUsers.length} users</span>
+                <h2 className="font-serif font-bold text-white" style={{ fontSize: "20px" }}>User Management</h2>
+                <span className="text-muted-foreground" style={{ fontSize: "13px" }}>{filteredUsers.length} users</span>
               </div>
               <div className="mb-4">
-                <Input
+                <input
+                  type="text"
                   placeholder="Search by name or email…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="max-w-sm bg-background border-white/10"
+                  className="text-white placeholder-muted-foreground outline-none rounded-xl max-w-sm w-full"
+                  style={{
+                    background: "hsl(220 20% 6%)",
+                    border: "1px solid rgba(255,255,255,0.10)",
+                    height: "44px",
+                    paddingLeft: "16px",
+                    paddingRight: "16px",
+                    fontSize: "14px",
+                  }}
                 />
               </div>
-              <div className="rounded-xl border border-white/5 overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-white/3 border-b border-white/5">
-                    <tr>
-                      <th className="text-left px-4 py-3 text-muted-foreground font-medium">User</th>
-                      <th className="text-left px-4 py-3 text-muted-foreground font-medium">Role</th>
-                      <th className="text-left px-4 py-3 text-muted-foreground font-medium">WPT Level</th>
-                      <th className="text-left px-4 py-3 text-muted-foreground font-medium">Stats</th>
-                      <th className="text-left px-4 py-3 text-muted-foreground font-medium">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {usersLoading ? (
-                      <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">Loading users…</td></tr>
-                    ) : filteredUsers.map((u: any) => (
-                      <tr key={u.id} className="hover:bg-white/2 transition-colors">
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            {u.role === "owner" && <span className="text-yellow-400 text-sm">👑</span>}
-                            <div>
-                              <div className="font-medium text-foreground">{u.name}</div>
-                              <div className="text-xs text-muted-foreground">{u.email}</div>
-                            </div>
-                            {u.verified && <span className="text-accent text-xs ml-1">✓</span>}
+
+              {usersLoading ? (
+                <div className="text-center py-16 text-muted-foreground" style={{ fontSize: "14px" }}>Loading users…</div>
+              ) : (
+                <div
+                  className="rounded-[20px] overflow-hidden"
+                  style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
+                >
+                  {filteredUsers.map((u: any, i: number) => {
+                    const roleStyle = ROLE_BADGE_STYLE[u.role] ?? ROLE_BADGE_STYLE.player;
+                    return (
+                      <div
+                        key={u.id}
+                        className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4"
+                        style={{ borderBottom: i < filteredUsers.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none" }}
+                      >
+                        {/* User info */}
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div
+                            className="rounded-full flex items-center justify-center font-serif flex-shrink-0"
+                            style={{ width: "40px", height: "40px", background: roleStyle.bg, color: roleStyle.color, fontSize: "14px", border: `1px solid ${roleStyle.border}` }}
+                          >
+                            {u.name?.[0] ?? "?"}
+                            {u.role === "owner" && <span style={{ fontSize: "10px" }}>👑</span>}
                           </div>
-                        </td>
-                        <td className="px-4 py-3">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-medium text-white truncate" style={{ fontSize: "14px" }}>{u.name}</span>
+                              {u.verified && <span style={{ color: "#D4AF37", fontSize: "12px" }}>✓</span>}
+                              {u.isOnline && <span style={{ color: "#4ade80", fontSize: "10px" }}>●</span>}
+                            </div>
+                            <div className="text-muted-foreground truncate" style={{ fontSize: "12px" }}>{u.email}</div>
+                            <div className="text-muted-foreground" style={{ fontSize: "11px" }}>
+                              {u.matchesPlayed} matches · {u.wins} wins
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Controls */}
+                        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+                          {/* Role selector */}
                           <Select defaultValue={u.role} onValueChange={(role) => setRoleMutation.mutate({ id: u.id, role })}>
-                            <SelectTrigger className={`h-7 text-xs w-24 border ${ROLE_COLORS[u.role] ?? ""}`}>
+                            <SelectTrigger
+                              className="text-xs w-28 border"
+                              style={{ borderColor: roleStyle.border, color: roleStyle.color, background: roleStyle.bg, height: "44px" }}
+                            >
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -274,15 +319,15 @@ export default function Admin() {
                               ))}
                             </SelectContent>
                           </Select>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
+
+                          {/* Level selector */}
+                          <div className="flex items-center gap-1.5">
                             <Select
                               defaultValue={u.level}
                               value={editingLevel[u.id] ?? u.level}
                               onValueChange={(v) => setEditingLevel((prev) => ({ ...prev, [u.id]: v }))}
                             >
-                              <SelectTrigger className="h-7 text-xs w-20 bg-background border-white/10">
+                              <SelectTrigger className="text-xs w-20 bg-transparent border-white/10" style={{ height: "44px" }}>
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -293,7 +338,8 @@ export default function Admin() {
                             </Select>
                             {editingLevel[u.id] && editingLevel[u.id] !== u.level && (
                               <button
-                                className="inline-flex items-center justify-center rounded-lg bg-primary text-black font-semibold h-7 px-2 text-xs transition-all hover:bg-primary/90 disabled:opacity-50"
+                                className="inline-flex items-center justify-center rounded-xl font-semibold text-black transition-all active:scale-[0.97] disabled:opacity-50"
+                                style={{ background: "#D4AF37", height: "44px", paddingLeft: "14px", paddingRight: "14px", fontSize: "13px" }}
                                 onClick={() => setLevelMutation.mutate({ id: u.id, level: editingLevel[u.id] })}
                                 disabled={setLevelMutation.isPending}
                               >
@@ -301,18 +347,14 @@ export default function Admin() {
                               </button>
                             )}
                           </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="text-xs text-muted-foreground">
-                            <span>{u.matchesPlayed}M</span>
-                            <span className="mx-1 text-accent">{u.wins}W</span>
-                            {u.isOnline && <span className="text-green-400">● online</span>}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
+
+                          {/* Delete */}
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <button className="inline-flex items-center justify-center rounded-lg bg-transparent text-destructive hover:bg-destructive/10 h-7 px-2 text-xs transition-colors">
+                              <button
+                                className="inline-flex items-center justify-center rounded-xl transition-colors hover:bg-red-500/10"
+                                style={{ color: "#f87171", height: "44px", paddingLeft: "14px", paddingRight: "14px", fontSize: "13px", background: "transparent" }}
+                              >
                                 Delete
                               </button>
                             </AlertDialogTrigger>
@@ -332,35 +374,42 @@ export default function Admin() {
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* ─── NEW REGISTRATIONS TAB ─── */}
+        {/* ─── REGISTRATIONS TAB ─── */}
         {activeTab === "registrations" && (
           <div className="space-y-4">
             {/* Header row */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {pending.length > 0 ? (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm border bg-yellow-500/10 text-yellow-400 border-yellow-500/30">
+                  <span
+                    className="inline-flex items-center rounded-full border"
+                    style={{ padding: "4px 12px", fontSize: "13px", color: "#D4AF37", borderColor: "rgba(212,175,55,0.30)", background: "rgba(212,175,55,0.08)" }}
+                  >
                     {pending.length} pending approval
                   </span>
                 ) : (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm border text-green-400 border-green-500/30 bg-green-500/10">
+                  <span
+                    className="inline-flex items-center rounded-full border"
+                    style={{ padding: "4px 12px", fontSize: "13px", color: "#4ade80", borderColor: "rgba(74,222,128,0.25)", background: "rgba(74,222,128,0.08)" }}
+                  >
                     ✅ All clear
                   </span>
                 )}
-                <span className="text-xs text-muted-foreground">Updates every 30s</span>
+                <span className="text-muted-foreground" style={{ fontSize: "12px" }}>Updates every 30s</span>
               </div>
               <button
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-transparent font-medium text-foreground px-4 h-9 text-sm transition-all hover:bg-white/5 disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-xl font-medium text-white transition-all hover:bg-white/[0.06] active:scale-[0.97] disabled:opacity-50"
+                style={{ border: "1px solid rgba(255,255,255,0.12)", height: "44px", paddingLeft: "16px", paddingRight: "16px", fontSize: "14px", background: "transparent" }}
                 onClick={() => refetchRegs()}
                 disabled={regsRefetching}
               >
@@ -369,139 +418,141 @@ export default function Admin() {
             </div>
 
             {regsLoading ? (
-              <div className="text-center py-16 text-muted-foreground">Loading registrations…</div>
+              <div className="text-center py-16 text-muted-foreground" style={{ fontSize: "14px" }}>Loading registrations…</div>
             ) : pending.length === 0 && rejected.length === 0 ? (
-              <div className="rounded-[20px] bg-card border border-white/5">
-                <div className="py-16 text-center">
-                  <div className="text-4xl mb-3">✅</div>
-                  <div className="font-medium mb-1">All caught up</div>
-                  <div className="text-sm text-muted-foreground">No pending or rejected registrations.</div>
-                </div>
+              <div
+                className="rounded-[20px] text-center py-16"
+                style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
+              >
+                <div style={{ fontSize: "40px", marginBottom: "12px" }}>✅</div>
+                <div className="font-medium text-white mb-1" style={{ fontSize: "16px" }}>All caught up</div>
+                <div className="text-muted-foreground" style={{ fontSize: "14px" }}>No pending or rejected registrations.</div>
               </div>
             ) : (
               <div className="space-y-6">
-                {/* PENDING TABLE */}
+                {/* PENDING */}
                 {pending.length > 0 && (
                   <div>
-                    <div className="text-sm font-medium text-muted-foreground mb-2 px-1">
+                    <div className="text-muted-foreground uppercase tracking-wider mb-3 px-1" style={{ fontSize: "11px" }}>
                       Pending ({pending.length})
                     </div>
-                    <div className="rounded-xl border border-yellow-500/20 overflow-hidden">
-                      <table className="w-full text-sm">
-                        <thead className="bg-yellow-500/5 border-b border-yellow-500/20">
-                          <tr>
-                            <th className="text-left px-4 py-3 text-muted-foreground font-medium">Name</th>
-                            <th className="text-left px-4 py-3 text-muted-foreground font-medium">Email</th>
-                            <th className="text-left px-4 py-3 text-muted-foreground font-medium">Phone</th>
-                            <th className="text-left px-4 py-3 text-muted-foreground font-medium">Level</th>
-                            <th className="text-left px-4 py-3 text-muted-foreground font-medium">Registered</th>
-                            <th className="text-left px-4 py-3 text-muted-foreground font-medium">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                          {pending.map((r: any) => (
-                            <tr key={r.id} className="hover:bg-white/2 transition-colors">
-                              <td className="px-4 py-3">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-8 h-8 rounded-full bg-yellow-500/10 flex items-center justify-center text-yellow-400 font-serif text-sm flex-shrink-0">
-                                    {r.name?.[0] ?? "?"}
-                                  </div>
-                                  <div>
-                                    <div className="font-medium">{r.name}</div>
-                                    <div className="text-xs text-muted-foreground capitalize">{r.goal}</div>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-4 py-3 text-muted-foreground">{r.email}</td>
-                              <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{r.phone || "—"}</td>
-                              <td className="px-4 py-3">
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs border border-white/10 font-mono text-muted-foreground">{r.level}</span>
-                              </td>
-                              <td className="px-4 py-3">
-                                <div className="text-xs">
-                                  <div>{fmtDate(r.createdAt)}</div>
-                                  <div className="text-muted-foreground">{timeAgo(r.createdAt)}</div>
-                                </div>
-                              </td>
-                              <td className="px-4 py-3">
-                                <div className="flex items-center gap-2">
-                                  <button
-                                    className="inline-flex items-center justify-center rounded-lg bg-green-600 hover:bg-green-500 text-white font-medium h-7 px-3 text-xs transition-all disabled:opacity-50"
-                                    onClick={() => approveMutation.mutate(r.id)}
-                                    disabled={approveMutation.isPending}
-                                  >
-                                    ✅ Approve
-                                  </button>
-                                  <button
-                                    className="inline-flex items-center justify-center rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 bg-transparent font-medium h-7 px-3 text-xs transition-all disabled:opacity-50"
-                                    onClick={() => rejectMutation.mutate(r.id)}
-                                    disabled={rejectMutation.isPending}
-                                  >
-                                    ❌ Reject
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div
+                      className="rounded-[20px] overflow-hidden"
+                      style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(212,175,55,0.20)" }}
+                    >
+                      {pending.map((r: any, i: number) => (
+                        <div
+                          key={r.id}
+                          className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4"
+                          style={{ borderBottom: i < pending.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none" }}
+                        >
+                          {/* Avatar + info */}
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div
+                              className="rounded-full flex items-center justify-center font-serif flex-shrink-0"
+                              style={{ width: "44px", height: "44px", background: "rgba(212,175,55,0.10)", color: "#D4AF37", fontSize: "16px", border: "1px solid rgba(212,175,55,0.20)" }}
+                            >
+                              {r.name?.[0] ?? "?"}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-medium text-white" style={{ fontSize: "15px" }}>{r.name}</div>
+                              <div className="text-muted-foreground" style={{ fontSize: "12px" }}>{r.email}</div>
+                              <div className="text-muted-foreground capitalize" style={{ fontSize: "12px" }}>
+                                {r.phone && <span className="mr-2 font-mono">{r.phone}</span>}
+                                {r.goal}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Level + date + actions */}
+                          <div className="flex items-center gap-3 flex-shrink-0 flex-wrap">
+                            <span
+                              className="inline-flex items-center rounded-full border font-mono"
+                              style={{ fontSize: "12px", padding: "3px 10px", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.6)" }}
+                            >
+                              {r.level}
+                            </span>
+                            <div className="text-muted-foreground text-right" style={{ fontSize: "11px" }}>
+                              <div>{timeAgo(r.createdAt)}</div>
+                            </div>
+                            <button
+                              className="inline-flex items-center justify-center rounded-xl font-medium text-white transition-all active:scale-[0.97] disabled:opacity-50"
+                              style={{ background: "#16a34a", height: "44px", paddingLeft: "16px", paddingRight: "16px", fontSize: "14px" }}
+                              onClick={() => approveMutation.mutate(r.id)}
+                              disabled={approveMutation.isPending}
+                            >
+                              ✅ Approve
+                            </button>
+                            <button
+                              className="inline-flex items-center justify-center rounded-xl font-medium transition-all hover:bg-red-500/10 active:scale-[0.97] disabled:opacity-50"
+                              style={{ border: "1px solid rgba(239,68,68,0.30)", color: "#f87171", height: "44px", paddingLeft: "16px", paddingRight: "16px", fontSize: "14px", background: "transparent" }}
+                              onClick={() => rejectMutation.mutate(r.id)}
+                              disabled={rejectMutation.isPending}
+                            >
+                              ❌ Reject
+                            </button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
 
-                {/* REJECTED TABLE */}
+                {/* REJECTED */}
                 {rejected.length > 0 && (
-                  <div>
-                    <div className="text-sm font-medium text-muted-foreground mb-2 px-1">
+                  <div className="opacity-70">
+                    <div className="text-muted-foreground uppercase tracking-wider mb-3 px-1" style={{ fontSize: "11px" }}>
                       Rejected ({rejected.length})
                     </div>
-                    <div className="rounded-xl border border-white/5 overflow-hidden opacity-70">
-                      <table className="w-full text-sm">
-                        <thead className="bg-white/3 border-b border-white/5">
-                          <tr>
-                            <th className="text-left px-4 py-3 text-muted-foreground font-medium">Name</th>
-                            <th className="text-left px-4 py-3 text-muted-foreground font-medium">Email</th>
-                            <th className="text-left px-4 py-3 text-muted-foreground font-medium">Phone</th>
-                            <th className="text-left px-4 py-3 text-muted-foreground font-medium">Level</th>
-                            <th className="text-left px-4 py-3 text-muted-foreground font-medium">Registered</th>
-                            <th className="text-left px-4 py-3 text-muted-foreground font-medium">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                          {rejected.map((r: any) => (
-                            <tr key={r.id} className="hover:bg-white/2 transition-colors">
-                              <td className="px-4 py-3">
-                                <div className="font-medium">{r.name}</div>
-                                <div className="text-xs text-muted-foreground capitalize">{r.goal}</div>
-                              </td>
-                              <td className="px-4 py-3 text-muted-foreground">{r.email}</td>
-                              <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{r.phone || "—"}</td>
-                              <td className="px-4 py-3">
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs border border-white/10 font-mono text-muted-foreground">{r.level}</span>
-                              </td>
-                              <td className="px-4 py-3 text-xs text-muted-foreground">{fmtDate(r.createdAt)}</td>
-                              <td className="px-4 py-3">
-                                <div className="flex items-center gap-2">
-                                  <button
-                                    className="inline-flex items-center justify-center rounded-lg bg-green-600 hover:bg-green-500 text-white font-medium h-7 px-3 text-xs transition-all disabled:opacity-50"
-                                    onClick={() => approveMutation.mutate(r.id)}
-                                    disabled={approveMutation.isPending}
-                                  >
-                                    Approve
-                                  </button>
-                                  <button
-                                    className="inline-flex items-center justify-center rounded-lg bg-transparent text-destructive hover:bg-destructive/10 h-7 px-2 text-xs transition-colors disabled:opacity-50"
-                                    onClick={() => deleteMutation.mutate(r.id)}
-                                    disabled={deleteMutation.isPending}
-                                  >
-                                    Delete
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div
+                      className="rounded-[20px] overflow-hidden"
+                      style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
+                    >
+                      {rejected.map((r: any, i: number) => (
+                        <div
+                          key={r.id}
+                          className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4"
+                          style={{ borderBottom: i < rejected.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none" }}
+                        >
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div
+                              className="rounded-full flex items-center justify-center font-serif flex-shrink-0"
+                              style={{ width: "40px", height: "40px", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.4)", fontSize: "14px", border: "1px solid rgba(255,255,255,0.08)" }}
+                            >
+                              {r.name?.[0] ?? "?"}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-medium text-white" style={{ fontSize: "14px" }}>{r.name}</div>
+                              <div className="text-muted-foreground" style={{ fontSize: "12px" }}>{r.email}</div>
+                              <div className="text-muted-foreground" style={{ fontSize: "11px" }}>{fmtDate(r.createdAt)}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span
+                              className="inline-flex items-center rounded-full border font-mono"
+                              style={{ fontSize: "12px", padding: "3px 10px", border: "1px solid rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.5)" }}
+                            >
+                              {r.level}
+                            </span>
+                            <button
+                              className="inline-flex items-center justify-center rounded-xl font-medium text-white transition-all active:scale-[0.97] disabled:opacity-50"
+                              style={{ background: "#16a34a", height: "44px", paddingLeft: "16px", paddingRight: "16px", fontSize: "13px" }}
+                              onClick={() => approveMutation.mutate(r.id)}
+                              disabled={approveMutation.isPending}
+                            >
+                              Approve
+                            </button>
+                            <button
+                              className="inline-flex items-center justify-center rounded-xl transition-all hover:bg-red-500/10 active:scale-[0.97] disabled:opacity-50"
+                              style={{ color: "#f87171", height: "44px", paddingLeft: "14px", paddingRight: "14px", fontSize: "13px", background: "transparent" }}
+                              onClick={() => deleteMutation.mutate(r.id)}
+                              disabled={deleteMutation.isPending}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}

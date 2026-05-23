@@ -3,7 +3,6 @@ import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { apiFetch } from "@/lib/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 export default function CoachMessages() {
@@ -53,37 +52,55 @@ export default function CoachMessages() {
 
   return (
     <AppLayout>
-      <div className="flex h-[calc(100vh-56px)] overflow-hidden">
+      <div className="flex overflow-hidden" style={{ height: "calc(100vh - 56px)" }}>
         {/* Client list */}
-        <div className={`${selectedClient ? "hidden sm:flex" : "flex"} w-full sm:w-72 border-r border-white/5 flex-col`}>
-          <div className="p-4 border-b border-white/5">
-            <h2 className="font-serif text-lg mb-1">Messages</h2>
-            <p className="text-xs text-muted-foreground">WhatsApp conversations</p>
+        <div
+          className={cn(
+            selectedClient ? "hidden sm:flex" : "flex",
+            "w-full sm:w-72 flex-col"
+          )}
+          style={{ borderRight: "1px solid rgba(255,255,255,0.06)" }}
+        >
+          <div className="px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <h2 className="font-serif font-bold text-white mb-0.5" style={{ fontSize: "20px" }}>Messages</h2>
+            <p className="text-muted-foreground" style={{ fontSize: "12px" }}>WhatsApp conversations</p>
           </div>
           <div className="flex-1 overflow-y-auto">
-            {latestPerClient.map((c: any) => (
+            {latestPerClient.map((c: any, i: number) => (
               <button
                 key={c.id}
                 onClick={() => setSelectedClient(c)}
                 className={cn(
-                  "w-full text-left p-4 border-b border-white/5 hover:bg-white/3 transition-colors",
-                  selectedClient?.id === c.id && "bg-primary/5 border-l-2 border-l-primary"
+                  "w-full text-left transition-colors",
+                  selectedClient?.id === c.id
+                    ? "bg-white/[0.05]"
+                    : "hover:bg-white/[0.03]"
                 )}
+                style={{
+                  borderBottom: "1px solid rgba(255,255,255,0.06)",
+                  borderLeft: selectedClient?.id === c.id ? "2px solid #D4AF37" : "2px solid transparent",
+                }}
               >
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-serif flex-shrink-0">
+                <div className="flex items-center gap-3 px-4" style={{ minHeight: "64px" }}>
+                  <div className="relative flex-shrink-0">
+                    <div
+                      className="rounded-full flex items-center justify-center font-serif"
+                      style={{ width: "42px", height: "42px", background: "rgba(212,175,55,0.12)", color: "#D4AF37", fontSize: "15px" }}
+                    >
                       {c.avatarInitials}
                     </div>
                     {c.unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent rounded-full text-xs flex items-center justify-center text-white">
+                      <span
+                        className="absolute -top-1 -right-1 flex items-center justify-center font-bold rounded-full text-white"
+                        style={{ width: "18px", height: "18px", fontSize: "10px", background: "#D4AF37", color: "#000" }}
+                      >
                         {c.unreadCount}
                       </span>
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium text-sm truncate">{c.name}</div>
-                    <div className="text-xs text-muted-foreground truncate">
+                    <div className="font-medium text-white truncate" style={{ fontSize: "14px" }}>{c.name}</div>
+                    <div className="text-muted-foreground truncate" style={{ fontSize: "12px" }}>
                       {c.lastMessage ? c.lastMessage.content : "No messages yet"}
                     </div>
                   </div>
@@ -94,39 +111,53 @@ export default function CoachMessages() {
         </div>
 
         {/* Chat thread */}
-        <div className={`${selectedClient ? "flex" : "hidden sm:flex"} flex-1 flex-col`}>
+        <div className={cn(selectedClient ? "flex" : "hidden sm:flex", "flex-1 flex-col")}>
           {!selectedClient ? (
-            <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+            <div className="flex-1 flex items-center justify-center text-muted-foreground" style={{ fontSize: "14px" }}>
               Select a client to view messages
             </div>
           ) : (
             <>
               {/* Chat header */}
-              <div className="p-4 border-b border-white/5 flex items-center justify-between gap-2">
+              <div
+                className="flex items-center justify-between gap-2 px-4 py-3"
+                style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", minHeight: "60px" }}
+              >
                 <div className="flex items-center gap-3 min-w-0">
                   <button
-                    className="sm:hidden text-muted-foreground hover:text-foreground mr-1 flex-shrink-0"
+                    className="sm:hidden text-muted-foreground hover:text-white mr-1 flex-shrink-0 transition-colors"
+                    style={{ fontSize: "20px", minWidth: "44px", minHeight: "44px", display: "flex", alignItems: "center" }}
                     onClick={() => setSelectedClient(null)}
-                  >←</button>
-                  <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-serif flex-shrink-0">
+                  >
+                    ‹
+                  </button>
+                  <div
+                    className="rounded-full flex items-center justify-center font-serif flex-shrink-0"
+                    style={{ width: "36px", height: "36px", background: "rgba(212,175,55,0.12)", color: "#D4AF37", fontSize: "13px" }}
+                  >
                     {selectedClient.avatarInitials}
                   </div>
                   <div className="min-w-0">
-                    <div className="font-medium text-sm truncate">{selectedClient.name}</div>
-                    <div className="text-xs text-muted-foreground flex items-center gap-1">
-                      <span className="text-green-400">●</span> WhatsApp
+                    <div className="font-medium text-white truncate" style={{ fontSize: "15px" }}>{selectedClient.name}</div>
+                    <div className="flex items-center gap-1" style={{ fontSize: "12px" }}>
+                      <span style={{ color: "#4ade80" }}>●</span>
+                      <span className="text-muted-foreground">WhatsApp</span>
                     </div>
                   </div>
                 </div>
-                <div className="flex gap-2 shrink-0">
+                <div className="flex gap-2 flex-shrink-0">
                   <button
                     onClick={sendSlots}
-                    className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent font-medium text-foreground px-3 h-9 text-xs transition-all hover:bg-white/5"
+                    className="inline-flex items-center justify-center rounded-xl font-medium text-white transition-all hover:bg-white/[0.06] active:scale-[0.97]"
+                    style={{ border: "1px solid rgba(255,255,255,0.12)", height: "44px", paddingLeft: "14px", paddingRight: "14px", fontSize: "13px" }}
                   >
                     📅 Send Slots
                   </button>
                   <Link href={`/clients/${selectedClient.id}`}>
-                    <button className="inline-flex items-center justify-center rounded-xl bg-transparent font-medium text-muted-foreground px-3 h-9 text-xs transition-all hover:bg-white/5">
+                    <button
+                      className="inline-flex items-center justify-center rounded-xl font-medium text-muted-foreground transition-all hover:bg-white/[0.06] hover:text-white active:scale-[0.97]"
+                      style={{ height: "44px", paddingLeft: "14px", paddingRight: "14px", fontSize: "13px" }}
+                    >
                       View Profile
                     </button>
                   </Link>
@@ -134,20 +165,32 @@ export default function CoachMessages() {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
                 {(thread as any[]).length === 0 ? (
-                  <div className="text-center text-muted-foreground text-sm py-8">No messages yet</div>
+                  <div className="text-center text-muted-foreground py-8" style={{ fontSize: "14px" }}>No messages yet</div>
                 ) : (
                   (thread as any[]).map((msg: any) => (
                     <div key={msg.id} className={cn("flex", msg.direction === "out" ? "justify-end" : "justify-start")}>
-                      <div className={cn(
-                        "max-w-xs lg:max-w-sm px-4 py-2 rounded-2xl text-sm whitespace-pre-line",
-                        msg.direction === "out"
-                          ? "bg-primary text-white rounded-br-sm"
-                          : "bg-white/8 text-foreground rounded-bl-sm"
-                      )}>
+                      <div
+                        className="whitespace-pre-line"
+                        style={{
+                          maxWidth: "280px",
+                          padding: "10px 14px",
+                          borderRadius: msg.direction === "out" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                          background: msg.direction === "out" ? "#D4AF37" : "rgba(255,255,255,0.08)",
+                          color: msg.direction === "out" ? "#000" : "white",
+                          fontSize: "14px",
+                          lineHeight: "1.45",
+                        }}
+                      >
                         {msg.content}
-                        <div className={cn("text-xs mt-1", msg.direction === "out" ? "text-white/60" : "text-muted-foreground")}>
+                        <div
+                          style={{
+                            fontSize: "11px",
+                            marginTop: "4px",
+                            color: msg.direction === "out" ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.4)",
+                          }}
+                        >
                           {new Date(msg.sentAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                         </div>
                       </div>
@@ -157,24 +200,34 @@ export default function CoachMessages() {
               </div>
 
               {/* Input */}
-              <div className="p-4 border-t border-white/5">
+              <div className="px-4 py-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                 <div className="flex gap-2">
-                  <Input
+                  <input
+                    type="text"
                     placeholder="Message…"
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && draft.trim() && sendMessage.mutate(draft.trim())}
-                    className="bg-background border-white/10"
+                    className="flex-1 text-white placeholder-muted-foreground outline-none rounded-xl transition-all"
+                    style={{
+                      background: "hsl(220 20% 6%)",
+                      border: "1px solid rgba(255,255,255,0.10)",
+                      height: "44px",
+                      paddingLeft: "16px",
+                      paddingRight: "16px",
+                      fontSize: "15px",
+                    }}
                   />
                   <button
                     onClick={() => draft.trim() && sendMessage.mutate(draft.trim())}
                     disabled={!draft.trim() || sendMessage.isPending}
-                    className="inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-4 h-11 text-sm transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex items-center justify-center rounded-xl font-semibold text-black transition-all active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed"
+                    style={{ background: "#D4AF37", height: "44px", paddingLeft: "20px", paddingRight: "20px", fontSize: "14px", flexShrink: 0 }}
                   >
                     Send
                   </button>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
+                <p className="text-muted-foreground mt-2" style={{ fontSize: "11px" }}>
                   Messages saved in-app. Connect Twilio to sync with real WhatsApp.
                 </p>
               </div>

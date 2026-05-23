@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { LEVEL_ORDER, LEVEL_DESCRIPTIONS, type Level, Q1_OPTIONS, Q2_OPTIONS, Q3_OPTIONS } from "@/lib/level-quiz";
+import { LEVEL_ORDER, type Level, Q1_OPTIONS, Q2_OPTIONS, Q3_OPTIONS } from "@/lib/level-quiz";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function LevelQuizResult() {
@@ -22,7 +22,6 @@ export default function LevelQuizResult() {
   const realLevel = result.real_level as Level;
   const quizLevel = result.quiz_level as Level;
   const levelIdx = LEVEL_ORDER.indexOf(realLevel);
-  const desc = LEVEL_DESCRIPTIONS[realLevel] ?? "";
 
   const q1 = answers?.q1 != null ? Q1_OPTIONS[answers.q1 as number] : null;
   const q2 = answers?.q2 != null ? Q2_OPTIONS[answers.q2 as number] : null;
@@ -61,7 +60,7 @@ export default function LevelQuizResult() {
             {realLevel}
           </div>
           <p className="text-muted-foreground leading-relaxed" style={{ fontSize: "16px" }}>
-            {desc}
+            {t(`levelQuiz.levelDescriptions.${realLevel}`)}
           </p>
           {quizLevel !== realLevel && (
             <p className="mt-2 text-muted-foreground" style={{ fontSize: "13px" }}>

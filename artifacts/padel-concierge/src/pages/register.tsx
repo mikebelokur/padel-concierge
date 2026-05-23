@@ -61,7 +61,11 @@ export default function Register() {
 
   useEffect(() => {
     if (user && localStorage.getItem("token")) {
-      setLocation("/dashboard");
+      if (user.archetype) {
+        setLocation("/dashboard");
+      } else {
+        setLocation("/assessment");
+      }
     }
   }, [user]);
 
@@ -93,9 +97,8 @@ export default function Register() {
     mutation: {
       onSuccess: (data) => {
         setRegError(null);
-        authLogin(data.token, data.user);
         toast({ title: t("register.welcomeToast"), description: t("register.welcomeToastDesc") });
-        setLocation("/assessment");
+        authLogin(data.token, data.user);
       },
       onError: (err: unknown) => {
         const translated = translateError(err);

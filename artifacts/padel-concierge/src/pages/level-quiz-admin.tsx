@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getLevelQuizAdmin } from "@/lib/level-quiz-api";
-import { LEVEL_ORDER, Q1_OPTIONS, Q2_OPTIONS, Q3_OPTIONS } from "@/lib/level-quiz";
+import { LEVEL_ORDER } from "@/lib/level-quiz";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Row {
   id: number;
@@ -43,6 +44,7 @@ export default function LevelQuizAdmin() {
   const [data, setData] = useState<{ results: Row[]; total: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const { t } = useLanguage();
 
   useEffect(() => {
     getLevelQuizAdmin()
@@ -117,9 +119,9 @@ export default function LevelQuizAdmin() {
               >
                 <td className="px-4 py-3"><LevelBadge level={row.real_level} /></td>
                 <td className="px-4 py-3 text-[#8a8a8a]">{row.quiz_level ?? "—"}</td>
-                <td className="px-4 py-3 text-[#8a8a8a] text-xs">{row.q1_answer != null ? Q1_OPTIONS[row.q1_answer] : "—"}</td>
-                <td className="px-4 py-3 text-[#8a8a8a] text-xs">{row.q2_answer != null ? Q2_OPTIONS[row.q2_answer] : "—"}</td>
-                <td className="px-4 py-3 text-[#8a8a8a] text-xs">{row.q3_answer != null ? Q3_OPTIONS[row.q3_answer] : "—"}</td>
+                <td className="px-4 py-3 text-[#8a8a8a] text-xs">{row.q1_answer != null ? t(`levelQuiz.q1Options.${row.q1_answer}`) : "—"}</td>
+                <td className="px-4 py-3 text-[#8a8a8a] text-xs">{row.q2_answer != null ? t(`levelQuiz.q2Options.${row.q2_answer}`) : "—"}</td>
+                <td className="px-4 py-3 text-[#8a8a8a] text-xs">{row.q3_answer != null ? t(`levelQuiz.q3Options.${row.q3_answer}`) : "—"}</td>
                 <td className="px-4 py-3 text-[#555] text-xs whitespace-nowrap">{fmt(row.completed_at)}</td>
               </tr>
             ))}

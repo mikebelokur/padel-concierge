@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { LEVEL_ORDER, type Level, Q1_OPTIONS, Q2_OPTIONS, Q3_OPTIONS } from "@/lib/level-quiz";
+import { LEVEL_ORDER, type Level } from "@/lib/level-quiz";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function LevelQuizProfile() {
   const [, setLocation] = useLocation();
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [answers, setAnswers] = useState<Record<string, unknown> | null>(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const r = sessionStorage.getItem("lq_result");
@@ -23,9 +25,9 @@ export default function LevelQuizProfile() {
     ? new Date(result.completed_at as string).toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric" })
     : new Date().toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric" });
 
-  const q1 = answers?.q1 != null ? Q1_OPTIONS[answers.q1 as number] : null;
-  const q2 = answers?.q2 != null ? Q2_OPTIONS[answers.q2 as number] : null;
-  const q3 = answers?.q3 != null ? Q3_OPTIONS[answers.q3 as number] : null;
+  const q1 = answers?.q1 != null ? t(`levelQuiz.q1Options.${answers.q1 as number}`) : null;
+  const q2 = answers?.q2 != null ? t(`levelQuiz.q2Options.${answers.q2 as number}`) : null;
+  const q3 = answers?.q3 != null ? t(`levelQuiz.q3Options.${answers.q3 as number}`) : null;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#080808] px-5 py-8">

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { LEVEL_ORDER, type Level, Q1_OPTIONS, Q2_OPTIONS, Q3_OPTIONS } from "@/lib/level-quiz";
+import { LEVEL_ORDER, type Level } from "@/lib/level-quiz";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function LevelQuizResult() {
@@ -23,9 +23,9 @@ export default function LevelQuizResult() {
   const quizLevel = result.quiz_level as Level;
   const levelIdx = LEVEL_ORDER.indexOf(realLevel);
 
-  const q1 = answers?.q1 != null ? Q1_OPTIONS[answers.q1 as number] : null;
-  const q2 = answers?.q2 != null ? Q2_OPTIONS[answers.q2 as number] : null;
-  const q3 = answers?.q3 != null ? Q3_OPTIONS[answers.q3 as number] : null;
+  const q1 = answers?.q1 != null ? t(`levelQuiz.q1Options.${answers.q1 as number}`) : null;
+  const q2 = answers?.q2 != null ? t(`levelQuiz.q2Options.${answers.q2 as number}`) : null;
+  const q3 = answers?.q3 != null ? t(`levelQuiz.q3Options.${answers.q3 as number}`) : null;
 
   function retake() {
     sessionStorage.removeItem("lq_result");

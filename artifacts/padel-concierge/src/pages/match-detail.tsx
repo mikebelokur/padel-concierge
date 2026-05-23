@@ -26,7 +26,13 @@ function formatStyle(fmt: string) {
 export default function MatchDetail() {
   const params = useParams();
   const matchId = Number(params.id);
-  const { data: match, isLoading } = useGetMatch(matchId, { query: { enabled: !!matchId, queryKey: getGetMatchQueryKey(matchId) } });
+  const { data: match, isLoading } = useGetMatch(matchId, {
+    query: {
+      enabled: !!matchId,
+      queryKey: getGetMatchQueryKey(matchId),
+      refetchInterval: 10_000,
+    },
+  });
   const [phase, setPhase] = useState(0);
   const [timeLeft, setTimeLeft] = useState(phases[0].duration);
   const { user } = useAuth();

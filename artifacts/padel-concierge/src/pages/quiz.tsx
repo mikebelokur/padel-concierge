@@ -38,18 +38,17 @@ const ARCHETYPE_QUESTIONS = [
 interface LevelQ {
   id: string; emoji: string;
   correctAnswer: boolean;
-  wrongExplanation: string;
   hintAfterAnswer?: string;
 }
 
 const LEVEL_QUESTIONS: LevelQ[] = [
-  { id: "lq1", emoji: "💥", correctAnswer: true,  wrongExplanation: "терпение и выбор момента", hintAfterAnswer: "lq1.hint" },
-  { id: "lq2", emoji: "🧠", correctAnswer: true,  wrongExplanation: "позицию после стекла" },
-  { id: "lq3", emoji: "📍", correctAnswer: false, wrongExplanation: "командную психологию" },
-  { id: "lq4", emoji: "🎭", correctAnswer: false, wrongExplanation: "тактику смэша" },
-  { id: "lq5", emoji: "⚖️", correctAnswer: true,  wrongExplanation: "стабильность и ментальную устойчивость" },
-  { id: "lq6", emoji: "🎯", correctAnswer: true,  wrongExplanation: "приоритет позиции над силой" },
-  { id: "lq7", emoji: "🔥", correctAnswer: false, wrongExplanation: "концентрацию против любых соперников" },
+  { id: "lq1", emoji: "💥", correctAnswer: true,  hintAfterAnswer: "lq1.hint" },
+  { id: "lq2", emoji: "🧠", correctAnswer: true  },
+  { id: "lq3", emoji: "📍", correctAnswer: false },
+  { id: "lq4", emoji: "🎭", correctAnswer: false },
+  { id: "lq5", emoji: "⚖️", correctAnswer: true  },
+  { id: "lq6", emoji: "🎯", correctAnswer: true  },
+  { id: "lq7", emoji: "🔥", correctAnswer: false },
 ];
 
 type Level = "D" | "D+" | "C" | "C+" | "B";
@@ -215,7 +214,7 @@ export default function Quiz() {
   const score = LEVEL_QUESTIONS.filter(q => levelAnswers[q.id] === q.correctAnswer).length;
   const wrongTopics = LEVEL_QUESTIONS
     .filter(q => levelAnswers[q.id] !== q.correctAnswer && levelAnswers[q.id] !== undefined)
-    .map(q => q.wrongExplanation);
+    .map(q => `quiz.${q.id}.wrongExplanation`);
   const rawLevel = calcRawLevel(score);
   const finalLevel = downgrade(rawLevel);
   const archetype = calcArchetype(archetypeAnswers);
@@ -482,9 +481,9 @@ export default function Quiz() {
             <div>
               <div className="text-xs text-white/30 uppercase tracking-wider mb-2 text-center">{t("quiz.result.growthAreas")}</div>
               <div className="flex flex-wrap gap-2 justify-center">
-                {wrongTopics.map((topic) => (
-                  <span key={topic} className="px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-300 text-xs">
-                    {topic}
+                {wrongTopics.map((topicKey) => (
+                  <span key={topicKey} className="px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-300 text-xs">
+                    {t(topicKey)}
                   </span>
                 ))}
               </div>

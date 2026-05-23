@@ -371,14 +371,15 @@
       "text": "Is it better to wait for the right moment before striking — even if that means missing a few balls?",
       "hint": "Tell me, when do you usually rush a shot?",
       "correct": "✅ Correct! Patience is the key in padel.",
-      "wrong": "💡 In padel, rushing a shot is more often a mistake than a solution."
+      "wrong": "💡 In padel, rushing a shot is more often a mistake than a solution.",
+      "wrongExplanation": "patience and timing"
     },
-    "lq2": { "text": "After a wall shot — should you immediately take position at the net?" },
-    "lq3": { "text": "When your partner makes a mistake — is it better to immediately tell them what they did wrong?" },
-    "lq4": { "text": "A full-power smash — always the best choice when the ball is high?" },
-    "lq5": { "text": "Three mistakes in a row is normal — no need to change your whole game plan?" },
-    "lq6": { "text": "Court position is more important than shot power?" },
-    "lq7": { "text": "Against weak opponents you can relax and stop thinking about tactics?" }
+    "lq2": { "text": "After a wall shot — should you immediately take position at the net?", "wrongExplanation": "positioning after the wall" },
+    "lq3": { "text": "When your partner makes a mistake — is it better to immediately tell them what they did wrong?", "wrongExplanation": "team psychology" },
+    "lq4": { "text": "A full-power smash — always the best choice when the ball is high?", "wrongExplanation": "smash tactics" },
+    "lq5": { "text": "Three mistakes in a row is normal — no need to change your whole game plan?", "wrongExplanation": "consistency and mental resilience" },
+    "lq6": { "text": "Court position is more important than shot power?", "wrongExplanation": "positioning over power" },
+    "lq7": { "text": "Against weak opponents you can relax and stop thinking about tactics?", "wrongExplanation": "focus against any opponent" }
   },
   "levelQuizResult": {
     "yourLevel": "Your level",

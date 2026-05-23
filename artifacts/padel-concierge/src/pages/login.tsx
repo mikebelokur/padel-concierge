@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, Redirect } from "wouter";
 import { useLogin } from "@workspace/api-client-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -10,9 +10,20 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [, setLocation] = useLocation();
-  const { login: authLogin } = useAuth();
+  const { login: authLogin, user, isLoading } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
+
+  if (isLoading) return null;
+  if (user) {
+    const dest =
+      user.role === "owner" || user.role === "admin"
+        ? "/admin"
+        : user.role === "coach"
+          ? "/coach"
+          : "/dashboard";
+    return <Redirect to={dest} />;
+  }
 
   const loginMutation = useLogin({
     mutation: {

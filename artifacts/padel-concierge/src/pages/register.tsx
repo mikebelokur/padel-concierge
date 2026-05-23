@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation, Link } from "wouter";
+import { useLocation, Link, Redirect } from "wouter";
 import { useRegister, useUpdateUser } from "@workspace/api-client-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -35,7 +35,7 @@ export default function Register() {
   const [step, setStep] = useState(1);
   const [slideDir, setSlideDir] = useState<"right" | "left">("right");
   const [, setLocation] = useLocation();
-  const { user, login: authLogin } = useAuth();
+  const { user, isLoading, login: authLogin } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
 
@@ -59,15 +59,10 @@ export default function Register() {
     locationName: "Dubai",
   });
 
-  useEffect(() => {
-    if (user && localStorage.getItem("token")) {
-      if (user.archetype) {
-        setLocation("/dashboard");
-      } else {
-        setLocation("/assessment");
-      }
-    }
-  }, [user]);
+  // Hold render until auth state is known — prevents a form flash for
+  // already-authenticated users. Route by archetype completion like login does.
+  if (isLoading) return null;
+  if (user) return <Redirect to={user.archetype ? "/dashboard" : "/assessment"} />;
 
   const update = (k: string, v: string) => setFormData((p) => ({ ...p, [k]: v }));
 

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useGetMe, useLogin, useRegister, getGetMeQueryKey } from '@workspace/api-client-react';
+import { useGetMe, getGetMeQueryKey } from '@workspace/api-client-react';
 import { setSessionExpiredHandler as setApiFetchExpiredHandler } from '@/lib/api';
 import { setSessionExpiredHandler } from '@workspace/api-client-react';
 import { toast } from '@/hooks/use-toast';

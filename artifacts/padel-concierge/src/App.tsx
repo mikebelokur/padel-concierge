@@ -79,13 +79,9 @@ function ProtectedRoute({
   allowedRoles?: string[];
 }) {
   const { user, isLoading } = useAuth();
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground text-sm">
-        Loading…
-      </div>
-    );
-  }
+  // Hold render until auth state is known — prevents a redirect flash for
+  // already-authenticated users on first load.
+  if (isLoading) return null;
   if (!user) return <Redirect to="/login" />;
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     return <Redirect to="/dashboard" />;

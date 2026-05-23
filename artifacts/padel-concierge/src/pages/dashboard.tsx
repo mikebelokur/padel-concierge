@@ -1,18 +1,15 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useGetPlayerStats, useListBookings, useGetActivityLog, getGetPlayerStatsQueryKey, getListBookingsQueryKey, getGetActivityLogQueryKey } from "@workspace/api-client-react";
+import { useGetPlayerStats, useListBookings, getGetPlayerStatsQueryKey, getListBookingsQueryKey } from "@workspace/api-client-react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { Link } from "wouter";
 import { ARCHETYPE_META, type Archetype } from "@/lib/archetypes";
 
-function levelLabel(level: string, t: (k: string) => string) {
+function levelLabel(level: string) {
   const n = parseFloat(level);
   if (isNaN(n)) return level;
-  if (n < 2.0) return t("quiz.levels.D");
+  if (n < 2.0) return "Beginner";
   if (n < 3.0) return "Intermediate";
   if (n < 4.0) return "Advanced";
   return "Elite";
@@ -32,11 +29,6 @@ export default function Dashboard() {
     { query: { queryKey: getListBookingsQueryKey({ userId }), enabled: !!userId } }
   );
 
-  const { data: activity } = useGetActivityLog(
-    { limit: 8 },
-    { query: { queryKey: getGetActivityLogQueryKey({ limit: 8 }), refetchInterval: 30000 } }
-  );
-
   const upcoming = (bookings ?? [])
     .filter((b) => b.paymentStatus !== "cancelled" && b.match)
     .sort((a, b) => {
@@ -47,250 +39,319 @@ export default function Dashboard() {
     .slice(0, 3);
 
   const winRatePct = stats ? Math.round((stats.winRate ?? 0) * 100) : 0;
+  const archetype = user?.archetype as Archetype | undefined;
+  const archetypeMeta = archetype ? ARCHETYPE_META[archetype] : null;
+
+  const firstName = user?.name?.split(" ")[0] || t("dashboard.player");
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().slice(0, 10);
 
   return (
     <AppLayout>
-      <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-5 sm:space-y-8">
-        {/* Header */}
-        <header className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-serif mb-1 truncate">
-              {t("dashboard.welcomeBack")}, {user?.name?.split(" ")[0] || t("dashboard.player")}
-            </h1>
-            <div className="flex flex-wrap items-center gap-2 mt-2">
-              <Badge className="bg-primary/20 text-primary border-primary/30 text-xs sm:text-sm px-2 sm:px-3 py-1">
-                WPT {user?.level ?? "—"}
-              </Badge>
-              <span className="text-muted-foreground text-sm">{levelLabel(user?.level ?? "", t)}</span>
-              {user?.verified && (
-                <Badge className="bg-accent/20 text-accent border-accent/30 text-xs sm:text-sm">
-                  ✓ {t("common.certified")}
-                </Badge>
-              )}
-            </div>
+      <div
+        className="max-w-2xl mx-auto px-6 animate-fade-up"
+        style={{ paddingTop: "28px" }}
+      >
+        {/* ── GREETING ── */}
+        <header className="mb-8">
+          <p className="text-muted-foreground mb-1" style={{ fontSize: "15px" }}>
+            Padel Concierge
+          </p>
+          <h1
+            className="font-serif font-bold text-white"
+            style={{ fontSize: "28px", lineHeight: "1.2" }}
+          >
+            {t("dashboard.greeting")}, {firstName} 👋
+          </h1>
+          <div className="flex items-center gap-2 mt-3 flex-wrap">
+            <span
+              className="px-3 py-1 rounded-full border font-mono font-semibold"
+              style={{
+                fontSize: "13px",
+                background: "rgba(212,175,55,0.12)",
+                borderColor: "rgba(212,175,55,0.3)",
+                color: "#D4AF37",
+              }}
+            >
+              WPT {user?.level ?? "—"}
+            </span>
+            <span className="text-muted-foreground" style={{ fontSize: "13px" }}>
+              {levelLabel(user?.level ?? "")}
+            </span>
+            {user?.verified && (
+              <span
+                className="px-3 py-1 rounded-full border"
+                style={{ fontSize: "13px", background: "rgba(0,212,255,0.1)", borderColor: "rgba(0,212,255,0.25)", color: "#00d4ff" }}
+              >
+                ✓ {t("common.certified")}
+              </span>
+            )}
           </div>
-          <Link href="/matches/suggest">
-            <Button size="sm" className="shadow-lg shadow-primary/20 shrink-0 text-sm sm:text-base sm:h-10">{t("dashboard.findMatch")}</Button>
-          </Link>
         </header>
 
-        {/* Find a Partner CTA */}
-        {(() => {
-          const tomorrow = new Date();
-          tomorrow.setDate(tomorrow.getDate() + 1);
-          const tomorrowStr = tomorrow.toISOString().slice(0, 10);
-          return (
-            <Link href={`/find-match?date=${tomorrowStr}`}>
-              <Card className="bg-gradient-to-r from-yellow-500/10 via-primary/10 to-transparent border-yellow-500/30 hover:border-yellow-500/50 transition-colors cursor-pointer">
-                <CardContent className="p-5 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="text-2xl flex-shrink-0">🎯</div>
-                    <div className="min-w-0">
-                      <div className="text-sm sm:text-base font-medium truncate">
-                        {t("dashboard.findPartnerTomorrow")}
-                      </div>
-                      <div className="text-xs text-muted-foreground truncate">
-                        {t("dashboard.findPartnerHint")}
-                      </div>
-                    </div>
-                  </div>
-                  <span className="text-yellow-400 text-xl">→</span>
-                </CardContent>
-              </Card>
-            </Link>
-          );
-        })()}
+        {/* ── 3 BIG STACKED CARDS ── */}
+        <div className="space-y-4 mb-8">
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Card 1: Find a Match */}
+          <Link href={`/find-match?date=${tomorrowStr}`}>
+            <div
+              className="rounded-[20px] p-6 cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.98]"
+              style={{
+                background: "linear-gradient(135deg, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.06) 100%)",
+                border: "1px solid rgba(212,175,55,0.3)",
+                minHeight: "200px",
+              }}
+            >
+              <div className="flex items-start justify-between h-full">
+                <div className="flex-1">
+                  <div className="text-3xl mb-3">🎯</div>
+                  <h2
+                    className="font-serif font-bold text-white mb-1"
+                    style={{ fontSize: "20px" }}
+                  >
+                    {t("dashboard.findAMatch")}
+                  </h2>
+                  <p className="text-muted-foreground" style={{ fontSize: "14px" }}>
+                    {t("dashboard.findPartnerHint")}
+                  </p>
+                </div>
+                <div
+                  className="rounded-full flex items-center justify-center ml-4 flex-shrink-0 mt-1"
+                  style={{ width: "44px", height: "44px", background: "#D4AF37", color: "#000" }}
+                >
+                  <span style={{ fontSize: "20px" }}>→</span>
+                </div>
+              </div>
+            </div>
+          </Link>
+
+          {/* Card 2: Upcoming Sessions */}
+          <div
+            className="rounded-[20px] p-6"
+            style={{
+              background: "hsl(220 20% 6%)",
+              border: "1px solid rgba(255,255,255,0.07)",
+              minHeight: "200px",
+            }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">📅</span>
+                <h2 className="font-serif font-semibold text-white" style={{ fontSize: "18px" }}>
+                  {t("dashboard.upcomingMatches")}
+                </h2>
+              </div>
+              <Link href="/bookings">
+                <span className="text-primary cursor-pointer hover:opacity-80" style={{ fontSize: "14px" }}>
+                  {t("common.viewAll")}
+                </span>
+              </Link>
+            </div>
+
+            {upcoming.length === 0 ? (
+              <div>
+                <p className="text-muted-foreground mb-4" style={{ fontSize: "15px" }}>
+                  {t("dashboard.noUpcomingMatches")}
+                </p>
+                <Link href="/matches/suggest">
+                  <button
+                    className="w-full rounded-[12px] border border-white/12 text-white/70 font-medium transition-all hover:border-white/20 hover:text-white"
+                    style={{ height: "44px", fontSize: "15px" }}
+                  >
+                    {t("dashboard.findAMatch")}
+                  </button>
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {upcoming.map((b) => (
+                  <Link key={b.id} href={`/matches/${b.matchId}`}>
+                    <div
+                      className="flex items-center justify-between rounded-xl px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
+                      style={{ background: "rgba(255,255,255,0.03)" }}
+                    >
+                      <div>
+                        <div className="text-white font-medium" style={{ fontSize: "15px" }}>
+                          {b.match?.clubName}
+                        </div>
+                        <div className="text-muted-foreground" style={{ fontSize: "13px" }}>
+                          {b.match?.date} · {b.match?.time}
+                        </div>
+                      </div>
+                      <span
+                        className="rounded-full px-3 py-1"
+                        style={{
+                          fontSize: "12px",
+                          background: "rgba(255,255,255,0.06)",
+                          color: "rgba(255,255,255,0.5)",
+                        }}
+                      >
+                        {b.match?.format}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Card 3: Player Card */}
+          <div
+            className="rounded-[20px] p-6"
+            style={{
+              background: archetypeMeta
+                ? `linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)`
+                : "hsl(220 20% 6%)",
+              border: archetypeMeta ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(255,255,255,0.07)",
+              minHeight: "200px",
+            }}
+          >
+            {archetypeMeta ? (
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="text-3xl mb-3">{archetypeMeta.icon}</div>
+                  <div className="text-muted-foreground mb-1" style={{ fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                    {t("dashboard.playerCard")}
+                  </div>
+                  <h2 className={`font-serif font-semibold mb-1 ${archetypeMeta.color}`} style={{ fontSize: "18px" }}>
+                    {archetypeMeta.nameRu}
+                  </h2>
+                  <p className="text-muted-foreground" style={{ fontSize: "14px", maxWidth: "260px" }}>
+                    {archetypeMeta.desc}
+                  </p>
+                  {user?.warmUpPreference && (
+                    <div className="text-orange-400 mt-2" style={{ fontSize: "13px" }}>
+                      🔥 {t("dashboard.preferWarmup")}
+                    </div>
+                  )}
+                </div>
+                <div className="ml-4 flex-shrink-0 text-center">
+                  <div className="font-mono font-bold text-white" style={{ fontSize: "28px" }}>
+                    {winRatePct}<span className="text-muted-foreground" style={{ fontSize: "16px" }}>%</span>
+                  </div>
+                  <div className="text-muted-foreground" style={{ fontSize: "11px" }}>
+                    {t("dashboard.winRate")}
+                  </div>
+                  <Link href="/quiz">
+                    <button
+                      className="mt-3 rounded-xl border border-white/12 text-white/60 transition-all hover:border-white/20 hover:text-white"
+                      style={{ fontSize: "12px", padding: "6px 12px" }}
+                    >
+                      {t("dashboard.retake")}
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="text-3xl mb-3">🧠</div>
+                  <h2 className="font-serif font-semibold text-white mb-1" style={{ fontSize: "18px" }}>
+                    {t("dashboard.knowYourArchetype")}
+                  </h2>
+                  <p className="text-muted-foreground" style={{ fontSize: "14px" }}>
+                    {t("dashboard.archetypeDesc")}
+                  </p>
+                </div>
+                <Link href="/quiz">
+                  <button
+                    className="ml-4 flex-shrink-0 rounded-[12px] font-semibold text-black bg-primary transition-all"
+                    style={{ fontSize: "14px", padding: "10px 18px" }}
+                  >
+                    {t("dashboard.takeQuiz")}
+                  </button>
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── STATS ROW ── */}
+        <div className="grid grid-cols-4 gap-3 mb-8">
           {[
-            { label: t("dashboard.matchesPlayed"), value: user?.matchesPlayed ?? 0, color: "text-foreground" },
-            { label: t("dashboard.wins"), value: user?.wins ?? 0, color: "text-accent" },
-            { label: t("dashboard.winRate"), value: `${winRatePct}%`, color: "text-primary" },
-            { label: t("dashboard.wptLevel"), value: user?.level ?? "—", color: "text-primary" },
+            { label: t("dashboard.matchesPlayed"), value: user?.matchesPlayed ?? 0 },
+            { label: t("dashboard.wins"), value: user?.wins ?? 0 },
+            { label: t("dashboard.winRate"), value: `${winRatePct}%` },
+            { label: t("dashboard.wptLevel"), value: user?.level ?? "—" },
           ].map((s) => (
-            <Card key={s.label} className="bg-card border-white/5">
-              <CardHeader className="pb-1 pt-4 px-5">
-                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  {s.label}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pb-4 px-5">
-                <div className={`text-3xl font-mono font-light ${s.color}`}>{s.value}</div>
-              </CardContent>
-            </Card>
+            <div
+              key={s.label}
+              className="rounded-[16px] p-3 text-center"
+              style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.07)" }}
+            >
+              <div
+                className="font-mono font-semibold text-primary"
+                style={{ fontSize: "22px" }}
+              >
+                {s.value}
+              </div>
+              <div
+                className="text-muted-foreground mt-1 leading-tight"
+                style={{ fontSize: "13px" }}
+              >
+                {s.label}
+              </div>
+            </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Win Trend Chart */}
-          <Card className="bg-card border-white/5 lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="text-base font-medium">{t("dashboard.winRateTrend")}</CardTitle>
-            </CardHeader>
-            <CardContent className="h-52">
-              {stats?.winTrend ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={stats.winTrend}>
-                    <XAxis dataKey="date" stroke="#6b7a99" fontSize={11} tickFormatter={(v) => v.slice(5)} />
-                    <YAxis stroke="#6b7a99" fontSize={11} domain={[0, 1]} tickFormatter={(v) => `${Math.round(v * 100)}%`} />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: "#0d1420", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px" }}
-                      formatter={(v: number) => [`${Math.round(v * 100)}%`, t("dashboard.winRate")]}
-                    />
-                    <Line type="monotone" dataKey="winRate" stroke="#2d7dff" strokeWidth={2} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-                  {t("dashboard.playMoreMatches")}
+        {/* ── QUICK ACTIONS ── */}
+        <div className="mb-8">
+          <h3 className="font-serif font-semibold text-white mb-4" style={{ fontSize: "18px" }}>
+            {t("dashboard.quickActions")}
+          </h3>
+          <div className="space-y-2">
+            {[
+              { href: "/matches/suggest", label: t("dashboard.findAMatch"), icon: "🎾" },
+              { href: "/courts", label: t("dashboard.bookACourt"), icon: "🏟️" },
+              { href: "/match-requests", label: t("dashboard.matchRequests"), icon: "📨" },
+              { href: "/assessment", label: t("dashboard.skillAssessment"), icon: "📊" },
+              { href: "/video-analysis", label: t("dashboard.videoAnalysis"), icon: "🎬" },
+            ].map((a) => (
+              <Link key={a.href} href={a.href}>
+                <div
+                  className="flex items-center gap-4 px-4 py-3 rounded-[14px] cursor-pointer hover:bg-white/5 transition-colors"
+                  style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
+                >
+                  <span style={{ fontSize: "22px" }}>{a.icon}</span>
+                  <span className="text-white/80 flex-1" style={{ fontSize: "16px" }}>{a.label}</span>
+                  <span className="text-muted-foreground">›</span>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Quick Actions */}
-          <Card className="bg-card border-white/5">
-            <CardHeader>
-              <CardTitle className="text-base font-medium">{t("dashboard.quickActions")}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {[
-                { href: "/matches/suggest", label: t("dashboard.findAMatch"), icon: "🎾" },
-                { href: "/courts", label: t("dashboard.bookACourt"), icon: "🏟️" },
-                { href: "/match-requests", label: t("dashboard.matchRequests"), icon: "📨" },
-                { href: "/assessment", label: t("dashboard.skillAssessment"), icon: "📊" },
-                { href: "/video-analysis", label: t("dashboard.videoAnalysis"), icon: "🎬" },
-              ].map((a) => (
-                <Link key={a.href} href={a.href}>
-                  <div className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-white/5 cursor-pointer transition-colors text-sm">
-                    <span className="text-lg">{a.icon}</span>
-                    <span className="text-foreground/80">{a.label}</span>
-                  </div>
-                </Link>
-              ))}
-            </CardContent>
-          </Card>
+              </Link>
+            ))}
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Upcoming Matches */}
-          <Card className="bg-card border-white/5">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base font-medium">{t("dashboard.upcomingMatches")}</CardTitle>
-              <Link href="/bookings">
-                <span className="text-xs text-primary hover:underline cursor-pointer">{t("common.viewAll")}</span>
-              </Link>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {upcoming.length === 0 ? (
-                <div className="text-muted-foreground text-sm py-4 text-center">{t("dashboard.noUpcomingMatches")}</div>
-              ) : (
-                upcoming.map((b) => (
-                  <Link key={b.id} href={`/matches/${b.matchId}`}>
-                    <div className="flex items-center justify-between p-3 rounded-md bg-background/50 hover:bg-white/5 cursor-pointer transition-colors">
-                      <div>
-                        <div className="font-medium text-sm">{b.match?.clubName}</div>
-                        <div className="text-xs text-muted-foreground">{b.match?.date} · {b.match?.time}</div>
-                      </div>
-                      <Badge variant="outline" className="text-xs border-white/10">{b.match?.format}</Badge>
-                    </div>
-                  </Link>
-                ))
-              )}
-              {upcoming.length === 0 && (
-                <Link href="/matches/suggest">
-                  <Button variant="outline" className="w-full border-white/10 text-sm mt-1">{t("dashboard.findAMatch")}</Button>
-                </Link>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Activity Feed */}
-          <Card className="bg-card border-white/5">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base font-medium">{t("dashboard.recentActivity")}</CardTitle>
-              <Link href="/members">
-                <span className="text-xs text-primary hover:underline cursor-pointer">{t("common.seeAll")}</span>
-              </Link>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {(activity ?? []).slice(0, 6).map((log) => (
-                <div key={log.id} className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-serif flex-shrink-0 mt-0.5">
-                    {log.userName?.[0] ?? "?"}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-sm">
-                      <span className="font-medium">{log.userName}</span>{" "}
-                      <span className="text-muted-foreground">{log.action?.replace(/_/g, " ")}</span>
-                    </div>
-                    {log.details && (
-                      <div className="text-xs text-muted-foreground truncate">{log.details}</div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Archetype Card */}
-        {(() => {
-          const archetype = user?.archetype as Archetype | undefined;
-          const meta = archetype ? ARCHETYPE_META[archetype] : null;
-          if (meta) {
-            return (
-              <Card className={`border ${meta.border} ${meta.bg}`}>
-                <CardContent className="p-6 flex items-center justify-between gap-4">
-                  <div>
-                    <div className="text-2xl mb-1">{meta.icon}</div>
-                    <div className={`font-serif text-lg mb-1 ${meta.color}`}>{meta.nameRu}</div>
-                    <div className="text-muted-foreground text-sm max-w-md">{meta.desc}</div>
-                    {user?.warmUpPreference && (
-                      <div className="text-xs text-orange-400 mt-1.5">🔥 {t("dashboard.preferWarmup")}</div>
-                    )}
-                  </div>
-                  <Link href="/quiz">
-                    <Button variant="outline" className="shrink-0 border-white/10 text-muted-foreground hover:text-foreground">
-                      {t("dashboard.retake")}
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            );
-          }
-          return (
-            <Card className="bg-gradient-to-r from-primary/10 via-accent/5 to-transparent border-primary/20">
-              <CardContent className="p-6 flex items-center justify-between gap-4">
-                <div>
-                  <div className="text-xl mb-0.5">🧠</div>
-                  <div className="font-serif text-lg mb-1">{t("dashboard.knowYourArchetype")}</div>
-                  <div className="text-muted-foreground text-sm">{t("dashboard.archetypeDesc")}</div>
-                </div>
-                <Link href="/quiz">
-                  <Button className="shrink-0 bg-primary shadow-lg shadow-primary/20">{t("dashboard.takeQuiz")}</Button>
-                </Link>
-              </CardContent>
-            </Card>
-          );
-        })()}
-
-        {/* Assessment CTA */}
+        {/* ── ASSESSMENT CTA ── */}
         {!user?.verified && (
-          <Card className="bg-gradient-to-r from-primary/10 to-accent/5 border-primary/20">
-            <CardContent className="p-6 flex items-center justify-between">
+          <div
+            className="rounded-[20px] p-6 mb-8"
+            style={{
+              background: "linear-gradient(135deg, rgba(212,175,55,0.1) 0%, rgba(0,212,255,0.05) 100%)",
+              border: "1px solid rgba(212,175,55,0.2)",
+            }}
+          >
+            <div className="flex items-center justify-between gap-4">
               <div>
-                <div className="font-serif text-lg mb-1">{t("dashboard.getCertifiedLevel")}</div>
-                <div className="text-muted-foreground text-sm">{t("dashboard.certifiedDesc")}</div>
+                <div className="font-serif font-semibold text-white mb-1" style={{ fontSize: "17px" }}>
+                  {t("dashboard.getCertifiedLevel")}
+                </div>
+                <div className="text-muted-foreground" style={{ fontSize: "14px" }}>
+                  {t("dashboard.certifiedDesc")}
+                </div>
               </div>
               <Link href="/assessment">
-                <Button variant="outline" className="border-primary text-primary hover:bg-primary/10 shrink-0 ml-4">
+                <button
+                  className="flex-shrink-0 rounded-[12px] border border-primary text-primary font-medium hover:bg-primary/10 transition-colors"
+                  style={{ fontSize: "14px", padding: "10px 16px" }}
+                >
                   {t("dashboard.takeAssessment")}
-                </Button>
+                </button>
               </Link>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
       </div>
     </AppLayout>

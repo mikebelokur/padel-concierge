@@ -35,6 +35,13 @@ const navItems: NavItem[] = [
   { href: "/admin",          labelKey: "nav.adminPanel",    icon: "🔧", roles: ["admin", "owner"] },
 ];
 
+const BOTTOM_TABS = [
+  { href: "/dashboard",  icon: TabHome,     labelKey: "nav.dashboard" },
+  { href: "/find-match", icon: TabSearch,   labelKey: "nav.findMatch" },
+  { href: "/matches",    icon: TabMatches,  labelKey: "nav.matches" },
+  { href: "/settings",   icon: TabSettings, labelKey: "nav.settings" },
+];
+
 export function Drawer() {
   const [location] = useLocation();
   const { user, logout } = useAuth();
@@ -73,7 +80,7 @@ export function Drawer() {
         className={cn(
           "px-2 py-0.5 rounded text-xs font-semibold transition-colors",
           language === "en"
-            ? "bg-primary text-white"
+            ? "bg-primary text-black"
             : "text-muted-foreground hover:text-foreground"
         )}
       >
@@ -85,7 +92,7 @@ export function Drawer() {
         className={cn(
           "px-2 py-0.5 rounded text-xs font-semibold transition-colors",
           language === "ru"
-            ? "bg-primary text-white"
+            ? "bg-primary text-black"
             : "text-muted-foreground hover:text-foreground"
         )}
       >
@@ -97,7 +104,7 @@ export function Drawer() {
   return (
     <>
       {/* ── TOP BAR ─────────────────────────────────── */}
-      <header className="fixed top-0 left-0 right-0 z-30 h-14 bg-card/95 backdrop-blur-sm border-b border-white/5 flex items-center px-4 gap-3 lg:pl-68">
+      <header className="fixed top-0 left-0 right-0 z-30 h-14 bg-black/95 backdrop-blur-sm border-b border-white/5 flex items-center px-4 gap-3 lg:pl-68">
         {/* Hamburger — mobile only */}
         <button
           onClick={openDrawer}
@@ -124,7 +131,7 @@ export function Drawer() {
           </Link>
         )}
 
-        {/* Language toggle — always visible in top bar */}
+        {/* Language toggle */}
         <LangToggle />
 
         {/* Avatar — mobile */}
@@ -140,7 +147,7 @@ export function Drawer() {
       </header>
 
       {/* ── DESKTOP SIDEBAR ─────────────────────────── */}
-      <aside className="hidden lg:flex flex-col fixed top-0 left-0 h-screen w-64 bg-card border-r border-white/5 z-30">
+      <aside className="hidden lg:flex flex-col fixed top-0 left-0 h-screen w-64 bg-black border-r border-white/5 z-30">
         <div className="h-14 flex items-center justify-between px-5 border-b border-white/5 flex-shrink-0">
           <div>
             <div className="font-serif text-base tracking-tight">Padel Concierge</div>
@@ -157,7 +164,7 @@ export function Drawer() {
       {/* ── MOBILE OVERLAY ──────────────────────────── */}
       <div
         className={cn(
-          "lg:hidden fixed inset-0 z-40 bg-black/70 transition-opacity duration-300",
+          "lg:hidden fixed inset-0 z-40 bg-black/80 transition-opacity duration-300",
           open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         )}
         onClick={closeDrawer}
@@ -166,7 +173,7 @@ export function Drawer() {
       {/* ── MOBILE DRAWER ───────────────────────────── */}
       <aside
         className={cn(
-          "lg:hidden fixed top-0 left-0 h-full w-72 z-50 bg-card border-r border-white/5 flex flex-col",
+          "lg:hidden fixed top-0 left-0 h-full w-72 z-50 bg-black border-r border-white/5 flex flex-col",
           "transition-transform duration-300 ease-in-out",
           open ? "translate-x-0" : "-translate-x-full"
         )}
@@ -185,6 +192,48 @@ export function Drawer() {
         </nav>
         <UserFooter user={user} isOwner={isOwner} logout={logout} t={t} />
       </aside>
+
+      {/* ── iOS BOTTOM TAB BAR ── mobile only ── */}
+      {user && (
+        <nav
+          className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-stretch"
+          style={{
+            background: "rgba(0,0,0,0.92)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            borderTop: "1px solid rgba(255,255,255,0.08)",
+            paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          }}
+        >
+          {BOTTOM_TABS.map(({ href, icon: Icon, labelKey }) => {
+            const active = location === href || (href !== "/dashboard" && location.startsWith(href));
+            return (
+              <Link key={href} href={href}>
+                <div
+                  className="flex flex-col items-center justify-center transition-all cursor-pointer"
+                  style={{
+                    flex: 1,
+                    minHeight: "56px",
+                    padding: "10px 0 8px",
+                    minWidth: 0,
+                  }}
+                >
+                  <Icon active={active} />
+                  <span
+                    className="mt-1 font-medium leading-none"
+                    style={{
+                      fontSize: "10px",
+                      color: active ? "#D4AF37" : "rgba(255,255,255,0.4)",
+                    }}
+                  >
+                    {t(labelKey)}
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+        </nav>
+      )}
     </>
   );
 }
@@ -279,5 +328,67 @@ function UserFooter({
         {t("common.signOut")}
       </button>
     </div>
+  );
+}
+
+/* ── SVG Tab Icons ── */
+
+function TabHome({ active }: { active: boolean }) {
+  const color = active ? "#D4AF37" : "rgba(255,255,255,0.4)";
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M3 12L12 3L21 12V20C21 20.5523 20.5523 21 20 21H15V16H9V21H4C3.44772 21 3 20.5523 3 20V12Z"
+        stroke={color}
+        strokeWidth={active ? "2" : "1.5"}
+        fill={active ? `${color}22` : "none"}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function TabSearch({ active }: { active: boolean }) {
+  const color = active ? "#D4AF37" : "rgba(255,255,255,0.4)";
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <circle
+        cx="11"
+        cy="11"
+        r="7"
+        stroke={color}
+        strokeWidth={active ? "2" : "1.5"}
+        fill={active ? `${color}15` : "none"}
+      />
+      <path d="M16.5 16.5L21 21" stroke={color} strokeWidth={active ? "2" : "1.5"} strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function TabMatches({ active }: { active: boolean }) {
+  const color = active ? "#D4AF37" : "rgba(255,255,255,0.4)";
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="9" stroke={color} strokeWidth={active ? "2" : "1.5"} fill={active ? `${color}15` : "none"} />
+      <path d="M12 3C12 3 9 7 9 12C9 17 12 21 12 21" stroke={color} strokeWidth={active ? "1.5" : "1"} />
+      <path d="M12 3C12 3 15 7 15 12C15 17 12 21 12 21" stroke={color} strokeWidth={active ? "1.5" : "1"} />
+      <path d="M3 12H21" stroke={color} strokeWidth={active ? "1.5" : "1"} />
+    </svg>
+  );
+}
+
+function TabSettings({ active }: { active: boolean }) {
+  const color = active ? "#D4AF37" : "rgba(255,255,255,0.4)";
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="3" stroke={color} strokeWidth={active ? "2" : "1.5"} fill={active ? `${color}40` : "none"} />
+      <path
+        d="M12 2L12 4M12 20L12 22M4.22 4.22L5.64 5.64M18.36 18.36L19.78 19.78M2 12H4M20 12H22M4.22 19.78L5.64 18.36M18.36 5.64L19.78 4.22"
+        stroke={color}
+        strokeWidth={active ? "2" : "1.5"}
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }

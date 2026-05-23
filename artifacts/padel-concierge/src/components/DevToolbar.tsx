@@ -58,6 +58,9 @@ export function DevToolbar() {
     if (user) setLevel(user.level ?? "");
   }, [user]);
 
+  const isAdminOrAbove = user?.role === "owner" || user?.role === "admin";
+  if (!isAdminOrAbove) return null;
+
   function flash(msg: string) {
     setFeedback(msg);
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -148,7 +151,7 @@ export function DevToolbar() {
     user && QUICK_ACCOUNTS.find(a => a.label === label)?.subtitle === user.role;
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999] flex flex-col items-end gap-2">
+    <div className="fixed bottom-24 right-4 z-[9999] flex flex-col items-end gap-2 lg:bottom-4">
       {feedback && (
         <div className="bg-black/90 border border-white/10 text-green-400 text-xs px-3 py-1.5 rounded-full font-mono shadow-xl">
           {feedback}
@@ -157,7 +160,6 @@ export function DevToolbar() {
 
       {open && (
         <div className="w-72 bg-[#0a0f1a] border border-white/10 rounded-xl shadow-2xl shadow-black/60 overflow-hidden">
-          {/* Header */}
           <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-xs font-mono text-yellow-400 font-semibold tracking-wider">DEV TOOLBAR</span>
@@ -169,7 +171,6 @@ export function DevToolbar() {
             )}
           </div>
 
-          {/* Current user strip */}
           {user && (
             <div className="px-4 py-2.5 bg-white/2 border-b border-white/5 flex items-center gap-2.5">
               <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-serif flex-shrink-0">
@@ -191,7 +192,6 @@ export function DevToolbar() {
             </div>
           )}
 
-          {/* Tabs */}
           <div className="flex border-b border-white/5">
             {(["accounts", "pages", "user"] as const).map((t) => (
               <button
@@ -207,7 +207,6 @@ export function DevToolbar() {
             ))}
           </div>
 
-          {/* Tab: Accounts */}
           {tab === "accounts" && (
             <div className="p-3 space-y-2">
               {QUICK_ACCOUNTS.map((acct) => (
@@ -238,7 +237,6 @@ export function DevToolbar() {
             </div>
           )}
 
-          {/* Tab: Pages */}
           {tab === "pages" && (
             <div className="p-3 max-h-72 overflow-y-auto">
               <div className="grid grid-cols-2 gap-1.5">
@@ -255,14 +253,12 @@ export function DevToolbar() {
             </div>
           )}
 
-          {/* Tab: User */}
           {tab === "user" && (
             <div className="p-3 space-y-4">
               {!user ? (
                 <p className="text-xs text-muted-foreground text-center py-4">Not logged in</p>
               ) : (
                 <>
-                  {/* Level setter */}
                   <div>
                     <div className="text-xs text-muted-foreground mb-2 font-mono uppercase tracking-wider">Set Level</div>
                     <div className="flex flex-wrap gap-1.5">
@@ -284,7 +280,6 @@ export function DevToolbar() {
                     </div>
                   </div>
 
-                  {/* Verification */}
                   <div>
                     <div className="text-xs text-muted-foreground mb-2 font-mono uppercase tracking-wider">Verification</div>
                     <button
@@ -301,7 +296,6 @@ export function DevToolbar() {
                     </button>
                   </div>
 
-                  {/* Archetype */}
                   <div>
                     <div className="text-xs text-muted-foreground mb-2 font-mono uppercase tracking-wider">Archetype</div>
                     <div className="flex items-center gap-2">
@@ -324,7 +318,6 @@ export function DevToolbar() {
                     </div>
                   </div>
 
-                  {/* Role switcher */}
                   <div>
                     <div className="text-xs text-muted-foreground mb-2 font-mono uppercase tracking-wider">Jump to role view</div>
                     <div className="grid grid-cols-2 gap-1.5">
@@ -350,7 +343,6 @@ export function DevToolbar() {
             </div>
           )}
 
-          {/* Footer */}
           <div className="px-4 py-2 border-t border-white/5 flex items-center justify-between">
             <span className="text-xs text-muted-foreground/40 font-mono">dev mode</span>
             <button
@@ -363,13 +355,12 @@ export function DevToolbar() {
         </div>
       )}
 
-      {/* Toggle button */}
       <button
         onClick={() => setOpen((v) => !v)}
         className={cn(
           "flex items-center gap-2 px-3 py-2 rounded-full border text-xs font-mono font-semibold shadow-xl transition-all",
           open
-            ? "bg-primary border-primary text-white shadow-primary/30"
+            ? "bg-primary border-primary text-black shadow-primary/30"
             : "bg-[#0a0f1a]/90 border-white/10 text-yellow-400 hover:border-yellow-500/40 shadow-black/50 backdrop-blur-sm"
         )}
       >

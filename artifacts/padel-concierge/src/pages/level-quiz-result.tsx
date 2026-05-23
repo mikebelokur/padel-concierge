@@ -34,65 +34,142 @@ export default function LevelQuizResult() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#080808] px-5 py-8">
-      <div className="w-full max-w-[480px] mx-auto flex flex-col gap-6">
+    <div
+      className="min-h-screen bg-black flex flex-col"
+      style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
+      <div className="w-full max-w-[480px] mx-auto px-6 py-8 flex flex-col gap-6 animate-fade-up">
 
-        {/* Big level */}
+        {/* Level hero */}
         <div className="text-center pt-4">
-          <div className="text-xs text-blue-400 font-medium uppercase tracking-widest mb-3">Твой уровень</div>
-          <div className="text-[96px] font-black text-white leading-none mb-3">{realLevel}</div>
-          <p className="text-[#8a8a8a] text-sm leading-relaxed">{desc}</p>
+          <div
+            className="font-medium uppercase tracking-widest mb-4"
+            style={{ fontSize: "11px", color: "#D4AF37" }}
+          >
+            Твой уровень
+          </div>
+          <div
+            className="font-black leading-none mb-4"
+            style={{
+              fontSize: "96px",
+              color: "#D4AF37",
+              textShadow: "0 0 60px rgba(212,175,55,0.5)",
+            }}
+          >
+            {realLevel}
+          </div>
+          <p className="text-muted-foreground leading-relaxed" style={{ fontSize: "16px" }}>
+            {desc}
+          </p>
           {quizLevel !== realLevel && (
-            <p className="text-xs text-[#444] mt-2">Тест: {quizLevel} → Рабочий: {realLevel}</p>
+            <p className="mt-2 text-muted-foreground" style={{ fontSize: "13px" }}>
+              Тест: {quizLevel} → Рабочий: {realLevel}
+            </p>
           )}
         </div>
 
         {/* Honest message */}
-        <div className="border-l-4 border-amber-500 bg-amber-500/5 rounded-r-xl px-4 py-4">
-          <p className="text-[#ccc] text-sm leading-relaxed">
+        <div
+          className="rounded-[16px] px-5 py-4"
+          style={{
+            borderLeft: "4px solid #D4AF37",
+            background: "rgba(212,175,55,0.06)",
+            borderRadius: "0 16px 16px 0",
+          }}
+        >
+          <p className="text-white/80 leading-relaxed" style={{ fontSize: "15px" }}>
             Это твой уровень в идеальных условиях. В реальной игре сложнее: партнёр влияет на половину розыгрышей, эмоции не всегда стабильны, техника под давлением работает иначе. Рабочий уровень — на ступень ниже. Это не плохо — это честно. Именно отсюда начинается настоящий рост.
           </p>
         </div>
 
         {/* Level scale */}
-        <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4">
-          <div className="text-xs text-[#555] uppercase tracking-widest mb-4">Шкала развития</div>
-          <div className="flex items-end gap-1.5">
+        <div
+          className="rounded-[20px] p-5"
+          style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.08)" }}
+        >
+          <div
+            className="uppercase tracking-widest mb-5"
+            style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)" }}
+          >
+            Шкала развития
+          </div>
+          <div className="flex items-end gap-2">
             {LEVEL_ORDER.map((lvl, i) => (
-              <div key={lvl} className="flex-1 flex flex-col items-center gap-1.5">
-                <div className={`w-full rounded-t transition-all ${
-                  i === levelIdx ? "bg-blue-500 h-10" :
-                  i < levelIdx  ? "bg-blue-500/30 h-5" :
-                                  "bg-white/10 h-3"
-                }`} />
-                <span className={`text-xs font-bold ${i === levelIdx ? "text-blue-400" : "text-[#555]"}`}>{lvl}</span>
+              <div key={lvl} className="flex-1 flex flex-col items-center gap-2">
+                <div
+                  className="w-full rounded-t-md transition-all"
+                  style={{
+                    height: i === levelIdx ? "44px" : i < levelIdx ? "24px" : "14px",
+                    background: i === levelIdx
+                      ? "#D4AF37"
+                      : i < levelIdx
+                      ? "rgba(212,175,55,0.35)"
+                      : "rgba(255,255,255,0.08)",
+                    boxShadow: i === levelIdx ? "0 0 20px rgba(212,175,55,0.4)" : "none",
+                  }}
+                />
+                <span
+                  className="font-bold"
+                  style={{
+                    fontSize: "12px",
+                    color: i === levelIdx ? "#D4AF37" : "rgba(255,255,255,0.25)",
+                  }}
+                >
+                  {lvl}
+                </span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Personality */}
+        {/* Player profile */}
         {(q1 || q2 || q3) && (
-          <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4">
-            <div className="text-xs text-[#555] uppercase tracking-widest mb-4">Профиль игрока</div>
-            <div className="space-y-3">
-              {q1 && <div className="flex gap-3"><span className="text-[#555] text-sm w-24 shrink-0">Бэкграунд</span><span className="text-white text-sm">{q1}</span></div>}
-              {q2 && <div className="flex gap-3"><span className="text-[#555] text-sm w-24 shrink-0">Мотивация</span><span className="text-white text-sm">{q2}</span></div>}
-              {q3 && <div className="flex gap-3"><span className="text-[#555] text-sm w-24 shrink-0">Стиль</span><span className="text-white text-sm">{q3}</span></div>}
+          <div
+            className="rounded-[20px] p-5"
+            style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.08)" }}
+          >
+            <div
+              className="uppercase tracking-widest mb-5"
+              style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)" }}
+            >
+              Профиль игрока
+            </div>
+            <div className="space-y-4">
+              {q1 && (
+                <div className="flex gap-4">
+                  <span className="text-muted-foreground flex-shrink-0" style={{ fontSize: "14px", minWidth: "90px" }}>Бэкграунд</span>
+                  <span className="text-white" style={{ fontSize: "14px" }}>{q1}</span>
+                </div>
+              )}
+              {q2 && (
+                <div className="flex gap-4">
+                  <span className="text-muted-foreground flex-shrink-0" style={{ fontSize: "14px", minWidth: "90px" }}>Мотивация</span>
+                  <span className="text-white" style={{ fontSize: "14px" }}>{q2}</span>
+                </div>
+              )}
+              {q3 && (
+                <div className="flex gap-4">
+                  <span className="text-muted-foreground flex-shrink-0" style={{ fontSize: "14px", minWidth: "90px" }}>Стиль</span>
+                  <span className="text-white" style={{ fontSize: "14px" }}>{q3}</span>
+                </div>
+              )}
             </div>
           </div>
         )}
 
+        {/* CTA buttons */}
         <button
           onClick={() => setLocation("/level-quiz/profile")}
-          className="w-full h-14 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-semibold text-base rounded-xl transition-colors"
+          className="w-full rounded-[14px] font-semibold text-black transition-all"
+          style={{ height: "56px", fontSize: "17px", background: "#D4AF37", boxShadow: "0 4px 20px rgba(212,175,55,0.3)" }}
         >
           Перейти в профиль →
         </button>
 
         <button
           onClick={retake}
-          className="w-full h-11 bg-transparent border border-white/10 text-[#8a8a8a] text-sm font-medium rounded-xl hover:border-white/20 hover:text-[#ccc] transition-colors"
+          className="w-full rounded-[14px] border font-medium text-muted-foreground hover:text-white hover:border-white/25 transition-colors"
+          style={{ height: "50px", fontSize: "15px", borderColor: "rgba(255,255,255,0.1)" }}
         >
           Пройти тест заново
         </button>

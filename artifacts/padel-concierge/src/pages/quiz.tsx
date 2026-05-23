@@ -301,9 +301,10 @@ export default function Quiz() {
               <button
                 key={optId}
                 onClick={() => handleArchetype(optId)}
-                className="w-full text-left px-5 py-4 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm hover:border-amber-400/50 hover:bg-amber-400/10 active:scale-[0.98] transition-all text-white font-medium text-sm leading-snug"
+                className="w-full text-left px-5 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm hover:border-amber-400/50 hover:bg-amber-400/10 active:scale-[0.98] transition-all text-white font-medium leading-snug flex items-center gap-3"
+                style={{ minHeight: "80px", fontSize: "17px" }}
               >
-                <span className="text-amber-400 font-bold mr-2">{idx === 0 ? "A" : "B"}</span>
+                <span className="text-amber-400 font-bold flex-shrink-0" style={{ fontSize: "15px" }}>{idx === 0 ? "A" : "B"}</span>
                 {t(`quiz.${q.id}.${idx === 0 ? "a" : "b"}`)}
               </button>
             ))}
@@ -346,13 +347,14 @@ export default function Quiz() {
                 onClick={() => !feedback && handleLevel(true)}
                 disabled={!!feedback}
                 className={cn(
-                  "flex-1 py-5 rounded-2xl border font-bold text-xl transition-all duration-300 active:scale-[0.97]",
+                  "flex-1 rounded-2xl border font-bold transition-all duration-300 active:scale-[0.97]",
                   yesFlash && isCorrect
                     ? "border-green-400 bg-green-500/30 text-green-300 shadow-[0_0_30px_rgba(34,197,94,0.6)] scale-[1.02]"
                     : yesFlash && !isCorrect
                     ? "border-red-400 bg-red-500/20 text-red-300"
                     : "border-green-500/40 bg-green-500/10 text-green-400 hover:border-green-400/60 hover:bg-green-500/20"
                 )}
+                style={{ minHeight: "80px", fontSize: "22px" }}
               >
                 {t("common.yes")}
               </button>
@@ -360,13 +362,14 @@ export default function Quiz() {
                 onClick={() => !feedback && handleLevel(false)}
                 disabled={!!feedback}
                 className={cn(
-                  "flex-1 py-5 rounded-2xl border font-bold text-xl transition-all duration-300 active:scale-[0.97]",
+                  "flex-1 rounded-2xl border font-bold transition-all duration-300 active:scale-[0.97]",
                   noFlash && !isCorrect && feedback !== null
                     ? "border-red-400 bg-red-500/20 text-red-300"
                     : noFlash && isCorrect
                     ? "border-green-400 bg-green-500/30 text-green-300 shadow-[0_0_30px_rgba(34,197,94,0.6)] scale-[1.02]"
                     : "border-red-500/40 bg-red-500/10 text-red-400 hover:border-red-400/60 hover:bg-red-500/20"
                 )}
+                style={{ minHeight: "80px", fontSize: "22px" }}
               >
                 {t("common.no")}
               </button>

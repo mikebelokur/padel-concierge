@@ -3,10 +3,6 @@ import { Link, useLocation } from "wouter";
 import { useLogin } from "@workspace/api-client-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Login() {
@@ -41,64 +37,106 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md bg-card border-white/5">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-3xl font-serif">{t("login.title")}</CardTitle>
-          <CardDescription className="text-muted-foreground">
+    <div
+      className="min-h-screen flex flex-col items-center justify-center bg-black px-6"
+      style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
+      <div className="w-full max-w-sm animate-fade-up">
+        {/* Logo mark */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/15 border border-primary/30 mb-5">
+            <span className="text-3xl">🎾</span>
+          </div>
+          <h1
+            className="font-serif font-bold text-white mb-2"
+            style={{ fontSize: "32px", lineHeight: "1.15" }}
+          >
+            {t("login.title")}
+          </h1>
+          <p className="text-muted-foreground" style={{ fontSize: "15px" }}>
             {t("login.subtitle")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">{t("login.email")}</Label>
-              <Input
+          </p>
+        </div>
+
+        {/* Card */}
+        <div
+          className="rounded-[20px] p-6 border border-white/8"
+          style={{ background: "hsl(220 20% 6%)" }}
+        >
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Email field */}
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-white font-medium mb-2"
+                style={{ fontSize: "15px" }}
+              >
+                {t("login.email")}
+              </label>
+              <input
                 id="email"
                 type="text"
                 placeholder="player@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-background border-white/10 focus-visible:ring-primary"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 text-white placeholder:text-white/30 transition-all focus:border-primary/60 focus:bg-white/8 focus:shadow-[0_0_0_3px_rgba(212,175,55,0.15)]"
+                style={{ height: "56px", fontSize: "17px" }}
               />
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">{t("login.password")}</Label>
+
+            {/* Password field */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label
+                  htmlFor="password"
+                  className="text-white font-medium"
+                  style={{ fontSize: "15px" }}
+                >
+                  {t("login.password")}
+                </label>
                 <Link href="/forgot-password">
-                  <span className="text-xs text-muted-foreground hover:text-primary cursor-pointer transition-colors">
+                  <span
+                    className="text-primary hover:text-primary/80 cursor-pointer transition-colors"
+                    style={{ fontSize: "15px" }}
+                  >
                     {t("login.forgotPassword")}
                   </span>
                 </Link>
               </div>
-              <Input
+              <input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="bg-background border-white/10 focus-visible:ring-primary"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 text-white placeholder:text-white/30 transition-all focus:border-primary/60 focus:bg-white/8 focus:shadow-[0_0_0_3px_rgba(212,175,55,0.15)]"
+                style={{ height: "56px", fontSize: "17px" }}
               />
             </div>
-            <Button
+
+            {/* Submit button */}
+            <button
               type="submit"
-              className="w-full mt-6"
-              disabled={loginMutation.isPending}
+              disabled={loginMutation.isPending || !email || !password}
+              className="w-full rounded-[14px] bg-primary text-black font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+              style={{ height: "56px", fontSize: "17px" }}
             >
               {loginMutation.isPending ? t("login.loggingIn") : t("login.loginButton")}
-            </Button>
-            <div className="text-center pt-2">
-              <span className="text-sm text-muted-foreground">
-                {t("login.notMember")}{" "}
-                <Link href="/register">
-                  <span className="text-primary hover:underline cursor-pointer">{t("login.joinNow")}</span>
-                </Link>
-              </span>
-            </div>
+            </button>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Sign up link */}
+        <p className="text-center mt-6" style={{ fontSize: "15px" }}>
+          <span className="text-muted-foreground">{t("login.notMember")} </span>
+          <Link href="/register">
+            <span className="text-primary font-medium hover:text-primary/80 cursor-pointer transition-colors">
+              {t("login.joinNow")}
+            </span>
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

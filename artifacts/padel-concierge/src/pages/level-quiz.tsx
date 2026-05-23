@@ -17,12 +17,15 @@ type Answers = {
 
 const SESSION_KEY = "lq_session";
 
-function ProgressBar({ step }: { step: number }) {
+function GoldProgressBar({ step }: { step: number }) {
   return (
-    <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+    <div className="w-full h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
       <div
-        className="h-full bg-blue-500 rounded-full transition-all duration-300"
-        style={{ width: `${(step / TOTAL) * 100}%` }}
+        className="h-full rounded-full transition-all duration-500"
+        style={{
+          width: `${(step / TOTAL) * 100}%`,
+          background: "linear-gradient(90deg, #D4AF37, #f0d060)",
+        }}
       />
     </div>
   );
@@ -117,10 +120,10 @@ export default function LevelQuiz() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#080808]">
+      <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-center">
-          <div className="text-4xl mb-4 animate-bounce">🏸</div>
-          <p className="text-[#8a8a8a]">{t("levelQuiz.loading")}</p>
+          <div className="text-5xl mb-5 animate-bounce">🏸</div>
+          <p className="text-muted-foreground" style={{ fontSize: "17px" }}>{t("levelQuiz.loading")}</p>
         </div>
       </div>
     );
@@ -137,41 +140,75 @@ export default function LevelQuiz() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#080808] px-5 py-6">
-      <div className="w-full max-w-[480px] mx-auto flex flex-col flex-1">
+    <div
+      className="min-h-screen flex flex-col bg-black"
+      style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
+      <div className="w-full max-w-[480px] mx-auto flex flex-col flex-1 px-6 py-6">
 
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
-          {step > 1 && (
-            <button onClick={handleBack} className="text-[#8a8a8a] hover:text-white transition-colors text-sm font-medium shrink-0">
-              {t("levelQuiz.back")}
-            </button>
-          )}
-          <div className="flex-1"><ProgressBar step={step} /></div>
-          <span className="text-[#555] text-xs shrink-0">{step}/{TOTAL}</span>
+        {/* Header with progress */}
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-3">
+            {step > 1 && (
+              <button
+                onClick={handleBack}
+                className="text-muted-foreground hover:text-white transition-colors font-medium flex-shrink-0"
+                style={{ fontSize: "15px" }}
+              >
+                ← {t("levelQuiz.back").replace("← ", "")}
+              </button>
+            )}
+            <div className="flex-1">
+              <GoldProgressBar step={step} />
+            </div>
+            <span className="text-muted-foreground flex-shrink-0 font-mono" style={{ fontSize: "13px" }}>
+              {step}/{TOTAL}
+            </span>
+          </div>
         </div>
 
         {/* Personality questions */}
         {isPersonality && (() => {
           const q = personalitySteps[step - 1];
           return (
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col animate-fade-up">
               <div className="mb-8">
-                <div className="text-4xl mb-3">{q.emoji}</div>
-                <div className="text-xs text-blue-400 font-medium uppercase tracking-widest mb-2">{q.label}</div>
-                <h2 className="text-xl font-bold text-white leading-snug">{q.question}</h2>
+                <div
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl mb-5"
+                  style={{ background: "rgba(212,175,55,0.12)", border: "1px solid rgba(212,175,55,0.25)" }}
+                >
+                  {q.emoji}
+                </div>
+                <div
+                  className="mb-2 font-medium uppercase tracking-widest"
+                  style={{ fontSize: "11px", color: "#D4AF37" }}
+                >
+                  {q.label}
+                </div>
+                <h2 className="font-serif font-bold text-white leading-snug" style={{ fontSize: "22px" }}>
+                  {q.question}
+                </h2>
               </div>
               <div className="space-y-3">
                 {q.options.map((opt, i) => (
                   <button
                     key={i}
                     onClick={() => setQ(q.qKey, i, step + 1)}
-                    className={`w-full min-h-[56px] px-4 py-3 text-left rounded-xl border transition-all text-sm font-medium ${
-                      q.selected === i
-                        ? "border-blue-500 bg-blue-500/10 text-white"
-                        : "border-white/10 bg-white/[0.03] text-[#ccc] hover:border-blue-500/50 hover:bg-blue-500/5"
-                    }`}
+                    className="w-full text-left px-5 py-4 rounded-[16px] border transition-all"
+                    style={{
+                      minHeight: "64px",
+                      fontSize: "16px",
+                      background: q.selected === i ? "rgba(212,175,55,0.12)" : "rgba(255,255,255,0.03)",
+                      borderColor: q.selected === i ? "rgba(212,175,55,0.5)" : "rgba(255,255,255,0.1)",
+                      color: q.selected === i ? "#D4AF37" : "rgba(255,255,255,0.85)",
+                    }}
                   >
+                    <span
+                      className="font-bold mr-3"
+                      style={{ color: "rgba(212,175,55,0.6)", fontSize: "13px" }}
+                    >
+                      {String.fromCharCode(65 + i)}
+                    </span>
                     {opt}
                   </button>
                 ))}
@@ -182,30 +219,44 @@ export default function LevelQuiz() {
 
         {/* Level questions */}
         {!isPersonality && levelQ && (
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col animate-fade-up">
             <div className="mb-8">
-              <div className="text-4xl mb-3">{levelQ.emoji}</div>
-              <div className="text-xs text-blue-400 font-medium uppercase tracking-widest mb-2">
+              <div
+                className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl mb-5"
+                style={{ background: "rgba(212,175,55,0.12)", border: "1px solid rgba(212,175,55,0.25)" }}
+              >
+                {levelQ.emoji}
+              </div>
+              <div
+                className="mb-2 font-medium uppercase tracking-widest"
+                style={{ fontSize: "11px", color: "#D4AF37" }}
+              >
                 {t(`levelQuiz.${levelQ.key}.label`)}
               </div>
-              <h2 className="text-xl font-bold text-white leading-snug">
+              <h2 className="font-serif font-bold text-white leading-snug" style={{ fontSize: "22px" }}>
                 {t(`levelQuiz.${levelQ.key}.text`)}
               </h2>
             </div>
 
             {showExtra ? (
-              <div className="flex-1 flex flex-col gap-4">
-                <p className="text-[#8a8a8a] text-sm">{t("levelQuiz.howDoYouDo")}</p>
+              <div className="flex flex-col gap-4">
+                <p className="text-muted-foreground" style={{ fontSize: "16px" }}>{t("levelQuiz.howDoYouDo")}</p>
                 <textarea
                   value={q4Extra}
                   onChange={(e) => setQ4Extra(e.target.value)}
                   placeholder={t("levelQuiz.optional")}
                   rows={4}
-                  className="w-full px-4 py-3 bg-white/[0.03] border border-white/10 rounded-xl text-white placeholder-[#555] focus:outline-none focus:border-blue-500 transition-colors resize-none text-sm"
+                  className="w-full px-4 py-4 rounded-[16px] border text-white placeholder-white/30 outline-none transition-colors resize-none"
+                  style={{
+                    background: "rgba(255,255,255,0.04)",
+                    borderColor: "rgba(255,255,255,0.1)",
+                    fontSize: "16px",
+                  }}
                 />
                 <button
                   onClick={handleExtraContinue}
-                  className="w-full h-14 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-500 transition-colors"
+                  className="w-full rounded-[14px] font-semibold text-black bg-primary transition-all"
+                  style={{ height: "56px", fontSize: "17px" }}
                 >
                   {t("levelQuiz.continueBtn")}
                 </button>
@@ -216,11 +267,14 @@ export default function LevelQuiz() {
                   <button
                     key={val}
                     onClick={() => handleLevelAnswer(levelQ.key, val, levelQ.hasExtra, step === TOTAL)}
-                    className={`w-full min-h-[64px] py-4 rounded-xl border font-bold text-lg transition-all ${
-                      val === "yes"
-                        ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50 active:scale-[0.98]"
-                        : "border-red-500/30 bg-red-500/5 text-red-400 hover:bg-red-500/10 hover:border-red-500/50 active:scale-[0.98]"
-                    }`}
+                    className="w-full rounded-[16px] border font-bold transition-all"
+                    style={{
+                      minHeight: "72px",
+                      fontSize: "20px",
+                      background: val === "yes" ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.08)",
+                      borderColor: val === "yes" ? "rgba(34,197,94,0.3)" : "rgba(239,68,68,0.3)",
+                      color: val === "yes" ? "#22c55e" : "#ef4444",
+                    }}
                   >
                     {val === "yes" ? t("levelQuiz.yes") : t("levelQuiz.no")}
                   </button>

@@ -1,62 +1,202 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useListBookings } from "@workspace/api-client-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
+
+const PAYMENT_STATUS_STYLES: Record<string, { bg: string; border: string; color: string }> = {
+  completed: { bg: "rgba(34,197,94,0.12)",  border: "rgba(34,197,94,0.3)",  color: "#4ade80" },
+  pending:   { bg: "rgba(234,179,8,0.12)",  border: "rgba(234,179,8,0.3)",  color: "#facc15" },
+  failed:    { bg: "rgba(239,68,68,0.10)",  border: "rgba(239,68,68,0.25)", color: "#f87171" },
+  cancelled: { bg: "rgba(255,255,255,0.05)", border: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)" },
+};
+
+function paymentStyle(status: string) {
+  return PAYMENT_STATUS_STYLES[status] ?? PAYMENT_STATUS_STYLES.pending;
+}
+
+function isUpcoming(date: string | undefined) {
+  if (!date) return false;
+  return new Date(date) >= new Date(new Date().toDateString());
+}
 
 export default function Bookings() {
   const { user } = useAuth();
   const { data: bookings, isLoading } = useListBookings({ userId: user?.id });
 
+  const upcoming = (bookings ?? []).filter(b => isUpcoming(b.match?.date));
+  const past = (bookings ?? []).filter(b => !isUpcoming(b.match?.date));
+
   return (
     <AppLayout>
-      <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-5 sm:space-y-8">
-        <header>
-          <h1 className="text-3xl font-serif mb-2">My Bookings</h1>
-          <p className="text-muted-foreground">Your upcoming and past matches.</p>
+      <div className="max-w-2xl mx-auto px-6 animate-fade-up" style={{ paddingTop: "28px" }}>
+
+        {/* ── HEADER ── */}
+        <header className="mb-6">
+          <h1 className="font-serif font-bold text-white mb-1" style={{ fontSize: "26px" }}>
+            My Bookings
+          </h1>
+          <p className="text-muted-foreground" style={{ fontSize: "15px" }}>
+            Your upcoming and past matches.
+          </p>
         </header>
 
         {isLoading ? (
-          <div>Loading bookings...</div>
-        ) : (
-          <div className="space-y-4">
-            {bookings?.map((booking) => (
-              <Card key={booking.id} className="bg-card border-white/5">
-                <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-6">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-serif text-xl">{booking.match?.clubName}</h3>
-                      <Badge variant="outline" className={
-                        booking.paymentStatus === 'completed' ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
-                      }>
-                        {booking.paymentStatus}
-                      </Badge>
-                    </div>
-                    <div className="text-muted-foreground text-sm flex gap-4">
-                      <span>{booking.match?.date}</span>
-                      <span>{booking.match?.time}</span>
-                      <span>{booking.match?.format}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 w-full md:w-auto">
-                    <Link href={`/bookings/${booking.id}`}>
-                      <Button className="w-full md:w-auto">View Details</Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
+          <div className="space-y-3">
+            {[1, 2, 3].map(i => (
+              <div
+                key={i}
+                className="rounded-[20px] p-5 animate-pulse"
+                style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)", minHeight: "110px" }}
+              />
             ))}
-            
-            {bookings?.length === 0 && (
-              <div className="text-center py-12 text-muted-foreground bg-card border border-white/5 rounded-lg">
-                No bookings found. <Link href="/matches" className="text-primary hover:underline">Find a match</Link>.
-              </div>
+          </div>
+        ) : (bookings ?? []).length === 0 ? (
+          <div
+            className="rounded-[20px] p-10 text-center"
+            style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.07)" }}
+          >
+            <div className="text-3xl mb-3">📅</div>
+            <div className="text-white font-medium mb-1">No bookings yet</div>
+            <div className="text-muted-foreground mb-4" style={{ fontSize: "14px" }}>
+              Join a match to see your bookings here.
+            </div>
+            <Link href="/matches">
+              <button
+                className="rounded-full font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
+                style={{
+                  height: "44px",
+                  padding: "0 24px",
+                  fontSize: "15px",
+                  background: "#D4AF37",
+                  color: "#000",
+                }}
+              >
+                Find a Match
+              </button>
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-6">
+
+            {/* ── UPCOMING ── */}
+            {upcoming.length > 0 && (
+              <section>
+                <div
+                  className="uppercase font-semibold mb-3"
+                  style={{ fontSize: "11px", letterSpacing: "0.08em", color: "rgba(255,255,255,0.4)" }}
+                >
+                  Upcoming
+                </div>
+                <div className="space-y-3">
+                  {upcoming.map(booking => {
+                    const ps = paymentStyle(booking.paymentStatus ?? "pending");
+                    return (
+                      <Link key={booking.id} href={`/bookings/${booking.id}`}>
+                        <div
+                          className="rounded-[20px] p-5 cursor-pointer transition-all hover:scale-[1.005] active:scale-[0.99]"
+                          style={{
+                            background: "hsl(220 20% 6%)",
+                            border: "1px solid rgba(212,175,55,0.15)",
+                          }}
+                        >
+                          <div className="flex items-start justify-between gap-3 mb-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="font-serif font-semibold text-white truncate" style={{ fontSize: "17px" }}>
+                                {booking.match?.clubName ?? "Match"}
+                              </div>
+                              <div className="text-muted-foreground mt-0.5" style={{ fontSize: "13px" }}>
+                                {booking.match?.date} · {booking.match?.time}
+                                {booking.match?.format && ` · ${booking.match.format}`}
+                              </div>
+                            </div>
+                            <span
+                              className="rounded-full px-3 py-1 font-medium capitalize flex-shrink-0"
+                              style={{
+                                fontSize: "12px",
+                                background: ps.bg,
+                                border: `1px solid ${ps.border}`,
+                                color: ps.color,
+                              }}
+                            >
+                              {booking.paymentStatus}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                            <span
+                              className="rounded-full px-3 py-1.5 font-semibold"
+                              style={{ fontSize: "13px", background: "#D4AF37", color: "#000" }}
+                            >
+                              View Details
+                            </span>
+                            <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "20px", lineHeight: 1 }}>›</span>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
+            {/* ── PAST ── */}
+            {past.length > 0 && (
+              <section>
+                <div
+                  className="uppercase font-semibold mb-3"
+                  style={{ fontSize: "11px", letterSpacing: "0.08em", color: "rgba(255,255,255,0.4)" }}
+                >
+                  Past
+                </div>
+                <div className="space-y-3">
+                  {past.map(booking => {
+                    const ps = paymentStyle(booking.paymentStatus ?? "pending");
+                    return (
+                      <Link key={booking.id} href={`/bookings/${booking.id}`}>
+                        <div
+                          className="rounded-[20px] p-5 cursor-pointer transition-all hover:scale-[1.005] active:scale-[0.99]"
+                          style={{
+                            background: "hsl(220 20% 6%)",
+                            border: "1px solid rgba(255,255,255,0.07)",
+                          }}
+                        >
+                          <div className="flex items-start justify-between gap-3 mb-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="font-serif font-semibold text-white truncate" style={{ fontSize: "17px", opacity: 0.75 }}>
+                                {booking.match?.clubName ?? "Match"}
+                              </div>
+                              <div className="text-muted-foreground mt-0.5" style={{ fontSize: "13px" }}>
+                                {booking.match?.date} · {booking.match?.time}
+                                {booking.match?.format && ` · ${booking.match.format}`}
+                              </div>
+                            </div>
+                            <span
+                              className="rounded-full px-3 py-1 font-medium capitalize flex-shrink-0"
+                              style={{
+                                fontSize: "12px",
+                                background: ps.bg,
+                                border: `1px solid ${ps.border}`,
+                                color: ps.color,
+                              }}
+                            >
+                              {booking.paymentStatus}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-end pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                            <span style={{ color: "rgba(255,255,255,0.25)", fontSize: "20px", lineHeight: 1 }}>›</span>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </section>
             )}
           </div>
         )}
+
+        <div style={{ height: "32px" }} />
       </div>
     </AppLayout>
   );

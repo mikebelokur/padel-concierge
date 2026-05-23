@@ -3,9 +3,6 @@ import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { apiFetch } from "@/lib/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -42,7 +39,6 @@ export default function CoachMessages() {
     },
   });
 
-  // Get latest message per client
   const latestPerClient = (clients as any[]).map((c: any) => {
     const msgs = (allMessages as any[]).filter((m: any) => m.clientId === c.id);
     const unread = msgs.filter((m: any) => !m.read && m.direction === "in").length;
@@ -50,7 +46,6 @@ export default function CoachMessages() {
     return { ...c, lastMessage: last, unreadCount: unread };
   });
 
-  // Send available slots template
   const sendSlots = () => {
     const slots = "📅 Свободные слоты:\n• Понедельник 18:00–19:30\n• Среда 17:00–18:30\n• Пятница 19:00–20:30\nКакой подходит?";
     setDraft(slots);
@@ -124,11 +119,16 @@ export default function CoachMessages() {
                   </div>
                 </div>
                 <div className="flex gap-2 shrink-0">
-                  <Button size="sm" variant="outline" className="border-white/10 text-xs" onClick={sendSlots}>
+                  <button
+                    onClick={sendSlots}
+                    className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent font-medium text-foreground px-3 h-9 text-xs transition-all hover:bg-white/5"
+                  >
                     📅 Send Slots
-                  </Button>
+                  </button>
                   <Link href={`/clients/${selectedClient.id}`}>
-                    <Button size="sm" variant="ghost" className="text-xs text-muted-foreground">View Profile</Button>
+                    <button className="inline-flex items-center justify-center rounded-xl bg-transparent font-medium text-muted-foreground px-3 h-9 text-xs transition-all hover:bg-white/5">
+                      View Profile
+                    </button>
                   </Link>
                 </div>
               </div>
@@ -166,12 +166,13 @@ export default function CoachMessages() {
                     onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && draft.trim() && sendMessage.mutate(draft.trim())}
                     className="bg-background border-white/10"
                   />
-                  <Button
+                  <button
                     onClick={() => draft.trim() && sendMessage.mutate(draft.trim())}
                     disabled={!draft.trim() || sendMessage.isPending}
+                    className="inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-4 h-11 text-sm transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Send
-                  </Button>
+                  </button>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
                   Messages saved in-app. Connect Twilio to sync with real WhatsApp.

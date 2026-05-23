@@ -2,7 +2,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useGetPlayerStats, useListBookings, getGetPlayerStatsQueryKey, getListBookingsQueryKey } from "@workspace/api-client-react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import { ARCHETYPE_META, type Archetype } from "@/lib/archetypes";
 

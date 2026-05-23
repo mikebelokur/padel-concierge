@@ -3,8 +3,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage, type Language } from "@/contexts/LanguageContext";
 import { useUpdateUser } from "@workspace/api-client-react";
 import { apiFetch } from "@/lib/api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
@@ -54,39 +52,41 @@ export default function Settings() {
           <p className="text-muted-foreground">{t("settings.subtitle")}</p>
         </header>
 
-        <Card className="bg-card border-white/5">
-          <CardHeader>
-            <CardTitle>{t("settings.language")}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <div className="rounded-[20px] bg-card border border-white/5">
+          <div className="px-6 pt-5 pb-3">
+            <div className="text-base font-medium">{t("settings.language")}</div>
+          </div>
+          <div className="px-6 pb-6 space-y-4">
             <div className="flex gap-4">
-              <Button
-                variant={language === "en" ? "default" : "outline"}
+              <button
                 onClick={() => handleLanguageChange("en")}
-                className={language !== "en" ? "border-white/10" : ""}
+                className={language === "en"
+                  ? "inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-5 h-11 text-sm transition-all hover:bg-primary/90"
+                  : "inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent font-medium text-foreground px-5 h-11 text-sm transition-all hover:bg-white/5"}
               >
                 English
-              </Button>
-              <Button
-                variant={language === "ru" ? "default" : "outline"}
+              </button>
+              <button
                 onClick={() => handleLanguageChange("ru")}
-                className={language !== "ru" ? "border-white/10" : ""}
+                className={language === "ru"
+                  ? "inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-5 h-11 text-sm transition-all hover:bg-primary/90"
+                  : "inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent font-medium text-foreground px-5 h-11 text-sm transition-all hover:bg-white/5"}
               >
                 Русский
-              </Button>
+              </button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {(() => {
           const archetype = user?.archetype as Archetype | undefined;
           const meta = archetype ? ARCHETYPE_META[archetype] : null;
           return (
-            <Card className="bg-card border-white/5">
-              <CardHeader>
-                <CardTitle>{t("settings.playerArchetype")}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <div className="rounded-[20px] bg-card border border-white/5">
+              <div className="px-6 pt-5 pb-3">
+                <div className="text-base font-medium">{t("settings.playerArchetype")}</div>
+              </div>
+              <div className="px-6 pb-6 space-y-4">
                 {meta ? (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -97,16 +97,18 @@ export default function Settings() {
                       </div>
                     </div>
                     <Link href="/quiz">
-                      <Button variant="outline" size="sm" className="border-white/10">
+                      <button className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent font-medium text-foreground px-4 h-9 text-sm transition-all hover:bg-white/5">
                         {t("settings.retakeTest")}
-                      </Button>
+                      </button>
                     </Link>
                   </div>
                 ) : (
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-muted-foreground">{t("settings.archetypeNotSet")}</p>
                     <Link href="/quiz">
-                      <Button size="sm" className="ml-4 shrink-0">{t("settings.takeTest")}</Button>
+                      <button className="ml-4 shrink-0 inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-4 h-9 text-sm transition-all hover:bg-primary/90">
+                        {t("settings.takeTest")}
+                      </button>
                     </Link>
                   </div>
                 )}
@@ -116,16 +118,16 @@ export default function Settings() {
                     <span>{t("settings.preferWarmup")}</span>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           );
         })()}
 
-        <Card className="bg-card border-white/5">
-          <CardHeader>
-            <CardTitle>{t("settings.profileDetails")}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <div className="rounded-[20px] bg-card border border-white/5">
+          <div className="px-6 pt-5 pb-3">
+            <div className="text-base font-medium">{t("settings.profileDetails")}</div>
+          </div>
+          <div className="px-6 pb-6 space-y-4">
             <div className="space-y-2">
               <Label>{t("settings.name")}</Label>
               <Input
@@ -150,15 +152,15 @@ export default function Settings() {
                 className="bg-background border-white/10"
               />
             </div>
-            <Button
-              className="mt-4"
+            <button
+              className="mt-4 inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-5 h-11 text-sm transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleSave}
               disabled={updateUser.isPending}
             >
               {updateUser.isPending ? t("settings.saving") : t("settings.saveChanges")}
-            </Button>
-          </CardContent>
-        </Card>
+            </button>
+          </div>
+        </div>
       </div>
     </AppLayout>
   );

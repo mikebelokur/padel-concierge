@@ -2,10 +2,8 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { apiFetch } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
 export default function ResetPassword() {
@@ -55,14 +53,12 @@ export default function ResetPassword() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md bg-card border-white/5">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-3xl font-serif">{t("resetPassword.title")}</CardTitle>
-          <CardDescription className="text-muted-foreground">
-            {t("resetPassword.subtitle")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <div className="w-full max-w-md rounded-[20px] bg-card border border-white/5">
+        <div className="p-6 space-y-1 text-center">
+          <h1 className="text-3xl font-serif">{t("resetPassword.title")}</h1>
+          <p className="text-muted-foreground text-sm">{t("resetPassword.subtitle")}</p>
+        </div>
+        <div className="px-6 pb-6">
           {done ? (
             <div className="text-center space-y-4 py-4">
               <div className="text-4xl">✅</div>
@@ -98,13 +94,17 @@ export default function ResetPassword() {
                   className="bg-background border-white/10 focus-visible:ring-primary"
                 />
               </div>
-              <Button type="submit" className="w-full mt-2" disabled={loading}>
+              <button
+                type="submit"
+                className="w-full mt-2 inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold h-11 text-sm transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading}
+              >
                 {loading ? t("resetPassword.updating") : t("resetPassword.updateButton")}
-              </Button>
+              </button>
             </form>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

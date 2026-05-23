@@ -2,9 +2,6 @@ import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { apiFetch } from "@/lib/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -77,22 +74,22 @@ export default function Registrations() {
             <p className="text-muted-foreground">Review and approve players who signed up</p>
           </div>
           {pending.length > 0 && (
-            <Badge className="bg-yellow-500/10 text-yellow-400 border-yellow-500/30 text-sm px-3 py-1">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm border bg-yellow-500/10 text-yellow-400 border-yellow-500/30">
               {pending.length} pending approval
-            </Badge>
+            </span>
           )}
         </div>
 
         {isLoading ? (
           <div className="text-center py-16 text-muted-foreground">Loading…</div>
         ) : pending.length === 0 && rejected.length === 0 ? (
-          <Card className="bg-card border-white/5">
-            <CardContent className="py-16 text-center">
+          <div className="rounded-[20px] bg-card border border-white/5">
+            <div className="py-16 text-center">
               <div className="text-4xl mb-3">✅</div>
               <div className="font-medium mb-1">All caught up</div>
               <div className="text-sm text-muted-foreground">No pending registrations right now.</div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* LEFT: list */}
@@ -104,15 +101,15 @@ export default function Registrations() {
                     Pending ({pending.length})
                   </div>
                   {pending.map((r: any) => (
-                    <Card
+                    <div
                       key={r.id}
                       onClick={() => setSelected(r)}
                       className={cn(
-                        "bg-card border-white/5 cursor-pointer hover:border-primary/30 transition-colors",
-                        selected?.id === r.id && "border-primary/50 bg-primary/5"
+                        "rounded-[20px] bg-card border cursor-pointer hover:border-primary/30 transition-colors",
+                        selected?.id === r.id ? "border-primary/50 bg-primary/5" : "border-white/5"
                       )}
                     >
-                      <CardContent className="p-4">
+                      <div className="p-4">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-3">
                             <div className="w-9 h-9 rounded-full bg-yellow-500/10 flex items-center justify-center text-yellow-400 font-serif">
@@ -126,32 +123,29 @@ export default function Registrations() {
                           <span className="text-xs text-muted-foreground">{timeAgo(r.createdAt)}</span>
                         </div>
                         <div className="flex items-center gap-2 mt-3">
-                          <Badge variant="outline" className={cn("text-xs", LEVEL_COLORS[r.level] ?? "")}>
+                          <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border", LEVEL_COLORS[r.level] ?? "")}>
                             Level {r.level}
-                          </Badge>
+                          </span>
                           {r.phone && <span className="text-xs text-muted-foreground">{r.phone}</span>}
                         </div>
                         <div className="flex gap-2 mt-3">
-                          <Button
-                            size="sm"
-                            className="flex-1 bg-green-600 hover:bg-green-500 text-white text-xs h-8"
+                          <button
+                            className="flex-1 inline-flex items-center justify-center rounded-xl bg-green-600 hover:bg-green-500 text-white font-medium h-8 text-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             onClick={(e) => { e.stopPropagation(); approve.mutate(r.id); }}
                             disabled={approve.isPending}
                           >
                             ✅ Approve
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="flex-1 border-red-500/30 text-red-400 hover:bg-red-500/10 text-xs h-8"
+                          </button>
+                          <button
+                            className="flex-1 inline-flex items-center justify-center rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 bg-transparent font-medium h-8 text-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             onClick={(e) => { e.stopPropagation(); reject.mutate(r.id); }}
                             disabled={reject.isPending}
                           >
                             ❌ Reject
-                          </Button>
+                          </button>
                         </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   ))}
                 </>
               )}
@@ -163,8 +157,8 @@ export default function Registrations() {
                     Rejected ({rejected.length})
                   </div>
                   {rejected.map((r: any) => (
-                    <Card key={r.id} className="bg-card border-white/5 opacity-60">
-                      <CardContent className="p-4">
+                    <div key={r.id} className="rounded-[20px] bg-card border border-white/5 opacity-60">
+                      <div className="p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-muted-foreground font-serif">
@@ -176,26 +170,22 @@ export default function Registrations() {
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-xs text-green-400 hover:text-green-300 h-7 px-2"
+                            <button
+                              className="inline-flex items-center justify-center rounded-xl bg-transparent text-green-400 hover:text-green-300 h-7 px-2 text-xs transition-colors"
                               onClick={() => approve.mutate(r.id)}
                             >
                               Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-xs text-red-400 hover:text-red-300 h-7 px-2"
+                            </button>
+                            <button
+                              className="inline-flex items-center justify-center rounded-xl bg-transparent text-red-400 hover:text-red-300 h-7 px-2 text-xs transition-colors"
                               onClick={() => remove.mutate(r.id)}
                             >
                               Delete
-                            </Button>
+                            </button>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   ))}
                 </>
               )}
@@ -204,23 +194,21 @@ export default function Registrations() {
             {/* RIGHT: detail panel */}
             <div>
               {selected ? (
-                <Card className="bg-card border-primary/20 sticky top-6">
-                  <CardHeader className="pb-3 border-b border-white/5">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-base">Registration Details</CardTitle>
-                      <button onClick={() => setSelected(null)} className="text-muted-foreground hover:text-foreground text-lg leading-none">×</button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-5 space-y-3">
+                <div className="rounded-[20px] bg-card border border-primary/20 sticky top-6">
+                  <div className="px-5 pt-5 pb-3 border-b border-white/5 flex items-center justify-between">
+                    <div className="text-sm font-medium">Registration Details</div>
+                    <button onClick={() => setSelected(null)} className="text-muted-foreground hover:text-foreground text-lg leading-none">×</button>
+                  </div>
+                  <div className="p-5 space-y-3">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center text-primary font-serif text-xl">
                         {selected.name?.[0]}
                       </div>
                       <div>
                         <div className="font-serif text-lg">{selected.name}</div>
-                        <Badge variant="outline" className={cn("text-xs mt-1", LEVEL_COLORS[selected.level] ?? "")}>
+                        <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border mt-1", LEVEL_COLORS[selected.level] ?? "")}>
                           Level {selected.level}
-                        </Badge>
+                        </span>
                       </div>
                     </div>
                     {[
@@ -237,24 +225,23 @@ export default function Registrations() {
                       </div>
                     ))}
                     <div className="flex gap-3 pt-2">
-                      <Button
-                        className="flex-1 bg-green-600 hover:bg-green-500 text-white"
+                      <button
+                        className="flex-1 inline-flex items-center justify-center rounded-xl bg-green-600 hover:bg-green-500 text-white font-semibold h-11 text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={() => approve.mutate(selected.id)}
                         disabled={approve.isPending || selected.approvalStatus === "approved"}
                       >
                         {selected.approvalStatus === "approved" ? "✅ Approved" : "✅ Approve Player"}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="border-red-500/30 text-red-400 hover:bg-red-500/10"
+                      </button>
+                      <button
+                        className="inline-flex items-center justify-center rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 bg-transparent font-semibold px-4 h-11 text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={() => reject.mutate(selected.id)}
                         disabled={reject.isPending}
                       >
                         ❌
-                      </Button>
+                      </button>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               ) : (
                 <div className="flex items-center justify-center h-48 text-muted-foreground text-sm border border-white/5 rounded-xl">
                   Click a registration to see details

@@ -1,9 +1,6 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useListVideoAnalyses, useCreateVideoAnalysis } from "@workspace/api-client-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,8 +23,7 @@ export default function VideoAnalysisList() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    
-    // Use a placeholder URL if empty for demo purposes
+
     const payload = {
       ...formData,
       userId: user.id,
@@ -56,11 +52,11 @@ export default function VideoAnalysisList() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1 space-y-6">
-            <Card className="bg-card border-white/5">
-              <CardHeader>
-                <CardTitle>New Submission</CardTitle>
-              </CardHeader>
-              <CardContent>
+            <div className="rounded-[20px] bg-card border border-white/5">
+              <div className="px-6 pt-5 pb-3">
+                <div className="text-base font-medium">New Submission</div>
+              </div>
+              <div className="px-6 pb-6">
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
                     <Label>Video File (MP4, max 50MB)</Label>
@@ -68,54 +64,62 @@ export default function VideoAnalysisList() {
                   </div>
                   <div className="space-y-2">
                     <Label>Your Shirt Color</Label>
-                    <Input 
-                      placeholder="e.g. Black t-short, white shorts" 
+                    <Input
+                      placeholder="e.g. Black t-shirt, white shorts"
                       value={formData.playerShirtColor}
                       onChange={e => setFormData({...formData, playerShirtColor: e.target.value})}
                       required
-                      className="bg-background border-white/10" 
+                      className="bg-background border-white/10"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>What to focus on?</Label>
-                    <Textarea 
-                      placeholder="e.g. My backhand volleys feel weak" 
+                    <Textarea
+                      placeholder="e.g. My backhand volleys feel weak"
                       value={formData.analysisQuery}
                       onChange={e => setFormData({...formData, analysisQuery: e.target.value})}
-                      className="bg-background border-white/10 min-h-[100px]" 
+                      className="bg-background border-white/10 min-h-[100px]"
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={createAnalysis.isPending}>
+                  <button
+                    type="submit"
+                    className="w-full inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold h-11 text-sm transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={createAnalysis.isPending}
+                  >
                     {createAnalysis.isPending ? "Uploading..." : "Submit for Analysis"}
-                  </Button>
+                  </button>
                 </form>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
 
           <div className="lg:col-span-2 space-y-4">
             <h3 className="font-serif text-xl mb-4">Past Submissions</h3>
             {analyses?.map(analysis => (
-              <Card key={analysis.id} className="bg-card border-white/5">
-                <CardContent className="p-6 flex justify-between items-center">
+              <div key={analysis.id} className="rounded-[20px] bg-card border border-white/5">
+                <div className="p-6 flex justify-between items-center">
                   <div>
                     <div className="font-medium mb-1">Analysis #{analysis.id}</div>
                     <div className="text-sm text-muted-foreground">{analysis.uploadDate}</div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <Badge variant="outline" className={
-                      analysis.status === 'completed' ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-white/5 text-muted-foreground border-white/10"
-                    }>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border ${
+                      analysis.status === 'completed'
+                        ? "bg-green-500/10 text-green-400 border-green-500/20"
+                        : "bg-white/5 text-muted-foreground border-white/10"
+                    }`}>
                       {analysis.status}
-                    </Badge>
+                    </span>
                     {analysis.status === 'completed' && (
                       <Link href={`/video-analysis/${analysis.id}`}>
-                        <Button variant="secondary" size="sm">View Report</Button>
+                        <button className="inline-flex items-center justify-center rounded-xl bg-white/10 text-foreground font-medium px-4 h-9 text-sm transition-all hover:bg-white/15">
+                          View Report
+                        </button>
                       </Link>
                     )}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))}
             {analyses?.length === 0 && (
               <div className="text-center py-12 text-muted-foreground border border-white/5 rounded-lg border-dashed">

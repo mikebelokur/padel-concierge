@@ -3,10 +3,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useGetDashboardStats, getGetDashboardStatsQueryKey } from "@workspace/api-client-react";
 import { apiFetch } from "@/lib/api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -63,7 +60,7 @@ export default function Admin() {
   const [search, setSearch] = useState("");
   const [editingLevel, setEditingLevel] = useState<Record<number, string>>({});
 
-  const { data: stats, isLoading: statsLoading } = useGetDashboardStats({
+  const { data: stats } = useGetDashboardStats({
     query: { queryKey: getGetDashboardStatsQueryKey(), refetchInterval: 30000 },
   });
 
@@ -193,24 +190,24 @@ export default function Admin() {
                 { label: t("admin.totalMatches"), value: stats?.totalMatches ?? "–",                color: "" },
                 { label: t("admin.revenue"),      value: stats ? `${stats.dailyRevenue} AED` : "–", color: "text-primary" },
               ].map(({ label, value, color }) => (
-                <Card key={label} className="bg-card border-white/5">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-xs font-medium text-muted-foreground">{label}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                <div key={label} className="rounded-[20px] bg-card border border-white/5">
+                  <div className="px-5 pt-4 pb-1">
+                    <div className="text-xs font-medium text-muted-foreground">{label}</div>
+                  </div>
+                  <div className="px-5 pb-4">
                     <div className={`text-2xl font-mono ${color}`}>{value}</div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               ))}
             </div>
 
             {/* Level chart */}
             {stats?.levelDistribution && (
-              <Card className="bg-card border-white/5">
-                <CardHeader>
-                  <CardTitle className="text-sm">WPT Level Distribution</CardTitle>
-                </CardHeader>
-                <CardContent className="h-48">
+              <div className="rounded-[20px] bg-card border border-white/5">
+                <div className="px-5 pt-5 pb-3">
+                  <div className="text-sm font-medium">WPT Level Distribution</div>
+                </div>
+                <div className="px-5 pb-5 h-48">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={stats.levelDistribution}>
                       <XAxis dataKey="level" stroke="#6b7a99" tick={{ fontSize: 11 }} />
@@ -222,8 +219,8 @@ export default function Admin() {
                       <Bar dataKey="count" fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             )}
 
             {/* User management */}
@@ -295,11 +292,13 @@ export default function Admin() {
                               </SelectContent>
                             </Select>
                             {editingLevel[u.id] && editingLevel[u.id] !== u.level && (
-                              <Button size="sm" className="h-7 px-2 text-xs"
+                              <button
+                                className="inline-flex items-center justify-center rounded-lg bg-primary text-black font-semibold h-7 px-2 text-xs transition-all hover:bg-primary/90 disabled:opacity-50"
                                 onClick={() => setLevelMutation.mutate({ id: u.id, level: editingLevel[u.id] })}
-                                disabled={setLevelMutation.isPending}>
+                                disabled={setLevelMutation.isPending}
+                              >
                                 Save
-                              </Button>
+                              </button>
                             )}
                           </div>
                         </td>
@@ -313,9 +312,9 @@ export default function Admin() {
                         <td className="px-4 py-3">
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10">
+                              <button className="inline-flex items-center justify-center rounded-lg bg-transparent text-destructive hover:bg-destructive/10 h-7 px-2 text-xs transition-colors">
                                 Delete
-                              </Button>
+                              </button>
                             </AlertDialogTrigger>
                             <AlertDialogContent className="bg-card border-white/10">
                               <AlertDialogHeader>
@@ -350,39 +349,35 @@ export default function Admin() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {pending.length > 0 ? (
-                  <Badge className="bg-yellow-500/10 text-yellow-400 border-yellow-500/30 text-sm px-3 py-1">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm border bg-yellow-500/10 text-yellow-400 border-yellow-500/30">
                     {pending.length} pending approval
-                  </Badge>
+                  </span>
                 ) : (
-                  <Badge variant="outline" className="text-green-400 border-green-500/30 bg-green-500/10 text-sm px-3 py-1">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm border text-green-400 border-green-500/30 bg-green-500/10">
                     ✅ All clear
-                  </Badge>
+                  </span>
                 )}
-                <span className="text-xs text-muted-foreground">
-                  Updates every 30s
-                </span>
+                <span className="text-xs text-muted-foreground">Updates every 30s</span>
               </div>
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-white/10 text-sm gap-2"
+              <button
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-transparent font-medium text-foreground px-4 h-9 text-sm transition-all hover:bg-white/5 disabled:opacity-50"
                 onClick={() => refetchRegs()}
                 disabled={regsRefetching}
               >
                 {regsRefetching ? "⟳ Refreshing…" : "⟳ Refresh"}
-              </Button>
+              </button>
             </div>
 
             {regsLoading ? (
               <div className="text-center py-16 text-muted-foreground">Loading registrations…</div>
             ) : pending.length === 0 && rejected.length === 0 ? (
-              <Card className="bg-card border-white/5">
-                <CardContent className="py-16 text-center">
+              <div className="rounded-[20px] bg-card border border-white/5">
+                <div className="py-16 text-center">
                   <div className="text-4xl mb-3">✅</div>
                   <div className="font-medium mb-1">All caught up</div>
                   <div className="text-sm text-muted-foreground">No pending or rejected registrations.</div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ) : (
               <div className="space-y-6">
                 {/* PENDING TABLE */}
@@ -420,7 +415,7 @@ export default function Admin() {
                               <td className="px-4 py-3 text-muted-foreground">{r.email}</td>
                               <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{r.phone || "—"}</td>
                               <td className="px-4 py-3">
-                                <Badge variant="outline" className="text-xs font-mono">{r.level}</Badge>
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs border border-white/10 font-mono text-muted-foreground">{r.level}</span>
                               </td>
                               <td className="px-4 py-3">
                                 <div className="text-xs">
@@ -430,23 +425,20 @@ export default function Admin() {
                               </td>
                               <td className="px-4 py-3">
                                 <div className="flex items-center gap-2">
-                                  <Button
-                                    size="sm"
-                                    className="h-7 px-3 text-xs bg-green-600 hover:bg-green-500 text-white"
+                                  <button
+                                    className="inline-flex items-center justify-center rounded-lg bg-green-600 hover:bg-green-500 text-white font-medium h-7 px-3 text-xs transition-all disabled:opacity-50"
                                     onClick={() => approveMutation.mutate(r.id)}
                                     disabled={approveMutation.isPending}
                                   >
                                     ✅ Approve
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-7 px-3 text-xs border-red-500/30 text-red-400 hover:bg-red-500/10"
+                                  </button>
+                                  <button
+                                    className="inline-flex items-center justify-center rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 bg-transparent font-medium h-7 px-3 text-xs transition-all disabled:opacity-50"
                                     onClick={() => rejectMutation.mutate(r.id)}
                                     disabled={rejectMutation.isPending}
                                   >
                                     ❌ Reject
-                                  </Button>
+                                  </button>
                                 </div>
                               </td>
                             </tr>
@@ -485,28 +477,25 @@ export default function Admin() {
                               <td className="px-4 py-3 text-muted-foreground">{r.email}</td>
                               <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{r.phone || "—"}</td>
                               <td className="px-4 py-3">
-                                <Badge variant="outline" className="text-xs font-mono">{r.level}</Badge>
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs border border-white/10 font-mono text-muted-foreground">{r.level}</span>
                               </td>
                               <td className="px-4 py-3 text-xs text-muted-foreground">{fmtDate(r.createdAt)}</td>
                               <td className="px-4 py-3">
                                 <div className="flex items-center gap-2">
-                                  <Button
-                                    size="sm"
-                                    className="h-7 px-3 text-xs bg-green-600 hover:bg-green-500 text-white"
+                                  <button
+                                    className="inline-flex items-center justify-center rounded-lg bg-green-600 hover:bg-green-500 text-white font-medium h-7 px-3 text-xs transition-all disabled:opacity-50"
                                     onClick={() => approveMutation.mutate(r.id)}
                                     disabled={approveMutation.isPending}
                                   >
                                     Approve
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10"
+                                  </button>
+                                  <button
+                                    className="inline-flex items-center justify-center rounded-lg bg-transparent text-destructive hover:bg-destructive/10 h-7 px-2 text-xs transition-colors disabled:opacity-50"
                                     onClick={() => deleteMutation.mutate(r.id)}
                                     disabled={deleteMutation.isPending}
                                   >
                                     Delete
-                                  </Button>
+                                  </button>
                                 </div>
                               </td>
                             </tr>

@@ -1,5 +1,4 @@
 import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Home() {
@@ -16,10 +15,14 @@ export default function Home() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link href="/register">
-            <Button size="lg" className="w-full sm:w-auto font-medium text-lg px-8 py-6 h-auto">{t("home.getStarted")}</Button>
+            <button className="w-full sm:w-auto inline-flex items-center justify-center rounded-[14px] bg-primary text-black font-semibold text-lg px-8 h-14 transition-all hover:bg-primary/90">
+              {t("home.getStarted")}
+            </button>
           </Link>
           <Link href="/login">
-            <Button variant="outline" size="lg" className="w-full sm:w-auto font-medium text-lg px-8 py-6 h-auto bg-transparent border-white/10 hover:bg-white/5">{t("home.login")}</Button>
+            <button className="w-full sm:w-auto inline-flex items-center justify-center rounded-[14px] border border-white/10 bg-transparent font-medium text-lg px-8 h-14 text-foreground transition-all hover:bg-white/5">
+              {t("home.login")}
+            </button>
           </Link>
         </div>
       </div>

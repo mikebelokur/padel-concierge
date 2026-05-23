@@ -1,9 +1,6 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useGetMatchSuggestions, getGetMatchSuggestionsQueryKey } from "@workspace/api-client-react";
 import { useQueries } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { Lock } from "lucide-react";
@@ -88,26 +85,26 @@ export default function MatchSuggest() {
     const isLocked = type === "best" && !user?.verified;
 
     return (
-      <Card className="bg-card border-white/5 relative overflow-hidden h-full flex flex-col">
+      <div className="rounded-[20px] bg-card border border-white/5 relative overflow-hidden flex flex-col h-full">
         {isLocked && (
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 text-center border border-white/10">
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 text-center border border-white/10 rounded-[20px]">
             <Lock className="w-8 h-8 text-muted-foreground mb-4" />
             <h3 className="font-serif text-xl mb-2">Verification Required</h3>
             <p className="text-sm text-muted-foreground mb-6">Play 1 verification match to unlock Best Match suggestions.</p>
-            <Button variant="outline">Learn More</Button>
+            <button className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent font-medium text-foreground px-4 h-9 text-sm transition-all hover:bg-white/5">
+              Learn More
+            </button>
           </div>
         )}
 
-        <CardHeader className="border-b border-white/5 pb-4">
-          <CardTitle className="flex justify-between items-center">
-            <span>{title}</span>
-            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-              {match.balanceScore}% Match
-            </Badge>
-          </CardTitle>
-        </CardHeader>
+        <div className="px-5 pt-5 pb-4 border-b border-white/5 flex items-center justify-between">
+          <span className="font-medium text-base">{title}</span>
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border bg-primary/10 text-primary border-primary/20">
+            {match.balanceScore}% Match
+          </span>
+        </div>
 
-        <CardContent className="p-6 flex-1 flex flex-col justify-between space-y-5">
+        <div className="p-5 flex-1 flex flex-col justify-between space-y-5">
           <div>
             <div className="font-serif text-xl mb-1">{match.clubName}</div>
             <div className="text-sm text-muted-foreground">{match.date} at {match.time}</div>
@@ -143,10 +140,12 @@ export default function MatchSuggest() {
           </div>
 
           <Link href={`/matches/${match.id}`}>
-            <Button className="w-full">View Match</Button>
+            <button className="w-full inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold h-11 text-sm transition-all hover:bg-primary/90">
+              View Match
+            </button>
           </Link>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   };
 
@@ -160,7 +159,6 @@ export default function MatchSuggest() {
           <p className="text-muted-foreground">Curated games based on your level, archetype, and history.</p>
         </header>
 
-        {/* Archetype hint if not set */}
         {!user?.archetype && (
           <div className="bg-primary/8 border border-primary/15 rounded-xl p-4 flex items-center gap-4">
             <div className="text-2xl">🧩</div>
@@ -169,14 +167,13 @@ export default function MatchSuggest() {
               <div className="text-xs text-muted-foreground">Пройди 4-минутный тест для более точного подбора партнёров по стилю игры.</div>
             </div>
             <Link href="/quiz">
-              <Button size="sm" variant="outline" className="border-primary/30 text-primary hover:bg-primary/10 shrink-0">
+              <button className="inline-flex items-center justify-center rounded-xl border border-primary/30 text-primary bg-transparent px-4 h-9 text-sm font-medium transition-all hover:bg-primary/10 shrink-0">
                 Пройти тест
-              </Button>
+              </button>
             </Link>
           </div>
         )}
 
-        {/* Show current archetype if set */}
         {user?.archetype && (
           <div className="flex items-center gap-3">
             <div className="text-xs text-muted-foreground">Твой архетип:</div>

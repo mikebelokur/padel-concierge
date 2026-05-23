@@ -1,9 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
 import { ARCHETYPE_META, type Archetype } from "@/lib/archetypes";
 import { cn } from "@/lib/utils";
@@ -114,27 +111,15 @@ export default function PlayerProfilePage() {
   });
 
   if (isNaN(id)) {
-    return (
-      <AppLayout>
-        <div className="p-8 text-muted-foreground">Invalid player ID.</div>
-      </AppLayout>
-    );
+    return <AppLayout><div className="p-8 text-muted-foreground">Invalid player ID.</div></AppLayout>;
   }
 
   if (playerLoading) {
-    return (
-      <AppLayout>
-        <div className="p-8 text-muted-foreground animate-pulse">Loading profile…</div>
-      </AppLayout>
-    );
+    return <AppLayout><div className="p-8 text-muted-foreground animate-pulse">Loading profile…</div></AppLayout>;
   }
 
   if (!player) {
-    return (
-      <AppLayout>
-        <div className="p-8 text-muted-foreground">Player not found.</div>
-      </AppLayout>
-    );
+    return <AppLayout><div className="p-8 text-muted-foreground">Player not found.</div></AppLayout>;
   }
 
   const archetype = player.archetype as Archetype | undefined;
@@ -152,11 +137,10 @@ export default function PlayerProfilePage() {
   return (
     <AppLayout>
       <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
-        {/* Back */}
         <Link href="/members">
-          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground -ml-2">
+          <button className="text-muted-foreground hover:text-foreground text-sm transition-colors -ml-1">
             ← Members
-          </Button>
+          </button>
         </Link>
 
         {/* Header */}
@@ -168,22 +152,19 @@ export default function PlayerProfilePage() {
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-2xl font-serif">{player.name}</h1>
               {player.verified && (
-                <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20 text-xs px-2">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs border bg-accent/10 text-accent border-accent/20">
                   ✓ Certified
-                </Badge>
+                </span>
               )}
             </div>
             <div className="flex flex-wrap gap-2 items-center">
-              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-sm px-3">
+              <span className="inline-flex items-center px-3 py-0.5 rounded-full text-sm border bg-primary/10 text-primary border-primary/20">
                 {player.levelQuiz ?? player.level}
-              </Badge>
+              </span>
               {archetypeMeta && (
-                <Badge
-                  variant="outline"
-                  className={`text-sm px-3 ${archetypeMeta.color} ${archetypeMeta.bg} ${archetypeMeta.border}`}
-                >
+                <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-sm border ${archetypeMeta.color} ${archetypeMeta.bg} ${archetypeMeta.border}`}>
                   {archetypeMeta.icon} {archetypeMeta.nameRu}
-                </Badge>
+                </span>
               )}
               {reliability && !reliabilityLoading && (
                 <span className="inline-flex items-center gap-1.5">
@@ -217,11 +198,11 @@ export default function PlayerProfilePage() {
         </div>
 
         {/* Level & Performance */}
-        <Card className="bg-card border-white/5">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Level & Performance</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <div className="rounded-[20px] bg-card border border-white/5">
+          <div className="px-5 pt-5 pb-3">
+            <div className="text-sm font-medium">Level & Performance</div>
+          </div>
+          <div className="px-5 pb-5 space-y-4">
             {statsLoading ? (
               <div className="text-sm text-muted-foreground animate-pulse">Loading stats…</div>
             ) : !stats ? (
@@ -262,16 +243,16 @@ export default function PlayerProfilePage() {
                 )}
               </>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Play Style */}
         {(player.levelSelf != null || player.levelQuiz || player.physicalSelf != null || player.warmupFormat) && (
-          <Card className="bg-card border-white/5">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Play Style</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <div className="rounded-[20px] bg-card border border-white/5">
+            <div className="px-5 pt-5 pb-3">
+              <div className="text-sm font-medium">Play Style</div>
+            </div>
+            <div className="px-5 pb-5">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {player.levelSelf != null && (
                   <div className="p-3 rounded-lg bg-white/5 border border-white/5 text-center">
@@ -302,16 +283,16 @@ export default function PlayerProfilePage() {
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {/* Match History */}
-        <Card className="bg-card border-white/5">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Match History</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div className="rounded-[20px] bg-card border border-white/5">
+          <div className="px-5 pt-5 pb-3">
+            <div className="text-sm font-medium">Match History</div>
+          </div>
+          <div className="px-5 pb-5">
             {bookingsLoading ? (
               <div className="text-sm text-muted-foreground animate-pulse">Loading matches…</div>
             ) : recentMatches.length === 0 ? (
@@ -354,15 +335,15 @@ export default function PlayerProfilePage() {
                 })}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Reliability */}
-        <Card className="bg-card border-white/5">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Reliability</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div className="rounded-[20px] bg-card border border-white/5">
+          <div className="px-5 pt-5 pb-3">
+            <div className="text-sm font-medium">Reliability</div>
+          </div>
+          <div className="px-5 pb-5">
             {reliabilityLoading ? (
               <div className="text-sm text-muted-foreground animate-pulse">Loading…</div>
             ) : !reliability ? (
@@ -405,28 +386,27 @@ export default function PlayerProfilePage() {
                     <div className="text-xs text-muted-foreground mb-2">Flags</div>
                     <div className="flex flex-wrap gap-2">
                       {reliability.behavioralFlags.map((flag) => (
-                        <Badge
+                        <span
                           key={flag}
-                          variant="outline"
-                          className="text-xs border-amber-500/30 text-amber-400 bg-amber-500/10"
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border border-amber-500/30 text-amber-400 bg-amber-500/10"
                         >
                           ⚑ {flag}
-                        </Badge>
+                        </span>
                       ))}
                     </div>
                   </div>
                 )}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Details */}
-        <Card className="bg-card border-white/5">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Details</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div className="rounded-[20px] bg-card border border-white/5">
+          <div className="px-5 pt-5 pb-3">
+            <div className="text-sm font-medium">Details</div>
+          </div>
+          <div className="px-5 pb-5">
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <span className="text-muted-foreground">Goal</span>
@@ -449,8 +429,8 @@ export default function PlayerProfilePage() {
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </AppLayout>
   );

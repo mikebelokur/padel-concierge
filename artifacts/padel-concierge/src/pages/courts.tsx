@@ -1,9 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -95,7 +92,6 @@ export default function Courts() {
 
   const today = new Date().toISOString().split("T")[0];
   const upcomingBookings = myBookings.filter((b) => b.status !== "cancelled" && b.date >= today);
-  const pastBookings = myBookings.filter((b) => b.status !== "cancelled" && b.date < today).slice(0, 3);
 
   return (
     <AppLayout>
@@ -111,19 +107,21 @@ export default function Courts() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {courts.map((court) => (
-              <Card key={court.id} className="bg-card border-white/5 hover:border-white/10 transition-all group overflow-hidden">
+              <div key={court.id} className="rounded-[20px] bg-card border border-white/5 hover:border-white/10 transition-all group overflow-hidden">
                 <div className="h-36 bg-gradient-to-br from-primary/10 to-accent/5 flex items-center justify-center relative">
                   <div className="text-5xl opacity-30">🏟️</div>
                   <div className="absolute top-3 right-3 flex gap-2">
-                    <Badge variant="outline" className={`text-xs ${SURFACE_COLORS[court.surface] ?? "text-muted-foreground"}`}>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs border ${SURFACE_COLORS[court.surface] ?? "text-muted-foreground border-white/10"}`}>
                       {court.surface}
-                    </Badge>
+                    </span>
                     {court.indoor && (
-                      <Badge variant="outline" className="text-xs text-primary bg-primary/10 border-primary/20">Indoor</Badge>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs border text-primary bg-primary/10 border-primary/20">
+                        Indoor
+                      </span>
                     )}
                   </div>
                 </div>
-                <CardContent className="p-5 space-y-3">
+                <div className="p-5 space-y-3">
                   <div>
                     <h3 className="font-serif text-lg leading-tight">{court.name}</h3>
                     <p className="text-sm text-muted-foreground">{court.location}</p>
@@ -131,23 +129,23 @@ export default function Courts() {
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {court.amenities.slice(0, 3).map((a) => (
-                      <Badge key={a} variant="outline" className="text-xs border-white/10 text-muted-foreground">{a}</Badge>
+                      <span key={a} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs border border-white/10 text-muted-foreground">{a}</span>
                     ))}
                     {court.amenities.length > 3 && (
-                      <Badge variant="outline" className="text-xs border-white/10 text-muted-foreground">+{court.amenities.length - 3}</Badge>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs border border-white/10 text-muted-foreground">+{court.amenities.length - 3}</span>
                     )}
                   </div>
                   <div className="flex items-center justify-between pt-1">
                     <span className="font-mono text-primary">{court.pricePerHour} AED<span className="text-muted-foreground text-xs">/hr</span></span>
-                    <Button
-                      size="sm"
+                    <button
+                      className="inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-4 h-9 text-sm transition-all hover:bg-primary/90"
                       onClick={() => { setSelectedCourt(court); setShowModal(true); setBookDate(""); setBookTime(""); }}
                     >
                       Book Now
-                    </Button>
+                    </button>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))}
           </div>
         )}
@@ -158,8 +156,8 @@ export default function Courts() {
             <h2 className="text-xl font-serif mb-4">My Upcoming Court Bookings</h2>
             <div className="space-y-3">
               {upcomingBookings.map((b) => (
-                <Card key={b.id} className="bg-card border-white/5">
-                  <CardContent className="p-4 flex items-center justify-between">
+                <div key={b.id} className="rounded-[20px] bg-card border border-white/5">
+                  <div className="p-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center text-xl">🏟️</div>
                       <div>
@@ -169,17 +167,15 @@ export default function Courts() {
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="font-mono text-sm text-muted-foreground">{b.totalPrice} AED</span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-white/10 text-muted-foreground hover:text-destructive hover:border-destructive/30"
+                      <button
+                        className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent font-medium text-muted-foreground px-4 h-9 text-sm transition-all hover:text-destructive hover:border-destructive/30"
                         onClick={() => cancelMutation.mutate(b.id)}
                       >
                         Cancel
-                      </Button>
+                      </button>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               ))}
             </div>
           </section>
@@ -228,13 +224,13 @@ export default function Courts() {
               )}
               <div className="flex items-center justify-between pt-2 border-t border-white/5">
                 <span className="text-muted-foreground text-sm">Total: <span className="font-mono text-foreground">{selectedCourt?.pricePerHour} AED</span></span>
-                <Button
+                <button
+                  className="inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-5 h-11 text-sm transition-all hover:bg-primary/90 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={() => bookMutation.mutate()}
                   disabled={!bookDate || !bookTime || bookMutation.isPending}
-                  className="shadow-lg shadow-primary/20"
                 >
                   {bookMutation.isPending ? "Booking..." : "Confirm Booking"}
-                </Button>
+                </button>
               </div>
             </div>
           </DialogContent>

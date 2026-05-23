@@ -3,8 +3,6 @@ import { useLocation } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { apiFetch } from "@/lib/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -67,11 +65,11 @@ export default function ClientNew() {
           <p className="text-muted-foreground">Add a new coaching client to your roster.</p>
         </header>
 
-        <Card className="bg-card border-white/5">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-medium">Client Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5">
+        <div className="rounded-[20px] bg-card border border-white/5">
+          <div className="px-6 pt-5 pb-3">
+            <div className="text-base font-medium">Client Details</div>
+          </div>
+          <div className="px-6 pb-6 space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Full Name <span className="text-red-400">*</span></Label>
@@ -155,20 +153,22 @@ export default function ClientNew() {
                 className="bg-background border-white/10"
               />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         <div className="flex gap-3 justify-end">
           <Link href="/clients">
-            <Button variant="outline" className="border-white/10">Cancel</Button>
+            <button className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent font-medium text-foreground px-5 h-11 text-sm transition-all hover:bg-white/5">
+              Cancel
+            </button>
           </Link>
-          <Button
+          <button
             onClick={() => createMutation.mutate()}
             disabled={!canSubmit || createMutation.isPending}
-            className="shadow-lg shadow-primary/20"
+            className="inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-5 h-11 text-sm transition-all hover:bg-primary/90 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {createMutation.isPending ? "Adding…" : "Add Client"}
-          </Button>
+          </button>
         </div>
       </div>
     </AppLayout>

@@ -2,9 +2,6 @@ import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { apiFetch } from "@/lib/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -59,7 +56,9 @@ export default function PadelNews() {
           {canPost && (
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button size="sm">+ Post</Button>
+                <button className="inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-4 h-9 text-sm transition-all hover:bg-primary/90">
+                  + Post
+                </button>
               </DialogTrigger>
               <DialogContent className="bg-card border-white/10">
                 <DialogHeader>
@@ -99,13 +98,13 @@ export default function PadelNews() {
                       rows={5}
                     />
                   </div>
-                  <Button
-                    className="w-full"
+                  <button
+                    className="w-full inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold h-11 text-sm transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => postNews.mutate()}
                     disabled={!form.title || !form.content || postNews.isPending}
                   >
                     Publish
-                  </Button>
+                  </button>
                 </div>
               </DialogContent>
             </Dialog>
@@ -119,10 +118,10 @@ export default function PadelNews() {
             {(news as any[]).map((item: any) => {
               const cat = CATEGORY_LABELS[item.category] ?? { label: item.category, color: "text-muted-foreground bg-white/5 border-white/10" };
               return (
-                <Card key={item.id} className="bg-card border-white/5 hover:border-white/10 transition-colors">
-                  <CardContent className="p-5">
+                <div key={item.id} className="rounded-[20px] bg-card border border-white/5 hover:border-white/10 transition-colors">
+                  <div className="p-5">
                     <div className="flex items-start justify-between gap-3 mb-3">
-                      <Badge variant="outline" className={`text-xs ${cat.color}`}>{cat.label}</Badge>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border ${cat.color}`}>{cat.label}</span>
                       <span className="text-xs text-muted-foreground flex-shrink-0">
                         {new Date(item.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                       </span>
@@ -132,8 +131,8 @@ export default function PadelNews() {
                     <div className="mt-3 pt-3 border-t border-white/5 text-xs text-muted-foreground">
                       By {item.author}
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               );
             })}
           </div>

@@ -3,9 +3,6 @@ import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { apiFetch } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -36,7 +33,9 @@ export default function Clients() {
             <p className="text-muted-foreground">{(clients as any[]).length} coaching clients</p>
           </div>
           <Link href="/clients/new">
-            <Button size="sm" className="gap-1">+ New Client</Button>
+            <button className="inline-flex items-center justify-center gap-1 rounded-xl bg-primary text-black font-semibold px-4 h-9 text-sm transition-all hover:bg-primary/90">
+              + New Client
+            </button>
           </Link>
         </div>
 
@@ -53,8 +52,8 @@ export default function Clients() {
           <div className="space-y-3">
             {filtered.map((client: any) => (
               <Link key={client.id} href={`/clients/${client.id}`}>
-                <Card className="bg-card border-white/5 hover:border-primary/30 transition-colors cursor-pointer">
-                  <CardContent className="p-5">
+                <div className="rounded-[20px] bg-card border border-white/5 hover:border-primary/30 transition-colors cursor-pointer">
+                  <div className="p-5">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-serif text-lg flex-shrink-0">
                         {client.avatarInitials}
@@ -62,9 +61,9 @@ export default function Clients() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-medium">{client.name}</span>
-                          <Badge variant="outline" className={cn("text-xs", LEVEL_COLORS[client.level] ?? "")}>
+                          <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border", LEVEL_COLORS[client.level] ?? "border-white/10 text-muted-foreground")}>
                             Level {client.level}
-                          </Badge>
+                          </span>
                           {client.status === "active" && (
                             <span className="text-xs text-green-400">● active</span>
                           )}
@@ -85,8 +84,8 @@ export default function Clients() {
                         📋 Next: {client.nextSessionPlan}
                       </div>
                     )}
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </Link>
             ))}
           </div>

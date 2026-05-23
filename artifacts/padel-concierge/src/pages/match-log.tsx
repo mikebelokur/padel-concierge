@@ -3,12 +3,9 @@ import { useRoute, Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { apiFetch } from "@/lib/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -86,29 +83,33 @@ export default function MatchLog() {
             <h1 className="text-2xl font-serif">Заполнить результат</h1>
             <p className="text-sm text-muted-foreground mt-1">{m.clubName} · {m.date} · {m.time}</p>
           </div>
-          <Link href="/matches"><Button variant="outline" size="sm" className="border-white/10">← Назад</Button></Link>
+          <Link href="/matches">
+            <button className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent font-medium text-foreground px-4 h-9 text-sm transition-all hover:bg-white/5">
+              ← Назад
+            </button>
+          </Link>
         </div>
 
         {/* Players */}
-        <Card className="bg-card border-white/5">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground uppercase tracking-wider">Участники</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-2">
+        <div className="rounded-xl bg-card border border-white/5">
+          <div className="px-4 pt-4 pb-2">
+            <div className="text-xs text-muted-foreground uppercase tracking-wider">Участники</div>
+          </div>
+          <div className="px-4 pb-4 flex flex-wrap gap-2">
             {players.map(p => (
-              <Badge key={p.userId} variant="outline" className="border-white/10">
+              <span key={p.userId} className="inline-flex items-center px-2.5 py-1 rounded-full text-xs border border-white/10 text-foreground">
                 {p.name} <span className="ml-1 text-muted-foreground font-mono">{p.level}</span>
-              </Badge>
+              </span>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Absent players */}
-        <Card className={cn("border", absentIds.size > 0 ? "bg-amber-500/5 border-amber-500/20" : "bg-card border-white/5")}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground uppercase tracking-wider">Неявки</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <div className={cn("rounded-xl border", absentIds.size > 0 ? "bg-amber-500/5 border-amber-500/20" : "bg-card border-white/5")}>
+          <div className="px-4 pt-4 pb-2">
+            <div className="text-xs text-muted-foreground uppercase tracking-wider">Неявки</div>
+          </div>
+          <div className="px-4 pb-4 space-y-3">
             <p className="text-xs text-muted-foreground">Отметь игроков, которые не пришли на матч</p>
             {players.map(p => {
               const absent = absentIds.has(p.userId);
@@ -141,12 +142,12 @@ export default function MatchLog() {
                 ⚠ {absentIds.size} {absentIds.size === 1 ? "игрок не явился" : "игрока(-ов) не явилось"} — будет зафиксировано при сохранении
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Set scores */}
-        <Card className="bg-card border-white/5">
-          <CardContent className="p-4 space-y-3">
+        <div className="rounded-xl bg-card border border-white/5">
+          <div className="p-4 space-y-3">
             <Label className="text-sm font-medium">Счёт по сетам</Label>
             <Input
               placeholder="например: 6-4, 6-3"
@@ -155,15 +156,15 @@ export default function MatchLog() {
               className="bg-background border-white/10 font-mono"
             />
             <p className="text-xs text-muted-foreground">Запиши счёт каждого сета через запятую</p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Per-player ratings */}
-        <Card className="bg-card border-white/5">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground uppercase tracking-wider">Оценки игроков</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <div className="rounded-xl bg-card border border-white/5">
+          <div className="px-4 pt-4 pb-2">
+            <div className="text-xs text-muted-foreground uppercase tracking-wider">Оценки игроков</div>
+          </div>
+          <div className="px-4 pb-4 space-y-4">
             {players.map(p => (
               <div key={p.userId} className="flex items-center gap-4">
                 <div className="w-32 shrink-0">
@@ -190,42 +191,44 @@ export default function MatchLog() {
                 </div>
               </div>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Conflict */}
-        <Card className={cn("border", conflict ? "bg-red-500/5 border-red-500/20" : "bg-card border-white/5")}>
-          <CardContent className="p-4">
+        <div className={cn("rounded-xl border", conflict ? "bg-red-500/5 border-red-500/20" : "bg-card border-white/5")}>
+          <div className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-medium">Был конфликт на корте?</div>
                 <div className="text-xs text-muted-foreground mt-0.5">Ругань, агрессия, споры</div>
               </div>
               <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant={!conflict ? "default" : "outline"}
-                  className={!conflict ? "" : "border-white/10"}
+                <button
+                  className={cn(
+                    "inline-flex items-center justify-center rounded-lg px-3 h-9 text-sm font-medium transition-all",
+                    !conflict ? "bg-primary text-black" : "border border-white/10 text-foreground hover:bg-white/5"
+                  )}
                   onClick={() => setConflict(false)}
                 >
                   ✓ Нет
-                </Button>
-                <Button
-                  size="sm"
-                  variant={conflict ? "destructive" : "outline"}
-                  className={conflict ? "" : "border-white/10"}
+                </button>
+                <button
+                  className={cn(
+                    "inline-flex items-center justify-center rounded-lg px-3 h-9 text-sm font-medium transition-all",
+                    conflict ? "bg-destructive text-white" : "border border-white/10 text-foreground hover:bg-white/5"
+                  )}
                   onClick={() => setConflict(true)}
                 >
                   🚩 Да
-                </Button>
+                </button>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Overall note */}
-        <Card className="bg-card border-white/5">
-          <CardContent className="p-4 space-y-3">
+        <div className="rounded-xl bg-card border border-white/5">
+          <div className="p-4 space-y-3">
             <Label className="text-sm font-medium">Общая заметка тренера</Label>
             <Textarea
               placeholder="Общее впечатление от матча, рекомендации, наблюдения…"
@@ -234,26 +237,26 @@ export default function MatchLog() {
               rows={3}
               className="bg-background border-white/10 resize-none"
             />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Button
-          className="w-full shadow-lg shadow-primary/20"
+        <button
+          className="w-full inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold h-11 text-sm transition-all hover:bg-primary/90 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => saveMutation.mutate()}
           disabled={saveMutation.isPending}
         >
           {saveMutation.isPending ? "Сохранение…" : "💾 Сохранить результат матча"}
-        </Button>
+        </button>
 
         {(m.setScores || m.overallNote) && (
-          <Card className="bg-emerald-500/5 border-emerald-500/20">
-            <CardContent className="p-4 space-y-2 text-sm">
+          <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/20">
+            <div className="p-4 space-y-2 text-sm">
               <div className="text-emerald-400 font-medium text-xs uppercase tracking-wider mb-2">Сохранено ранее</div>
               {m.setScores && <div><span className="text-muted-foreground">Счёт: </span><span className="font-mono">{m.setScores}</span></div>}
               {m.conflictOccurred && <div className="text-red-400">⚠ Конфликт был зафиксирован</div>}
               {m.overallNote && <div><span className="text-muted-foreground">Заметка: </span>{m.overallNote}</div>}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
       </div>
     </AppLayout>

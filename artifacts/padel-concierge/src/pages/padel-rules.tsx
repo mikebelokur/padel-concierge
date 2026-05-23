@@ -3,8 +3,6 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { apiFetch } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type Lang = "ru" | "en" | "ar";
 
@@ -73,16 +71,18 @@ export default function PadelRules() {
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-lg">{CATEGORY_ICONS[category] ?? "📋"}</span>
                 <h2 className="text-lg font-serif capitalize">{category}</h2>
-                <Badge variant="outline" className="text-xs border-white/10">{catRules.length} rules</Badge>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs border border-white/10 text-muted-foreground">
+                  {catRules.length} rules
+                </span>
               </div>
               <div className="space-y-3">
                 {catRules.map((rule: any) => (
-                  <Card key={rule.id} className="bg-card border-white/5">
-                    <CardContent className={`p-4 ${lang === "ar" ? "text-right" : ""}`} dir={lang === "ar" ? "rtl" : "ltr"}>
+                  <div key={rule.id} className="rounded-xl bg-card border border-white/5">
+                    <div className={`p-4 ${lang === "ar" ? "text-right" : ""}`} dir={lang === "ar" ? "rtl" : "ltr"}>
                       <h3 className="font-medium mb-2">{getTitle(rule)}</h3>
                       <p className="text-sm text-muted-foreground leading-relaxed">{getText(rule)}</p>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>

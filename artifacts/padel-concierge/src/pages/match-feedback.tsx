@@ -3,8 +3,6 @@ import { useRoute, Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { apiFetch } from "@/lib/api";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -115,7 +113,11 @@ export default function MatchFeedback() {
           <div className="text-5xl">🎉</div>
           <h1 className="text-2xl font-serif">Спасибо!</h1>
           <p className="text-muted-foreground">Твой анонимный отзыв отправлен. Это помогает нам делать матчи лучше.</p>
-          <Link href="/matches"><Button className="mt-4">← К матчам</Button></Link>
+          <Link href="/matches">
+            <button className="mt-4 inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-6 h-11 text-sm transition-all hover:bg-primary/90">
+              ← К матчам
+            </button>
+          </Link>
         </div>
       </AppLayout>
     );
@@ -130,7 +132,11 @@ export default function MatchFeedback() {
             <h1 className="text-2xl font-serif">Как прошёл матч?</h1>
             <p className="text-sm text-muted-foreground mt-1">{m.clubName} · {m.date}</p>
           </div>
-          <Link href="/matches"><Button variant="outline" size="sm" className="border-white/10">← Назад</Button></Link>
+          <Link href="/matches">
+            <button className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent font-medium text-foreground px-4 h-9 text-sm transition-all hover:bg-white/5">
+              ← Назад
+            </button>
+          </Link>
         </div>
 
         <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/20 text-xs text-amber-400">
@@ -140,8 +146,8 @@ export default function MatchFeedback() {
         {players.map(player => {
           const fb = feedbacks[player.userId] ?? { rating: 5, traits: [], comment: "" };
           return (
-            <Card key={player.userId} className="bg-card border-white/5">
-              <CardContent className="p-4 space-y-4">
+            <div key={player.userId} className="rounded-xl bg-card border border-white/5">
+              <div className="p-4 space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-serif">
                     {player.name[0]}
@@ -201,18 +207,18 @@ export default function MatchFeedback() {
                   rows={2}
                   className="bg-background border-white/10 resize-none text-sm"
                 />
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           );
         })}
 
-        <Button
-          className="w-full shadow-lg shadow-primary/20"
+        <button
+          className="w-full inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold h-11 text-sm transition-all hover:bg-primary/90 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => submitMutation.mutate()}
           disabled={submitMutation.isPending || players.length === 0}
         >
           {submitMutation.isPending ? "Отправка…" : "📨 Отправить отзыв анонимно"}
-        </Button>
+        </button>
       </div>
     </AppLayout>
   );

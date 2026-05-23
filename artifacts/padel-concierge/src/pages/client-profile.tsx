@@ -3,9 +3,6 @@ import { useRoute, Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { apiFetch } from "@/lib/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { ToastAction } from "@/components/ui/toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -142,9 +139,9 @@ function BehavioralStats({
   });
 
   return (
-    <Card className="bg-card border-white/5">
-      <CardHeader className="pb-2 pt-4 px-4">
-        <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+    <div className="rounded-[20px] bg-card border border-white/5">
+      <div className="px-4 pt-4 pb-2">
+        <div className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
           📊 Behavioral Stats
           {data?.source === "mongodb" && (
             <span className="text-xs font-normal text-emerald-400/70 normal-case tracking-normal">live</span>
@@ -153,28 +150,24 @@ function BehavioralStats({
             <span className="text-xs font-normal text-amber-400/70 normal-case tracking-normal">estimated</span>
           )}
           {canEdit && !loading && data && !editing && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="ml-auto h-6 px-2 text-xs border-white/10 text-muted-foreground hover:text-foreground"
+            <button
+              className="ml-auto inline-flex items-center justify-center rounded-lg border border-white/10 bg-transparent text-muted-foreground hover:text-foreground px-2 h-6 text-xs transition-colors"
               onClick={openEdit}
             >
               ✏ Edit / Flag
-            </Button>
+            </button>
           )}
           {editing && (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="ml-auto h-6 px-2 text-xs text-muted-foreground"
+            <button
+              className="ml-auto inline-flex items-center justify-center rounded-lg bg-transparent text-muted-foreground hover:text-foreground px-2 h-6 text-xs transition-colors"
               onClick={() => setEditing(false)}
             >
               ✕ Cancel
-            </Button>
+            </button>
           )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="px-4 pb-4">
+        </div>
+      </div>
+      <div className="px-4 pb-4">
         {loading ? (
           <div className="text-sm text-muted-foreground animate-pulse">Loading…</div>
         ) : !data ? (
@@ -232,9 +225,13 @@ function BehavioralStats({
                   onKeyDown={e => e.key === "Enter" && addCustom()}
                   className="bg-background border-white/10 text-sm h-8"
                 />
-                <Button size="sm" variant="outline" className="border-white/10 h-8" onClick={addCustom} disabled={!customFlag.trim()}>
+                <button
+                  className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-transparent text-foreground px-3 h-8 text-xs transition-colors hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={addCustom}
+                  disabled={!customFlag.trim()}
+                >
                   Add
-                </Button>
+                </button>
               </div>
               {/* Active custom flags not in preset list */}
               {pendingFlags.filter(f => !PRESET_FLAGS.includes(f)).length > 0 && (
@@ -253,14 +250,13 @@ function BehavioralStats({
               )}
             </div>
 
-            <Button
-              size="sm"
+            <button
+              className="w-full inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold h-9 text-sm transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => saveFlags.mutate()}
               disabled={saveFlags.isPending}
-              className="w-full"
             >
               {saveFlags.isPending ? "Saving…" : "Save Changes"}
-            </Button>
+            </button>
           </div>
         ) : (
           <div className="space-y-4">
@@ -328,8 +324,8 @@ function BehavioralStats({
             )}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -431,9 +427,9 @@ export default function ClientProfile() {
             <div>
               <h1 className="text-2xl font-serif">{client.name}</h1>
               <div className="flex items-center gap-2 mt-1">
-                <Badge variant="outline" className={cn("text-xs", LEVEL_COLORS[client.level] ?? "")}>
+                <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border", LEVEL_COLORS[client.level] ?? "border-white/10 text-muted-foreground")}>
                   Level {client.level}
-                </Badge>
+                </span>
                 {client.phone && <span className="text-sm text-muted-foreground">📱 {client.phone}</span>}
                 {client.email && <span className="text-sm text-muted-foreground">✉ {client.email}</span>}
               </div>
@@ -442,23 +438,27 @@ export default function ClientProfile() {
               </div>
             </div>
           </div>
-          <Link href="/clients"><Button variant="outline" size="sm" className="border-white/10">← Back</Button></Link>
+          <Link href="/clients">
+            <button className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent text-foreground px-3 h-9 text-sm font-medium transition-all hover:bg-white/5">
+              ← Back
+            </button>
+          </Link>
         </div>
 
         {/* Recurring schedule */}
         {recurring.length > 0 && (
-          <Card className="bg-card border-white/5">
-            <CardContent className="p-4">
+          <div className="rounded-[20px] bg-card border border-white/5">
+            <div className="p-4">
               <div className="text-sm font-medium mb-2 text-muted-foreground uppercase tracking-wider text-xs">Recurring Slots</div>
               <div className="flex flex-wrap gap-2">
                 {recurring.map((s: any) => (
-                  <Badge key={s.id} className="bg-primary/10 text-primary border-primary/20">
+                  <span key={s.id} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border bg-primary/10 text-primary border-primary/20">
                     {DAY_NAMES[s.dayOfWeek]} {s.startTime}–{s.endTime}
-                  </Badge>
+                  </span>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {/* Package tracker */}
@@ -486,14 +486,13 @@ export default function ClientProfile() {
                   )}
                 </div>
                 {!exhausted ? (
-                  <Button
-                    size="sm"
+                  <button
+                    className="inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-3 h-9 text-sm transition-all hover:bg-primary/90 disabled:opacity-50 shrink-0"
                     onClick={() => markSession.mutate()}
                     disabled={markSession.isPending}
-                    className="shrink-0"
                   >
                     {markSession.isPending ? "…" : "+ Отметить тренировку"}
-                  </Button>
+                  </button>
                 ) : null}
               </div>
 
@@ -521,17 +520,15 @@ export default function ClientProfile() {
                   <span className="text-sm text-amber-400 font-medium">
                     Пакет завершён. Предложить продление?
                   </span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10 shrink-0"
+                  <button
+                    className="inline-flex items-center justify-center rounded-xl border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 bg-transparent font-medium px-3 h-9 text-sm transition-all shrink-0"
                     onClick={() => {
                       const msg = `Привет! Твой пакет из ${total} тренировок завершён. Готов продолжить? 💪`;
                       window.open(`https://wa.me/${client.phone?.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`);
                     }}
                   >
                     📲 WhatsApp
-                  </Button>
+                  </button>
                 </div>
               )}
             </div>
@@ -570,8 +567,8 @@ export default function ClientProfile() {
               <div className="text-center py-12 text-muted-foreground text-sm">No sessions yet</div>
             ) : (
               sessions.map((s: any) => (
-                <Card key={s.id} className="bg-card border-white/5">
-                  <CardContent className="p-4">
+                <div key={s.id} className="rounded-[20px] bg-card border border-white/5">
+                  <div className="p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
@@ -582,7 +579,9 @@ export default function ClientProfile() {
                         </div>
                         <div className="text-xs text-muted-foreground">{s.date} · {s.time} · {s.durationMinutes} min{s.court ? ` · ${s.court}` : ""}</div>
                       </div>
-                      <Badge variant="outline" className="text-xs capitalize">{s.status}</Badge>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border border-white/10 text-muted-foreground capitalize">
+                        {s.status}
+                      </span>
                     </div>
                     {s.subtopics?.length > 0 && (
                       <div className="flex flex-wrap gap-1 mb-2">
@@ -597,8 +596,8 @@ export default function ClientProfile() {
                     {s.nextSessionFocus && (
                       <div className="mt-2 text-xs text-accent">→ Next: {s.nextSessionFocus}</div>
                     )}
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               ))
             )}
           </TabsContent>
@@ -606,8 +605,8 @@ export default function ClientProfile() {
           {/* POST-MATCH NOTES */}
           <TabsContent value="notes" className="mt-4 space-y-3">
             {/* Add new question */}
-            <Card className="bg-card border-white/5">
-              <CardContent className="p-4 space-y-3">
+            <div className="rounded-[20px] bg-card border border-white/5">
+              <div className="p-4 space-y-3">
                 <Label className="text-sm font-medium">Record Post-Match Question</Label>
                 <Textarea
                   placeholder="Question asked on court (e.g. Как улучшить технику виоловки?)"
@@ -616,22 +615,22 @@ export default function ClientProfile() {
                   className="bg-background border-white/10 resize-none"
                   rows={2}
                 />
-                <Button
-                  size="sm"
+                <button
+                  className="inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-4 h-9 text-sm transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={() => newQuestion.trim() && addNote.mutate(newQuestion.trim())}
                   disabled={!newQuestion.trim() || addNote.isPending}
                 >
                   Record Question
-                </Button>
-              </CardContent>
-            </Card>
+                </button>
+              </div>
+            </div>
 
             {notes.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground text-sm">No questions recorded yet</div>
             ) : (
               notes.map((note: any) => (
-                <Card key={note.id} className="bg-card border-white/5">
-                  <CardContent className="p-4 space-y-3">
+                <div key={note.id} className="rounded-[20px] bg-card border border-white/5">
+                  <div className="p-4 space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <p className="font-medium text-sm">❓ {note.question}</p>
@@ -653,33 +652,31 @@ export default function ClientProfile() {
                           className="bg-background border-white/10 resize-none text-sm"
                           rows={2}
                         />
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-white/10"
+                        <button
+                          className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent text-foreground font-medium px-4 h-9 text-sm transition-all hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
                           onClick={() => updateNote.mutate({ noteId: note.id, coachResponse: noteResponse[note.id] ?? "" })}
                           disabled={!noteResponse[note.id] || updateNote.isPending}
                         >
                           Save Response
-                        </Button>
+                        </button>
                       </div>
                     )}
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               ))
             )}
           </TabsContent>
 
           {/* CHAT HISTORY */}
           <TabsContent value="chat" className="mt-4">
-            <Card className="bg-card border-white/5">
-              <CardHeader className="pb-2 border-b border-white/5">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  💬 WhatsApp History
-                  <Badge variant="outline" className="text-xs border-green-500/30 text-green-400 bg-green-500/10">WhatsApp</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4">
+            <div className="rounded-[20px] bg-card border border-white/5">
+              <div className="px-4 pt-4 pb-2 border-b border-white/5 flex items-center gap-2">
+                <span className="text-sm font-medium">💬 WhatsApp History</span>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border border-green-500/30 text-green-400 bg-green-500/10">
+                  WhatsApp
+                </span>
+              </div>
+              <div className="p-4">
                 <div className="space-y-2 max-h-80 overflow-y-auto mb-4">
                   {messages.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground text-sm">No messages yet</div>
@@ -710,16 +707,16 @@ export default function ClientProfile() {
                     onKeyDown={(e) => e.key === "Enter" && newMessage.trim() && sendMessage.mutate(newMessage.trim())}
                     className="bg-background border-white/10 text-sm"
                   />
-                  <Button
-                    size="sm"
+                  <button
+                    className="inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-4 h-9 text-sm transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => newMessage.trim() && sendMessage.mutate(newMessage.trim())}
                     disabled={!newMessage.trim() || sendMessage.isPending}
                   >
                     Send
-                  </Button>
+                  </button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

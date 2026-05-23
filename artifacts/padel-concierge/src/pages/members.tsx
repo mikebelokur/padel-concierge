@@ -2,8 +2,6 @@ import { useState, useMemo, useCallback } from "react";
 import { useQuery, useQueries, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { apiFetch } from "@/lib/api";
 import { ReliabilityDot } from "@/components/ReliabilityDot";
@@ -198,8 +196,8 @@ export default function Members() {
             ) : (
               <div className="space-y-2">
                 {activity.map((log) => (
-                  <Card key={log.id} className="bg-card border-white/5 hover:border-white/10 transition-colors">
-                    <CardContent className="p-4 flex items-start gap-4">
+                  <div key={log.id} className="rounded-xl bg-card border border-white/5 hover:border-white/10 transition-colors">
+                    <div className="p-4 flex items-start gap-4">
                       <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center text-primary font-serif text-sm flex-shrink-0">
                         {log.userName?.[0] ?? "?"}
                       </div>
@@ -220,8 +218,8 @@ export default function Members() {
                           <p className="text-xs text-muted-foreground mt-0.5 truncate">{log.details}</p>
                         )}
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
@@ -230,11 +228,11 @@ export default function Members() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* New Members */}
-            <Card className="bg-card border-white/5">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">{t("members.newMembers")}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
+            <div className="rounded-[20px] bg-card border border-white/5">
+              <div className="px-5 pt-4 pb-3">
+                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("members.newMembers")}</div>
+              </div>
+              <div className="px-5 pb-4 space-y-3">
                 {usersLoading ? (
                   <div className="text-muted-foreground text-sm">Loading...</div>
                 ) : (
@@ -256,9 +254,6 @@ export default function Members() {
                                 {u.levelSelf}★
                               </span>
                             )}
-                            {u.warmupFormat && (
-                              <span className="text-xs text-muted-foreground/70 capitalize">{u.warmupFormat}</span>
-                            )}
                           </div>
                         </div>
                         <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -273,21 +268,23 @@ export default function Members() {
                           {profileMap[u.id] && (
                             <ReliabilityDot score={profileMap[u.id].reliabilityScore} />
                           )}
-                          <Badge variant="outline" className="text-xs border-white/10 font-mono">{u.levelQuiz ?? u.level}</Badge>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs border border-white/10 font-mono text-muted-foreground">
+                            {u.levelQuiz ?? u.level}
+                          </span>
                         </div>
                       </div>
                     </Link>
                   ))
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Top Players */}
-            <Card className="bg-card border-white/5">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">{t("members.topPlayers")}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
+            <div className="rounded-[20px] bg-card border border-white/5">
+              <div className="px-5 pt-4 pb-3">
+                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("members.topPlayers")}</div>
+              </div>
+              <div className="px-5 pb-4 space-y-3">
                 {topPlayers.map((u, i) => (
                   <Link key={u.id} href={`/players/${u.id}`}>
                     <div className="flex items-center gap-3 cursor-pointer rounded-lg hover:bg-white/5 transition-colors -mx-1 px-1 py-0.5">
@@ -297,16 +294,8 @@ export default function Members() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium truncate">{u.name}</div>
-                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                        <div className="flex items-center gap-1.5 mt-0.5">
                           <span className="text-xs text-muted-foreground">{u.matchesPlayed} matches · {u.wins}W</span>
-                          {u.levelSelf != null && (
-                            <span className="text-xs font-mono text-primary/70 bg-primary/10 border border-primary/15 rounded px-1">
-                              {u.levelSelf}★
-                            </span>
-                          )}
-                          {u.warmupFormat && (
-                            <span className="text-xs text-muted-foreground/70 capitalize">{u.warmupFormat}</span>
-                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -321,20 +310,22 @@ export default function Members() {
                         {profileMap[u.id] && (
                           <ReliabilityDot score={profileMap[u.id].reliabilityScore} />
                         )}
-                        <Badge variant="outline" className="text-xs border-white/10 font-mono">{u.levelQuiz ?? u.level}</Badge>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs border border-white/10 font-mono text-muted-foreground">
+                          {u.levelQuiz ?? u.level}
+                        </span>
                       </div>
                     </div>
                   </Link>
                 ))}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Level Distribution */}
-            <Card className="bg-card border-white/5">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Level Distribution</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
+            <div className="rounded-[20px] bg-card border border-white/5">
+              <div className="px-5 pt-4 pb-3">
+                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Level Distribution</div>
+              </div>
+              <div className="px-5 pb-4 space-y-2">
                 {["1.0","1.5","2.0","2.5","3.0","3.5","4.0","4.5","5.0"].map((lvl) => {
                   const count = players.filter((u) => u.level === lvl).length;
                   const pct = players.length > 0 ? (count / players.length) * 100 : 0;
@@ -348,8 +339,8 @@ export default function Members() {
                     </div>
                   ) : null;
                 })}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -419,7 +410,6 @@ export default function Members() {
                 />
               </div>
 
-              {/* Level filter */}
               <select
                 value={levelFilter}
                 onChange={e => setLevelFilter(e.target.value)}
@@ -431,7 +421,6 @@ export default function Members() {
                 ))}
               </select>
 
-              {/* Sort */}
               <div className="flex gap-1 rounded-lg bg-white/5 border border-white/8 p-0.5">
                 {(["reliability", "level", "matches", "name"] as SortKey[]).map(key => (
                   <button
@@ -459,7 +448,6 @@ export default function Members() {
               <div className="text-sm text-muted-foreground italic py-4 text-center">No players match your search.</div>
             ) : (
               <div className="rounded-xl border border-white/8 overflow-hidden">
-                {/* Header row */}
                 <div className="hidden sm:grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-4 px-4 py-2 bg-white/3 border-b border-white/5 text-xs text-muted-foreground uppercase tracking-wide items-center">
                   <span className="w-5" />
                   <span>{t("members.name")}</span>
@@ -478,7 +466,6 @@ export default function Members() {
                       <div key={u.id} className="relative group">
                         <Link href={`/players/${u.id}`}>
                           <div className="grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_auto_auto_auto_auto] gap-x-4 gap-y-0.5 px-4 py-3 hover:bg-white/5 transition-colors cursor-pointer items-center">
-                            {/* Checkbox */}
                             <div
                               onClick={e => toggleSelect(u.id, isAlreadyVerified, e)}
                               className="flex items-center justify-center w-5 flex-shrink-0"
@@ -504,67 +491,37 @@ export default function Members() {
                               )}
                             </div>
 
-                            {/* Name + meta */}
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center text-primary text-xs font-serif flex-shrink-0">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center text-primary text-xs font-serif flex-shrink-0">
                                 {u.name[0]}
                               </div>
                               <div className="min-w-0">
-                                <div className="text-sm font-medium flex items-center gap-1.5">
-                                  <span className="truncate">{u.name}</span>
-                                  {u.verified && <span className="text-accent text-xs flex-shrink-0">✓</span>}
+                                <div className="text-sm font-medium flex items-center gap-1.5 truncate">
+                                  {u.name}
+                                  {u.verified && <span className="text-accent text-xs">✓</span>}
                                 </div>
-                                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                                  {u.locationName && (
-                                    <span className="text-xs text-muted-foreground">{u.locationName}</span>
-                                  )}
-                                  {u.warmupFormat && (
-                                    <span className="text-xs text-muted-foreground/60 capitalize">{u.warmupFormat}</span>
-                                  )}
-                                  {u.levelSelf != null && (
-                                    <span className="text-xs font-mono text-primary/60 bg-primary/8 border border-primary/12 rounded px-1">
-                                      {u.levelSelf}★
-                                    </span>
-                                  )}
+                                <div className="text-xs text-muted-foreground truncate sm:hidden">
+                                  {u.levelQuiz ?? u.level} · {u.matchesPlayed}M
+                                  {profile && <span className={cn("ml-1 tabular-nums", profile.reliabilityScore >= 80 ? "text-emerald-400" : profile.reliabilityScore >= 60 ? "text-amber-400" : "text-red-400")}> {profile.reliabilityScore}</span>}
                                 </div>
                               </div>
                             </div>
 
-                            {/* Mobile: right column summary */}
-                            <div className="flex sm:hidden items-center gap-2 flex-shrink-0">
-                              <Badge variant="outline" className="text-xs border-white/10 font-mono">
-                                {u.levelQuiz ?? u.level}
-                              </Badge>
-                              {profile && <ReliabilityDot score={profile.reliabilityScore} />}
-                            </div>
-
-                            {/* Desktop columns */}
-                            <div className="hidden sm:flex justify-end w-16">
-                              <Badge variant="outline" className="text-xs border-white/10 font-mono">
-                                {u.levelQuiz ?? u.level}
-                              </Badge>
-                            </div>
-
-                            <div className="hidden sm:flex justify-end items-center gap-1.5 w-20">
+                            <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded text-xs border border-white/10 font-mono text-muted-foreground text-right w-16 justify-end">
+                              {u.levelQuiz ?? u.level}
+                            </span>
+                            <div className="hidden sm:flex items-center justify-end w-20">
                               {profile ? (
-                                <>
+                                <div className="flex items-center gap-1.5">
                                   <ReliabilityDot score={profile.reliabilityScore} />
-                                  <span className="text-xs font-mono text-muted-foreground tabular-nums">
+                                  <span className={cn("text-xs tabular-nums font-medium", profile.reliabilityScore >= 80 ? "text-emerald-400" : profile.reliabilityScore >= 60 ? "text-amber-400" : "text-red-400")}>
                                     {profile.reliabilityScore}
                                   </span>
-                                </>
-                              ) : (
-                                <span className="text-xs text-muted-foreground/40">—</span>
-                              )}
+                                </div>
+                              ) : <span className="text-xs text-muted-foreground">—</span>}
                             </div>
-
-                            <div className="hidden sm:flex justify-end w-16">
-                              <span className="text-xs font-mono text-muted-foreground tabular-nums">
-                                {u.matchesPlayed}
-                              </span>
-                            </div>
-
-                            <div className="hidden sm:flex justify-end w-12">
+                            <span className="hidden sm:block text-xs text-muted-foreground text-right w-16">{u.matchesPlayed}</span>
+                            <div className="hidden sm:flex items-center justify-end w-12">
                               {profile && profile.behavioralFlags.length > 0 ? (
                                 <span
                                   title={profile.behavioralFlags.join(", ")}
@@ -572,9 +529,7 @@ export default function Members() {
                                 >
                                   ⚑ {profile.behavioralFlags.length}
                                 </span>
-                              ) : (
-                                <span className="text-xs text-muted-foreground/30">—</span>
-                              )}
+                              ) : <span className="text-xs text-muted-foreground">—</span>}
                             </div>
                           </div>
                         </Link>

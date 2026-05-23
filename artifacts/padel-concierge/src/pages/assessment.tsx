@@ -2,9 +2,6 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/api";
@@ -200,15 +197,19 @@ export default function Assessment() {
               <h1 className="text-4xl font-serif mb-3">{label}</h1>
               <p className="text-muted-foreground max-w-sm mx-auto">{desc}</p>
             </div>
-            <Badge className="bg-accent/20 text-accent border-accent/30 text-sm px-4 py-1.5">
+            <span className="inline-flex items-center px-4 py-1.5 rounded-full border text-sm"
+              style={{ background: "rgba(0,212,255,0.1)", borderColor: "rgba(0,212,255,0.25)", color: "#00d4ff" }}>
               WPT {result} — Assessment Complete
-            </Badge>
+            </span>
             <div className="text-sm text-muted-foreground">
               {submitMutation.isPending ? "Saving your level..." : "Your profile has been updated. Redirecting to dashboard..."}
             </div>
-            <Button onClick={() => setLocation("/dashboard")} className="shadow-lg shadow-primary/20">
+            <button
+              onClick={() => setLocation("/dashboard")}
+              className="inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-6 h-11 text-sm transition-all hover:bg-primary/90 shadow-lg shadow-primary/20"
+            >
               Go to Dashboard
-            </Button>
+            </button>
           </div>
         </div>
       </AppLayout>
@@ -241,8 +242,8 @@ export default function Assessment() {
         </div>
 
         {/* Question */}
-        <Card className="bg-card border-white/5">
-          <CardContent className="p-8 space-y-6">
+        <div className="rounded-[20px] bg-card border border-white/5">
+          <div className="p-8 space-y-6">
             <h2 className="text-xl font-serif leading-relaxed">{q.text}</h2>
             <div className="space-y-3">
               {q.options.map((opt, i) => (
@@ -269,24 +270,23 @@ export default function Assessment() {
 
             <div className="flex gap-3 pt-2">
               {step > 0 && (
-                <Button
-                  variant="outline"
-                  className="border-white/10 text-muted-foreground"
+                <button
                   onClick={handleBack}
+                  className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent font-medium text-muted-foreground px-4 h-11 text-sm transition-all hover:bg-white/5 hover:text-foreground"
                 >
                   Back
-                </Button>
+                </button>
               )}
-              <Button
-                className="flex-1 shadow-lg shadow-primary/20"
+              <button
+                className="flex-1 inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold h-11 text-sm transition-all hover:bg-primary/90 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={selected === null}
                 onClick={handleNext}
               >
                 {step === QUESTIONS.length - 1 ? "See My Level" : "Next Question"}
-              </Button>
+              </button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         <p className="text-center text-xs text-muted-foreground">
           Your level can be verified and adjusted by a certified coach after your first match.

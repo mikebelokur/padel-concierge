@@ -3,9 +3,6 @@ import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { apiFetch } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -65,7 +62,9 @@ export default function CoachDashboard() {
             <p className="text-muted-foreground">{dateStr}</p>
           </div>
           <Link href="/clients/new">
-            <Button size="sm" className="gap-2">+ Add Client</Button>
+            <button className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-black font-semibold px-4 h-9 text-sm transition-all hover:bg-primary/90">
+              + Add Client
+            </button>
           </Link>
         </div>
 
@@ -77,29 +76,27 @@ export default function CoachDashboard() {
             { label: "Unread Messages", value: unreadMessages.length, icon: "💬", color: "text-yellow-400" },
             { label: "Revenue This Week", value: `${weekRevenue} AED`, icon: "💰", color: "text-green-400" },
           ].map(({ label, value, icon, color }) => (
-            <Card key={label} className="bg-card border-white/5">
-              <CardContent className="p-4">
+            <div key={label} className="rounded-[20px] bg-card border border-white/5">
+              <div className="p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-lg">{icon}</span>
                   <span className="text-xs text-muted-foreground">{label}</span>
                 </div>
                 <div className={cn("text-2xl font-mono font-semibold", color)}>{value}</div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
 
         {/* Today's sessions */}
-        <Card className="bg-card border-white/5">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-medium">Today — {dayName}</CardTitle>
-              {(todaySessions as any[]).length === 0 && (
-                <span className="text-xs text-muted-foreground">No recurring sessions today</span>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <div className="rounded-[20px] bg-card border border-white/5">
+          <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+            <div className="text-base font-medium">Today — {dayName}</div>
+            {(todaySessions as any[]).length === 0 && (
+              <span className="text-xs text-muted-foreground">No recurring sessions today</span>
+            )}
+          </div>
+          <div className="px-5 pb-5 space-y-3">
             {(todaySessions as any[]).length === 0 ? (
               <div className="text-center py-6 text-muted-foreground text-sm">
                 Free day — no scheduled sessions 🏖️
@@ -117,23 +114,25 @@ export default function CoachDashboard() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className={cn("text-xs", LEVEL_COLORS[session.client?.level ?? "C"] ?? "")}>
+                    <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border", LEVEL_COLORS[session.client?.level ?? "C"] ?? "")}>
                       {session.client?.level}
-                    </Badge>
-                    <Badge className="bg-green-500/10 text-green-400 border-green-500/20 text-xs">Recurring</Badge>
+                    </span>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border bg-green-500/10 text-green-400 border-green-500/20">
+                      Recurring
+                    </span>
                   </div>
                 </div>
               ))
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Clients overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {(clients as any[]).map((client: any) => (
             <Link key={client.id} href={`/clients/${client.id}`}>
-              <Card className="bg-card border-white/5 hover:border-primary/30 transition-colors cursor-pointer">
-                <CardContent className="p-4">
+              <div className="rounded-[20px] bg-card border border-white/5 hover:border-primary/30 transition-colors cursor-pointer">
+                <div className="p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-serif">
@@ -144,9 +143,9 @@ export default function CoachDashboard() {
                         <div className="text-xs text-muted-foreground capitalize">{client.bookingPattern.replace("_", " ")}</div>
                       </div>
                     </div>
-                    <Badge variant="outline" className={cn("text-xs", LEVEL_COLORS[client.level] ?? "")}>
+                    <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border", LEVEL_COLORS[client.level] ?? "border-white/10 text-muted-foreground")}>
                       {client.level}
-                    </Badge>
+                    </span>
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>{client.totalSessions} sessions · {client.totalRevenue} AED</span>
@@ -154,54 +153,58 @@ export default function CoachDashboard() {
                       ● {client.status}
                     </span>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </Link>
           ))}
         </div>
 
         {/* Pending video queue */}
         {pendingVideos.length > 0 && (
-          <Card className="bg-card border-white/5">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-medium flex items-center gap-2">
-                🎬 Video Analysis Queue
-                <Badge className="bg-accent/10 text-accent border-accent/20">{pendingVideos.length}</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
+          <div className="rounded-[20px] bg-card border border-white/5">
+            <div className="px-5 pt-5 pb-3 flex items-center gap-2">
+              <span className="text-base font-medium">🎬 Video Analysis Queue</span>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs border bg-accent/10 text-accent border-accent/20">
+                {pendingVideos.length}
+              </span>
+            </div>
+            <div className="px-5 pb-5 space-y-2">
               {pendingVideos.slice(0, 3).map((v: any) => (
                 <Link key={v.id} href={`/video-analysis/${v.id}`}>
                   <div className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-white/5 hover:border-primary/20 cursor-pointer transition-colors">
                     <div className="text-sm font-medium">Video #{v.id}</div>
-                    <Badge variant="outline" className="text-xs capitalize">{v.status}</Badge>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border border-white/10 text-muted-foreground capitalize">
+                      {v.status}
+                    </span>
                   </div>
                 </Link>
               ))}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {/* Recent messages preview */}
         {unreadMessages.length > 0 && (
-          <Card className="bg-card border-white/5">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-medium flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  💬 New Messages
-                  <Badge className="bg-yellow-500/10 text-yellow-400 border-yellow-500/20">{unreadMessages.length}</Badge>
+          <div className="rounded-[20px] bg-card border border-white/5">
+            <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-base font-medium">💬 New Messages</span>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs border bg-yellow-500/10 text-yellow-400 border-yellow-500/20">
+                  {unreadMessages.length}
                 </span>
-                <Link href="/messages"><span className="text-xs text-primary hover:underline cursor-pointer">View all</span></Link>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
+              </div>
+              <Link href="/messages">
+                <span className="text-xs text-primary hover:underline cursor-pointer">View all</span>
+              </Link>
+            </div>
+            <div className="px-5 pb-5 space-y-2">
               {unreadMessages.slice(0, 3).map((m: any) => (
                 <div key={m.id} className="p-3 rounded-lg bg-background/50 border border-white/5 text-sm">
                   <span className="text-muted-foreground">{m.content}</span>
                 </div>
               ))}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
       </div>
     </AppLayout>

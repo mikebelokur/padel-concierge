@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { useQuery, useQueries, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,7 @@ interface MatchRequest {
   status: string;
   proposedDate: string | null;
   proposedTime: string | null;
+  matchId: number | null;
   createdAt: string;
   fromUser: { id: number; name: string; level: string; verified: boolean } | null;
   toUser: { id: number; name: string; level: string; verified: boolean } | null;
@@ -238,6 +240,7 @@ function PlayerCard({
 export default function MatchRequests() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const qc = useQueryClient();
   const isCoach = user?.role === "coach" || user?.role === "admin" || user?.role === "owner";
 
@@ -338,10 +341,28 @@ export default function MatchRequests() {
 
   const respondMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: string }) =>
-      apiFetch(`/match-requests/${id}`, { method: "PATCH", body: JSON.stringify({ status }) }),
-    onSuccess: (_data, vars) => {
-      toast({ title: vars.status === "accepted" ? "Запрос принят!" : "Запрос отклонён" });
+      apiFetch<MatchRequest>(`/match-requests/${id}`, { method: "PATCH", body: JSON.stringify({ status }) }),
+    onSuccess: (data, vars) => {
+      if (vars.status === "accepted" && (data as MatchRequest).matchId) {
+        const matchId = (data as MatchRequest).matchId;
+        toast({
+          title: "Запрос принят! Матч создан ✓",
+          description: "Черновик матча готов — откройте, чтобы добавить детали.",
+          action: (
+            <button
+              onClick={() => navigate(`/matches/${matchId}`)}
+              className="rounded-full font-semibold px-3 py-1 text-xs"
+              style={{ background: "#D4AF37", color: "#000" }}
+            >
+              Открыть матч
+            </button>
+          ),
+        });
+      } else {
+        toast({ title: vars.status === "accepted" ? "Запрос принят!" : "Запрос отклонён" });
+      }
       qc.invalidateQueries({ queryKey: ["match-requests"] });
+      qc.invalidateQueries({ queryKey: ["match"] });
     },
   });
 
@@ -647,6 +668,15 @@ export default function MatchRequests() {
                                   Отклонить
                                 </button>
                               </div>
+                            )}
+                            {r.status === "accepted" && r.matchId && (
+                              <button
+                                onClick={() => navigate(`/matches/${r.matchId}`)}
+                                className="mt-3 rounded-full font-medium transition-all hover:scale-[1.02] active:scale-[0.98] inline-flex items-center gap-1.5"
+                                style={{ height: "36px", padding: "0 16px", fontSize: "13px", background: "rgba(212,175,55,0.12)", border: "1px solid rgba(212,175,55,0.3)", color: "#D4AF37" }}
+                              >
+                                🎾 Перейти к матчу
+                              </button>
                             )}
                             {personalTab === "sent" && r.status === "pending" && (
                               <button

@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, matchRequestsTable, usersTable, activityLogsTable } from "@workspace/db";
+import { db, matchRequestsTable, usersTable, activityLogsTable, matchesTable } from "@workspace/db";
 import { and, eq, gt, or } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth";
 
@@ -17,6 +17,7 @@ async function formatRequest(r: typeof matchRequestsTable.$inferSelect) {
     status: r.status,
     proposedDate: r.proposedDate ?? null,
     proposedTime: r.proposedTime ?? null,
+    matchId: r.matchId ?? null,
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
     fromUser: fromUser ? { id: fromUser.id, name: fromUser.name, level: fromUser.level, avatar: fromUser.avatar ?? null, verified: fromUser.verified } : null,
@@ -100,15 +101,74 @@ router.patch("/match-requests/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const [request] = await db.update(matchRequestsTable).set({
-    status,
-    updatedAt: new Date(),
-  }).where(eq(matchRequestsTable.id, id)).returning();
+  const authUserId: number = (req as any).auth.userId;
 
-  if (!request) { res.status(404).json({ error: "Request not found" }); return; }
+  const [existing] = await db.select().from(matchRequestsTable).where(eq(matchRequestsTable.id, id));
+  if (!existing) { res.status(404).json({ error: "Request not found" }); return; }
 
-  const [fromUser] = await db.select().from(usersTable).where(eq(usersTable.id, request.fromUserId));
-  const [toUser] = await db.select().from(usersTable).where(eq(usersTable.id, request.toUserId));
+  const isRecipient = existing.toUserId === authUserId;
+  const isSender = existing.fromUserId === authUserId;
+
+  if ((status === "accepted" || status === "declined") && !isRecipient) {
+    res.status(403).json({ error: "Only the recipient can accept or decline a request" });
+    return;
+  }
+  if (status === "cancelled" && !isSender) {
+    res.status(403).json({ error: "Only the sender can cancel a request" });
+    return;
+  }
+
+  if (existing.status === "accepted" && status === "accepted") {
+    res.json(await formatRequest(existing));
+    return;
+  }
+
+  const [fromUser] = await db.select().from(usersTable).where(eq(usersTable.id, existing.fromUserId));
+  const [toUser] = await db.select().from(usersTable).where(eq(usersTable.id, existing.toUserId));
+
+  let createdMatchId: number | null = null;
+
+  if (status === "accepted" && existing.proposedDate && fromUser && toUser && !existing.matchId) {
+    const LEVELS = ["D-", "D", "D+", "C-", "C", "C+"];
+    const LEVEL_INDEX = Object.fromEntries(LEVELS.map((l, i) => [l, i]));
+    const levels = [fromUser, toUser].map(p => LEVEL_INDEX[p.level] ?? 0);
+    const levelMin = LEVELS[Math.min(...levels)] ?? null;
+    const levelMax = LEVELS[Math.max(...levels)] ?? null;
+    const players = [fromUser, toUser].map(p => ({
+      userId: p.id,
+      name: p.name,
+      level: p.level,
+      confirmed: false,
+      avatar: p.avatar ?? null,
+    }));
+
+    const [match] = await db.insert(matchesTable).values({
+      date: existing.proposedDate,
+      time: existing.proposedTime ?? "TBD",
+      clubName: "TBD",
+      format: "2v2",
+      players: JSON.stringify(players),
+      matchType: "balanced",
+      levelMin,
+      levelMax,
+      balanceScore: 100 - (Math.max(...levels) - Math.min(...levels)) * 20,
+      status: "scheduled",
+    }).returning();
+
+    createdMatchId = match.id;
+
+    await db.insert(activityLogsTable).values({
+      userId: fromUser.id,
+      userName: fromUser.name,
+      action: "match_created",
+      details: `Match scheduled with ${toUser.name} on ${existing.proposedDate}`,
+    });
+  }
+
+  const updateData: Record<string, unknown> = { status, updatedAt: new Date() };
+  if (createdMatchId !== null) updateData.matchId = createdMatchId;
+
+  const [request] = await db.update(matchRequestsTable).set(updateData).where(eq(matchRequestsTable.id, id)).returning();
 
   if (toUser && fromUser) {
     await db.insert(activityLogsTable).values({

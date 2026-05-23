@@ -10,6 +10,7 @@ export const matchRequestsTable = pgTable("match_requests", {
   status: text("status").notNull().default("pending"),
   proposedDate: text("proposed_date"),
   proposedTime: text("proposed_time"),
+  matchId: integer("match_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

@@ -23,6 +23,7 @@ const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(authRouter);
+router.use(padelFutureRouter);
 router.use(usersRouter);
 router.use(matchesRouter);
 router.use(bookingsRouter);
@@ -38,7 +39,6 @@ router.use(padelRulesRouter);
 router.use(padelNewsRouter);
 router.use(matchmakingRouter);
 router.use(registrationsRouter);
-router.use(padelFutureRouter);
 router.use(trainerMatchRequestsRouter);
 
 export default router;

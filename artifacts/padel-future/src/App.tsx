@@ -5,6 +5,7 @@ import Quiz from "@/pages/quiz";
 import Result from "@/pages/result";
 import Profile from "@/pages/profile";
 import Admin from "@/pages/admin";
+import AdminUser from "@/pages/admin-user";
 
 function NotFound() {
   return (
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/quiz" component={Quiz} />
       <Route path="/result" component={Result} />
       <Route path="/profile" component={Profile} />
+      <Route path="/admin/users/:id" component={AdminUser} />
       <Route path="/admin" component={Admin} />
       <Route component={NotFound} />
     </Switch>

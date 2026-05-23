@@ -81,7 +81,7 @@ export default function Quiz() {
     setLoading(true);
     try {
       const result = await submitQuiz({
-        userId: user.id,
+        userEmail: user.email,
         quizLevel, realLevel,
         personalityType: personality,
         q1Answer: answers.q1,
@@ -235,7 +235,7 @@ export default function Quiz() {
                         const personality = Q3_OPTIONS[newAnswers.q3 ?? 0];
                         setLoading(true);
                         submitQuiz({
-                          userId: user.id, quizLevel, realLevel,
+                          userEmail: user.email, quizLevel, realLevel,
                           personalityType: personality,
                           q1Answer: newAnswers.q1, q2Answer: newAnswers.q2, q3Answer: newAnswers.q3,
                           q4Answer: levelAnswers.q4, q4Extra: q4Extra || null,

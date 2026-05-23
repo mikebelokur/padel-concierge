@@ -5,6 +5,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface Candidate {
   user: {
@@ -121,6 +122,7 @@ export default function FindMatch() {
   const { user } = useAuth();
   const { language, t } = useLanguage();
   const [, navigate] = useLocation();
+  const { toast } = useToast();
 
   const initialDate = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
@@ -132,6 +134,36 @@ export default function FindMatch() {
   const [candidates, setCandidates] = useState<Candidate[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [suggestingId, setSuggestingId] = useState<number | null>(null);
+
+  async function handleSuggest(candidateUserId: number) {
+    if (!user?.id || suggestingId !== null) return;
+    setSuggestingId(candidateUserId);
+    try {
+      await apiFetch("/match-requests", {
+        method: "POST",
+        body: JSON.stringify({
+          toUserId: candidateUserId,
+          message: null,
+          proposedDate: date || null,
+          proposedTime: null,
+        }),
+      });
+      toast({
+        title: t("findMatch.suggestSent"),
+        description: t("findMatch.suggestSentDesc"),
+      });
+      navigate("/match-requests");
+    } catch (e: any) {
+      toast({
+        title: t("findMatch.suggestError"),
+        description: e.message || "Network error",
+        variant: "destructive",
+      });
+    } finally {
+      setSuggestingId(null);
+    }
+  }
 
   const maxDate = useMemo(() => { const d = new Date(); d.setDate(d.getDate() + 14); return toDateInput(d); }, []);
   const minDate = useMemo(() => toDateInput(new Date()), []);
@@ -285,7 +317,8 @@ export default function FindMatch() {
                 language={language}
                 t={t}
                 index={idx}
-                onSuggest={() => alert(t("findMatch.comingSoon"))}
+                onSuggest={() => handleSuggest(c.user.id)}
+                isSuggesting={suggestingId === c.user.id}
                 onView={() => navigate(`/players/${c.user.id}`)}
               />
             ))}
@@ -303,6 +336,7 @@ function CandidateCard({
   t,
   index,
   onSuggest,
+  isSuggesting,
   onView,
 }: {
   candidate: Candidate;
@@ -311,6 +345,7 @@ function CandidateCard({
   t: (k: string) => string;
   index: number;
   onSuggest: () => void;
+  isSuggesting: boolean;
   onView: () => void;
 }) {
   const { user: u, compatibility_score: score, shared_availability_slots: slots } = candidate;
@@ -439,10 +474,11 @@ function CandidateCard({
       <div className="space-y-3">
         <button
           onClick={onSuggest}
-          className="w-full rounded-[14px] bg-primary text-black font-semibold transition-all"
+          disabled={isSuggesting}
+          className="w-full rounded-[14px] bg-primary text-black font-semibold transition-all disabled:opacity-60"
           style={{ height: "56px", fontSize: "17px" }}
         >
-          {t("findMatch.suggest")}
+          {isSuggesting ? t("findMatch.suggesting") : t("findMatch.suggest")}
         </button>
         <button
           onClick={onView}

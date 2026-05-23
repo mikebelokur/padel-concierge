@@ -37,18 +37,19 @@ router.get("/match-requests", async (req, res): Promise<void> => {
 });
 
 router.post("/match-requests", async (req, res): Promise<void> => {
-  const { fromUserId, toUserId, message, proposedDate, proposedTime } = req.body;
-  if (!fromUserId || !toUserId) {
-    res.status(400).json({ error: "fromUserId and toUserId required" });
+  const authUserId: number = (req as any).auth.userId;
+  const { toUserId, message, proposedDate, proposedTime } = req.body;
+  if (!toUserId) {
+    res.status(400).json({ error: "toUserId required" });
     return;
   }
 
-  const [from] = await db.select().from(usersTable).where(eq(usersTable.id, Number(fromUserId)));
+  const [from] = await db.select().from(usersTable).where(eq(usersTable.id, authUserId));
   const [to] = await db.select().from(usersTable).where(eq(usersTable.id, Number(toUserId)));
   if (!from || !to) { res.status(404).json({ error: "User not found" }); return; }
 
   const [request] = await db.insert(matchRequestsTable).values({
-    fromUserId: Number(fromUserId),
+    fromUserId: authUserId,
     toUserId: Number(toUserId),
     message: message ?? null,
     proposedDate: proposedDate ?? null,
@@ -56,12 +57,20 @@ router.post("/match-requests", async (req, res): Promise<void> => {
     status: "pending",
   }).returning();
 
-  await db.insert(activityLogsTable).values({
-    userId: from.id,
-    userName: from.name,
-    action: "match_request_sent",
-    details: `Sent match request to ${to.name}`,
-  });
+  await db.insert(activityLogsTable).values([
+    {
+      userId: from.id,
+      userName: from.name,
+      action: "match_request_sent",
+      details: `Sent match request to ${to.name}`,
+    },
+    {
+      userId: to.id,
+      userName: to.name,
+      action: "match_request_received",
+      details: `Received match request from ${from.name}`,
+    },
+  ]);
 
   res.status(201).json(await formatRequest(request));
 });

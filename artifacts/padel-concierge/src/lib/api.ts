@@ -20,7 +20,7 @@ export async function apiFetch<T = unknown>(
     },
   });
   if (!res.ok) {
-    if (res.status === 401 || res.status === 403) {
+    if (res.status === 401) {
       sessionExpiredHandler?.();
     }
     const err = await res.json().catch(() => ({ error: res.statusText }));

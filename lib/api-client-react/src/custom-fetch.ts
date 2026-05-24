@@ -377,7 +377,7 @@ export async function customFetch<T = unknown>(
   const response = await fetch(input, { ...init, method, headers });
 
   if (!response.ok) {
-    if ((response.status === 401 || response.status === 403) && _sessionExpiredHandler && !_sessionExpiredFiring) {
+    if (response.status === 401 && _sessionExpiredHandler && !_sessionExpiredFiring) {
       _sessionExpiredFiring = true;
       _sessionExpiredHandler();
     }

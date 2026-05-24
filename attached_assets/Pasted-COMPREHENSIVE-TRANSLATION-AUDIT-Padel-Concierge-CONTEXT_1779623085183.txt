@@ -1,0 +1,79 @@
+COMPREHENSIVE TRANSLATION AUDIT — Padel Concierge.
+
+CONTEXT:
+Real user testing revealed multiple pages stay in English when 
+RU is selected. We fixed matches.tsx in task #88. Now do a 
+comprehensive audit and fix ALL remaining pages in one task.
+
+GOAL:
+100% of user-visible strings on ALL pages must be translatable 
+via useLanguage()/t() hook and have both EN and RU values in 
+en.json and ru.json.
+
+CONFIRMED BROKEN PAGES (must fix):
+- /assessment (the 10-question level quiz)
+- /match-requests
+- /match-detail
+- /find-match (verify, partial fix earlier)
+- /booking
+- /news
+- /rules
+- /profile
+- /settings
+
+WHAT TO DO:
+
+1. AUDIT every .tsx file in artifacts/padel-concierge/src/**.
+   Grep for hardcoded English strings in JSX:
+   - <h1>, <h2>, <h3>, <h4>, <p>, <span>, <button>, <label>, 
+     <div> text content
+   - placeholder="...", title="...", aria-label="..." attributes
+   - Toast notification messages
+   - Error messages, success messages
+   - Option labels in <select>, radio groups
+   - Tab labels, breadcrumb labels
+   - Loading states, empty states
+   - Modal titles and body text
+
+2. EXTRACT all found strings into i18n keys.
+   Naming pattern: pageName.section.element (camelCase)
+   Examples:
+   - assessment.title
+   - assessment.progressLabel
+   - assessment.questions.experience
+   - assessment.answers.lessThan6Months
+   - assessment.nextButton
+   - assessment.disclaimer
+
+3. ADD all strings to BOTH en.json and ru.json files in 
+   artifacts/padel-concierge/src/i18n/.
+
+4. RUSSIAN TRANSLATION PRINCIPLES:
+   - Natural conversational Russian, NOT literal
+   - Use "ты" form (informal)
+   - Padel terms stay in original (bandeja, víbora, smash)  
+   - Use en-dash for ranges: "6–12 месяцев"
+   - Correct Russian plurals: 1 год / 2 года / 5 лет
+   - Tone: friendly, premium, encouraging
+
+5. SPECIFIC ASSESSMENT PAGE TRANSLATIONS:
+   - "Question 1 of 10" → "Вопрос 1 из 10"  
+   - "0% complete" → "0% пройдено"
+   - "How long have you been playing padel?" → 
+     "Как давно ты играешь в падел?"
+   - "Less than 6 months" → "Меньше 6 месяцев"
+   - "6–12 months" → "6–12 месяцев"
+   - "1–3 years" → "1–3 года"
+   - "3–5 years" → "3–5 лет"
+   - "5+ years" → "5+ лет"
+   - "Next Question" → "Следующий вопрос"
+   - "Your level can be verified and adjusted by a certified 
+     coach after your first match." → 
+     "Твой уровень подтвердит и при необходимости скорректирует 
+     сертифицированный тренер после первого матча."
+
+6. APPLY useLanguage() hook to every page using hardcoded strings:
+   ```tsx
+   import { useLanguage } from '@/contexts/LanguageContext';
+   const { t } = useLanguage();
+   <h1>{t('assessment.title')}</h1>

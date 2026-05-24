@@ -1,0 +1,77 @@
+DANIEL — Padel Concierge work, Saturday May 23 evening.
+
+GOAL: Finish translating the app to Russian. Right now some 
+pages are still in English even when user picks RU.
+
+WHAT YOU DO:
+
+STEP 1 — Cancel old tasks (3 minutes)
+   1. Open Replit on iPad
+   2. Open Padel Concierge project  
+   3. Tap "Open task board" (bottom-left)
+   4. You will see columns: Drafts, Active, Queued, Ready, Done
+   5. In QUEUED column find these tasks:
+      #87, #86, #81, #80, #79, #77, #76, #75, #74, #73, #72
+   6. For EACH of them:
+      - Tap the task
+      - Find "⋮" (three dots) or "Cancel" button
+      - Tap Cancel → Confirm
+   7. Result: Queued column should be empty
+   8. Take screenshot of task board → send to Mike
+
+STEP 2 — Wait for Mike confirmation
+   Mike will say "OK go ahead" after he sees the screenshot.
+   DO NOT start step 3 until Mike says OK.
+
+STEP 3 — Start new big translation task
+   1. Tap "+ New task" (top left)
+   2. Set model: ADVANCED (not Economy)
+   3. Toggle Plan: ON
+   4. Copy the BIG PROMPT below into the task field
+   5. Tap blue up-arrow to submit
+   6. Wait 30-60 seconds for agent to think and write a plan
+   7. Take screenshot of plan → send to Mike
+   8. Mike says "Build" → you tap "Build on main"
+   
+STEP 4 — Wait for completion (15-30 minutes)
+   1. Agent works in background
+   2. Check progress every 5 minutes
+   3. If you see RED error or "FAILED" — STOP, ask Mike
+   4. If you see "Approval required" — STOP, ask Mike
+   5. If everything is GREEN and "Done" — go to Step 5
+
+STEP 5 — Publish
+   1. Right side panel — tap blue "Republish" button
+   2. If it asks "Review and approve" — STOP, ask Mike
+   3. If it just publishes — wait 2-3 minutes  
+   4. When you see "Misha published just now" — DONE
+   5. Send screenshot to Mike
+
+STEP 6 — Test on iPhone (you, Daniel)
+   1. Open Safari on iPad or iPhone
+   2. Go to: padel-concierge.replit.app
+   3. Switch language to RU (top right toggle)
+   4. Try these pages:
+      - Home (Главная)
+      - Найти матч (Find Match)  
+      - Матчи (Matches)
+      - Заявки (Requests)
+      - Настройки (Settings)
+      - Pass the assessment quiz (Оценка уровня)
+   5. Anywhere you see ENGLISH text — screenshot it
+   6. Send all screenshots to Mike
+
+IF SOMETHING GOES WRONG:
+   - Build error → screenshot to Mike, STOP
+   - Agent asks question → screenshot to Mike, STOP
+   - Page does not load → screenshot to Mike, STOP
+   - Lost where you are → screenshot to Mike, STOP
+   - Anything red, scary, or unclear → STOP, ask Mike
+
+CRITICAL RULES:
+   ✅ DO: cancel queued tasks, paste prompt, tap Build, wait, 
+       Republish, test
+   ❌ DON'T: start new tasks Mike didn't approve
+   ❌ DON'T: tap "Approve" on database changes alone
+   ❌ DON'T: change any code yourself
+   ❌ DON'T: cancel the new translation task once it starts

@@ -52,6 +52,11 @@ export default function AdminUsers() {
 
   const [filter, setFilter] = useState<"all" | UserType>("all");
   const [search, setSearch] = useState("");
+  // Reset to page 1 when filter or search changes — use a setter wrapper
+  const setFilterAndReset = (v: "all" | UserType) => { setFilter(v); setPage(1); };
+  const setSearchAndReset = (v: string) => { setSearch(v); setPage(1); };
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 10;
   const [confirmTarget, setConfirmTarget] = useState<{ user: AdminUser; newType: UserType } | null>(null);
 
   const { data: users = [], isLoading } = useQuery<AdminUser[]>({
@@ -86,6 +91,10 @@ export default function AdminUsers() {
     if (search && !u.name.toLowerCase().includes(search.toLowerCase()) && !u.email.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   return (
     <AppLayout>
@@ -128,7 +137,7 @@ export default function AdminUsers() {
             {(["all", ...ALL_TYPES] as const).map(chip => (
               <button
                 key={chip}
-                onClick={() => setFilter(chip)}
+                onClick={() => setFilterAndReset(chip)}
                 className="rounded-full text-sm font-medium px-3 py-1.5 transition-all"
                 style={{
                   background: filter === chip
@@ -151,7 +160,7 @@ export default function AdminUsers() {
           </div>
           <input
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => setSearchAndReset(e.target.value)}
             placeholder="Search by name or email…"
             className="rounded-xl px-3.5 py-2.5 text-sm bg-transparent text-white placeholder:text-muted-foreground outline-none"
             style={{ border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.03)" }}
@@ -165,7 +174,7 @@ export default function AdminUsers() {
           <div className="text-center py-12 text-muted-foreground text-sm">No users found</div>
         ) : (
           <div className="flex flex-col gap-2">
-            {filtered.map(user => {
+            {paginated.map(user => {
               const typeStyle = TYPE_STYLES[user.userType as UserType] ?? TYPE_STYLES.real_user;
               const roleStyle = ROLE_STYLES[user.role] ?? ROLE_STYLES.player;
               return (
@@ -230,6 +239,32 @@ export default function AdminUsers() {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Pagination controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-5 px-1">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={safePage === 1}
+              className="rounded-full px-4 py-1.5 text-sm font-medium transition-all disabled:opacity-30"
+              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.7)" }}
+            >
+              ← Prev
+            </button>
+            <span className="text-sm text-muted-foreground">
+              {safePage} / {totalPages}
+              <span className="ml-2 opacity-50 text-xs">({filtered.length} total)</span>
+            </span>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={safePage === totalPages}
+              className="rounded-full px-4 py-1.5 text-sm font-medium transition-all disabled:opacity-30"
+              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.7)" }}
+            >
+              Next →
+            </button>
           </div>
         )}
 

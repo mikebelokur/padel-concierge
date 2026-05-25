@@ -6,7 +6,9 @@ import {
   timestamp,
   integer,
   real,
+  check,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -48,7 +50,9 @@ export const usersTable = pgTable("users", {
   physicalSelf: integer("physical_self"),
   warmupFormat: text("warmup_format"),
   userType: text("user_type").notNull().default("real_user"),
-});
+}, t => [
+  check("users_user_type_check", sql`${t.userType} IN ('real_user', 'seed_test', 'beta_tester')`),
+]);
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({
   id: true,

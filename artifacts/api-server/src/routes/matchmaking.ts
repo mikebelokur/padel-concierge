@@ -170,7 +170,7 @@ router.post("/matchmaking/suggest", async (req, res): Promise<void> => {
       location_name: string | null;
       goal: string | null;
     };
-    is_beta: boolean;
+    isBeta: boolean;
     compatibility_score: number;
     compatibility_breakdown: {
       level_match: number;
@@ -219,7 +219,7 @@ router.post("/matchmaking/suggest", async (req, res): Promise<void> => {
         location_name: u.locationName,
         goal: u.goal,
       },
-      is_beta: (u.userType ?? "real_user") === "beta_tester",
+      isBeta: (u.userType ?? "real_user") === "beta_tester",
       compatibility_score: score,
       compatibility_breakdown: {
         level_match: lm,

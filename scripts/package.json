@@ -8,6 +8,7 @@
     "seed-matchmaking": "tsx ./src/seed-matchmaking-users.ts",
     "seed-test-accounts": "tsx ./src/seed-test-accounts.ts",
     "backfill-user-types": "tsx ./src/backfill-user-types.ts",
+    "add-reminder-column": "tsx ./src/add-reminder-column.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {

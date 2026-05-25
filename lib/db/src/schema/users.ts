@@ -50,6 +50,7 @@ export const usersTable = pgTable("users", {
   physicalSelf: integer("physical_self"),
   warmupFormat: text("warmup_format"),
   userType: text("user_type").notNull().default("real_user"),
+  reminderSentAt: timestamp("reminder_sent_at", { withTimezone: true }),
 }, t => [
   check("users_user_type_check", sql`${t.userType} IN ('real_user', 'seed_test', 'beta_tester')`),
 ]);

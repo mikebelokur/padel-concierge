@@ -92,6 +92,14 @@
     "welcomeToastDesc": "Take the skill assessment to get your official WPT level.",
     "registrationFailed": "Registration failed",
     "passwordsMismatch": "Passwords don't match",
+    "checkingEmail": "Checking…",
+    "emailExists": {
+      "title": "This email is already registered",
+      "body": "Looks like you've already created an account.",
+      "signIn": "Sign in",
+      "forgotPassword": "Forgot password?",
+      "useDifferent": "Use a different email"
+    },
     "goals": {
       "Play": "Play",
       "Compete": "Compete",
@@ -696,6 +704,120 @@
     "toastTitle": "Analysis Submitted",
     "toastDesc": "Our coaches will review it shortly.",
     "toastError": "Submission Failed"
+  },
+  "matchRequests": {
+    "title": "Match Requests",
+    "subtitle": "Personal invitations and trainer requests",
+    "invite": "Invite",
+    "tabs": {
+      "personal": "Personal",
+      "trainer": "To Trainer",
+      "playerRequests": "Player Requests"
+    },
+    "subTabs": {
+      "received": "Received",
+      "sent": "Sent"
+    },
+    "filter": {
+      "all": "All",
+      "pending": "Pending",
+      "accepted": "Accepted",
+      "declined": "Declined",
+      "cancelled": "Cancelled",
+      "assigned": "Assigned"
+    },
+    "status": {
+      "pending": "Pending",
+      "accepted": "Accepted",
+      "declined": "Declined",
+      "cancelled": "Cancelled",
+      "assigned": "Assigned"
+    },
+    "empty": {
+      "withStatus": "No requests with status «{{status}}»",
+      "noIncoming": "No incoming requests",
+      "noSent": "No sent requests",
+      "noPlayerRequests": "No incoming requests from players"
+    },
+    "actions": {
+      "accept": "Accept",
+      "decline": "Decline",
+      "cancel": "Cancel",
+      "goToMatch": "🎾 Go to match",
+      "assignPartners": "🎯 Assign partners"
+    },
+    "matchCreated": "✓ Match #{{id}} created",
+    "at": "at",
+    "trainer": {
+      "title": "Request a match from the trainer",
+      "subtitle": "We'll find suitable partners for you",
+      "format": "Match format",
+      "venue": "Venue",
+      "date": "Date",
+      "time": "Time",
+      "notesLabel": "Notes (optional)",
+      "notesPlaceholder": "I want an intense game, looking for partners of similar level…",
+      "submit": "📩 Send request to trainer",
+      "submitting": "Sending…",
+      "myRequests": "My requests",
+      "anywhere": "Anywhere"
+    },
+    "trainerStatus": {
+      "pending": "Pending",
+      "assigned": "Match created"
+    },
+    "timeAgo": {
+      "justNow": "just now",
+      "minutes": "{{n}}m ago",
+      "hours": "{{n}}h ago",
+      "days": "{{n}}d ago"
+    },
+    "toasts": {
+      "acceptedWithMatch": "Request accepted! Match created ✓",
+      "acceptedWithMatchDesc": "Match draft ready — open to add details.",
+      "openMatch": "Open match",
+      "accepted": "Request accepted!",
+      "declined": "Request declined",
+      "sent": "Request sent!",
+      "sentDesc": "Request to {{name}}",
+      "trainerSent": "Request sent to trainer ✓",
+      "matchCreated": "Match created ✓",
+      "partnersAssigned": "Partners assigned",
+      "error": "Error"
+    },
+    "dialog": {
+      "invitePlayer": "Invite player",
+      "smartMatch": "🎯 Smart match",
+      "search": "🔍 Search",
+      "takeQuizHint": "💡 Take the test for archetype matching — currently showing closest by level.",
+      "searching": "Searching players...",
+      "topThree": "Top-3 by compatibility",
+      "infoTooltip": "● Compatibility (%) — accounts for skill level, archetype and match history\n● Reliability (dot) — green ≥80, yellow ≥55, red <55 — attendance and on-court behavior",
+      "reliable": "reliable",
+      "average": "average",
+      "unreliable": "unreliable",
+      "compatLegend": "% — compatibility",
+      "searchPlaceholder": "Player name...",
+      "change": "Change",
+      "date": "Date",
+      "time": "Time",
+      "messageLabel": "Message (optional)",
+      "messagePlaceholder": "Shall we play this weekend?",
+      "sendTo": "Send request → {{name}}",
+      "sending": "Sending..."
+    },
+    "assign": {
+      "title": "Assign partners",
+      "instructions": "Choose up to 3 partners for {{name}}. Sorted by compatibility.",
+      "selected": "Selected: {{n}}/3",
+      "createMatch": "⚡ Create match ({{n}} players)",
+      "creating": "Creating match…"
+    },
+    "matchBadge": "Match",
+    "riskTitle": "Warning: {{details}}",
+    "reliabilityScore": "reliability {{score}}/100",
+    "risk": "⚠ Risk",
+    "player": "Player"
   },
   "videoAnalysisDetail": {
     "title": "Analysis Report #{{id}}",

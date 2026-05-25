@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, Link, Redirect } from "wouter";
 import { useRegister, useUpdateUser } from "@workspace/api-client-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { translateError } from "@/lib/errorMessages";
+import { translateError, type Lang } from "@/lib/errorMessages";
 
 const LEVELS = [
   { value: 0, label: "1.0", desc: "Complete Beginner" },
@@ -31,18 +31,21 @@ const AVAILABILITY_SLOTS = [
   { id: "evening_we", key: "register.availability.eveningWeekend" },
 ] as const;
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function Register() {
   const [step, setStep] = useState(1);
   const [slideDir, setSlideDir] = useState<"right" | "left">("right");
   const [, setLocation] = useLocation();
   const { user, isLoading, login: authLogin } = useAuth();
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const lang: Lang = language === "en" ? "en" : "ru";
 
-  const [regError, setRegError] = useState<{
-    message: string;
-    action?: { label: string; href: string };
-  } | null>(null);
+  const [emailExists, setEmailExists] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const [inlineError, setInlineError] = useState<{ field?: "email" | "password" | "confirm" | "form"; message: string } | null>(null);
+  const emailInputRef = useRef<HTMLInputElement>(null);
 
   const [levelIdx, setLevelIdx] = useState(2);
   const [availability, setAvailability] = useState<Set<string>>(new Set());
@@ -59,12 +62,19 @@ export default function Register() {
     locationName: "Dubai",
   });
 
-  // Hold render until auth state is known — prevents a form flash for
-  // already-authenticated users. Route by archetype completion like login does.
   if (isLoading) return null;
   if (user) return <Redirect to={user.archetype ? "/dashboard" : "/assessment"} />;
 
-  const update = (k: string, v: string) => setFormData((p) => ({ ...p, [k]: v }));
+  const update = (k: string, v: string) => {
+    setFormData((p) => ({ ...p, [k]: v }));
+    if (k === "email") {
+      setEmailExists(false);
+      if (inlineError?.field === "email") setInlineError(null);
+    }
+    if ((k === "password" || k === "confirmPassword") && inlineError?.field !== "form") {
+      setInlineError(null);
+    }
+  };
 
   const toggleAvailability = (id: string) => {
     setAvailability((prev) => {
@@ -75,15 +85,38 @@ export default function Register() {
     });
   };
 
+  const emailCheckAbort = useRef<AbortController | null>(null);
+  const emailCheckValue = useRef<string>("");
+  async function checkEmailAvailability(email: string) {
+    const trimmed = email.trim();
+    if (!trimmed || !EMAIL_RE.test(trimmed)) return;
+    emailCheckAbort.current?.abort();
+    const ctrl = new AbortController();
+    emailCheckAbort.current = ctrl;
+    emailCheckValue.current = trimmed;
+    setCheckingEmail(true);
+    try {
+      const res = await fetch(`/api/auth/check-email?email=${encodeURIComponent(trimmed)}`, { signal: ctrl.signal });
+      if (!res.ok || emailCheckValue.current !== trimmed) return;
+      const data = (await res.json()) as { available: boolean };
+      if (emailCheckValue.current !== trimmed) return;
+      setEmailExists(!data.available);
+    } catch {
+      // network/aborted — silent
+    } finally {
+      if (emailCheckAbort.current === ctrl) setCheckingEmail(false);
+    }
+  }
+
   const updateUserMutation = useUpdateUser({
     mutation: {
       onSuccess: () => {
-        setRegError(null);
+        setInlineError(null);
         setLocation("/assessment");
       },
       onError: (err: unknown) => {
-        const translated = translateError(err);
-        setRegError(translated);
+        const translated = translateError(err, lang);
+        setInlineError({ field: "form", message: translated.message });
       },
     },
   });
@@ -91,16 +124,40 @@ export default function Register() {
   const registerMutation = useRegister({
     mutation: {
       onSuccess: (data) => {
-        setRegError(null);
+        setInlineError(null);
         toast({ title: t("register.welcomeToast"), description: t("register.welcomeToastDesc") });
         authLogin(data.token, data.user);
       },
       onError: (err: unknown) => {
-        const translated = translateError(err);
-        setRegError(translated);
+        const translated = translateError(err, lang);
+        if (translated.code === "emailExists") {
+          setEmailExists(true);
+          setStep(1);
+          setSlideDir("left");
+        } else {
+          setInlineError({ field: "form", message: translated.message });
+        }
       },
     },
   });
+
+  const handleStep1Continue = () => {
+    if (!formData.email.trim() || !EMAIL_RE.test(formData.email.trim())) {
+      setInlineError({ field: "email", message: translateError({ message: "invalid email" }, lang).message });
+      return;
+    }
+    if (formData.password.length < 8) {
+      setInlineError({ field: "password", message: translateError({ message: "password too short" }, lang).message });
+      return;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      setInlineError({ field: "confirm", message: translateError({ message: "passwords don't match" }, lang).message });
+      return;
+    }
+    if (emailExists) return;
+    setInlineError(null);
+    goToStep(2);
+  };
 
   const handleSubmit = () => {
     const existingToken = localStorage.getItem("token");
@@ -118,13 +175,17 @@ export default function Register() {
       });
       return;
     }
-    if (formData.password !== formData.confirmPassword) {
-      toast({ title: t("register.passwordsMismatch"), variant: "destructive" });
-      return;
-    }
-    setRegError(null);
+    setInlineError(null);
     const { confirmPassword, ...rest } = formData;
     registerMutation.mutate({ data: { ...rest, phone: rest.phone || "N/A" } });
+  };
+
+  const useDifferentEmail = () => {
+    setFormData((p) => ({ ...p, email: "" }));
+    setEmailExists(false);
+    setInlineError(null);
+    setStep(1);
+    setTimeout(() => emailInputRef.current?.focus(), 50);
   };
 
   const goToStep = (next: number) => {
@@ -133,18 +194,14 @@ export default function Register() {
   };
 
   const isPending = registerMutation.isPending || updateUserMutation.isPending;
-
   const selectedLevel = LEVELS[levelIdx];
+  const emailQuery = formData.email.trim() ? `?email=${encodeURIComponent(formData.email.trim())}` : "";
 
   return (
     <div
       className="bg-black flex flex-col"
-      style={{
-        minHeight: "100dvh",
-        paddingTop: "env(safe-area-inset-top)",
-      }}
+      style={{ minHeight: "100dvh", paddingTop: "env(safe-area-inset-top)" }}
     >
-      {/* Fixed header with progress */}
       <div className="flex-shrink-0 px-6 pt-8 pb-6">
         <div className="text-center mb-8">
           <h1 className="font-serif font-bold text-white" style={{ fontSize: "28px" }}>
@@ -155,7 +212,6 @@ export default function Register() {
           </p>
         </div>
 
-        {/* iOS progress bar */}
         <div className="flex gap-2">
           {[1, 2, 3].map((s) => (
             <div
@@ -178,14 +234,11 @@ export default function Register() {
         </div>
       </div>
 
-      {/* Scrollable step content */}
       <div className="flex-1 overflow-y-auto px-6 pb-4">
         <div
           key={step}
           style={{ animation: `${slideDir === "right" ? "slideInRight" : "slideInLeft"} 0.3s ease-out both` }}
         >
-
-          {/* ── STEP 1: ACCOUNT ── */}
           {step === 1 && (
             <div className="space-y-5 pb-2">
               <IosInput
@@ -194,35 +247,98 @@ export default function Register() {
                 value={formData.name}
                 onChange={(v) => update("name", v)}
               />
-              <IosInput
-                label={t("register.email")}
-                type="email"
-                placeholder="you@example.com"
-                value={formData.email}
-                onChange={(v) => update("email", v)}
-              />
+              <div>
+                <label className="block text-white font-medium mb-2" style={{ fontSize: "15px" }}>
+                  {t("register.email")}
+                </label>
+                <input
+                  ref={emailInputRef}
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  value={formData.email}
+                  onChange={(e) => update("email", e.target.value)}
+                  onBlur={(e) => checkEmailAvailability(e.target.value)}
+                  className="w-full bg-white/5 border rounded-xl px-4 text-white placeholder:text-white/30 transition-all focus:bg-white/8"
+                  style={{
+                    height: "56px",
+                    fontSize: "17px",
+                    borderColor: emailExists
+                      ? "rgba(245,158,11,0.5)"
+                      : inlineError?.field === "email"
+                        ? "rgba(245,158,11,0.5)"
+                        : "rgba(255,255,255,0.1)",
+                    boxShadow: emailExists || inlineError?.field === "email" ? "0 0 0 3px rgba(245,158,11,0.12)" : undefined,
+                  }}
+                />
+                {checkingEmail && (
+                  <p className="mt-1.5 text-xs text-white/40">{t("register.checkingEmail")}</p>
+                )}
+                {!checkingEmail && inlineError?.field === "email" && !emailExists && (
+                  <p className="mt-1.5" style={{ fontSize: "13px", color: "#fbbf24" }}>{inlineError.message}</p>
+                )}
+                {emailExists && (
+                  <EmailExistsCard
+                    title={t("register.emailExists.title")}
+                    body={t("register.emailExists.body")}
+                    signInLabel={t("register.emailExists.signIn")}
+                    forgotLabel={t("register.emailExists.forgotPassword")}
+                    useDifferentLabel={t("register.emailExists.useDifferent")}
+                    signInHref={`/login${emailQuery}`}
+                    forgotHref={`/forgot-password${emailQuery}`}
+                    onUseDifferent={useDifferentEmail}
+                  />
+                )}
+              </div>
               <IosInput
                 label={t("register.phone")}
                 placeholder="+971 50 000 0000"
                 value={formData.phone}
                 onChange={(v) => update("phone", v)}
               />
-              <IosInput
-                label={t("register.password")}
-                type="password"
-                value={formData.password}
-                onChange={(v) => update("password", v)}
-              />
-              <IosInput
-                label={t("register.confirmPassword")}
-                type="password"
-                value={formData.confirmPassword}
-                onChange={(v) => update("confirmPassword", v)}
-              />
+              <div>
+                <label className="block text-white font-medium mb-2" style={{ fontSize: "15px" }}>
+                  {t("register.password")}
+                </label>
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  value={formData.password}
+                  onChange={(e) => update("password", e.target.value)}
+                  className="w-full bg-white/5 border rounded-xl px-4 text-white placeholder:text-white/30 transition-all focus:bg-white/8"
+                  style={{
+                    height: "56px",
+                    fontSize: "17px",
+                    borderColor: inlineError?.field === "password" ? "rgba(245,158,11,0.5)" : "rgba(255,255,255,0.1)",
+                  }}
+                />
+                {inlineError?.field === "password" && (
+                  <p className="mt-1.5" style={{ fontSize: "13px", color: "#fbbf24" }}>{inlineError.message}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-white font-medium mb-2" style={{ fontSize: "15px" }}>
+                  {t("register.confirmPassword")}
+                </label>
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => update("confirmPassword", e.target.value)}
+                  className="w-full bg-white/5 border rounded-xl px-4 text-white placeholder:text-white/30 transition-all focus:bg-white/8"
+                  style={{
+                    height: "56px",
+                    fontSize: "17px",
+                    borderColor: inlineError?.field === "confirm" ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.1)",
+                  }}
+                />
+                {inlineError?.field === "confirm" && (
+                  <p className="mt-1.5" style={{ fontSize: "13px", color: "#f87171" }}>{inlineError.message}</p>
+                )}
+              </div>
             </div>
           )}
 
-          {/* ── STEP 2: PROFILE ── */}
           {step === 2 && (
             <div className="space-y-8 pb-2">
               <div>
@@ -294,7 +410,6 @@ export default function Register() {
             </div>
           )}
 
-          {/* ── STEP 3: LOCATION & AVAILABILITY ── */}
           {step === 3 && (
             <div className="space-y-8 pb-2">
               <div>
@@ -326,25 +441,12 @@ export default function Register() {
                 </div>
               </div>
 
-              {/* Error banner */}
-              {regError && (
+              {inlineError?.field === "form" && (
                 <div
                   className="rounded-[14px] p-4 border"
-                  style={{ background: "rgba(220,38,38,0.08)", borderColor: "rgba(220,38,38,0.3)" }}
+                  style={{ background: "rgba(245,158,11,0.08)", borderColor: "rgba(245,158,11,0.3)" }}
                 >
-                  <p className="text-red-400 font-medium" style={{ fontSize: "14px" }}>
-                    {regError.message}
-                  </p>
-                  {regError.action && (
-                    <Link href={regError.action.href}>
-                      <span
-                        className="inline-block mt-2 px-4 py-1.5 rounded-lg font-semibold text-black cursor-pointer"
-                        style={{ background: "#D4AF37", fontSize: "14px" }}
-                      >
-                        {regError.action.label}
-                      </span>
-                    </Link>
-                  )}
+                  <p style={{ fontSize: "14px", color: "#fbbf24" }}>{inlineError.message}</p>
                 </div>
               )}
 
@@ -364,7 +466,6 @@ export default function Register() {
         </div>
       </div>
 
-      {/* ── STICKY CTA FOOTER — always visible at the bottom ── */}
       <div
         className="flex-shrink-0 px-6 pt-4 border-t border-white/6"
         style={{
@@ -376,8 +477,8 @@ export default function Register() {
         {step === 1 && (
           <>
             <IosButton
-              onClick={() => goToStep(2)}
-              disabled={!formData.name || !formData.email || !formData.password || !formData.confirmPassword}
+              onClick={handleStep1Continue}
+              disabled={!formData.name || !formData.email || !formData.password || !formData.confirmPassword || emailExists || checkingEmail}
             >
               {t("register.continue")}
             </IosButton>
@@ -419,6 +520,75 @@ export default function Register() {
             </IosButton>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function EmailExistsCard({
+  title,
+  body,
+  signInLabel,
+  forgotLabel,
+  useDifferentLabel,
+  signInHref,
+  forgotHref,
+  onUseDifferent,
+}: {
+  title: string;
+  body: string;
+  signInLabel: string;
+  forgotLabel: string;
+  useDifferentLabel: string;
+  signInHref: string;
+  forgotHref: string;
+  onUseDifferent: () => void;
+}) {
+  return (
+    <div
+      className="mt-3 rounded-[16px] p-4 border"
+      style={{
+        background: "rgba(245,158,11,0.06)",
+        borderColor: "rgba(245,158,11,0.25)",
+        animation: "slideInRight 0.25s ease-out both",
+      }}
+    >
+      <div className="flex items-start gap-3 mb-3">
+        <div
+          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+          style={{ background: "rgba(245,158,11,0.15)", color: "#fbbf24", fontSize: "16px" }}
+        >
+          ⓘ
+        </div>
+        <div className="flex-1">
+          <div className="text-white font-medium" style={{ fontSize: "15px" }}>{title}</div>
+          <p className="text-muted-foreground mt-0.5" style={{ fontSize: "13px" }}>{body}</p>
+        </div>
+      </div>
+      <div className="flex flex-col gap-2">
+        <Link href={signInHref}>
+          <button
+            className="w-full rounded-[12px] font-semibold text-black transition-all hover:opacity-90"
+            style={{ height: "44px", fontSize: "14px", background: "#D4AF37" }}
+          >
+            {signInLabel}
+          </button>
+        </Link>
+        <Link href={forgotHref}>
+          <button
+            className="w-full rounded-[12px] font-medium transition-all"
+            style={{ height: "44px", fontSize: "14px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.85)" }}
+          >
+            {forgotLabel}
+          </button>
+        </Link>
+        <button
+          onClick={onUseDifferent}
+          className="w-full rounded-[12px] font-medium transition-all"
+          style={{ height: "44px", fontSize: "14px", background: "transparent", color: "rgba(255,255,255,0.55)" }}
+        >
+          {useDifferentLabel}
+        </button>
       </div>
     </div>
   );
@@ -471,9 +641,7 @@ function IosButton({
       disabled={disabled}
       className={cn(
         "w-full flex-1 rounded-[14px] font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed",
-        gold
-          ? "bg-primary text-black shadow-lg"
-          : "bg-primary text-black"
+        gold ? "bg-primary text-black shadow-lg" : "bg-primary text-black"
       )}
       style={{ height: "56px", fontSize: "17px", boxShadow: "0 4px 20px rgba(212,175,55,0.25)" }}
     >

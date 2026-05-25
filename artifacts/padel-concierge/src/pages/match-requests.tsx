@@ -7,12 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { ARCHETYPE_META, archetypeCompatibility, type Archetype } from "@/lib/archetypes";
 import { ReliabilityDot, CompatBadge } from "@/components/ReliabilityBadge";
-import { translateError } from "@/lib/errorMessages";
+import { translateError, type Lang } from "@/lib/errorMessages";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -92,20 +93,27 @@ function statusStyle(s: string) {
   return STATUS_STYLES[s] ?? STATUS_STYLES.pending;
 }
 
-const VENUES = ["Padel Edition", "Al Qasr Padel", "Где угодно"];
 const FORMATS = ["4v4", "3v3", "2v2"];
 
-function timeAgo(iso: string) {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "только что";
-  if (mins < 60) return `${mins}м назад`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}ч назад`;
-  return `${Math.floor(hrs / 24)}д назад`;
+function useVenues(t: (k: string) => string) {
+  return ["Padel Edition", "Al Qasr Padel", t("matchRequests.trainer.anywhere")];
+}
+
+function useTimeAgo() {
+  const { t } = useLanguage();
+  return (iso: string) => {
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return t("matchRequests.timeAgo.justNow");
+    if (mins < 60) return t("matchRequests.timeAgo.minutes").replace("{{n}}", String(mins));
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return t("matchRequests.timeAgo.hours").replace("{{n}}", String(hrs));
+    return t("matchRequests.timeAgo.days").replace("{{n}}", String(Math.floor(hrs / 24)));
+  };
 }
 
 function ArchetypePill({ archetype, size = "sm" }: { archetype: string | null; size?: "sm" | "xs" }) {
+  const { language } = useLanguage();
   if (!archetype) return null;
   const meta = ARCHETYPE_META[archetype as Archetype];
   if (!meta) return null;
@@ -115,7 +123,7 @@ function ArchetypePill({ archetype, size = "sm" }: { archetype: string | null; s
       meta.bg, meta.border, meta.color,
       size === "xs" ? "text-xs px-2 py-0.5" : "text-xs px-2.5 py-1"
     )}>
-      {meta.icon} {meta.nameRu}
+      {meta.icon} {language === "en" ? meta.name : meta.nameRu}
     </span>
   );
 }
@@ -143,22 +151,23 @@ function CompatBar({ pct }: { pct: number }) {
 }
 
 function RiskWarning({ profile }: { profile?: PlayerProfile }) {
+  const { t } = useLanguage();
   if (!profile) return null;
   const isLowScore = profile.reliabilityScore < 60;
   const hasFlags = profile.behavioralFlags.length > 0;
   if (!isLowScore && !hasFlags) return null;
 
   const parts: string[] = [];
-  if (isLowScore) parts.push(`надёжность ${profile.reliabilityScore}/100`);
+  if (isLowScore) parts.push(t("matchRequests.reliabilityScore").replace("{{score}}", String(profile.reliabilityScore)));
   if (hasFlags) parts.push(profile.behavioralFlags.join(", "));
 
   return (
     <span
-      title={`Предупреждение: ${parts.join(" · ")}`}
+      title={t("matchRequests.riskTitle").replace("{{details}}", parts.join(" · "))}
       className="inline-flex items-center gap-1 text-xs font-medium rounded-full px-2 py-0.5 cursor-help"
       style={{ color: "#f59e0b", background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)" }}
     >
-      ⚠ Риск
+      {t("matchRequests.risk")}
     </span>
   );
 }
@@ -176,6 +185,7 @@ function PlayerCard({
   myArchetype: string | null;
   reliability?: PlayerProfile;
 }) {
+  const { t } = useLanguage();
   const isArchetypeMatch = player.archetypeMatch;
   const compatNote = myArchetype && player.archetype
     ? archetypeCompatibility(myArchetype as Archetype, player.archetype as Archetype)
@@ -211,7 +221,7 @@ function PlayerCard({
               className="text-xs rounded-full px-2 py-0.5"
               style={{ background: "rgba(212,175,55,0.12)", border: "1px solid rgba(212,175,55,0.3)", color: "#D4AF37" }}
             >
-              Совпадение
+              {t("matchRequests.matchBadge")}
             </span>
           )}
           {compatPct !== undefined && <CompatBadge pct={compatPct} />}
@@ -240,7 +250,11 @@ function PlayerCard({
 
 export default function MatchRequests() {
   const { user } = useAuth();
+  const { t, language } = useLanguage();
+  const lang: Lang = language === "en" ? "en" : "ru";
   const { toast } = useToast();
+  const timeAgo = useTimeAgo();
+  const VENUES = useVenues(t);
   const [, navigate] = useLocation();
   const qc = useQueryClient();
   const isCoach = user?.role === "coach" || user?.role === "admin" || user?.role === "owner";
@@ -347,20 +361,20 @@ export default function MatchRequests() {
       if (vars.status === "accepted" && (data as MatchRequest).matchId) {
         const matchId = (data as MatchRequest).matchId;
         toast({
-          title: "Запрос принят! Матч создан ✓",
-          description: "Черновик матча готов — откройте, чтобы добавить детали.",
+          title: t("matchRequests.toasts.acceptedWithMatch"),
+          description: t("matchRequests.toasts.acceptedWithMatchDesc"),
           action: (
             <button
               onClick={() => navigate(`/matches/${matchId}`)}
               className="rounded-full font-semibold px-3 py-1 text-xs"
               style={{ background: "#D4AF37", color: "#000" }}
             >
-              Открыть матч
+              {t("matchRequests.toasts.openMatch")}
             </button>
           ),
         });
       } else {
-        toast({ title: vars.status === "accepted" ? "Запрос принят!" : "Запрос отклонён" });
+        toast({ title: vars.status === "accepted" ? t("matchRequests.toasts.accepted") : t("matchRequests.toasts.declined") });
       }
       qc.invalidateQueries({ queryKey: ["match-requests"] });
       qc.invalidateQueries({ queryKey: ["match"] });
@@ -379,13 +393,16 @@ export default function MatchRequests() {
       }),
     }),
     onSuccess: () => {
-      toast({ title: "Запрос отправлен!", description: `Запрос к ${selectedPlayer?.name}` });
+      toast({
+        title: t("matchRequests.toasts.sent"),
+        description: t("matchRequests.toasts.sentDesc").replace("{{name}}", selectedPlayer?.name ?? ""),
+      });
       qc.invalidateQueries({ queryKey: ["match-requests"] });
       setShowSend(false);
       setSelectedPlayer(null);
       setMessage(""); setProposedDate(""); setProposedTime("");
     },
-    onError: (e: unknown) => toast({ title: "Ошибка", description: translateError(e).message, variant: "destructive" }),
+    onError: (e: unknown) => toast({ title: t("matchRequests.toasts.error"), description: translateError(e, lang).message, variant: "destructive" }),
   });
 
   const trainerRequestMutation = useMutation({
@@ -401,11 +418,11 @@ export default function MatchRequests() {
       }),
     }),
     onSuccess: () => {
-      toast({ title: "Запрос отправлен тренеру ✓" });
+      toast({ title: t("matchRequests.toasts.trainerSent") });
       qc.invalidateQueries({ queryKey: ["trainer-match-requests"] });
       setTrDate(""); setTrNotes(""); setTrTime("18:00");
     },
-    onError: (e: unknown) => toast({ title: "Ошибка", description: translateError(e).message, variant: "destructive" }),
+    onError: (e: unknown) => toast({ title: t("matchRequests.toasts.error"), description: translateError(e, lang).message, variant: "destructive" }),
   });
 
   const assignMutation = useMutation({
@@ -430,13 +447,13 @@ export default function MatchRequests() {
       return match;
     },
     onSuccess: () => {
-      toast({ title: "Матч создан ✓", description: "Партнёры назначены" });
+      toast({ title: t("matchRequests.toasts.matchCreated"), description: t("matchRequests.toasts.partnersAssigned") });
       qc.invalidateQueries({ queryKey: ["trainer-match-requests"] });
       qc.invalidateQueries({ queryKey: ["match"] });
       setAssignTarget(null);
       setSelectedCandidates([]);
     },
-    onError: (e: unknown) => toast({ title: "Ошибка", description: translateError(e).message, variant: "destructive" }),
+    onError: (e: unknown) => toast({ title: t("matchRequests.toasts.error"), description: translateError(e, lang).message, variant: "destructive" }),
   });
 
   function toggleCandidate(id: number) {
@@ -456,10 +473,10 @@ export default function MatchRequests() {
         <header className="flex items-start justify-between mb-6">
           <div>
             <h1 className="font-serif font-bold text-white mb-1" style={{ fontSize: "26px" }}>
-              Запросы на матч
+              {t("matchRequests.title")}
             </h1>
             <p className="text-muted-foreground" style={{ fontSize: "15px" }}>
-              Личные приглашения и запросы к тренеру
+              {t("matchRequests.subtitle")}
             </p>
           </div>
           {mainTab === "personal" && (
@@ -468,7 +485,7 @@ export default function MatchRequests() {
               className="rounded-full font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] flex-shrink-0"
               style={{ height: "44px", padding: "0 20px", fontSize: "15px", background: "#D4AF37", color: "#000" }}
             >
-              Пригласить
+              {t("matchRequests.invite")}
             </button>
           )}
         </header>
@@ -492,10 +509,10 @@ export default function MatchRequests() {
               }}
             >
               {tab === "personal" ? (
-                <>Личные <span style={{ opacity: 0.6, fontSize: "12px" }}>{received.length + sent.length}</span></>
+                <>{t("matchRequests.tabs.personal")} <span style={{ opacity: 0.6, fontSize: "12px" }}>{received.length + sent.length}</span></>
               ) : (
                 <>
-                  {isCoach ? "Запросы игроков" : "К тренеру"}
+                  {isCoach ? t("matchRequests.tabs.playerRequests") : t("matchRequests.tabs.trainer")}
                   {isCoach && pendingTrainer.length > 0 && (
                     <span
                       className="ml-1.5 rounded-full px-1.5 text-xs"
@@ -515,23 +532,23 @@ export default function MatchRequests() {
           <div className="space-y-4">
             {/* Sub-tabs */}
             <div className="flex gap-2">
-              {(["received", "sent"] as const).map(t => (
+              {(["received", "sent"] as const).map(sub => (
                 <button
-                  key={t}
-                  onClick={() => { setPersonalTab(t); setStatusFilter("all"); }}
+                  key={sub}
+                  onClick={() => { setPersonalTab(sub); setStatusFilter("all"); }}
                   className="rounded-full font-medium transition-all"
                   style={{
                     height: "34px",
                     padding: "0 16px",
                     fontSize: "13px",
-                    background: personalTab === t ? "rgba(255,255,255,0.1)" : "transparent",
-                    border: `1px solid ${personalTab === t ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.08)"}`,
-                    color: personalTab === t ? "#fff" : "rgba(255,255,255,0.45)",
+                    background: personalTab === sub ? "rgba(255,255,255,0.1)" : "transparent",
+                    border: `1px solid ${personalTab === sub ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.08)"}`,
+                    color: personalTab === sub ? "#fff" : "rgba(255,255,255,0.45)",
                   }}
                 >
-                  {t === "received" ? "Полученные" : "Отправленные"}
+                  {sub === "received" ? t("matchRequests.subTabs.received") : t("matchRequests.subTabs.sent")}
                   <span style={{ marginLeft: "6px", opacity: 0.6, fontSize: "11px" }}>
-                    {t === "received" ? received.length : sent.length}
+                    {sub === "received" ? received.length : sent.length}
                   </span>
                 </button>
               ))}
@@ -563,7 +580,7 @@ export default function MatchRequests() {
                           color: isActive ? (ss ? ss.color : "#fff") : "rgba(255,255,255,0.4)",
                         }}
                       >
-                        {s === "all" ? "Все" : s}
+                        {s === "all" ? t("matchRequests.filter.all") : (t(`matchRequests.status.${s}`) ?? s)}
                       </button>
                     );
                   })}
@@ -590,8 +607,8 @@ export default function MatchRequests() {
                   >
                     <div className="text-muted-foreground" style={{ fontSize: "14px" }}>
                       {statusFilter !== "all"
-                        ? `Нет запросов со статусом «${statusFilter}»`
-                        : personalTab === "received" ? "Нет входящих запросов" : "Нет отправленных запросов"}
+                        ? t("matchRequests.empty.withStatus").replace("{{status}}", t(`matchRequests.status.${statusFilter}`) ?? statusFilter)
+                        : personalTab === "received" ? t("matchRequests.empty.noIncoming") : t("matchRequests.empty.noSent")}
                     </div>
                   </div>
                 ) : (
@@ -632,7 +649,7 @@ export default function MatchRequests() {
                                 </div>
                                 {r.proposedDate && (
                                   <div className="text-muted-foreground mt-0.5" style={{ fontSize: "13px" }}>
-                                    {r.proposedDate}{r.proposedTime ? ` в ${r.proposedTime}` : ""}
+                                    {r.proposedDate}{r.proposedTime ? ` ${t("matchRequests.at")} ${r.proposedTime}` : ""}
                                   </div>
                                 )}
                                 {r.message && (
@@ -641,10 +658,10 @@ export default function MatchRequests() {
                               </div>
                               <div className="flex flex-col items-end gap-2 shrink-0">
                                 <span
-                                  className="rounded-full px-3 py-1 font-medium capitalize"
+                                  className="rounded-full px-3 py-1 font-medium"
                                   style={{ fontSize: "12px", background: ss.bg, border: `1px solid ${ss.border}`, color: ss.color }}
                                 >
-                                  {r.status}
+                                  {t(`matchRequests.status.${r.status}`) ?? r.status}
                                 </span>
                                 <span className="text-muted-foreground" style={{ fontSize: "11px" }}>{timeAgo(r.createdAt)}</span>
                               </div>
@@ -658,7 +675,7 @@ export default function MatchRequests() {
                                   className="rounded-full font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                                   style={{ height: "40px", padding: "0 20px", fontSize: "14px", background: "#D4AF37", color: "#000" }}
                                 >
-                                  Принять
+                                  {t("matchRequests.actions.accept")}
                                 </button>
                                 <button
                                   onClick={() => respondMutation.mutate({ id: r.id, status: "declined" })}
@@ -666,7 +683,7 @@ export default function MatchRequests() {
                                   className="rounded-full font-medium transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                                   style={{ height: "40px", padding: "0 20px", fontSize: "14px", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.6)" }}
                                 >
-                                  Отклонить
+                                  {t("matchRequests.actions.decline")}
                                 </button>
                               </div>
                             )}
@@ -676,7 +693,7 @@ export default function MatchRequests() {
                                 className="mt-3 rounded-full font-medium transition-all hover:scale-[1.02] active:scale-[0.98] inline-flex items-center gap-1.5"
                                 style={{ height: "36px", padding: "0 16px", fontSize: "13px", background: "rgba(212,175,55,0.12)", border: "1px solid rgba(212,175,55,0.3)", color: "#D4AF37" }}
                               >
-                                🎾 Перейти к матчу
+                                {t("matchRequests.actions.goToMatch")}
                               </button>
                             )}
                             {personalTab === "sent" && r.status === "pending" && (
@@ -685,7 +702,7 @@ export default function MatchRequests() {
                                 className="mt-3 rounded-full font-medium transition-all"
                                 style={{ height: "36px", padding: "0 16px", fontSize: "13px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)" }}
                               >
-                                Отменить
+                                {t("matchRequests.actions.cancel")}
                               </button>
                             )}
                           </div>
@@ -713,17 +730,17 @@ export default function MatchRequests() {
                 >
                   <div className="mb-4">
                     <div className="font-serif font-semibold text-white mb-0.5" style={{ fontSize: "16px" }}>
-                      Запросить матч у тренера
+                      {t("matchRequests.trainer.title")}
                     </div>
                     <div className="text-muted-foreground" style={{ fontSize: "13px" }}>
-                      Мы подберём для тебя подходящих партнёров
+                      {t("matchRequests.trainer.subtitle")}
                     </div>
                   </div>
 
                   <div className="space-y-4">
                     {/* Format */}
                     <div className="space-y-2">
-                      <Label className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>Формат матча</Label>
+                      <Label className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>{t("matchRequests.trainer.format")}</Label>
                       <div className="flex gap-2">
                         {FORMATS.map(f => (
                           <button
@@ -746,7 +763,7 @@ export default function MatchRequests() {
 
                     {/* Venue */}
                     <div className="space-y-2">
-                      <Label className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>Место</Label>
+                      <Label className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>{t("matchRequests.trainer.venue")}</Label>
                       <div className="flex flex-col gap-2">
                         {VENUES.map(v => (
                           <button
@@ -770,20 +787,20 @@ export default function MatchRequests() {
                     {/* Date + Time */}
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <Label className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>Дата</Label>
+                        <Label className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>{t("matchRequests.trainer.date")}</Label>
                         <Input type="date" min={today} value={trDate} onChange={e => setTrDate(e.target.value)} className="bg-background border-white/10 rounded-[12px]" style={{ height: "44px" }} />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>Время</Label>
+                        <Label className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>{t("matchRequests.trainer.time")}</Label>
                         <Input type="time" value={trTime} onChange={e => setTrTime(e.target.value)} className="bg-background border-white/10 rounded-[12px]" style={{ height: "44px" }} />
                       </div>
                     </div>
 
                     {/* Notes */}
                     <div className="space-y-2">
-                      <Label className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>Пожелания (необязательно)</Label>
+                      <Label className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>{t("matchRequests.trainer.notesLabel")}</Label>
                       <Textarea
-                        placeholder="Хочу интенсивную игру, ищу партнёров схожего уровня…"
+                        placeholder={t("matchRequests.trainer.notesPlaceholder")}
                         value={trNotes}
                         onChange={e => setTrNotes(e.target.value)}
                         rows={2}
@@ -797,7 +814,7 @@ export default function MatchRequests() {
                       className="w-full rounded-[14px] font-semibold transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
                       style={{ height: "52px", fontSize: "15px", background: "#D4AF37", color: "#000" }}
                     >
-                      {trainerRequestMutation.isPending ? "Отправка…" : "📩 Отправить запрос тренеру"}
+                      {trainerRequestMutation.isPending ? t("matchRequests.trainer.submitting") : t("matchRequests.trainer.submit")}
                     </button>
                   </div>
                 </div>
@@ -809,7 +826,7 @@ export default function MatchRequests() {
                       className="uppercase font-semibold"
                       style={{ fontSize: "11px", letterSpacing: "0.08em", color: "rgba(255,255,255,0.4)" }}
                     >
-                      Мои запросы
+                      {t("matchRequests.trainer.myRequests")}
                     </div>
                     {myTrainerRequests.map(r => {
                       const ss = statusStyle(r.status);
@@ -822,14 +839,14 @@ export default function MatchRequests() {
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <div className="font-medium text-white" style={{ fontSize: "14px" }}>{r.format} · {r.venue}</div>
-                              <div className="text-muted-foreground mt-0.5" style={{ fontSize: "12px" }}>{r.requestedDate} в {r.requestedTime}</div>
+                              <div className="text-muted-foreground mt-0.5" style={{ fontSize: "12px" }}>{r.requestedDate} {t("matchRequests.at")} {r.requestedTime}</div>
                               {r.notes && <div className="text-muted-foreground/60 mt-1 italic" style={{ fontSize: "12px" }}>"{r.notes}"</div>}
                             </div>
                             <span
-                              className="rounded-full px-3 py-1 font-medium capitalize shrink-0"
+                              className="rounded-full px-3 py-1 font-medium shrink-0"
                               style={{ fontSize: "12px", background: ss.bg, border: `1px solid ${ss.border}`, color: ss.color }}
                             >
-                              {r.status === "pending" ? "Ожидание" : r.status === "assigned" ? "Матч создан" : r.status}
+                              {r.status === "pending" ? t("matchRequests.trainerStatus.pending") : r.status === "assigned" ? t("matchRequests.trainerStatus.assigned") : r.status}
                             </span>
                           </div>
                         </div>
@@ -856,7 +873,7 @@ export default function MatchRequests() {
                           <button
                             key={s}
                             onClick={() => setTrainerStatusFilter(s)}
-                            className="rounded-full font-medium capitalize transition-all"
+                            className="rounded-full font-medium transition-all"
                             style={{
                               height: "30px",
                               padding: "0 12px",
@@ -866,7 +883,7 @@ export default function MatchRequests() {
                               color: isActive ? (ss ? ss.color : "#fff") : "rgba(255,255,255,0.4)",
                             }}
                           >
-                            {s === "all" ? "Все" : s === "pending" ? "Ожидает" : s === "assigned" ? "Назначен" : s}
+                            {s === "all" ? t("matchRequests.filter.all") : s === "pending" ? t("matchRequests.trainerStatus.pending") : s === "assigned" ? t("matchRequests.trainerStatus.assigned") : s}
                           </button>
                         );
                       })}
@@ -885,8 +902,8 @@ export default function MatchRequests() {
                     >
                       <div className="text-muted-foreground" style={{ fontSize: "14px" }}>
                         {trainerStatusFilter !== "all"
-                          ? `Нет запросов со статусом «${trainerStatusFilter}»`
-                          : "Нет входящих запросов от игроков"}
+                          ? t("matchRequests.empty.withStatus").replace("{{status}}", t(`matchRequests.trainerStatus.${trainerStatusFilter}`) ?? trainerStatusFilter)
+                          : t("matchRequests.empty.noPlayerRequests")}
                       </div>
                     </div>
                   ) : null;
@@ -915,7 +932,7 @@ export default function MatchRequests() {
                               {r.player?.name?.[0] ?? "?"}
                             </div>
                             <div>
-                              <div className="font-medium text-white" style={{ fontSize: "15px" }}>{r.player?.name ?? "Игрок"}</div>
+                              <div className="font-medium text-white" style={{ fontSize: "15px" }}>{r.player?.name ?? t("matchRequests.player")}</div>
                               <div className="font-mono text-muted-foreground" style={{ fontSize: "12px" }}>{r.player?.level}</div>
                             </div>
                           </div>
@@ -924,7 +941,7 @@ export default function MatchRequests() {
                               className="rounded-full px-3 py-1 font-medium"
                               style={{ fontSize: "12px", background: ss.bg, border: `1px solid ${ss.border}`, color: ss.color }}
                             >
-                              {r.status === "pending" ? "Ожидает" : r.status === "assigned" ? "Назначен" : r.status}
+                              {r.status === "pending" ? t("matchRequests.trainerStatus.pending") : r.status === "assigned" ? t("matchRequests.trainerStatus.assigned") : r.status}
                             </span>
                             <span className="text-muted-foreground" style={{ fontSize: "11px" }}>{timeAgo(r.createdAt)}</span>
                           </div>
@@ -932,9 +949,9 @@ export default function MatchRequests() {
 
                         <div className="grid grid-cols-3 gap-2 mb-4">
                           {[
-                            { label: "Формат", value: r.format },
-                            { label: "Дата", value: r.requestedDate },
-                            { label: "Время", value: r.requestedTime },
+                            { label: t("matchRequests.trainer.format"), value: r.format },
+                            { label: t("matchRequests.trainer.date"), value: r.requestedDate },
+                            { label: t("matchRequests.trainer.time"), value: r.requestedTime },
                           ].map(({ label, value }) => (
                             <div key={label} className="rounded-[10px] px-3 py-2" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
                               <div className="text-muted-foreground" style={{ fontSize: "11px" }}>{label}</div>
@@ -952,11 +969,11 @@ export default function MatchRequests() {
                             className="w-full rounded-[14px] font-semibold transition-all hover:scale-[1.01] active:scale-[0.99]"
                             style={{ height: "48px", fontSize: "14px", background: "#D4AF37", color: "#000" }}
                           >
-                            🎯 Назначить партнёров
+                            {t("matchRequests.actions.assignPartners")}
                           </button>
                         )}
                         {r.status === "assigned" && (
-                          <div style={{ fontSize: "13px", color: "#64b4ff" }}>✓ Матч #{r.assignedMatchId} создан</div>
+                          <div style={{ fontSize: "13px", color: "#64b4ff" }}>{t("matchRequests.matchCreated").replace("{{id}}", String(r.assignedMatchId))}</div>
                         )}
                       </div>
                     );
@@ -974,7 +991,7 @@ export default function MatchRequests() {
       <Dialog open={showSend} onOpenChange={setShowSend}>
         <DialogContent className="bg-card border-white/10 text-foreground max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-serif text-xl">Пригласить игрока</DialogTitle>
+            <DialogTitle className="font-serif text-xl">{t("matchRequests.dialog.invitePlayer")}</DialogTitle>
           </DialogHeader>
 
           {!selectedPlayer ? (
@@ -983,19 +1000,19 @@ export default function MatchRequests() {
                 className="flex gap-1 rounded-[12px] p-1"
                 style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}
               >
-                {(["smart", "search"] as const).map(t => (
+                {(["smart", "search"] as const).map(tab => (
                   <button
-                    key={t}
-                    onClick={() => setDialogTab(t)}
+                    key={tab}
+                    onClick={() => setDialogTab(tab)}
                     className="flex-1 rounded-[9px] font-medium transition-all"
                     style={{
                       height: "36px",
                       fontSize: "13px",
-                      background: dialogTab === t ? "rgba(212,175,55,0.15)" : "transparent",
-                      color: dialogTab === t ? "#D4AF37" : "rgba(255,255,255,0.5)",
+                      background: dialogTab === tab ? "rgba(212,175,55,0.15)" : "transparent",
+                      color: dialogTab === tab ? "#D4AF37" : "rgba(255,255,255,0.5)",
                     }}
                   >
-                    {t === "smart" ? "🎯 Умный подбор" : "🔍 Поиск"}
+                    {tab === "smart" ? t("matchRequests.dialog.smartMatch") : t("matchRequests.dialog.search")}
                   </button>
                 ))}
               </div>
@@ -1007,19 +1024,19 @@ export default function MatchRequests() {
                       className="text-xs rounded-[12px] p-3"
                       style={{ background: "rgba(234,179,8,0.08)", border: "1px solid rgba(234,179,8,0.2)", color: "rgba(255,255,255,0.7)" }}
                     >
-                      💡 Пройди тест для подбора по архетипу — сейчас показаны ближайшие по уровню.
+                      {t("matchRequests.dialog.takeQuizHint")}
                     </div>
                   )}
                   {!smartMatches ? (
-                    <div className="text-center py-6 text-sm text-muted-foreground">Поиск игроков...</div>
+                    <div className="text-center py-6 text-sm text-muted-foreground">{t("matchRequests.dialog.searching")}</div>
                   ) : smartMatches.noMatchesMessage ? (
                     <div className="text-center py-8 text-sm text-muted-foreground">{smartMatches.noMatchesMessage}</div>
                   ) : (
                     <div className="space-y-2">
                       <div className="flex items-center gap-1.5 mb-1">
-                        <span className="text-xs text-muted-foreground/60">Топ-3 по совместимости</span>
+                        <span className="text-xs text-muted-foreground/60">{t("matchRequests.dialog.topThree")}</span>
                         <span
-                          title={"● Совместимость (%) — учитывает уровень игры, архетип и историю матчей\n● Надёжность (точка) — зелёная ≥80, жёлтая ≥55, красная <55 — посещаемость и поведение на корте"}
+                          title={t("matchRequests.dialog.infoTooltip")}
                           className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border text-muted-foreground/50 text-[10px] leading-none cursor-help hover:text-muted-foreground transition-colors"
                           style={{ borderColor: "rgba(255,255,255,0.2)" }}
                         >
@@ -1031,16 +1048,16 @@ export default function MatchRequests() {
                       ))}
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-2 mt-1" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
                         {[
-                          { color: "#4ade80", label: "надёжный" },
-                          { color: "#facc15", label: "средний" },
-                          { color: "#f87171", label: "ненадёжный" },
+                          { color: "#4ade80", label: t("matchRequests.dialog.reliable") },
+                          { color: "#facc15", label: t("matchRequests.dialog.average") },
+                          { color: "#f87171", label: t("matchRequests.dialog.unreliable") },
                         ].map(({ color, label }) => (
                           <span key={label} className="flex items-center gap-1" style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)" }}>
                             <span className="w-2 h-2 rounded-full inline-block" style={{ background: color }} />
                             {label}
                           </span>
                         ))}
-                        <span className="ml-auto" style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)" }}>% — совместимость</span>
+                        <span className="ml-auto" style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)" }}>{t("matchRequests.dialog.compatLegend")}</span>
                       </div>
                     </div>
                   )}
@@ -1049,7 +1066,7 @@ export default function MatchRequests() {
 
               {dialogTab === "search" && (
                 <div className="space-y-3">
-                  <Input placeholder="Имя игрока..." value={search} onChange={e => setSearch(e.target.value)} className="bg-background border-white/10" />
+                  <Input placeholder={t("matchRequests.dialog.searchPlaceholder")} value={search} onChange={e => setSearch(e.target.value)} className="bg-background border-white/10" />
                   <div className="space-y-1.5 max-h-64 overflow-y-auto">
                     {(allUsers as User[]).filter(u => u.id !== user?.id && u.name.toLowerCase().includes(search.toLowerCase())).map(p => (
                       <PlayerCard key={p.id} player={p} onSelect={setSelectedPlayer} myArchetype={user?.archetype ?? null} />
@@ -1090,7 +1107,7 @@ export default function MatchRequests() {
                     className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                     onClick={() => setSelectedPlayer(null)}
                   >
-                    Изменить
+                    {t("matchRequests.dialog.change")}
                   </button>
                 </div>
                 {user?.archetype && selectedPlayer.archetype && (
@@ -1102,18 +1119,18 @@ export default function MatchRequests() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label className="text-sm">Дата</Label>
+                  <Label className="text-sm">{t("matchRequests.dialog.date")}</Label>
                   <Input type="date" min={today} value={proposedDate} onChange={e => setProposedDate(e.target.value)} className="bg-background border-white/10" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm">Время</Label>
+                  <Label className="text-sm">{t("matchRequests.dialog.time")}</Label>
                   <Input type="time" value={proposedTime} onChange={e => setProposedTime(e.target.value)} className="bg-background border-white/10" />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-sm">Сообщение (необязательно)</Label>
-                <Input placeholder="Сыграем на этих выходных?" value={message} onChange={e => setMessage(e.target.value)} className="bg-background border-white/10" />
+                <Label className="text-sm">{t("matchRequests.dialog.messageLabel")}</Label>
+                <Input placeholder={t("matchRequests.dialog.messagePlaceholder")} value={message} onChange={e => setMessage(e.target.value)} className="bg-background border-white/10" />
               </div>
 
               <button
@@ -1122,7 +1139,7 @@ export default function MatchRequests() {
                 className="w-full rounded-[14px] font-semibold transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
                 style={{ height: "52px", fontSize: "15px", background: "#D4AF37", color: "#000" }}
               >
-                {sendMutation.isPending ? "Отправка..." : `Отправить запрос → ${selectedPlayer.name}`}
+                {sendMutation.isPending ? t("matchRequests.dialog.sending") : t("matchRequests.dialog.sendTo").replace("{{name}}", selectedPlayer.name)}
               </button>
             </div>
           )}
@@ -1133,7 +1150,7 @@ export default function MatchRequests() {
       <Dialog open={!!assignTarget} onOpenChange={open => !open && setAssignTarget(null)}>
         <DialogContent className="bg-card border-white/10 text-foreground max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-serif text-xl">Назначить партнёров</DialogTitle>
+            <DialogTitle className="font-serif text-xl">{t("matchRequests.assign.title")}</DialogTitle>
             {assignTarget && (
               <p className="text-sm text-muted-foreground">
                 {assignTarget.player?.name} · {assignTarget.format} · {assignTarget.requestedDate} {assignTarget.requestedTime}
@@ -1143,7 +1160,7 @@ export default function MatchRequests() {
 
           <div className="space-y-4 mt-2">
             <div className="text-xs text-muted-foreground">
-              Выбери до 3 партнёров для {assignTarget?.player?.name}. Отсортировано по совместимости.
+              {t("matchRequests.assign.instructions").replace("{{name}}", assignTarget?.player?.name ?? "")}
             </div>
 
             {selectedCandidates.length > 0 && (
@@ -1151,7 +1168,7 @@ export default function MatchRequests() {
                 className="p-3 rounded-[14px]"
                 style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.2)" }}
               >
-                <div className="text-xs text-muted-foreground mb-2">Выбрано: {selectedCandidates.length}/3</div>
+                <div className="text-xs text-muted-foreground mb-2">{t("matchRequests.assign.selected").replace("{{n}}", String(selectedCandidates.length))}</div>
                 <div className="flex flex-wrap gap-1">
                   {selectedCandidates.map(id => {
                     const c = (candidates as Candidate[]).find(x => x.id === id);
@@ -1231,7 +1248,7 @@ export default function MatchRequests() {
               className="w-full rounded-[14px] font-semibold transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
               style={{ height: "52px", fontSize: "15px", background: "#D4AF37", color: "#000" }}
             >
-              {assignMutation.isPending ? "Создание матча…" : `⚡ Создать матч (${1 + selectedCandidates.length} игроков)`}
+              {assignMutation.isPending ? t("matchRequests.assign.creating") : t("matchRequests.assign.createMatch").replace("{{n}}", String(1 + selectedCandidates.length))}
             </button>
           </div>
         </DialogContent>

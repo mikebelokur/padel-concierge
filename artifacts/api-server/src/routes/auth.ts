@@ -42,6 +42,37 @@ function formatUser(user: typeof usersTable.$inferSelect) {
   };
 }
 
+const checkEmailHits = new Map<string, { count: number; resetAt: number }>();
+const CHECK_EMAIL_WINDOW_MS = 60_000;
+const CHECK_EMAIL_MAX = 20;
+
+router.get("/auth/check-email", async (req, res): Promise<void> => {
+  const ip = (req.ip ?? req.socket.remoteAddress ?? "unknown").toString();
+  const now = Date.now();
+  const entry = checkEmailHits.get(ip);
+  if (!entry || entry.resetAt < now) {
+    checkEmailHits.set(ip, { count: 1, resetAt: now + CHECK_EMAIL_WINDOW_MS });
+  } else {
+    entry.count++;
+    if (entry.count > CHECK_EMAIL_MAX) {
+      res.status(429).json({ available: true });
+      return;
+    }
+  }
+  if (checkEmailHits.size > 5000) {
+    for (const [k, v] of checkEmailHits) if (v.resetAt < now) checkEmailHits.delete(k);
+  }
+
+  const emailRaw = (req.query.email as string | undefined) ?? "";
+  const email = emailRaw.trim().toLowerCase();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    res.json({ available: true });
+    return;
+  }
+  const existing = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.email, email)).limit(1);
+  res.json({ available: existing.length === 0 });
+});
+
 router.post("/auth/register", async (req, res): Promise<void> => {
   const parsed = RegisterBody.safeParse(req.body);
   if (!parsed.success) {

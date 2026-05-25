@@ -1237,3 +1237,238 @@ export const ListCoachUpcomingMatchesResponseItem = zod.object({
 export const ListCoachUpcomingMatchesResponse = zod.array(
   ListCoachUpcomingMatchesResponseItem,
 );
+
+/**
+ * @summary List visible group trainings
+ */
+export const ListGroupTrainingsQueryParams = zod.object({
+  from: zod.coerce.string().optional(),
+  to: zod.coerce.string().optional(),
+  category: zod.coerce.string().optional(),
+});
+
+export const ListGroupTrainingsResponseItem = zod.object({
+  id: zod.number(),
+  coachId: zod.number(),
+  dateTime: zod.string(),
+  durationMinutes: zod.number(),
+  category: zod.enum(["D-", "D", "D+", "C-", "C", "C+", "B-"]),
+  courtName: zod.string(),
+  courtAddress: zod.string().nullish(),
+  maxParticipants: zod.number(),
+  priceAed: zod.string(),
+  descriptionEn: zod.string().nullish(),
+  descriptionRu: zod.string().nullish(),
+  status: zod.enum(["open", "full", "cancelled", "completed"]),
+  isRecurring: zod.boolean(),
+  recurringSeriesId: zod.number().nullish(),
+  recurringPattern: zod.string().nullish(),
+  bookedCount: zod.number(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+export const ListGroupTrainingsResponse = zod.array(
+  ListGroupTrainingsResponseItem,
+);
+
+/**
+ * @summary Create a group training (coach/admin)
+ */
+export const CreateGroupTrainingBody = zod.object({
+  dateTime: zod.string(),
+  durationMinutes: zod.number().optional(),
+  category: zod.enum(["D-", "D", "D+", "C-", "C", "C+", "B-"]),
+  courtName: zod.string(),
+  courtAddress: zod.string().nullish(),
+  maxParticipants: zod.number().optional(),
+  priceAed: zod.union([zod.number(), zod.string()]),
+  descriptionEn: zod.string().nullish(),
+  descriptionRu: zod.string().nullish(),
+  isRecurring: zod.boolean().optional(),
+  recurringPattern: zod.string().nullish(),
+});
+
+/**
+ * @summary List current user's training bookings (upcoming + past)
+ */
+export const ListMyTrainingBookingsResponseItem = zod.object({
+  id: zod.number(),
+  trainingId: zod.number(),
+  userId: zod.number(),
+  status: zod.string(),
+  bookedAt: zod.string(),
+  cancelledAt: zod.string().nullish(),
+  createdAt: zod.string(),
+  training: zod.object({
+    id: zod.number(),
+    coachId: zod.number(),
+    dateTime: zod.string(),
+    durationMinutes: zod.number(),
+    category: zod.enum(["D-", "D", "D+", "C-", "C", "C+", "B-"]),
+    courtName: zod.string(),
+    courtAddress: zod.string().nullish(),
+    maxParticipants: zod.number(),
+    priceAed: zod.string(),
+    descriptionEn: zod.string().nullish(),
+    descriptionRu: zod.string().nullish(),
+    status: zod.enum(["open", "full", "cancelled", "completed"]),
+    isRecurring: zod.boolean(),
+    recurringSeriesId: zod.number().nullish(),
+    recurringPattern: zod.string().nullish(),
+    bookedCount: zod.number(),
+    createdAt: zod.string(),
+    updatedAt: zod.string(),
+  }),
+});
+export const ListMyTrainingBookingsResponse = zod.array(
+  ListMyTrainingBookingsResponseItem,
+);
+
+/**
+ * @summary Get group training detail
+ */
+export const GetGroupTrainingParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetGroupTrainingResponse = zod.object({
+  id: zod.number(),
+  coachId: zod.number(),
+  dateTime: zod.string(),
+  durationMinutes: zod.number(),
+  category: zod.enum(["D-", "D", "D+", "C-", "C", "C+", "B-"]),
+  courtName: zod.string(),
+  courtAddress: zod.string().nullish(),
+  maxParticipants: zod.number(),
+  priceAed: zod.string(),
+  descriptionEn: zod.string().nullish(),
+  descriptionRu: zod.string().nullish(),
+  status: zod.enum(["open", "full", "cancelled", "completed"]),
+  isRecurring: zod.boolean(),
+  recurringSeriesId: zod.number().nullish(),
+  recurringPattern: zod.string().nullish(),
+  bookedCount: zod.number(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Update group training (coach/admin)
+ */
+export const UpdateGroupTrainingParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateGroupTrainingBody = zod.object({
+  dateTime: zod.string().optional(),
+  durationMinutes: zod.number().optional(),
+  category: zod.enum(["D-", "D", "D+", "C-", "C", "C+", "B-"]).optional(),
+  courtName: zod.string().optional(),
+  courtAddress: zod.string().nullish(),
+  maxParticipants: zod.number().optional(),
+  priceAed: zod.union([zod.number(), zod.string()]).optional(),
+  descriptionEn: zod.string().nullish(),
+  descriptionRu: zod.string().nullish(),
+  status: zod.enum(["open", "full", "cancelled", "completed"]).optional(),
+});
+
+export const UpdateGroupTrainingResponse = zod.object({
+  id: zod.number(),
+  coachId: zod.number(),
+  dateTime: zod.string(),
+  durationMinutes: zod.number(),
+  category: zod.enum(["D-", "D", "D+", "C-", "C", "C+", "B-"]),
+  courtName: zod.string(),
+  courtAddress: zod.string().nullish(),
+  maxParticipants: zod.number(),
+  priceAed: zod.string(),
+  descriptionEn: zod.string().nullish(),
+  descriptionRu: zod.string().nullish(),
+  status: zod.enum(["open", "full", "cancelled", "completed"]),
+  isRecurring: zod.boolean(),
+  recurringSeriesId: zod.number().nullish(),
+  recurringPattern: zod.string().nullish(),
+  bookedCount: zod.number(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Cancel a group training (coach/admin)
+ */
+export const CancelGroupTrainingParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const CancelGroupTrainingResponse = zod.object({
+  id: zod.number(),
+  coachId: zod.number(),
+  dateTime: zod.string(),
+  durationMinutes: zod.number(),
+  category: zod.enum(["D-", "D", "D+", "C-", "C", "C+", "B-"]),
+  courtName: zod.string(),
+  courtAddress: zod.string().nullish(),
+  maxParticipants: zod.number(),
+  priceAed: zod.string(),
+  descriptionEn: zod.string().nullish(),
+  descriptionRu: zod.string().nullish(),
+  status: zod.enum(["open", "full", "cancelled", "completed"]),
+  isRecurring: zod.boolean(),
+  recurringSeriesId: zod.number().nullish(),
+  recurringPattern: zod.string().nullish(),
+  bookedCount: zod.number(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Book a spot in a group training
+ */
+export const BookGroupTrainingParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary Cancel current user's booking for a training
+ */
+export const CancelMyTrainingBookingParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const CancelMyTrainingBookingResponse = zod.object({
+  id: zod.number(),
+  trainingId: zod.number(),
+  userId: zod.number(),
+  status: zod.enum(["booked", "cancelled", "attended", "no_show"]),
+  bookedAt: zod.string(),
+  cancelledAt: zod.string().nullish(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary List bookings for a training (coach/admin view)
+ */
+export const ListGroupTrainingBookingsParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ListGroupTrainingBookingsResponseItem = zod.object({
+  id: zod.number(),
+  trainingId: zod.number(),
+  userId: zod.number(),
+  status: zod.string(),
+  bookedAt: zod.string(),
+  cancelledAt: zod.string().nullish(),
+  createdAt: zod.string(),
+  player: zod.object({
+    id: zod.number(),
+    name: zod.string(),
+    email: zod.string(),
+    phone: zod.string(),
+    level: zod.string(),
+    avatar: zod.string().nullish(),
+  }),
+});
+export const ListGroupTrainingBookingsResponse = zod.array(
+  ListGroupTrainingBookingsResponseItem,
+);

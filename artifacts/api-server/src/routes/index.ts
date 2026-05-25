@@ -18,6 +18,7 @@ import registrationsRouter from "./registrations";
 import padelFutureRouter from "./padel_future";
 import trainerMatchRequestsRouter from "./trainer_match_requests";
 import matchmakingRouter from "./matchmaking";
+import groupTrainingsRouter from "./group_trainings";
 
 const router: IRouter = Router();
 
@@ -40,5 +41,6 @@ router.use(padelNewsRouter);
 router.use(matchmakingRouter);
 router.use(registrationsRouter);
 router.use(trainerMatchRequestsRouter);
+router.use(groupTrainingsRouter);
 
 export default router;

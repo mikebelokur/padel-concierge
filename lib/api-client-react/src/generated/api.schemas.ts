@@ -317,6 +317,186 @@ export interface ActivityLog {
   createdAt: string;
 }
 
+export type GroupTrainingCategory =
+  (typeof GroupTrainingCategory)[keyof typeof GroupTrainingCategory];
+
+export const GroupTrainingCategory = {
+  "D-": "D-",
+  D: "D",
+  "D+": "D+",
+  "C-": "C-",
+  C: "C",
+  "C+": "C+",
+  "B-": "B-",
+} as const;
+
+export type GroupTrainingStatus =
+  (typeof GroupTrainingStatus)[keyof typeof GroupTrainingStatus];
+
+export const GroupTrainingStatus = {
+  open: "open",
+  full: "full",
+  cancelled: "cancelled",
+  completed: "completed",
+} as const;
+
+export interface GroupTraining {
+  id: number;
+  coachId: number;
+  dateTime: string;
+  durationMinutes: number;
+  category: GroupTrainingCategory;
+  courtName: string;
+  /** @nullable */
+  courtAddress?: string | null;
+  maxParticipants: number;
+  priceAed: string;
+  /** @nullable */
+  descriptionEn?: string | null;
+  /** @nullable */
+  descriptionRu?: string | null;
+  status: GroupTrainingStatus;
+  isRecurring: boolean;
+  /** @nullable */
+  recurringSeriesId?: number | null;
+  /** @nullable */
+  recurringPattern?: string | null;
+  bookedCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateGroupTrainingBodyCategory =
+  (typeof CreateGroupTrainingBodyCategory)[keyof typeof CreateGroupTrainingBodyCategory];
+
+export const CreateGroupTrainingBodyCategory = {
+  "D-": "D-",
+  D: "D",
+  "D+": "D+",
+  "C-": "C-",
+  C: "C",
+  "C+": "C+",
+  "B-": "B-",
+} as const;
+
+export interface CreateGroupTrainingBody {
+  dateTime: string;
+  durationMinutes?: number;
+  category: CreateGroupTrainingBodyCategory;
+  courtName: string;
+  /** @nullable */
+  courtAddress?: string | null;
+  maxParticipants?: number;
+  priceAed: number | string;
+  /** @nullable */
+  descriptionEn?: string | null;
+  /** @nullable */
+  descriptionRu?: string | null;
+  isRecurring?: boolean;
+  /** @nullable */
+  recurringPattern?: string | null;
+}
+
+export type UpdateGroupTrainingBodyCategory =
+  (typeof UpdateGroupTrainingBodyCategory)[keyof typeof UpdateGroupTrainingBodyCategory];
+
+export const UpdateGroupTrainingBodyCategory = {
+  "D-": "D-",
+  D: "D",
+  "D+": "D+",
+  "C-": "C-",
+  C: "C",
+  "C+": "C+",
+  "B-": "B-",
+} as const;
+
+export type UpdateGroupTrainingBodyStatus =
+  (typeof UpdateGroupTrainingBodyStatus)[keyof typeof UpdateGroupTrainingBodyStatus];
+
+export const UpdateGroupTrainingBodyStatus = {
+  open: "open",
+  full: "full",
+  cancelled: "cancelled",
+  completed: "completed",
+} as const;
+
+export interface UpdateGroupTrainingBody {
+  dateTime?: string;
+  durationMinutes?: number;
+  category?: UpdateGroupTrainingBodyCategory;
+  courtName?: string;
+  /** @nullable */
+  courtAddress?: string | null;
+  maxParticipants?: number;
+  priceAed?: number | string;
+  /** @nullable */
+  descriptionEn?: string | null;
+  /** @nullable */
+  descriptionRu?: string | null;
+  status?: UpdateGroupTrainingBodyStatus;
+}
+
+export type TrainingBookingStatus =
+  (typeof TrainingBookingStatus)[keyof typeof TrainingBookingStatus];
+
+export const TrainingBookingStatus = {
+  booked: "booked",
+  cancelled: "cancelled",
+  attended: "attended",
+  no_show: "no_show",
+} as const;
+
+export interface TrainingBooking {
+  id: number;
+  trainingId: number;
+  userId: number;
+  status: TrainingBookingStatus;
+  bookedAt: string;
+  /** @nullable */
+  cancelledAt?: string | null;
+  createdAt: string;
+}
+
+export interface TrainingBookingWithTraining {
+  id: number;
+  trainingId: number;
+  userId: number;
+  status: string;
+  bookedAt: string;
+  /** @nullable */
+  cancelledAt?: string | null;
+  createdAt: string;
+  training: GroupTraining;
+}
+
+export interface TrainingBookingPlayer {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  level: string;
+  /** @nullable */
+  avatar?: string | null;
+}
+
+export interface TrainingBookingWithPlayer {
+  id: number;
+  trainingId: number;
+  userId: number;
+  status: string;
+  bookedAt: string;
+  /** @nullable */
+  cancelledAt?: string | null;
+  createdAt: string;
+  player: TrainingBookingPlayer;
+}
+
+export interface BookingConflict {
+  error: string;
+  full?: boolean;
+  alreadyBooked?: boolean;
+}
+
 export type ListMatchesParams = {
   level?: string;
   format?: string;
@@ -366,4 +546,10 @@ export const PatchAdminUserTypeBodyUserType = {
 
 export type PatchAdminUserTypeBody = {
   userType: PatchAdminUserTypeBodyUserType;
+};
+
+export type ListGroupTrainingsParams = {
+  from?: string;
+  to?: string;
+  category?: string;
 };

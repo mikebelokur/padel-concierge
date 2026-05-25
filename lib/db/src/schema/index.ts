@@ -20,3 +20,5 @@ export * from "./player_profiles";
 export * from "./match_logs";
 export * from "./feedback_aggregates";
 export * from "./compatibility_scores";
+export * from "./group_trainings";
+export * from "./training_bookings";

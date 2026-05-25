@@ -26,6 +26,8 @@ tags:
     description: Coach operations
   - name: stats
     description: Statistics and dashboards
+  - name: group-trainings
+    description: Group training sessions and bookings
 
 paths:
   /healthz:
@@ -716,6 +718,205 @@ paths:
                 items:
                   $ref: "#/components/schemas/Match"
 
+  # GROUP TRAININGS
+  /group-trainings:
+    get:
+      operationId: listGroupTrainings
+      tags: [group-trainings]
+      summary: List visible group trainings
+      parameters:
+        - name: from
+          in: query
+          schema:
+            type: string
+        - name: to
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GroupTraining"
+    post:
+      operationId: createGroupTraining
+      tags: [group-trainings]
+      summary: Create a group training (coach/admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateGroupTrainingBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupTraining"
+        "403":
+          description: Forbidden
+
+  /group-trainings/me/bookings:
+    get:
+      operationId: listMyTrainingBookings
+      tags: [group-trainings]
+      summary: List current user's training bookings (upcoming + past)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TrainingBookingWithTraining"
+
+  /group-trainings/{id}:
+    get:
+      operationId: getGroupTraining
+      tags: [group-trainings]
+      summary: Get group training detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupTraining"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateGroupTraining
+      tags: [group-trainings]
+      summary: Update group training (coach/admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateGroupTrainingBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupTraining"
+        "403":
+          description: Forbidden
+    delete:
+      operationId: cancelGroupTraining
+      tags: [group-trainings]
+      summary: Cancel a group training (coach/admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupTraining"
+        "403":
+          description: Forbidden
+
+  /group-trainings/{id}/book:
+    post:
+      operationId: bookGroupTraining
+      tags: [group-trainings]
+      summary: Book a spot in a group training
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrainingBooking"
+        "403":
+          description: Category too high
+        "409":
+          description: Training is full or user already booked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingConflict"
+
+  /group-trainings/{id}/booking:
+    delete:
+      operationId: cancelMyTrainingBooking
+      tags: [group-trainings]
+      summary: Cancel current user's booking for a training
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrainingBooking"
+        "404":
+          description: No active booking
+
+  /group-trainings/{id}/bookings:
+    get:
+      operationId: listGroupTrainingBookings
+      tags: [group-trainings]
+      summary: List bookings for a training (coach/admin view)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TrainingBookingWithPlayer"
+        "403":
+          description: Forbidden
+
 components:
   schemas:
     HealthStatus:
@@ -1379,3 +1580,234 @@ components:
         - userName
         - action
         - createdAt
+
+    GroupTraining:
+      type: object
+      properties:
+        id:
+          type: integer
+        coachId:
+          type: integer
+        dateTime:
+          type: string
+        durationMinutes:
+          type: integer
+        category:
+          type: string
+          enum: [D-, D, D+, C-, C, C+, B-]
+        courtName:
+          type: string
+        courtAddress:
+          type: ["string", "null"]
+        maxParticipants:
+          type: integer
+        priceAed:
+          type: string
+        descriptionEn:
+          type: ["string", "null"]
+        descriptionRu:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [open, full, cancelled, completed]
+        isRecurring:
+          type: boolean
+        recurringSeriesId:
+          type: ["integer", "null"]
+        recurringPattern:
+          type: ["string", "null"]
+        bookedCount:
+          type: integer
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - coachId
+        - dateTime
+        - durationMinutes
+        - category
+        - courtName
+        - maxParticipants
+        - priceAed
+        - status
+        - isRecurring
+        - bookedCount
+        - createdAt
+        - updatedAt
+
+    CreateGroupTrainingBody:
+      type: object
+      properties:
+        dateTime:
+          type: string
+        durationMinutes:
+          type: integer
+        category:
+          type: string
+          enum: [D-, D, D+, C-, C, C+, B-]
+        courtName:
+          type: string
+        courtAddress:
+          type: ["string", "null"]
+        maxParticipants:
+          type: integer
+        priceAed:
+          type: ["number", "string"]
+        descriptionEn:
+          type: ["string", "null"]
+        descriptionRu:
+          type: ["string", "null"]
+        isRecurring:
+          type: boolean
+        recurringPattern:
+          type: ["string", "null"]
+      required:
+        - dateTime
+        - category
+        - courtName
+        - priceAed
+
+    UpdateGroupTrainingBody:
+      type: object
+      properties:
+        dateTime:
+          type: string
+        durationMinutes:
+          type: integer
+        category:
+          type: string
+          enum: [D-, D, D+, C-, C, C+, B-]
+        courtName:
+          type: string
+        courtAddress:
+          type: ["string", "null"]
+        maxParticipants:
+          type: integer
+        priceAed:
+          type: ["number", "string"]
+        descriptionEn:
+          type: ["string", "null"]
+        descriptionRu:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [open, full, cancelled, completed]
+
+    TrainingBooking:
+      type: object
+      properties:
+        id:
+          type: integer
+        trainingId:
+          type: integer
+        userId:
+          type: integer
+        status:
+          type: string
+          enum: [booked, cancelled, attended, no_show]
+        bookedAt:
+          type: string
+        cancelledAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - trainingId
+        - userId
+        - status
+        - bookedAt
+        - createdAt
+
+    TrainingBookingWithTraining:
+      type: object
+      properties:
+        id:
+          type: integer
+        trainingId:
+          type: integer
+        userId:
+          type: integer
+        status:
+          type: string
+        bookedAt:
+          type: string
+        cancelledAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        training:
+          $ref: "#/components/schemas/GroupTraining"
+      required:
+        - id
+        - trainingId
+        - userId
+        - status
+        - bookedAt
+        - createdAt
+        - training
+
+    TrainingBookingPlayer:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        level:
+          type: string
+        avatar:
+          type: ["string", "null"]
+      required:
+        - id
+        - name
+        - email
+        - phone
+        - level
+
+    TrainingBookingWithPlayer:
+      type: object
+      properties:
+        id:
+          type: integer
+        trainingId:
+          type: integer
+        userId:
+          type: integer
+        status:
+          type: string
+        bookedAt:
+          type: string
+        cancelledAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        player:
+          oneOf:
+            - $ref: "#/components/schemas/TrainingBookingPlayer"
+            - type: "null"
+      required:
+        - id
+        - trainingId
+        - userId
+        - status
+        - bookedAt
+        - createdAt
+
+    BookingConflict:
+      type: object
+      properties:
+        error:
+          type: string
+        full:
+          type: boolean
+        alreadyBooked:
+          type: boolean
+      required:
+        - error

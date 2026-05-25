@@ -50,6 +50,8 @@ Premium padel player matchmaking platform for Dubai. A quality-control system (n
 - `recurring_schedules` — Fixed weekly slots (Oleg Miserva: Mon/Wed/Fri 09:30–10:30)
 - `padel_rules` — Official padel rules in EN/RU/AR (10 rules across 5 categories)
 - `padel_news` — News feed with categories: WPT news, coaching tips, student achievements
+- `group_trainings` — Coach-run group sessions: coachId, dateTime, durationMinutes (90), category (D-…B-), courtName/Address, maxParticipants (4), priceAed numeric(10,2), descriptionEn/Ru, status (open/full/cancelled/completed), isRecurring + recurringSeriesId/Pattern. Indexed on (coachId, dateTime).
+- `training_bookings` — Player bookings for a group training. Status (booked/cancelled/attended/no_show). Partial unique index on (trainingId, userId) WHERE status<>'cancelled' allows rebooking after a cancel.
 
 ## Test Accounts
 

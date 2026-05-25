@@ -20,17 +20,21 @@ import type {
   ActivityLog,
   AuthResponse,
   Booking,
+  BookingConflict,
   ConfirmPaymentBody,
   CreateBookingBody,
+  CreateGroupTrainingBody,
   CreateMatchBody,
   CreateVideoAnalysisBody,
   DashboardStats,
   FavouriteBody,
   GetActivityLogParams,
   GetMatchSuggestionsParams,
+  GroupTraining,
   HealthStatus,
   ListAdminUsersParams,
   ListBookingsParams,
+  ListGroupTrainingsParams,
   ListMatchesParams,
   ListVideoAnalysesParams,
   LoginBody,
@@ -40,8 +44,12 @@ import type {
   PaymentIntentResponse,
   PlayerStats,
   RegisterBody,
+  TrainingBooking,
+  TrainingBookingWithPlayer,
+  TrainingBookingWithTraining,
   UpdateAvailabilityBody,
   UpdateBookingBody,
+  UpdateGroupTrainingBody,
   UpdateMatchBody,
   UpdateUserBody,
   UpdateVideoAnalysisBody,
@@ -2856,6 +2864,786 @@ export function useListCoachUpcomingMatches<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getListCoachUpcomingMatchesQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List visible group trainings
+ */
+export const getListGroupTrainingsUrl = (params?: ListGroupTrainingsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/group-trainings?${stringifiedParams}`
+    : `/api/group-trainings`;
+};
+
+export const listGroupTrainings = async (
+  params?: ListGroupTrainingsParams,
+  options?: RequestInit,
+): Promise<GroupTraining[]> => {
+  return customFetch<GroupTraining[]>(getListGroupTrainingsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListGroupTrainingsQueryKey = (
+  params?: ListGroupTrainingsParams,
+) => {
+  return [`/api/group-trainings`, ...(params ? [params] : [])] as const;
+};
+
+export const getListGroupTrainingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listGroupTrainings>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListGroupTrainingsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listGroupTrainings>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListGroupTrainingsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listGroupTrainings>>
+  > = ({ signal }) => listGroupTrainings(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listGroupTrainings>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListGroupTrainingsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listGroupTrainings>>
+>;
+export type ListGroupTrainingsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List visible group trainings
+ */
+
+export function useListGroupTrainings<
+  TData = Awaited<ReturnType<typeof listGroupTrainings>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListGroupTrainingsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listGroupTrainings>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListGroupTrainingsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a group training (coach/admin)
+ */
+export const getCreateGroupTrainingUrl = () => {
+  return `/api/group-trainings`;
+};
+
+export const createGroupTraining = async (
+  createGroupTrainingBody: CreateGroupTrainingBody,
+  options?: RequestInit,
+): Promise<GroupTraining> => {
+  return customFetch<GroupTraining>(getCreateGroupTrainingUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createGroupTrainingBody),
+  });
+};
+
+export const getCreateGroupTrainingMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createGroupTraining>>,
+    TError,
+    { data: BodyType<CreateGroupTrainingBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createGroupTraining>>,
+  TError,
+  { data: BodyType<CreateGroupTrainingBody> },
+  TContext
+> => {
+  const mutationKey = ["createGroupTraining"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createGroupTraining>>,
+    { data: BodyType<CreateGroupTrainingBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createGroupTraining(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateGroupTrainingMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createGroupTraining>>
+>;
+export type CreateGroupTrainingMutationBody = BodyType<CreateGroupTrainingBody>;
+export type CreateGroupTrainingMutationError = ErrorType<void>;
+
+/**
+ * @summary Create a group training (coach/admin)
+ */
+export const useCreateGroupTraining = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createGroupTraining>>,
+    TError,
+    { data: BodyType<CreateGroupTrainingBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createGroupTraining>>,
+  TError,
+  { data: BodyType<CreateGroupTrainingBody> },
+  TContext
+> => {
+  return useMutation(getCreateGroupTrainingMutationOptions(options));
+};
+
+/**
+ * @summary List current user's training bookings (upcoming + past)
+ */
+export const getListMyTrainingBookingsUrl = () => {
+  return `/api/group-trainings/me/bookings`;
+};
+
+export const listMyTrainingBookings = async (
+  options?: RequestInit,
+): Promise<TrainingBookingWithTraining[]> => {
+  return customFetch<TrainingBookingWithTraining[]>(
+    getListMyTrainingBookingsUrl(),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListMyTrainingBookingsQueryKey = () => {
+  return [`/api/group-trainings/me/bookings`] as const;
+};
+
+export const getListMyTrainingBookingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMyTrainingBookings>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listMyTrainingBookings>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListMyTrainingBookingsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listMyTrainingBookings>>
+  > = ({ signal }) => listMyTrainingBookings({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMyTrainingBookings>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListMyTrainingBookingsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMyTrainingBookings>>
+>;
+export type ListMyTrainingBookingsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List current user's training bookings (upcoming + past)
+ */
+
+export function useListMyTrainingBookings<
+  TData = Awaited<ReturnType<typeof listMyTrainingBookings>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listMyTrainingBookings>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListMyTrainingBookingsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get group training detail
+ */
+export const getGetGroupTrainingUrl = (id: number) => {
+  return `/api/group-trainings/${id}`;
+};
+
+export const getGroupTraining = async (
+  id: number,
+  options?: RequestInit,
+): Promise<GroupTraining> => {
+  return customFetch<GroupTraining>(getGetGroupTrainingUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetGroupTrainingQueryKey = (id: number) => {
+  return [`/api/group-trainings/${id}`] as const;
+};
+
+export const getGetGroupTrainingQueryOptions = <
+  TData = Awaited<ReturnType<typeof getGroupTraining>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getGroupTraining>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetGroupTrainingQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getGroupTraining>>
+  > = ({ signal }) => getGroupTraining(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getGroupTraining>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetGroupTrainingQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getGroupTraining>>
+>;
+export type GetGroupTrainingQueryError = ErrorType<void>;
+
+/**
+ * @summary Get group training detail
+ */
+
+export function useGetGroupTraining<
+  TData = Awaited<ReturnType<typeof getGroupTraining>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getGroupTraining>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetGroupTrainingQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update group training (coach/admin)
+ */
+export const getUpdateGroupTrainingUrl = (id: number) => {
+  return `/api/group-trainings/${id}`;
+};
+
+export const updateGroupTraining = async (
+  id: number,
+  updateGroupTrainingBody: UpdateGroupTrainingBody,
+  options?: RequestInit,
+): Promise<GroupTraining> => {
+  return customFetch<GroupTraining>(getUpdateGroupTrainingUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateGroupTrainingBody),
+  });
+};
+
+export const getUpdateGroupTrainingMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateGroupTraining>>,
+    TError,
+    { id: number; data: BodyType<UpdateGroupTrainingBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateGroupTraining>>,
+  TError,
+  { id: number; data: BodyType<UpdateGroupTrainingBody> },
+  TContext
+> => {
+  const mutationKey = ["updateGroupTraining"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateGroupTraining>>,
+    { id: number; data: BodyType<UpdateGroupTrainingBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateGroupTraining(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateGroupTrainingMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateGroupTraining>>
+>;
+export type UpdateGroupTrainingMutationBody = BodyType<UpdateGroupTrainingBody>;
+export type UpdateGroupTrainingMutationError = ErrorType<void>;
+
+/**
+ * @summary Update group training (coach/admin)
+ */
+export const useUpdateGroupTraining = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateGroupTraining>>,
+    TError,
+    { id: number; data: BodyType<UpdateGroupTrainingBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateGroupTraining>>,
+  TError,
+  { id: number; data: BodyType<UpdateGroupTrainingBody> },
+  TContext
+> => {
+  return useMutation(getUpdateGroupTrainingMutationOptions(options));
+};
+
+/**
+ * @summary Cancel a group training (coach/admin)
+ */
+export const getCancelGroupTrainingUrl = (id: number) => {
+  return `/api/group-trainings/${id}`;
+};
+
+export const cancelGroupTraining = async (
+  id: number,
+  options?: RequestInit,
+): Promise<GroupTraining> => {
+  return customFetch<GroupTraining>(getCancelGroupTrainingUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getCancelGroupTrainingMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cancelGroupTraining>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof cancelGroupTraining>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["cancelGroupTraining"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof cancelGroupTraining>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return cancelGroupTraining(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CancelGroupTrainingMutationResult = NonNullable<
+  Awaited<ReturnType<typeof cancelGroupTraining>>
+>;
+
+export type CancelGroupTrainingMutationError = ErrorType<void>;
+
+/**
+ * @summary Cancel a group training (coach/admin)
+ */
+export const useCancelGroupTraining = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cancelGroupTraining>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof cancelGroupTraining>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getCancelGroupTrainingMutationOptions(options));
+};
+
+/**
+ * @summary Book a spot in a group training
+ */
+export const getBookGroupTrainingUrl = (id: number) => {
+  return `/api/group-trainings/${id}/book`;
+};
+
+export const bookGroupTraining = async (
+  id: number,
+  options?: RequestInit,
+): Promise<TrainingBooking> => {
+  return customFetch<TrainingBooking>(getBookGroupTrainingUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getBookGroupTrainingMutationOptions = <
+  TError = ErrorType<void | BookingConflict>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof bookGroupTraining>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof bookGroupTraining>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["bookGroupTraining"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof bookGroupTraining>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return bookGroupTraining(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type BookGroupTrainingMutationResult = NonNullable<
+  Awaited<ReturnType<typeof bookGroupTraining>>
+>;
+
+export type BookGroupTrainingMutationError = ErrorType<void | BookingConflict>;
+
+/**
+ * @summary Book a spot in a group training
+ */
+export const useBookGroupTraining = <
+  TError = ErrorType<void | BookingConflict>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof bookGroupTraining>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof bookGroupTraining>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getBookGroupTrainingMutationOptions(options));
+};
+
+/**
+ * @summary Cancel current user's booking for a training
+ */
+export const getCancelMyTrainingBookingUrl = (id: number) => {
+  return `/api/group-trainings/${id}/booking`;
+};
+
+export const cancelMyTrainingBooking = async (
+  id: number,
+  options?: RequestInit,
+): Promise<TrainingBooking> => {
+  return customFetch<TrainingBooking>(getCancelMyTrainingBookingUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getCancelMyTrainingBookingMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cancelMyTrainingBooking>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof cancelMyTrainingBooking>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["cancelMyTrainingBooking"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof cancelMyTrainingBooking>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return cancelMyTrainingBooking(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CancelMyTrainingBookingMutationResult = NonNullable<
+  Awaited<ReturnType<typeof cancelMyTrainingBooking>>
+>;
+
+export type CancelMyTrainingBookingMutationError = ErrorType<void>;
+
+/**
+ * @summary Cancel current user's booking for a training
+ */
+export const useCancelMyTrainingBooking = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cancelMyTrainingBooking>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof cancelMyTrainingBooking>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getCancelMyTrainingBookingMutationOptions(options));
+};
+
+/**
+ * @summary List bookings for a training (coach/admin view)
+ */
+export const getListGroupTrainingBookingsUrl = (id: number) => {
+  return `/api/group-trainings/${id}/bookings`;
+};
+
+export const listGroupTrainingBookings = async (
+  id: number,
+  options?: RequestInit,
+): Promise<TrainingBookingWithPlayer[]> => {
+  return customFetch<TrainingBookingWithPlayer[]>(
+    getListGroupTrainingBookingsUrl(id),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListGroupTrainingBookingsQueryKey = (id: number) => {
+  return [`/api/group-trainings/${id}/bookings`] as const;
+};
+
+export const getListGroupTrainingBookingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listGroupTrainingBookings>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listGroupTrainingBookings>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListGroupTrainingBookingsQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listGroupTrainingBookings>>
+  > = ({ signal }) =>
+    listGroupTrainingBookings(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listGroupTrainingBookings>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListGroupTrainingBookingsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listGroupTrainingBookings>>
+>;
+export type ListGroupTrainingBookingsQueryError = ErrorType<void>;
+
+/**
+ * @summary List bookings for a training (coach/admin view)
+ */
+
+export function useListGroupTrainingBookings<
+  TData = Awaited<ReturnType<typeof listGroupTrainingBookings>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listGroupTrainingBookings>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListGroupTrainingBookingsQueryOptions(id, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

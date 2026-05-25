@@ -52,6 +52,50 @@ function formatDateTime(iso: string, language: string): string {
   });
 }
 
+function formatDateRange(iso: string, durationMinutes: number, language: string): string {
+  const start = new Date(iso);
+  const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
+  const locale = language === "ru" ? "ru-RU" : "en-GB";
+  const dayPart = start.toLocaleDateString(locale, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+  const timeFmt: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit", hour12: false };
+  const startTime = start.toLocaleTimeString(locale, timeFmt);
+  const endTime = end.toLocaleTimeString(locale, timeFmt);
+  return `${dayPart} · ${startTime} – ${endTime}`;
+}
+
+function formatWeekday(iso: string, language: string): string {
+  return new Date(iso).toLocaleDateString(language === "ru" ? "ru-RU" : "en-GB", {
+    weekday: "long",
+  });
+}
+
+function formatStartTime(iso: string, language: string): string {
+  return new Date(iso).toLocaleTimeString(language === "ru" ? "ru-RU" : "en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
+function mapsUrl(name: string, addr: string | null): string {
+  const q = encodeURIComponent(addr ? `${name}, ${addr}` : name);
+  return `https://www.google.com/maps/search/?api=1&query=${q}`;
+}
+
+const CATEGORY_COLORS: Record<string, { fg: string; bg: string }> = {
+  "D-": { fg: "#94a3b8", bg: "rgba(148,163,184,0.12)" },
+  "D":  { fg: "#94a3b8", bg: "rgba(148,163,184,0.14)" },
+  "D+": { fg: "#7dd3fc", bg: "rgba(125,211,252,0.12)" },
+  "C-": { fg: "#60a5fa", bg: "rgba(96,165,250,0.12)" },
+  "C":  { fg: "#a78bfa", bg: "rgba(167,139,250,0.14)" },
+  "C+": { fg: "#c084fc", bg: "rgba(192,132,252,0.14)" },
+  "B-": { fg: "#D4AF37", bg: "rgba(212,175,55,0.14)" },
+};
+
 function dateOnly(iso: string): string {
   // local YYYY-MM-DD for trainer-match-request payload
   const d = new Date(iso);
@@ -70,14 +114,15 @@ function hoursUntil(iso: string): number {
 }
 
 function CategoryBadge({ cat }: { cat: string }) {
+  const c = CATEGORY_COLORS[cat] ?? { fg: GOLD, bg: "rgba(212,175,55,0.10)" };
   return (
     <span
       className="inline-flex items-center px-2 py-0.5 rounded-md font-mono font-semibold"
       style={{
         fontSize: "11px",
-        color: GOLD,
-        background: "rgba(212,175,55,0.10)",
-        border: `1px solid ${GOLD}33`,
+        color: c.fg,
+        background: c.bg,
+        border: `1px solid ${c.fg}40`,
       }}
     >
       {cat}
@@ -96,35 +141,28 @@ function StatusBadge({
   isPast: boolean;
   t: (k: string, v?: Record<string, string | number>) => string;
 }) {
+  const pill = (label: string, fg: string, bg: string) => (
+    <span
+      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs"
+      style={{ color: fg, background: bg, border: `1px solid ${fg}40` }}
+    >
+      {label}
+    </span>
+  );
+  if (status === "cancelled") {
+    return pill(t("playerTrainings.card.cancelledByCoach"), "#f87171", "rgba(248,113,113,0.12)");
+  }
   if (isPast) {
-    return (
-      <span
-        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs"
-        style={{ color: "#94a3b8", background: "rgba(148,163,184,0.12)", border: "1px solid #94a3b840" }}
-      >
-        {t("playerTrainings.card.past")}
-      </span>
-    );
+    return pill(t("playerTrainings.card.past"), "#94a3b8", "rgba(148,163,184,0.12)");
   }
   if (locked) {
-    return (
-      <span
-        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs"
-        style={{ color: "#f87171", background: "rgba(248,113,113,0.12)", border: "1px solid #f8717140" }}
-      >
-        🔒 {t("playerTrainings.card.locked")}
-      </span>
-    );
+    return pill(`🔒 ${t("playerTrainings.card.locked")}`, "#f87171", "rgba(248,113,113,0.12)");
   }
   if (status === "full") {
-    return (
-      <span
-        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs"
-        style={{ color: GOLD, background: "rgba(212,175,55,0.12)", border: `1px solid ${GOLD}40` }}
-      >
-        {t("playerTrainings.card.full")}
-      </span>
-    );
+    return pill(t("playerTrainings.card.full"), GOLD, "rgba(212,175,55,0.12)");
+  }
+  if (status === "open") {
+    return pill(t("playerTrainings.card.open"), "#4ade80", "rgba(74,222,128,0.12)");
   }
   return null;
 }
@@ -212,6 +250,7 @@ function TrainingCard({
 
   const cta: CardAction = (() => {
     if (isPast) return { kind: "none" };
+    if (training.status === "cancelled") return { kind: "none" };
     if (isBooked) return { kind: "cancel", training };
     if (locked) return { kind: "locked", training };
     if (isFull) return { kind: "waitlist", training };
@@ -294,12 +333,10 @@ function TrainingCard({
             )}
           </div>
           <div className="text-white font-semibold leading-tight" style={{ fontSize: "17px" }}>
-            {formatDateTime(training.dateTime, language)}
+            {formatDateRange(training.dateTime, training.durationMinutes, language)}
           </div>
           <div className="text-muted-foreground" style={{ fontSize: "13px", marginTop: 2 }}>
             {t("playerTrainings.card.withCoach", { coach: coach?.name ?? `#${training.coachId}` })}
-            {" · "}
-            {t("playerTrainings.card.duration", { min: training.durationMinutes })}
           </div>
         </div>
         <div className="text-right flex-shrink-0">
@@ -310,17 +347,22 @@ function TrainingCard({
         </div>
       </div>
 
-      {/* Court */}
-      <div className="mb-3">
+      {/* Court — clickable opens Google Maps */}
+      <a
+        href={mapsUrl(training.courtName, training.courtAddress ?? null)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block mb-3 -mx-1 px-1 py-1 rounded-md hover:bg-white/[0.03] transition-colors"
+      >
         <div className="text-white" style={{ fontSize: "13px" }}>
-          📍 {training.courtName}
+          📍 <span className="underline decoration-white/20 underline-offset-2">{training.courtName}</span>
         </div>
         {training.courtAddress && (
           <div className="text-muted-foreground" style={{ fontSize: "12px", marginTop: 2, paddingLeft: 18 }}>
             {training.courtAddress}
           </div>
         )}
-      </div>
+      </a>
 
       {/* Spots progress */}
       <div className="mb-4">
@@ -352,10 +394,35 @@ function TrainingCard({
         </div>
       )}
 
-      {/* CTA */}
-      {cta.kind !== "none" && (
+      {/* CTA — past trainings render a disabled button */}
+      {cta.kind === "none" ? (
+        <button
+          disabled
+          className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl font-medium transition-all"
+          style={{
+            background: "rgba(255,255,255,0.04)",
+            color: "rgba(255,255,255,0.35)",
+            border: "1px solid rgba(255,255,255,0.06)",
+            height: 44,
+            fontSize: "14px",
+            cursor: "not-allowed",
+          }}
+        >
+          {training.status === "cancelled"
+            ? t("playerTrainings.card.cancelledByCoach")
+            : t("playerTrainings.card.past")}
+        </button>
+      ) : (
         <button
           onClick={() => onAction(cta)}
+          title={
+            cta.kind === "locked"
+              ? t("playerTrainings.card.lockedTooltip", {
+                  level: myLevel ?? "—",
+                  cat: training.category,
+                })
+              : undefined
+          }
           className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl font-semibold transition-all active:scale-[0.98]"
           style={{
             background: ctaBg,
@@ -392,7 +459,13 @@ function BookModal({
       onSuccess: () => {
         qc.invalidateQueries({ queryKey: getListGroupTrainingsQueryKey() });
         qc.invalidateQueries({ queryKey: getListMyTrainingBookingsQueryKey() });
-        toast({ title: t("playerTrainings.bookModal.success") });
+        toast({
+          title: t("playerTrainings.bookModal.success", {
+            court: training.courtName,
+            day: formatWeekday(training.dateTime, language),
+            time: formatStartTime(training.dateTime, language),
+          }),
+        });
         onClose();
       },
       onError: (err: any) => {
@@ -424,7 +497,7 @@ function BookModal({
             className="rounded-xl p-3"
             style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
           >
-            <div className="text-white font-medium mb-1">{formatDateTime(training.dateTime, language)}</div>
+            <div className="text-white font-medium mb-1">{formatDateRange(training.dateTime, training.durationMinutes, language)}</div>
             <div className="text-muted-foreground" style={{ fontSize: "13px" }}>
               {coach?.name ?? `#${training.coachId}`} · {training.courtName}
             </div>

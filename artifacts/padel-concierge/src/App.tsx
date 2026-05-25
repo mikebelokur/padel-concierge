@@ -1,6 +1,6 @@
 import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
@@ -29,7 +29,7 @@ import VideoAnalysisDetail from "@/pages/video-analysis-detail";
 import Settings from "@/pages/settings";
 import CoachDashboard from "@/pages/coach";
 import CoachGroupTrainings from "@/pages/coach-group-trainings";
-import GroupTrainings from "@/pages/group-trainings";
+const GroupTrainings = lazy(() => import("@/pages/group-trainings"));
 import Admin from "@/pages/admin";
 import AdminUsers from "@/pages/admin-users";
 import Courts from "@/pages/courts";
@@ -147,7 +147,11 @@ function Router() {
 
       <Route path="/registrations">{() => <ProtectedRoute component={Registrations} allowedRoles={["admin", "owner"]} />}</Route>
       <Route path="/coach/group-trainings">{() => <ProtectedRoute component={CoachGroupTrainings} allowedRoles={["coach", "admin", "owner"]} />}</Route>
-      <Route path="/group-trainings">{() => <ProtectedRoute component={GroupTrainings} />}</Route>
+      <Route path="/group-trainings">{() => (
+        <Suspense fallback={null}>
+          <ProtectedRoute component={GroupTrainings} />
+        </Suspense>
+      )}</Route>
       <Route path="/coach">{() => <ProtectedRoute component={CoachDashboard} allowedRoles={["coach", "admin", "owner"]} />}</Route>
       <Route path="/admin/users">{() => <ProtectedRoute component={AdminUsers} allowedRoles={["admin", "owner"]} allowedEmails={["mikebelokur8@gmail.com"]} />}</Route>
       <Route path="/admin">{() => <ProtectedRoute component={Admin} allowedRoles={["admin", "owner"]} />}</Route>

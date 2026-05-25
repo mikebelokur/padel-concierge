@@ -628,6 +628,28 @@ paths:
                   $ref: "#/components/schemas/ActivityLog"
 
   # ADMIN
+  /admin/users:
+    get:
+      operationId: listAdminUsers
+      tags: [admin]
+      summary: List all users (admin) with optional type filter
+      parameters:
+        - name: userType
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [real_user, seed_test, beta_tester]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
   /admin/users/{id}/user-type:
     patch:
       operationId: patchAdminUserType

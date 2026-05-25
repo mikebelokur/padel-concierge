@@ -6,23 +6,39 @@ import { formatUser } from "./auth";
 
 const router: IRouter = Router();
 
+const MIKE_EMAIL = "mikebelokur8@gmail.com";
+
 function requireOwnerOrAdmin(req: any, res: any): { userId: number; role: string } | null {
   const token = getTokenFromRequest(req);
   if (!token) { res.status(401).json({ error: "Unauthorized" }); return null; }
   const payload = verifyToken(token);
-  if (!payload || !["admin", "owner"].includes(payload.role)) {
-    res.status(403).json({ error: "Forbidden" });
-    return null;
-  }
+  if (!payload) { res.status(401).json({ error: "Unauthorized" }); return null; }
   return payload;
 }
 
-// GET /api/admin/users — all users with stats
-router.get("/admin/users", async (req, res): Promise<void> => {
-  if (!requireOwnerOrAdmin(req, res)) return;
+async function requireAdminAccess(req: any, res: any): Promise<{ userId: number; role: string } | null> {
+  const payload = requireOwnerOrAdmin(req, res);
+  if (!payload) return null;
+  if (["admin", "owner"].includes(payload.role)) return payload;
+  // Mike exception: specific player email has read access to user-segmentation page
+  const [user] = await db.select({ email: usersTable.email }).from(usersTable).where(eq(usersTable.id, payload.userId));
+  if (user?.email === MIKE_EMAIL) return payload;
+  res.status(403).json({ error: "Forbidden" });
+  return null;
+}
 
-  const users = await db.select().from(usersTable).orderBy(usersTable.createdAt);
-  res.json(users.map(formatUser));
+// GET /api/admin/users — all users with optional ?userType= filter
+router.get("/admin/users", async (req, res): Promise<void> => {
+  if (!await requireAdminAccess(req, res)) return;
+
+  const { userType } = req.query;
+  const validTypes = ["real_user", "seed_test", "beta_tester"];
+
+  let rows = await db.select().from(usersTable).orderBy(usersTable.createdAt);
+  if (typeof userType === "string" && validTypes.includes(userType)) {
+    rows = rows.filter(u => (u.userType ?? "real_user") === userType);
+  }
+  res.json(rows.map(formatUser));
 });
 
 // PUT /api/admin/users/:id/level — set skill level

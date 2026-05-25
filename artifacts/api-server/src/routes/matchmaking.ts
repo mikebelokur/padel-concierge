@@ -180,11 +180,21 @@ router.post("/matchmaking/suggest", async (req, res): Promise<void> => {
     shared_availability_slots: { start: string; end: string }[];
   }[] = [];
 
+  const myUserType = me.userType ?? "real_user";
+
   for (const u of allUsers) {
     if (u.id === userId) continue;
     if (u.role !== "player") continue;
     if (!u.verified) continue;
     if (!["approved", "active"].includes(u.approvalStatus)) continue;
+
+    // Segment by user type: seed↔seed, real/beta↔real/beta
+    const uType = u.userType ?? "real_user";
+    if (myUserType === "seed_test") {
+      if (uType !== "seed_test") continue;
+    } else {
+      if (uType === "seed_test") continue;
+    }
 
     const theirSlots = parseSlots(u.availability);
     const lm = scoreLevelMatch(me.levelQuiz, u.levelQuiz);

@@ -342,6 +342,19 @@ export type GetActivityLogParams = {
   limit?: number;
 };
 
+export type ListAdminUsersParams = {
+  userType?: ListAdminUsersUserType;
+};
+
+export type ListAdminUsersUserType =
+  (typeof ListAdminUsersUserType)[keyof typeof ListAdminUsersUserType];
+
+export const ListAdminUsersUserType = {
+  real_user: "real_user",
+  seed_test: "seed_test",
+  beta_tester: "beta_tester",
+} as const;
+
 export type PatchAdminUserTypeBodyUserType =
   (typeof PatchAdminUserTypeBodyUserType)[keyof typeof PatchAdminUserTypeBodyUserType];
 

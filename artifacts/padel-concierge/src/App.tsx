@@ -75,16 +75,18 @@ function LanguageSync() {
 function ProtectedRoute({
   component: Component,
   allowedRoles,
+  allowedEmails,
 }: {
   component: React.ComponentType;
   allowedRoles?: string[];
+  allowedEmails?: string[];
 }) {
   const { user, isLoading } = useAuth();
-  // Hold render until auth state is known — prevents a redirect flash for
-  // already-authenticated users on first load.
   if (isLoading) return null;
   if (!user) return <Redirect to="/login" />;
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
+  const roleOk = !allowedRoles || allowedRoles.includes(user.role);
+  const emailOk = allowedEmails && allowedEmails.includes(user.email);
+  if (!roleOk && !emailOk) {
     return <Redirect to="/dashboard" />;
   }
   return (
@@ -143,7 +145,7 @@ function Router() {
 
       <Route path="/registrations">{() => <ProtectedRoute component={Registrations} allowedRoles={["admin", "owner"]} />}</Route>
       <Route path="/coach">{() => <ProtectedRoute component={CoachDashboard} allowedRoles={["coach", "admin", "owner"]} />}</Route>
-      <Route path="/admin/users">{() => <ProtectedRoute component={AdminUsers} allowedRoles={["admin", "owner"]} />}</Route>
+      <Route path="/admin/users">{() => <ProtectedRoute component={AdminUsers} allowedRoles={["admin", "owner"]} allowedEmails={["mikebelokur8@gmail.com"]} />}</Route>
       <Route path="/admin">{() => <ProtectedRoute component={Admin} allowedRoles={["admin", "owner"]} />}</Route>
 
       <Route component={NotFound} />

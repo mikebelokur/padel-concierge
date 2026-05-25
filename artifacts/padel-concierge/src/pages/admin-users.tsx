@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -45,10 +46,13 @@ const ROLE_STYLES: Record<string, { color: string }> = {
 
 const ALL_TYPES: UserType[] = ["real_user", "seed_test", "beta_tester"];
 
+const MIKE_EMAIL = "mikebelokur8@gmail.com";
+
 export default function AdminUsers() {
   const { t } = useLanguage();
   const { toast } = useToast();
   const qc = useQueryClient();
+  const { user: me } = useAuth();
 
   const [filter, setFilter] = useState<"all" | UserType>("all");
   const [search, setSearch] = useState("");
@@ -212,30 +216,42 @@ export default function AdminUsers() {
                   </div>
 
                   {/* Type selector */}
-                  <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                    <span
-                      className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                      style={{ color: typeStyle.color, background: typeStyle.bg, border: `1px solid ${typeStyle.border}` }}
-                    >
-                      {t(`userSegmentation.typeLabel.${user.userType}`)}
-                    </span>
-                    <div className="flex gap-1">
-                      {ALL_TYPES.filter(t => t !== user.userType).map(newType => (
-                        <button
-                          key={newType}
-                          onClick={() => setConfirmTarget({ user, newType })}
-                          className="text-xs px-2 py-0.5 rounded-full transition-all hover:opacity-100 opacity-50"
-                          style={{
-                            color: TYPE_STYLES[newType].color,
-                            background: TYPE_STYLES[newType].bg,
-                            border: `1px solid ${TYPE_STYLES[newType].border}`,
-                          }}
+                  {(() => {
+                    const isReadOnly = me?.role === "player" && me?.email === MIKE_EMAIL;
+                    return (
+                      <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                        <span
+                          className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                          style={{ color: typeStyle.color, background: typeStyle.bg, border: `1px solid ${typeStyle.border}` }}
                         >
-                          → {t(`userSegmentation.typeLabel.${newType}`)}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                          {t(`userSegmentation.typeLabel.${user.userType}`)}
+                        </span>
+                        {!isReadOnly && (
+                          <div className="flex gap-1">
+                            {ALL_TYPES.filter(tp => tp !== user.userType).map(newType => (
+                              <button
+                                key={newType}
+                                onClick={() => setConfirmTarget({ user, newType })}
+                                className="text-xs px-2 py-0.5 rounded-full transition-all hover:opacity-100 opacity-50"
+                                style={{
+                                  color: TYPE_STYLES[newType].color,
+                                  background: TYPE_STYLES[newType].bg,
+                                  border: `1px solid ${TYPE_STYLES[newType].border}`,
+                                }}
+                              >
+                                → {t(`userSegmentation.typeLabel.${newType}`)}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {isReadOnly && (
+                          <span className="text-xs opacity-40" style={{ color: "rgba(255,255,255,0.4)" }}>
+                            view only
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })}

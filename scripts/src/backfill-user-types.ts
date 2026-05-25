@@ -1,10 +1,13 @@
 /**
- * Deterministic backfill of user_type for named accounts.
+ * Deterministic backfill of user_type per task #115 named-account mapping.
  *
- * Explicit mapping per task #115:
- *   seed_test   — Anna K, Marina S, Sergey V, Dmitry P, Olga R, Alex M, Karim H, Yulia T, Veron K
- *   beta_tester — Vlad (email-first lookup; falls back to name ILIKE if email unknown)
- *   real_user   — everyone else (default; also re-set explicitly for known real accounts)
+ * Exact assignment:
+ *   real_user   — Tamara, Lena, Daniel, Александр, Mike
+ *   seed_test   — Anna K, Marina S, Olga R, Sergey, Dmitry, Alex, Karim, Yulia
+ *   beta_tester — Vlad
+ *
+ * Lookup is email-first (if email is known), otherwise name ILIKE.
+ * Accounts not in any list stay at the DB default ('real_user').
  *
  * Safe to re-run idempotently.
  * Run:  pnpm --filter @workspace/scripts run backfill-user-types
@@ -14,92 +17,78 @@ import pg from "pg";
 
 const { Pool } = pg;
 
-const SEED_TEST_EMAILS = [
-  "anna.k@test.com",
-  "marina.s@test.com",
-  "sergey.v@test.com",
-  "dmitry.p@test.com",
-  "olga.r@test.com",
-  "alex.m@test.com",
-  "karim.h@test.com",
-  "yulia.t@test.com",
-  "veron.k@test.com",
+interface Account {
+  nameLike: string;        // ILIKE pattern for name-based fallback
+  email?: string;          // preferred exact email lookup
+}
+
+const REAL_USER_ACCOUNTS: Account[] = [
+  { nameLike: "%tamara%"      },
+  { nameLike: "%lena%"        },
+  { nameLike: "%daniel%",      email: "macho21bee@gmail.com" },
+  { nameLike: "%александр%"   },
+  { nameLike: "%mike%",        email: "mikebelokur8@gmail.com" },
 ];
 
-// Vlad's exact email once known — add here and remove name fallback
-const VLAD_EMAIL: string | null = null;
-
-const REAL_USER_EMAILS = [
-  "misha.belokur@gmail.com",
-  "mikebelokur8@gmail.com",
-  "oleg.ilin@email.com",
-  "admin@padelconcierge.com",
-  "coach@padelconcierge.com",
-  "player@padelconcierge.com",
-  "macho21bee@gmail.com",
+const SEED_TEST_ACCOUNTS: Account[] = [
+  { nameLike: "%anna k%",    email: "anna.k@test.com"    },
+  { nameLike: "%marina s%",  email: "marina.s@test.com"  },
+  { nameLike: "%olga r%",    email: "olga.r@test.com"    },
+  { nameLike: "%sergey%",    email: "sergey.v@test.com"  },
+  { nameLike: "%dmitry%",    email: "dmitry.p@test.com"  },
+  { nameLike: "%alex m%",    email: "alex.m@test.com"    },
+  { nameLike: "%karim%",     email: "karim.h@test.com"   },
+  { nameLike: "%yulia%",     email: "yulia.t@test.com"   },
 ];
 
-async function upsertByEmail(pool: pg.Pool, email: string, type: string): Promise<boolean> {
-  const r = await pool.query(
-    `UPDATE users SET user_type = $1 WHERE email = $2 RETURNING id, name`,
-    [type, email]
-  );
-  if (r.rowCount && r.rowCount > 0) {
-    console.log(`  [${type}] ✓ ${r.rows[0].name} <${email}>`);
-    return true;
+const BETA_TESTER_ACCOUNTS: Account[] = [
+  { nameLike: "%vlad%" },  // email unknown until account is created
+];
+
+async function backfillAccount(pool: pg.Pool, account: Account, type: string): Promise<void> {
+  let result: pg.QueryResult | null = null;
+
+  if (account.email) {
+    result = await pool.query(
+      `UPDATE users SET user_type = $1 WHERE email = $2 RETURNING id, name, email`,
+      [type, account.email]
+    );
+    if (result.rowCount && result.rowCount > 0) {
+      console.log(`  [${type}] ✓ email  ${result.rows[0].name} <${account.email}>`);
+      return;
+    }
   }
-  console.log(`  [${type}] ? NOT FOUND by email: ${email}`);
-  return false;
+
+  // Fallback: name ILIKE
+  result = await pool.query(
+    `UPDATE users SET user_type = $1 WHERE name ILIKE $2 RETURNING id, name, email`,
+    [type, account.nameLike]
+  );
+  if (result.rowCount && result.rowCount > 0) {
+    for (const row of result.rows) {
+      console.log(`  [${type}] ✓ name   ${row.name} <${row.email}>`);
+    }
+  } else {
+    console.log(`  [${type}] ? NOT FOUND  pattern="${account.nameLike}"${account.email ? ` email="${account.email}"` : ""}`);
+  }
 }
 
 async function main() {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
   try {
-    console.log("=== Backfill user_type ===\n");
+    console.log("=== Backfill user_type (task #115 named accounts) ===\n");
 
-    // 1. real_user — explicitly named real accounts
     console.log("→ real_user");
-    for (const email of REAL_USER_EMAILS) await upsertByEmail(pool, email, "real_user");
+    for (const a of REAL_USER_ACCOUNTS) await backfillAccount(pool, a, "real_user");
 
-    // 2. seed_test — explicit list by email
     console.log("\n→ seed_test");
-    for (const email of SEED_TEST_EMAILS) await upsertByEmail(pool, email, "seed_test");
+    for (const a of SEED_TEST_ACCOUNTS) await backfillAccount(pool, a, "seed_test");
 
-    // 3. beta_tester — Vlad: email-first, then name fallback
     console.log("\n→ beta_tester");
-    let vladDone = false;
-    if (VLAD_EMAIL) {
-      vladDone = await upsertByEmail(pool, VLAD_EMAIL, "beta_tester");
-    }
-    if (!vladDone) {
-      // Name-based fallback for Vlad until email is confirmed
-      const r = await pool.query(
-        `UPDATE users SET user_type = 'beta_tester' WHERE name ILIKE '%vlad%' RETURNING id, name, email`
-      );
-      if (r.rowCount && r.rowCount > 0) {
-        for (const row of r.rows) {
-          console.log(`  [beta_tester] ✓ (by name) ${row.name} <${row.email}>`);
-        }
-      } else {
-        console.log("  [beta_tester] Vlad not yet in DB — will be set on account creation");
-      }
-    }
+    for (const a of BETA_TESTER_ACCOUNTS) await backfillAccount(pool, a, "beta_tester");
 
-    // 4. Catch-all: any remaining @test.com accounts not already in seed list → seed_test
-    const catchAll = await pool.query(
-      `UPDATE users SET user_type = 'seed_test'
-       WHERE email LIKE '%@test.com'
-         AND email NOT IN (${SEED_TEST_EMAILS.map((_, i) => `$${i + 1}`).join(",")})
-       RETURNING id, name, email`,
-      SEED_TEST_EMAILS
-    );
-    if (catchAll.rowCount && catchAll.rowCount > 0) {
-      console.log(`\n→ seed_test (catch-all @test.com): ${catchAll.rowCount} extra`);
-      for (const row of catchAll.rows) console.log(`  ${row.name} <${row.email}>`);
-    }
-
-    // Summary
+    // Verification summary
     const counts = await pool.query(
       `SELECT user_type, count(*)::int AS n FROM users GROUP BY user_type ORDER BY user_type`
     );

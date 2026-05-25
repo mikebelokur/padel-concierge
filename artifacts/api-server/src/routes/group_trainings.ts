@@ -7,6 +7,12 @@ import {
   activityLogsTable,
 } from "@workspace/db";
 import { and, eq, gte, lte, ne, sql, desc, inArray } from "drizzle-orm";
+import { z } from "zod/v4";
+import {
+  CreateGroupTrainingBody,
+  UpdateGroupTrainingBody,
+  ListGroupTrainingsQueryParams,
+} from "@workspace/api-zod";
 import { requireAuth } from "../middleware/auth";
 
 const router: IRouter = Router();
@@ -16,6 +22,8 @@ const CATEGORIES = ["D-", "D", "D+", "C-", "C", "C+", "B-"] as const;
 const CATEGORY_INDEX: Record<string, number> = Object.fromEntries(
   CATEGORIES.map((c, i) => [c, i]),
 );
+
+const UuidSchema = z.string().uuid();
 
 function isCoachRole(role: string): boolean {
   return ["coach", "admin", "owner"].includes(role);
@@ -33,6 +41,11 @@ function canManageTraining(
   if (isAdminRole(role)) return true;
   if (role === "coach" && training.coachId === authUserId) return true;
   return false;
+}
+
+function parseId(raw: unknown): string | null {
+  const parsed = UuidSchema.safeParse(raw);
+  return parsed.success ? parsed.data : null;
 }
 
 function serializeTraining(
@@ -61,7 +74,19 @@ function serializeTraining(
   };
 }
 
-async function countActiveBookings(trainingId: number): Promise<number> {
+function serializeBooking(b: typeof trainingBookingsTable.$inferSelect) {
+  return {
+    id: b.id,
+    trainingId: b.trainingId,
+    userId: b.userId,
+    status: b.status,
+    bookedAt: b.bookedAt.toISOString(),
+    cancelledAt: b.cancelledAt ? b.cancelledAt.toISOString() : null,
+    createdAt: b.createdAt.toISOString(),
+  };
+}
+
+async function countActiveBookings(trainingId: string): Promise<number> {
   const rows = await db
     .select({ id: trainingBookingsTable.id })
     .from(trainingBookingsTable)
@@ -74,7 +99,7 @@ async function countActiveBookings(trainingId: number): Promise<number> {
   return rows.length;
 }
 
-async function bookedCountsFor(ids: number[]): Promise<Record<number, number>> {
+async function bookedCountsFor(ids: string[]): Promise<Record<string, number>> {
   if (ids.length === 0) return {};
   const rows = await db
     .select({
@@ -89,7 +114,7 @@ async function bookedCountsFor(ids: number[]): Promise<Record<number, number>> {
       ),
     )
     .groupBy(trainingBookingsTable.trainingId);
-  const map: Record<number, number> = {};
+  const map: Record<string, number> = {};
   for (const r of rows) map[r.trainingId] = Number(r.count);
   return map;
 }
@@ -99,20 +124,23 @@ router.get("/group-trainings", async (req, res): Promise<void> => {
   const role: string = (req as any).auth.role;
   const authUserId: number = (req as any).auth.userId;
 
-  const fromParam = req.query.from ? new Date(String(req.query.from)) : null;
-  const toParam = req.query.to ? new Date(String(req.query.to)) : null;
-  const categoryParam = req.query.category ? String(req.query.category) : null;
+  const qparsed = ListGroupTrainingsQueryParams.safeParse(req.query);
+  if (!qparsed.success) {
+    res.status(400).json({ error: "Invalid query", details: qparsed.error.issues });
+    return;
+  }
+  const { from, to, category } = qparsed.data;
 
   const conds = [];
-  if (fromParam && !Number.isNaN(fromParam.getTime())) {
-    conds.push(gte(groupTrainingsTable.dateTime, fromParam));
+  if (from) {
+    const d = new Date(from);
+    if (!Number.isNaN(d.getTime())) conds.push(gte(groupTrainingsTable.dateTime, d));
   }
-  if (toParam && !Number.isNaN(toParam.getTime())) {
-    conds.push(lte(groupTrainingsTable.dateTime, toParam));
+  if (to) {
+    const d = new Date(to);
+    if (!Number.isNaN(d.getTime())) conds.push(lte(groupTrainingsTable.dateTime, d));
   }
-  if (categoryParam) {
-    conds.push(eq(groupTrainingsTable.category, categoryParam));
-  }
+  if (category) conds.push(eq(groupTrainingsTable.category, category));
 
   let rows = await db
     .select()
@@ -120,8 +148,6 @@ router.get("/group-trainings", async (req, res): Promise<void> => {
     .where(conds.length ? and(...conds) : undefined)
     .orderBy(groupTrainingsTable.dateTime);
 
-  // Non-coach visibility: only future trainings up to 2 days ahead, status open/full,
-  // and within category-level rule (training category <= player level).
   if (!isCoachRole(role)) {
     const [me] = await db
       .select({ level: usersTable.level })
@@ -170,13 +196,7 @@ router.get("/group-trainings/me/bookings", async (req, res): Promise<void> => {
         const t = trainingMap.get(b.trainingId);
         if (!t) return null;
         return {
-          id: b.id,
-          trainingId: b.trainingId,
-          userId: b.userId,
-          status: b.status,
-          bookedAt: b.bookedAt.toISOString(),
-          cancelledAt: b.cancelledAt ? b.cancelledAt.toISOString() : null,
-          createdAt: b.createdAt.toISOString(),
+          ...serializeBooking(b),
           training: serializeTraining(t, counts[t.id] ?? 0),
         };
       })
@@ -186,9 +206,9 @@ router.get("/group-trainings/me/bookings", async (req, res): Promise<void> => {
 
 // ─── DETAIL ───────────────────────────────────────────────────────────────────
 router.get("/group-trainings/:id", async (req, res): Promise<void> => {
-  const id = parseInt(String(req.params.id), 10);
-  if (Number.isNaN(id)) {
-    res.status(400).json({ error: "Invalid id" });
+  const id = parseId(req.params.id);
+  if (!id) {
+    res.status(400).json({ error: "Invalid id (uuid expected)" });
     return;
   }
   const [t] = await db
@@ -211,20 +231,20 @@ router.post("/group-trainings", async (req, res): Promise<void> => {
     return;
   }
 
-  const b = req.body ?? {};
-  if (!b.dateTime || !b.category || !b.courtName || b.priceAed === undefined) {
-    res
-      .status(400)
-      .json({ error: "dateTime, category, courtName, priceAed required" });
+  const parsed = CreateGroupTrainingBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid body", details: parsed.error.issues });
     return;
   }
-  if (!CATEGORIES.includes(b.category)) {
-    res.status(400).json({ error: "Invalid category" });
-    return;
-  }
+  const b = parsed.data;
+
   const dt = new Date(b.dateTime);
   if (Number.isNaN(dt.getTime())) {
     res.status(400).json({ error: "Invalid dateTime" });
+    return;
+  }
+  if (!CATEGORIES.includes(b.category as (typeof CATEGORIES)[number])) {
+    res.status(400).json({ error: "Invalid category" });
     return;
   }
 
@@ -259,9 +279,9 @@ router.patch("/group-trainings/:id", async (req, res): Promise<void> => {
     res.status(403).json({ error: "Coach or admin only" });
     return;
   }
-  const id = parseInt(String(req.params.id), 10);
-  if (Number.isNaN(id)) {
-    res.status(400).json({ error: "Invalid id" });
+  const id = parseId(req.params.id);
+  if (!id) {
+    res.status(400).json({ error: "Invalid id (uuid expected)" });
     return;
   }
 
@@ -278,7 +298,13 @@ router.patch("/group-trainings/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const b = req.body ?? {};
+  const parsed = UpdateGroupTrainingBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid body", details: parsed.error.issues });
+    return;
+  }
+  const b = parsed.data;
+
   const update: Record<string, unknown> = { updatedAt: new Date() };
   if (b.dateTime !== undefined) {
     const dt = new Date(b.dateTime);
@@ -289,36 +315,20 @@ router.patch("/group-trainings/:id", async (req, res): Promise<void> => {
     update.dateTime = dt;
   }
   if (b.durationMinutes !== undefined) update.durationMinutes = b.durationMinutes;
-  if (b.category !== undefined) {
-    if (!CATEGORIES.includes(b.category)) {
-      res.status(400).json({ error: "Invalid category" });
-      return;
-    }
-    update.category = b.category;
-  }
+  if (b.category !== undefined) update.category = b.category;
   if (b.courtName !== undefined) update.courtName = b.courtName;
   if (b.courtAddress !== undefined) update.courtAddress = b.courtAddress;
   if (b.maxParticipants !== undefined) update.maxParticipants = b.maxParticipants;
   if (b.priceAed !== undefined) update.priceAed = String(b.priceAed);
   if (b.descriptionEn !== undefined) update.descriptionEn = b.descriptionEn;
   if (b.descriptionRu !== undefined) update.descriptionRu = b.descriptionRu;
-  if (b.status !== undefined) {
-    if (!["open", "full", "cancelled", "completed"].includes(b.status)) {
-      res.status(400).json({ error: "Invalid status" });
-      return;
-    }
-    update.status = b.status;
-  }
+  if (b.status !== undefined) update.status = b.status;
 
   const [row] = await db
     .update(groupTrainingsTable)
     .set(update)
     .where(eq(groupTrainingsTable.id, id))
     .returning();
-  if (!row) {
-    res.status(404).json({ error: "Not found" });
-    return;
-  }
   res.json(serializeTraining(row, await countActiveBookings(id)));
 });
 
@@ -330,9 +340,9 @@ router.delete("/group-trainings/:id", async (req, res): Promise<void> => {
     res.status(403).json({ error: "Coach or admin only" });
     return;
   }
-  const id = parseInt(String(req.params.id), 10);
-  if (Number.isNaN(id)) {
-    res.status(400).json({ error: "Invalid id" });
+  const id = parseId(req.params.id);
+  if (!id) {
+    res.status(400).json({ error: "Invalid id (uuid expected)" });
     return;
   }
   const [existing] = await db
@@ -353,7 +363,6 @@ router.delete("/group-trainings/:id", async (req, res): Promise<void> => {
     .where(eq(groupTrainingsTable.id, id))
     .returning();
 
-  // Cancel all active bookings (notification handled in task #5).
   await db
     .update(trainingBookingsTable)
     .set({ status: "cancelled", cancelledAt: new Date() })
@@ -371,9 +380,9 @@ router.delete("/group-trainings/:id", async (req, res): Promise<void> => {
 // ─── BOOK ─────────────────────────────────────────────────────────────────────
 router.post("/group-trainings/:id/book", async (req, res): Promise<void> => {
   const authUserId: number = (req as any).auth.userId;
-  const id = parseInt(String(req.params.id), 10);
-  if (Number.isNaN(id)) {
-    res.status(400).json({ error: "Invalid id" });
+  const id = parseId(req.params.id);
+  if (!id) {
+    res.status(400).json({ error: "Invalid id (uuid expected)" });
     return;
   }
 
@@ -385,12 +394,7 @@ router.post("/group-trainings/:id/book", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Not found" });
     return;
   }
-  if (training.status === "cancelled" || training.status === "completed") {
-    res.status(409).json({ error: "Training is not bookable", full: false });
-    return;
-  }
 
-  // Category-level rule (no override flag yet).
   const [me] = await db
     .select({ level: usersTable.level, name: usersTable.name })
     .from(usersTable)
@@ -408,7 +412,6 @@ router.post("/group-trainings/:id/book", async (req, res): Promise<void> => {
     return;
   }
 
-  // Transactionally lock the training row, re-check capacity, and insert.
   const txResult = await db.transaction(async (tx) => {
     const locked = await tx.execute(
       sql`SELECT id, max_participants, status FROM group_trainings WHERE id = ${id} FOR UPDATE`,
@@ -483,31 +486,22 @@ router.post("/group-trainings/:id/book", async (req, res): Promise<void> => {
     return;
   }
 
-  const booking = txResult.booking;
   await db.insert(activityLogsTable).values({
     userId: authUserId,
     userName: me.name,
     action: "training_booked",
-    details: `Booked group training #${id} (${training.category})`,
+    details: `Booked group training ${id} (${training.category})`,
   });
 
-  res.status(201).json({
-    id: booking.id,
-    trainingId: booking.trainingId,
-    userId: booking.userId,
-    status: booking.status,
-    bookedAt: booking.bookedAt.toISOString(),
-    cancelledAt: booking.cancelledAt ? booking.cancelledAt.toISOString() : null,
-    createdAt: booking.createdAt.toISOString(),
-  });
+  res.status(201).json(serializeBooking(txResult.booking));
 });
 
 // ─── CANCEL OWN BOOKING ───────────────────────────────────────────────────────
 router.delete("/group-trainings/:id/booking", async (req, res): Promise<void> => {
   const authUserId: number = (req as any).auth.userId;
-  const id = parseInt(String(req.params.id), 10);
-  if (Number.isNaN(id)) {
-    res.status(400).json({ error: "Invalid id" });
+  const id = parseId(req.params.id);
+  if (!id) {
+    res.status(400).json({ error: "Invalid id (uuid expected)" });
     return;
   }
 
@@ -550,16 +544,7 @@ router.delete("/group-trainings/:id/booking", async (req, res): Promise<void> =>
     res.status(404).json({ error: "No active booking" });
     return;
   }
-  const row = txResult.row;
-  res.json({
-    id: row.id,
-    trainingId: row.trainingId,
-    userId: row.userId,
-    status: row.status,
-    bookedAt: row.bookedAt.toISOString(),
-    cancelledAt: row.cancelledAt ? row.cancelledAt.toISOString() : null,
-    createdAt: row.createdAt.toISOString(),
-  });
+  res.json(serializeBooking(txResult.row));
 });
 
 // ─── COACH VIEW OF BOOKINGS ───────────────────────────────────────────────────
@@ -570,9 +555,9 @@ router.get("/group-trainings/:id/bookings", async (req, res): Promise<void> => {
     res.status(403).json({ error: "Coach or admin only" });
     return;
   }
-  const id = parseInt(String(req.params.id), 10);
-  if (Number.isNaN(id)) {
-    res.status(400).json({ error: "Invalid id" });
+  const id = parseId(req.params.id);
+  if (!id) {
+    res.status(400).json({ error: "Invalid id (uuid expected)" });
     return;
   }
 
@@ -615,13 +600,7 @@ router.get("/group-trainings/:id/bookings", async (req, res): Promise<void> => {
     rows.map((r) => {
       const p = playerMap.get(r.userId);
       return {
-        id: r.id,
-        trainingId: r.trainingId,
-        userId: r.userId,
-        status: r.status,
-        bookedAt: r.bookedAt.toISOString(),
-        cancelledAt: r.cancelledAt ? r.cancelledAt.toISOString() : null,
-        createdAt: r.createdAt.toISOString(),
+        ...serializeBooking(r),
         player: p
           ? {
               id: p.id,

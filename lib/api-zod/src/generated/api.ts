@@ -1248,7 +1248,7 @@ export const ListGroupTrainingsQueryParams = zod.object({
 });
 
 export const ListGroupTrainingsResponseItem = zod.object({
-  id: zod.number(),
+  id: zod.string().uuid(),
   coachId: zod.number(),
   dateTime: zod.string(),
   durationMinutes: zod.number(),
@@ -1261,7 +1261,7 @@ export const ListGroupTrainingsResponseItem = zod.object({
   descriptionRu: zod.string().nullish(),
   status: zod.enum(["open", "full", "cancelled", "completed"]),
   isRecurring: zod.boolean(),
-  recurringSeriesId: zod.number().nullish(),
+  recurringSeriesId: zod.string().uuid().nullish(),
   recurringPattern: zod.string().nullish(),
   bookedCount: zod.number(),
   createdAt: zod.string(),
@@ -1292,15 +1292,15 @@ export const CreateGroupTrainingBody = zod.object({
  * @summary List current user's training bookings (upcoming + past)
  */
 export const ListMyTrainingBookingsResponseItem = zod.object({
-  id: zod.number(),
-  trainingId: zod.number(),
+  id: zod.string().uuid(),
+  trainingId: zod.string().uuid(),
   userId: zod.number(),
   status: zod.string(),
   bookedAt: zod.string(),
   cancelledAt: zod.string().nullish(),
   createdAt: zod.string(),
   training: zod.object({
-    id: zod.number(),
+    id: zod.string().uuid(),
     coachId: zod.number(),
     dateTime: zod.string(),
     durationMinutes: zod.number(),
@@ -1313,7 +1313,7 @@ export const ListMyTrainingBookingsResponseItem = zod.object({
     descriptionRu: zod.string().nullish(),
     status: zod.enum(["open", "full", "cancelled", "completed"]),
     isRecurring: zod.boolean(),
-    recurringSeriesId: zod.number().nullish(),
+    recurringSeriesId: zod.string().uuid().nullish(),
     recurringPattern: zod.string().nullish(),
     bookedCount: zod.number(),
     createdAt: zod.string(),
@@ -1328,11 +1328,11 @@ export const ListMyTrainingBookingsResponse = zod.array(
  * @summary Get group training detail
  */
 export const GetGroupTrainingParams = zod.object({
-  id: zod.coerce.number(),
+  id: zod.coerce.string().uuid(),
 });
 
 export const GetGroupTrainingResponse = zod.object({
-  id: zod.number(),
+  id: zod.string().uuid(),
   coachId: zod.number(),
   dateTime: zod.string(),
   durationMinutes: zod.number(),
@@ -1345,7 +1345,7 @@ export const GetGroupTrainingResponse = zod.object({
   descriptionRu: zod.string().nullish(),
   status: zod.enum(["open", "full", "cancelled", "completed"]),
   isRecurring: zod.boolean(),
-  recurringSeriesId: zod.number().nullish(),
+  recurringSeriesId: zod.string().uuid().nullish(),
   recurringPattern: zod.string().nullish(),
   bookedCount: zod.number(),
   createdAt: zod.string(),
@@ -1356,7 +1356,7 @@ export const GetGroupTrainingResponse = zod.object({
  * @summary Update group training (coach/admin)
  */
 export const UpdateGroupTrainingParams = zod.object({
-  id: zod.coerce.number(),
+  id: zod.coerce.string().uuid(),
 });
 
 export const UpdateGroupTrainingBody = zod.object({
@@ -1373,7 +1373,7 @@ export const UpdateGroupTrainingBody = zod.object({
 });
 
 export const UpdateGroupTrainingResponse = zod.object({
-  id: zod.number(),
+  id: zod.string().uuid(),
   coachId: zod.number(),
   dateTime: zod.string(),
   durationMinutes: zod.number(),
@@ -1386,7 +1386,7 @@ export const UpdateGroupTrainingResponse = zod.object({
   descriptionRu: zod.string().nullish(),
   status: zod.enum(["open", "full", "cancelled", "completed"]),
   isRecurring: zod.boolean(),
-  recurringSeriesId: zod.number().nullish(),
+  recurringSeriesId: zod.string().uuid().nullish(),
   recurringPattern: zod.string().nullish(),
   bookedCount: zod.number(),
   createdAt: zod.string(),
@@ -1397,11 +1397,11 @@ export const UpdateGroupTrainingResponse = zod.object({
  * @summary Cancel a group training (coach/admin)
  */
 export const CancelGroupTrainingParams = zod.object({
-  id: zod.coerce.number(),
+  id: zod.coerce.string().uuid(),
 });
 
 export const CancelGroupTrainingResponse = zod.object({
-  id: zod.number(),
+  id: zod.string().uuid(),
   coachId: zod.number(),
   dateTime: zod.string(),
   durationMinutes: zod.number(),
@@ -1414,7 +1414,7 @@ export const CancelGroupTrainingResponse = zod.object({
   descriptionRu: zod.string().nullish(),
   status: zod.enum(["open", "full", "cancelled", "completed"]),
   isRecurring: zod.boolean(),
-  recurringSeriesId: zod.number().nullish(),
+  recurringSeriesId: zod.string().uuid().nullish(),
   recurringPattern: zod.string().nullish(),
   bookedCount: zod.number(),
   createdAt: zod.string(),
@@ -1425,19 +1425,19 @@ export const CancelGroupTrainingResponse = zod.object({
  * @summary Book a spot in a group training
  */
 export const BookGroupTrainingParams = zod.object({
-  id: zod.coerce.number(),
+  id: zod.coerce.string().uuid(),
 });
 
 /**
  * @summary Cancel current user's booking for a training
  */
 export const CancelMyTrainingBookingParams = zod.object({
-  id: zod.coerce.number(),
+  id: zod.coerce.string().uuid(),
 });
 
 export const CancelMyTrainingBookingResponse = zod.object({
-  id: zod.number(),
-  trainingId: zod.number(),
+  id: zod.string().uuid(),
+  trainingId: zod.string().uuid(),
   userId: zod.number(),
   status: zod.enum(["booked", "cancelled", "attended", "no_show"]),
   bookedAt: zod.string(),
@@ -1449,25 +1449,30 @@ export const CancelMyTrainingBookingResponse = zod.object({
  * @summary List bookings for a training (coach/admin view)
  */
 export const ListGroupTrainingBookingsParams = zod.object({
-  id: zod.coerce.number(),
+  id: zod.coerce.string().uuid(),
 });
 
 export const ListGroupTrainingBookingsResponseItem = zod.object({
-  id: zod.number(),
-  trainingId: zod.number(),
+  id: zod.string().uuid(),
+  trainingId: zod.string().uuid(),
   userId: zod.number(),
   status: zod.string(),
   bookedAt: zod.string(),
   cancelledAt: zod.string().nullish(),
   createdAt: zod.string(),
-  player: zod.object({
-    id: zod.number(),
-    name: zod.string(),
-    email: zod.string(),
-    phone: zod.string(),
-    level: zod.string(),
-    avatar: zod.string().nullish(),
-  }),
+  player: zod
+    .union([
+      zod.object({
+        id: zod.number(),
+        name: zod.string(),
+        email: zod.string(),
+        phone: zod.string(),
+        level: zod.string(),
+        avatar: zod.string().nullish(),
+      }),
+      zod.null(),
+    ])
+    .optional(),
 });
 export const ListGroupTrainingBookingsResponse = zod.array(
   ListGroupTrainingBookingsResponseItem,

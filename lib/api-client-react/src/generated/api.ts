@@ -3137,12 +3137,12 @@ export function useListMyTrainingBookings<
 /**
  * @summary Get group training detail
  */
-export const getGetGroupTrainingUrl = (id: number) => {
+export const getGetGroupTrainingUrl = (id: string) => {
   return `/api/group-trainings/${id}`;
 };
 
 export const getGroupTraining = async (
-  id: number,
+  id: string,
   options?: RequestInit,
 ): Promise<GroupTraining> => {
   return customFetch<GroupTraining>(getGetGroupTrainingUrl(id), {
@@ -3151,7 +3151,7 @@ export const getGroupTraining = async (
   });
 };
 
-export const getGetGroupTrainingQueryKey = (id: number) => {
+export const getGetGroupTrainingQueryKey = (id: string) => {
   return [`/api/group-trainings/${id}`] as const;
 };
 
@@ -3159,7 +3159,7 @@ export const getGetGroupTrainingQueryOptions = <
   TData = Awaited<ReturnType<typeof getGroupTraining>>,
   TError = ErrorType<void>,
 >(
-  id: number,
+  id: string,
   options?: {
     query?: UseQueryOptions<
       Awaited<ReturnType<typeof getGroupTraining>>,
@@ -3202,7 +3202,7 @@ export function useGetGroupTraining<
   TData = Awaited<ReturnType<typeof getGroupTraining>>,
   TError = ErrorType<void>,
 >(
-  id: number,
+  id: string,
   options?: {
     query?: UseQueryOptions<
       Awaited<ReturnType<typeof getGroupTraining>>,
@@ -3224,12 +3224,12 @@ export function useGetGroupTraining<
 /**
  * @summary Update group training (coach/admin)
  */
-export const getUpdateGroupTrainingUrl = (id: number) => {
+export const getUpdateGroupTrainingUrl = (id: string) => {
   return `/api/group-trainings/${id}`;
 };
 
 export const updateGroupTraining = async (
-  id: number,
+  id: string,
   updateGroupTrainingBody: UpdateGroupTrainingBody,
   options?: RequestInit,
 ): Promise<GroupTraining> => {
@@ -3248,14 +3248,14 @@ export const getUpdateGroupTrainingMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof updateGroupTraining>>,
     TError,
-    { id: number; data: BodyType<UpdateGroupTrainingBody> },
+    { id: string; data: BodyType<UpdateGroupTrainingBody> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof updateGroupTraining>>,
   TError,
-  { id: number; data: BodyType<UpdateGroupTrainingBody> },
+  { id: string; data: BodyType<UpdateGroupTrainingBody> },
   TContext
 > => {
   const mutationKey = ["updateGroupTraining"];
@@ -3269,7 +3269,7 @@ export const getUpdateGroupTrainingMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof updateGroupTraining>>,
-    { id: number; data: BodyType<UpdateGroupTrainingBody> }
+    { id: string; data: BodyType<UpdateGroupTrainingBody> }
   > = (props) => {
     const { id, data } = props ?? {};
 
@@ -3295,14 +3295,14 @@ export const useUpdateGroupTraining = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof updateGroupTraining>>,
     TError,
-    { id: number; data: BodyType<UpdateGroupTrainingBody> },
+    { id: string; data: BodyType<UpdateGroupTrainingBody> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof updateGroupTraining>>,
   TError,
-  { id: number; data: BodyType<UpdateGroupTrainingBody> },
+  { id: string; data: BodyType<UpdateGroupTrainingBody> },
   TContext
 > => {
   return useMutation(getUpdateGroupTrainingMutationOptions(options));
@@ -3311,12 +3311,12 @@ export const useUpdateGroupTraining = <
 /**
  * @summary Cancel a group training (coach/admin)
  */
-export const getCancelGroupTrainingUrl = (id: number) => {
+export const getCancelGroupTrainingUrl = (id: string) => {
   return `/api/group-trainings/${id}`;
 };
 
 export const cancelGroupTraining = async (
-  id: number,
+  id: string,
   options?: RequestInit,
 ): Promise<GroupTraining> => {
   return customFetch<GroupTraining>(getCancelGroupTrainingUrl(id), {
@@ -3332,14 +3332,14 @@ export const getCancelGroupTrainingMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof cancelGroupTraining>>,
     TError,
-    { id: number },
+    { id: string },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof cancelGroupTraining>>,
   TError,
-  { id: number },
+  { id: string },
   TContext
 > => {
   const mutationKey = ["cancelGroupTraining"];
@@ -3353,7 +3353,7 @@ export const getCancelGroupTrainingMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof cancelGroupTraining>>,
-    { id: number }
+    { id: string }
   > = (props) => {
     const { id } = props ?? {};
 
@@ -3379,14 +3379,14 @@ export const useCancelGroupTraining = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof cancelGroupTraining>>,
     TError,
-    { id: number },
+    { id: string },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof cancelGroupTraining>>,
   TError,
-  { id: number },
+  { id: string },
   TContext
 > => {
   return useMutation(getCancelGroupTrainingMutationOptions(options));
@@ -3395,12 +3395,12 @@ export const useCancelGroupTraining = <
 /**
  * @summary Book a spot in a group training
  */
-export const getBookGroupTrainingUrl = (id: number) => {
+export const getBookGroupTrainingUrl = (id: string) => {
   return `/api/group-trainings/${id}/book`;
 };
 
 export const bookGroupTraining = async (
-  id: number,
+  id: string,
   options?: RequestInit,
 ): Promise<TrainingBooking> => {
   return customFetch<TrainingBooking>(getBookGroupTrainingUrl(id), {
@@ -3416,14 +3416,14 @@ export const getBookGroupTrainingMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof bookGroupTraining>>,
     TError,
-    { id: number },
+    { id: string },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof bookGroupTraining>>,
   TError,
-  { id: number },
+  { id: string },
   TContext
 > => {
   const mutationKey = ["bookGroupTraining"];
@@ -3437,7 +3437,7 @@ export const getBookGroupTrainingMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof bookGroupTraining>>,
-    { id: number }
+    { id: string }
   > = (props) => {
     const { id } = props ?? {};
 
@@ -3463,14 +3463,14 @@ export const useBookGroupTraining = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof bookGroupTraining>>,
     TError,
-    { id: number },
+    { id: string },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof bookGroupTraining>>,
   TError,
-  { id: number },
+  { id: string },
   TContext
 > => {
   return useMutation(getBookGroupTrainingMutationOptions(options));
@@ -3479,12 +3479,12 @@ export const useBookGroupTraining = <
 /**
  * @summary Cancel current user's booking for a training
  */
-export const getCancelMyTrainingBookingUrl = (id: number) => {
+export const getCancelMyTrainingBookingUrl = (id: string) => {
   return `/api/group-trainings/${id}/booking`;
 };
 
 export const cancelMyTrainingBooking = async (
-  id: number,
+  id: string,
   options?: RequestInit,
 ): Promise<TrainingBooking> => {
   return customFetch<TrainingBooking>(getCancelMyTrainingBookingUrl(id), {
@@ -3500,14 +3500,14 @@ export const getCancelMyTrainingBookingMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof cancelMyTrainingBooking>>,
     TError,
-    { id: number },
+    { id: string },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof cancelMyTrainingBooking>>,
   TError,
-  { id: number },
+  { id: string },
   TContext
 > => {
   const mutationKey = ["cancelMyTrainingBooking"];
@@ -3521,7 +3521,7 @@ export const getCancelMyTrainingBookingMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof cancelMyTrainingBooking>>,
-    { id: number }
+    { id: string }
   > = (props) => {
     const { id } = props ?? {};
 
@@ -3547,14 +3547,14 @@ export const useCancelMyTrainingBooking = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof cancelMyTrainingBooking>>,
     TError,
-    { id: number },
+    { id: string },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof cancelMyTrainingBooking>>,
   TError,
-  { id: number },
+  { id: string },
   TContext
 > => {
   return useMutation(getCancelMyTrainingBookingMutationOptions(options));
@@ -3563,12 +3563,12 @@ export const useCancelMyTrainingBooking = <
 /**
  * @summary List bookings for a training (coach/admin view)
  */
-export const getListGroupTrainingBookingsUrl = (id: number) => {
+export const getListGroupTrainingBookingsUrl = (id: string) => {
   return `/api/group-trainings/${id}/bookings`;
 };
 
 export const listGroupTrainingBookings = async (
-  id: number,
+  id: string,
   options?: RequestInit,
 ): Promise<TrainingBookingWithPlayer[]> => {
   return customFetch<TrainingBookingWithPlayer[]>(
@@ -3580,7 +3580,7 @@ export const listGroupTrainingBookings = async (
   );
 };
 
-export const getListGroupTrainingBookingsQueryKey = (id: number) => {
+export const getListGroupTrainingBookingsQueryKey = (id: string) => {
   return [`/api/group-trainings/${id}/bookings`] as const;
 };
 
@@ -3588,7 +3588,7 @@ export const getListGroupTrainingBookingsQueryOptions = <
   TData = Awaited<ReturnType<typeof listGroupTrainingBookings>>,
   TError = ErrorType<void>,
 >(
-  id: number,
+  id: string,
   options?: {
     query?: UseQueryOptions<
       Awaited<ReturnType<typeof listGroupTrainingBookings>>,
@@ -3633,7 +3633,7 @@ export function useListGroupTrainingBookings<
   TData = Awaited<ReturnType<typeof listGroupTrainingBookings>>,
   TError = ErrorType<void>,
 >(
-  id: number,
+  id: string,
   options?: {
     query?: UseQueryOptions<
       Awaited<ReturnType<typeof listGroupTrainingBookings>>,

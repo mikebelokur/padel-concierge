@@ -791,7 +791,8 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
       responses:
         "200":
           description: OK
@@ -810,7 +811,8 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -835,7 +837,8 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
       responses:
         "200":
           description: OK
@@ -856,7 +859,8 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
       responses:
         "201":
           description: Created
@@ -883,7 +887,8 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
       responses:
         "200":
           description: OK
@@ -904,7 +909,8 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
       responses:
         "200":
           description: OK
@@ -1585,7 +1591,8 @@ components:
       type: object
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
         coachId:
           type: integer
         dateTime:
@@ -1613,7 +1620,8 @@ components:
         isRecurring:
           type: boolean
         recurringSeriesId:
-          type: ["integer", "null"]
+          type: ["string", "null"]
+          format: uuid
         recurringPattern:
           type: ["string", "null"]
         bookedCount:
@@ -1699,9 +1707,11 @@ components:
       type: object
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
         trainingId:
-          type: integer
+          type: string
+          format: uuid
         userId:
           type: integer
         status:
@@ -1725,9 +1735,11 @@ components:
       type: object
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
         trainingId:
-          type: integer
+          type: string
+          format: uuid
         userId:
           type: integer
         status:
@@ -1775,9 +1787,11 @@ components:
       type: object
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
         trainingId:
-          type: integer
+          type: string
+          format: uuid
         userId:
           type: integer
         status:

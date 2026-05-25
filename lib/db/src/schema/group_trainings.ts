@@ -1,6 +1,6 @@
 import {
   pgTable,
-  serial,
+  uuid,
   integer,
   text,
   timestamp,
@@ -17,7 +17,7 @@ import { usersTable } from "./users";
 export const groupTrainingsTable = pgTable(
   "group_trainings",
   {
-    id: serial("id").primaryKey(),
+    id: uuid("id").primaryKey().defaultRandom(),
     coachId: integer("coach_id")
       .notNull()
       .references(() => usersTable.id, { onDelete: "restrict" }),
@@ -32,7 +32,7 @@ export const groupTrainingsTable = pgTable(
     descriptionRu: text("description_ru"),
     status: text("status").notNull().default("open"),
     isRecurring: boolean("is_recurring").notNull().default(false),
-    recurringSeriesId: integer("recurring_series_id"),
+    recurringSeriesId: uuid("recurring_series_id"),
     recurringPattern: text("recurring_pattern"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

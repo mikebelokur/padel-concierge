@@ -1,6 +1,6 @@
 import {
   pgTable,
-  serial,
+  uuid,
   integer,
   text,
   timestamp,
@@ -17,8 +17,8 @@ import { usersTable } from "./users";
 export const trainingBookingsTable = pgTable(
   "training_bookings",
   {
-    id: serial("id").primaryKey(),
-    trainingId: integer("training_id")
+    id: uuid("id").primaryKey().defaultRandom(),
+    trainingId: uuid("training_id")
       .notNull()
       .references(() => groupTrainingsTable.id, { onDelete: "cascade" }),
     userId: integer("user_id")

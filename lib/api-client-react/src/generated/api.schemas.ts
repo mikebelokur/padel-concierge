@@ -341,7 +341,7 @@ export const GroupTrainingStatus = {
 } as const;
 
 export interface GroupTraining {
-  id: number;
+  id: string;
   coachId: number;
   dateTime: string;
   durationMinutes: number;
@@ -358,7 +358,7 @@ export interface GroupTraining {
   status: GroupTrainingStatus;
   isRecurring: boolean;
   /** @nullable */
-  recurringSeriesId?: number | null;
+  recurringSeriesId?: string | null;
   /** @nullable */
   recurringPattern?: string | null;
   bookedCount: number;
@@ -447,8 +447,8 @@ export const TrainingBookingStatus = {
 } as const;
 
 export interface TrainingBooking {
-  id: number;
-  trainingId: number;
+  id: string;
+  trainingId: string;
   userId: number;
   status: TrainingBookingStatus;
   bookedAt: string;
@@ -458,8 +458,8 @@ export interface TrainingBooking {
 }
 
 export interface TrainingBookingWithTraining {
-  id: number;
-  trainingId: number;
+  id: string;
+  trainingId: string;
   userId: number;
   status: string;
   bookedAt: string;
@@ -480,15 +480,15 @@ export interface TrainingBookingPlayer {
 }
 
 export interface TrainingBookingWithPlayer {
-  id: number;
-  trainingId: number;
+  id: string;
+  trainingId: string;
   userId: number;
   status: string;
   bookedAt: string;
   /** @nullable */
   cancelledAt?: string | null;
   createdAt: string;
-  player: TrainingBookingPlayer;
+  player?: TrainingBookingPlayer | null;
 }
 
 export interface BookingConflict {

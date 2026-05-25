@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useGetPlayerStats, useListBookings, getGetPlayerStatsQueryKey, getListBookingsQueryKey } from "@workspace/api-client-react";
@@ -14,10 +15,23 @@ function levelLabel(level: string) {
   return "Elite";
 }
 
+const BANNER_DISMISS_KEY = "dismissed_no_level_banner_v1";
+
 export default function Dashboard() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const userId = user?.id ?? 0;
+
+  const [bannerDismissed, setBannerDismissed] = useState<boolean>(
+    () => localStorage.getItem(BANNER_DISMISS_KEY) === "1"
+  );
+
+  const showNoLevelBanner = !user?.level && !bannerDismissed;
+
+  function dismissBanner() {
+    localStorage.setItem(BANNER_DISMISS_KEY, "1");
+    setBannerDismissed(true);
+  }
 
   const { data: stats } = useGetPlayerStats(userId, {
     query: { queryKey: getGetPlayerStatsQueryKey(userId), enabled: !!userId },
@@ -53,6 +67,43 @@ export default function Dashboard() {
         className="max-w-2xl mx-auto px-6 animate-fade-up"
         style={{ paddingTop: "28px" }}
       >
+        {/* ── NO LEVEL BANNER ── */}
+        {showNoLevelBanner && (
+          <div
+            className="flex items-start gap-3 rounded-[16px] px-4 py-4 mb-6"
+            style={{
+              background: "rgba(212,175,55,0.10)",
+              border: "1.5px solid rgba(212,175,55,0.45)",
+            }}
+          >
+            <span style={{ fontSize: "22px", lineHeight: "1.2", flexShrink: 0 }}>⚠️</span>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-white mb-0.5" style={{ fontSize: "15px" }}>
+                {t("dashboard.noLevelBannerTitle")}
+              </div>
+              <div className="text-muted-foreground" style={{ fontSize: "13px" }}>
+                {t("dashboard.noLevelBannerDesc")}
+              </div>
+              <Link href="/assessment">
+                <button
+                  className="mt-3 rounded-[10px] font-semibold text-black bg-primary hover:opacity-90 transition-opacity"
+                  style={{ fontSize: "13px", padding: "8px 16px" }}
+                >
+                  {t("dashboard.noLevelBannerCta")}
+                </button>
+              </Link>
+            </div>
+            <button
+              onClick={dismissBanner}
+              className="flex-shrink-0 text-muted-foreground hover:text-white transition-colors"
+              style={{ fontSize: "18px", lineHeight: "1", padding: "2px 4px" }}
+              aria-label="Dismiss"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
         {/* ── GREETING ── */}
         <header className="mb-8">
           <p className="text-muted-foreground mb-1" style={{ fontSize: "15px" }}>

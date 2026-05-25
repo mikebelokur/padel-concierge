@@ -175,7 +175,10 @@
     "takeAssessment": "Take Assessment",
     "preferWarmup": "Prefers warm-up before play",
     "findPartnerTomorrow": "Find a partner for tomorrow →",
-    "findPartnerHint": "See who matches your level and schedule"
+    "findPartnerHint": "See who matches your level and schedule",
+    "noLevelBannerTitle": "Set your skill level to unlock matchmaking",
+    "noLevelBannerDesc": "Without a level, we can't find compatible partners or verify your matches.",
+    "noLevelBannerCta": "Take Assessment"
   },
   "findMatch": {
     "title": "Find a Match",

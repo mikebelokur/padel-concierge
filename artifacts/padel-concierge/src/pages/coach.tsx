@@ -68,14 +68,24 @@ export default function CoachDashboard() {
             </h1>
             <p className="text-muted-foreground" style={{ fontSize: "14px" }}>{dateStr}</p>
           </div>
-          <Link href="/clients/new">
-            <button
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl font-semibold text-black transition-all active:scale-[0.97]"
-              style={{ background: "#D4AF37", height: "44px", paddingLeft: "16px", paddingRight: "16px", fontSize: "14px" }}
-            >
-              + Add Client
-            </button>
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/coach/group-trainings">
+              <button
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl font-semibold text-white transition-all active:scale-[0.97]"
+                style={{ background: "rgba(212,175,55,0.12)", color: "#D4AF37", border: "1px solid rgba(212,175,55,0.3)", height: "44px", paddingLeft: "16px", paddingRight: "16px", fontSize: "14px" }}
+              >
+                Group Trainings
+              </button>
+            </Link>
+            <Link href="/clients/new">
+              <button
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl font-semibold text-black transition-all active:scale-[0.97]"
+                style={{ background: "#D4AF37", height: "44px", paddingLeft: "16px", paddingRight: "16px", fontSize: "14px" }}
+              >
+                + Add Client
+              </button>
+            </Link>
+          </div>
         </div>
 
         {/* Stats row */}

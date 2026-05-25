@@ -28,6 +28,7 @@ import VideoAnalysisList from "@/pages/video-analysis-list";
 import VideoAnalysisDetail from "@/pages/video-analysis-detail";
 import Settings from "@/pages/settings";
 import CoachDashboard from "@/pages/coach";
+import CoachGroupTrainings from "@/pages/coach-group-trainings";
 import Admin from "@/pages/admin";
 import AdminUsers from "@/pages/admin-users";
 import Courts from "@/pages/courts";
@@ -144,6 +145,7 @@ function Router() {
       <Route path="/level-quiz/admin">{() => <ProtectedRoute component={LevelQuizAdmin} allowedRoles={["admin", "owner", "coach"]} />}</Route>
 
       <Route path="/registrations">{() => <ProtectedRoute component={Registrations} allowedRoles={["admin", "owner"]} />}</Route>
+      <Route path="/coach/group-trainings">{() => <ProtectedRoute component={CoachGroupTrainings} allowedRoles={["coach", "admin", "owner"]} />}</Route>
       <Route path="/coach">{() => <ProtectedRoute component={CoachDashboard} allowedRoles={["coach", "admin", "owner"]} />}</Route>
       <Route path="/admin/users">{() => <ProtectedRoute component={AdminUsers} allowedRoles={["admin", "owner"]} allowedEmails={["mikebelokur8@gmail.com"]} />}</Route>
       <Route path="/admin">{() => <ProtectedRoute component={Admin} allowedRoles={["admin", "owner"]} />}</Route>

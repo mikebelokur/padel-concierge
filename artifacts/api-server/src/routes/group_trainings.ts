@@ -14,6 +14,8 @@ import {
   ListGroupTrainingsQueryParams,
 } from "@workspace/api-zod";
 import { requireAuth } from "../middleware/auth";
+import { sendNotificationEmail } from "../lib/mail";
+import { fireAndForget } from "../lib/fireAndForget";
 
 const router: IRouter = Router();
 router.use(requireAuth);
@@ -206,6 +208,8 @@ router.get("/group-trainings/me/bookings", async (req, res): Promise<void> => {
 
 // ─── DETAIL ───────────────────────────────────────────────────────────────────
 router.get("/group-trainings/:id", async (req, res): Promise<void> => {
+  const role: string = (req as any).auth.role;
+  const authUserId: number = (req as any).auth.userId;
   const id = parseId(req.params.id);
   if (!id) {
     res.status(400).json({ error: "Invalid id (uuid expected)" });
@@ -219,6 +223,41 @@ router.get("/group-trainings/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Not found" });
     return;
   }
+
+  // Non-coach users: enforce same visibility/category rules as the list.
+  // A player may always see a training they have an active booking for,
+  // even if it would otherwise be hidden by the level filter.
+  if (!isCoachRole(role)) {
+    const [me] = await db
+      .select({ level: usersTable.level })
+      .from(usersTable)
+      .where(eq(usersTable.id, authUserId));
+    const myIdx = me ? (CATEGORY_INDEX[me.level] ?? -1) : -1;
+    const tIdx = CATEGORY_INDEX[t.category] ?? 99;
+
+    const [activeBooking] = await db
+      .select({ id: trainingBookingsTable.id })
+      .from(trainingBookingsTable)
+      .where(
+        and(
+          eq(trainingBookingsTable.trainingId, id),
+          eq(trainingBookingsTable.userId, authUserId),
+          ne(trainingBookingsTable.status, "cancelled"),
+        ),
+      );
+
+    if (!activeBooking) {
+      if (t.status !== "open" && t.status !== "full") {
+        res.status(404).json({ error: "Not found" });
+        return;
+      }
+      if (myIdx < 0 || tIdx > myIdx) {
+        res.status(403).json({ error: "Training category above your level" });
+        return;
+      }
+    }
+  }
+
   res.json(serializeTraining(t, await countActiveBookings(id)));
 });
 
@@ -357,6 +396,24 @@ router.delete("/group-trainings/:id", async (req, res): Promise<void> => {
     res.status(403).json({ error: "Not your training" });
     return;
   }
+  // Snapshot affected users BEFORE we cascade-cancel their bookings so we
+  // can notify them.
+  const affected = await db
+    .select({
+      bookingId: trainingBookingsTable.id,
+      userId: trainingBookingsTable.userId,
+      email: usersTable.email,
+      name: usersTable.name,
+    })
+    .from(trainingBookingsTable)
+    .innerJoin(usersTable, eq(usersTable.id, trainingBookingsTable.userId))
+    .where(
+      and(
+        eq(trainingBookingsTable.trainingId, id),
+        ne(trainingBookingsTable.status, "cancelled"),
+      ),
+    );
+
   const [row] = await db
     .update(groupTrainingsTable)
     .set({ status: "cancelled", updatedAt: new Date() })
@@ -373,7 +430,42 @@ router.delete("/group-trainings/:id", async (req, res): Promise<void> => {
       ),
     );
 
-  req.log?.info({ trainingId: id }, "group_training_cancelled");
+  // Notify each affected player: activity-log entry + email (best-effort).
+  if (affected.length > 0) {
+    await db.insert(activityLogsTable).values(
+      affected.map((a) => ({
+        userId: a.userId,
+        userName: a.name,
+        action: "training_cancelled_notify",
+        details: `Group training ${id} (${existing.category}, ${existing.courtName}) was cancelled by the coach.`,
+      })),
+    );
+
+    const when = existing.dateTime.toISOString();
+    const subject = `Group training cancelled / Тренировка отменена — ${existing.courtName}`;
+    for (const a of affected) {
+      if (!a.email) continue;
+      const html = `<!DOCTYPE html><html><body style="font-family:'Segoe UI',Arial,sans-serif;background:#000;color:#e8eaf0;padding:32px;">
+<div style="max-width:520px;margin:0 auto;background:#0f1520;border:1px solid #1e2a40;border-radius:16px;padding:32px;">
+<h2 style="color:#D4AF37;margin:0 0 16px;">Тренировка отменена</h2>
+<p>Привет, ${a.name}!</p>
+<p>К сожалению, групповая тренировка <strong>${existing.courtName}</strong> (${existing.category}) на ${when} была отменена тренером. Если ты оплатил место, мы вернём средства.</p>
+<hr style="border:none;border-top:1px solid #1e2a40;margin:24px 0;"/>
+<h3 style="color:#D4AF37;margin:0 0 12px;">Training cancelled</h3>
+<p>Hi ${a.name},</p>
+<p>The group training <strong>${existing.courtName}</strong> (${existing.category}) on ${when} has been cancelled by the coach. If you've paid, we'll refund your spot.</p>
+</div></body></html>`;
+      fireAndForget(
+        sendNotificationEmail(a.email, subject, html),
+        { trainingId: id, userId: a.userId, kind: "training_cancellation_email" },
+      );
+    }
+  }
+
+  req.log?.info(
+    { trainingId: id, notified: affected.length },
+    "group_training_cancelled",
+  );
   res.json(serializeTraining(row, 0));
 });
 

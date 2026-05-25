@@ -115,6 +115,35 @@ export async function sendPasswordResetEmail(
   return devFallback(to, resetUrl);
 }
 
+/**
+ * Send a generic transactional notification email (subject + plain HTML body).
+ * Falls back to a logger warning when Resend is not configured.
+ */
+export async function sendNotificationEmail(
+  to: string,
+  subject: string,
+  html: string,
+): Promise<{ sent: boolean }> {
+  if (RESEND_API_KEY) {
+    try {
+      const { Resend } = await import("resend");
+      const resend = new Resend(RESEND_API_KEY);
+      const { error } = await resend.emails.send({ from: FROM_ADDRESS, to, subject, html });
+      if (error) {
+        logger.error({ err: error, to, subject }, "Resend error sending notification");
+        return { sent: false };
+      }
+      logger.info({ to, subject }, "Notification email sent");
+      return { sent: true };
+    } catch (err) {
+      logger.error({ err, to, subject }, "Resend exception sending notification");
+      return { sent: false };
+    }
+  }
+  logger.warn({ to, subject }, "RESEND_API_KEY not configured — notification email not sent");
+  return { sent: false };
+}
+
 function devFallback(to: string, resetUrl: string): { sent: false; devUrl: string } {
   logger.warn({ to }, "RESEND_API_KEY not configured — password reset email not sent");
   console.log("\n========================================");

@@ -1,0 +1,237 @@
+GROUP TRAINING REGISTRATION + USER SEGMENTATION
+Padel Concierge — combined feature task.
+
+CONTEXT:
+Mike Belokur is a padel coach in Dubai. He runs recurring group 
+trainings twice a week:
+- Tuesdays (currently posted manually in WhatsApp)
+- Thursdays (NEXT one is May 28, 2026)
+
+Thursday May 28 schedule:
+- 10:00–12:00 — Category D (may or may not fill)
+- 12:00–13:30 — Category D-minus (4 players + Mike, already filling)
+
+Location: Padel 360 club
+
+GOAL:
+Move the entire group training flow into the app so players see 
+upcoming sessions, book spots transparently, and Mike never 
+forgets to open registration.
+
+CRITICAL CONSTRAINT — USER SEGMENTATION:
+Before building features, fix the user data model. Currently 
+real users (Tamara, Lena, Daniel, Александр) are mixed with 
+8 seed test users (Anna K, Marina S, Olga R, etc.) and beta 
+testers (Vlad). This will cause chaos as we scale.
+
+PART 1 — USER SEGMENTATION (do this FIRST)
+
+1. Add column to users table:
+   user_type VARCHAR ENUM('real_user', 'seed_test', 'beta_tester')
+   - Default for new registrations: 'real_user'
+   - Backfill existing users:
+     • Tamara, Lena, Daniel, Александр → 'real_user'
+     • Anna K, Marina S, Olga R, Sergey, Dmitry, Alex, Karim, Yulia 
+       (8 seed users) → 'seed_test'
+     • Vlad (coach friend) → 'beta_tester'
+     • Mike → 'real_user' (admin role separately)
+
+2. Update matchmaking algorithm:
+   - 'real_user' matched ONLY with 'real_user' 
+   - 'seed_test' matched ONLY with 'seed_test' (for algorithm 
+     verification)
+   - 'beta_tester' can be matched with real_user but marked with 
+     "BETA" badge on card
+   - This isolation prevents test data corrupting real experience
+
+3. Admin panel at /admin/users:
+   - Filter by user_type
+   - Show counts per type at top
+   - Ability to change user_type (with confirmation modal)
+
+PART 2 — GROUP TRAININGS FEATURE
+
+1. NEW DATABASE TABLES:
+
+group_trainings:
+- id (uuid)
+- coach_id (FK users.id)
+- date_time (timestamp)
+- duration_minutes (default 90)
+- category (enum: D-, D, D+, C-, C, C+, B-)
+- court_name (text, e.g. "Padel 360")
+- court_address (text, optional)
+- max_participants (default 4)
+- price_aed (decimal)
+- description (text, optional, RU+EN)
+- status (enum: open, full, cancelled, completed)
+- is_recurring (boolean)
+- recurring_pattern (text, e.g. "every Tuesday 19:00")
+- created_at, updated_at
+
+training_bookings:
+- id (uuid)
+- training_id (FK group_trainings.id)
+- user_id (FK users.id)
+- status (enum: booked, cancelled, attended, no_show)
+- booked_at (timestamp)
+- cancelled_at (timestamp, nullable)
+- created_at
+
+2. NEW PAGE: /group-trainings (player view)
+   - Visible from main navigation: "Тренировки" / "Trainings"
+   - Tab structure:
+     • "Доступные" / "Available" — upcoming open trainings
+     • "Мои записи" / "My bookings" — sessions player booked
+     • "История" / "History" — past trainings player attended
+
+   - Each training card shows:
+     • Date and time formatted nicely
+       (e.g. "Четверг, 28 мая, 12:00 – 13:30")
+     • Coach name + small photo (Mike Belokur)
+     • Category badge with color coding
+     • Court name + clickable address
+     • Spots: "3/4 забронировано" with visual progress bar
+     • Price in AED
+     • Status badge: ОТКРЫТА / ЗАПОЛНЕНА / ОТМЕНЕНА
+     • Primary button: "Записаться" / "Book spot"
+     • If booked: "Отменить запись" + spot confirmed
+
+3. BOOKING FLOW:
+   - Tap "Записаться" → confirmation modal:
+     • Training details summary
+     • Price breakdown
+     • Cancellation policy (free cancel up to 12h before)
+     • Confirm button
+   - On confirm → spot reserved, status updated
+   - Success toast: "Записан! До встречи на Padel 360 в четверг 12:00"
+   - In-app notification + visible in /group-trainings → My bookings
+
+4. CATEGORY RESTRICTIONS (important rule from Mike):
+   - Player CAN book training for category EQUAL or LOWER than 
+     their own level
+     (e.g. C- player can book D, D+, C- training — downgrade always 
+     allowed)
+   - Player CANNOT book training for category HIGHER than their 
+     level without coach approval
+   - Show locked badge with tooltip explaining: 
+     "Эта категория выше твоего уровня. Запросить разрешение 
+      у тренера?"
+   - "Request approval" button → sends message to coach
+
+5. COACH ADMIN PAGE: /coach/group-trainings
+   - Visible only to users with role='coach' or 'admin'
+   - Top section: stats cards
+     • Sessions this week
+     • Total bookings this week
+     • Revenue this week (sum of prices)
+     • Players to follow up (no-shows last week)
+   - Calendar view of all upcoming trainings
+   - "+ Create new training" button → form:
+     • Date + time picker (calendar component)
+     • Duration (default 90 min)
+     • Category (dropdown)
+     • Court (dropdown with autocomplete: Padel 360, Rukan, 
+       Dubai Hills, Dubai Sports City, custom)
+     • Max participants (default 4, range 1-8)
+     • Price in AED
+     • Description (optional, separate EN+RU fields)
+     • RECURRING toggle:
+       - "Repeat every [Mon/Tue/Wed/Thu/Fri/Sat/Sun]"
+       - "At [time]"
+       - "Until [date]" (optional, default 3 months ahead)
+     • Save button
+   - Edit existing trainings: same form pre-filled
+   - Cancel training: confirmation modal + auto-notify all booked players
+   - View bookings list per training: names, contact, status
+
+6. RECURRING LOGIC:
+   - When Mike creates "Every Tuesday 19:00 D+":
+     • System generates training instances 14 days ahead
+     • Each instance becomes visible to players 2 days before 
+       its start
+     • Players can pre-book up to 14 days ahead
+     • If Mike cancels ONE instance — recurring continues for next ones
+     • If Mike edits the recurring rule — only future instances change
+
+7. PARTICIPANT COUNTER (Mike's request):
+   - On homepage at top:
+     "Зарегистрировано в Padel Concierge: 47 игроков"
+   - Breakdown by category in small text:
+     "D-: 8 · D: 12 · D+: 18 · C-: 6 · C: 3"
+   - ONLY counts real_user (not seed_test or beta_tester)
+   - Progress bar visualization toward 100 players
+   - Hidden tooltip: "При 100+ игроках откроется автоматический 
+     подбор матчей"
+
+8. NOTIFICATIONS (in-app only for now):
+   - 2 days before training: "Открыта запись на тренировку 28 мая 12:00"
+     (sent to relevant category players)
+   - 1 day before, evening: "Завтра в 12:00 тренировка на Padel 360. 
+     Подтверди что придёшь" (sent only to booked players)
+   - 1 hour before: "Тренировка через час. До встречи!" (booked only)
+   - 12 hours before: deadline to cancel without penalty notice
+
+9. PREPOPULATE FOR MIKE (so it works immediately):
+   Create these initial recurring trainings for him:
+   - Tuesday 19:00 D+ at Padel 360, 90 min, 4 players, 175 AED
+   - Tuesday 20:30 D at Padel 360, 90 min, 4 players, 175 AED
+   - Thursday 10:00 D at Padel 360, 120 min, 4 players, 200 AED
+   - Thursday 12:00 D- at Padel 360, 90 min, 4 players, 175 AED
+
+   (Mike will edit prices/times via admin panel if needed)
+
+10. EDGE CASES:
+    - Player tries to book full training → 
+      "Тренировка заполнена. Записаться в лист ожидания?" 
+      (show button but waitlist functionality is OUT OF SCOPE — just 
+      capture interest)
+    - Player tries to book past training → button disabled
+    - Coach tries to cancel training with bookings → 
+      confirm dialog: "У тебя 3 записанных. Они получат уведомление 
+      об отмене. Подтвердить?"
+    - Player has booking, coach cancels training → 
+      send notification + show in player's history with "Отменено тренером"
+
+11. TRANSLATIONS:
+    All new strings must be in en.json AND ru.json:
+    - Use useLanguage() hook everywhere
+    - Russian: "ты" form, conversational, premium tone
+    - Test by toggling EN↔RU on every new page
+
+OUT OF SCOPE (do NOT build now):
+- Payment processing (just show price, real payment later)
+- WhatsApp/Telegram bot auto-posting (separate task)
+- Push notifications to phone (in-app only for now)
+- Court real-time availability from clubs (later)
+- Waitlist functionality (just capture interest, don't build)
+- Recurring exception handling beyond simple cancel
+
+TESTING (mandatory):
+1. As admin Mike: create Thursday 28 May 12:00 D- recurring 
+   training, save
+2. As real player (Tamara): see it in /group-trainings, book a spot, 
+   see in My bookings
+3. As real player Lena: try to book — should see "3/4 booked"
+4. As real player (4th): book — training becomes full
+5. As real player (5th): try to book — see waitlist offer
+6. As seed test user (Anna K): try to access /group-trainings — 
+   should see test mode banner OR be redirected
+7. Try to cancel booking 6h before — should warn about penalty 
+   (cancellation policy)
+8. Toggle EN↔RU on every new page — all text must translate
+9. Run pnpm typecheck — must pass
+10. Run pnpm build — must pass
+
+After completion show me:
+- Screenshot /group-trainings (player view) in RU on iPhone (390pt)
+- Screenshot /coach/group-trainings (admin view) in RU
+- Screenshot booking confirmation modal
+- Screenshot homepage with participant counter
+- Screenshot the 4 prepopulated recurring trainings in admin panel
+- Screenshot of users table with user_type column populated
+- List of all files modified
+- Confirmation that pnpm typecheck and build pass
+
+TIME ESTIMATE: 60-90 minutes of agent work.
+PRIORITY: Must complete before Thursday May 28 at 10:00 AM.

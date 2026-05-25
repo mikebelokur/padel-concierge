@@ -29,10 +29,20 @@ function compatibilityScore(
 // ─── TRAINER MATCH REQUESTS ──────────────────────────────────────────────────
 
 router.get("/trainer-match-requests", async (req, res): Promise<void> => {
-  const playerId = req.query.playerId ? parseInt(req.query.playerId as string) : undefined;
+  const authRole: string = (req as any).auth.role;
+  const authUserId: number = (req as any).auth.userId;
+  const isPrivileged = ["coach", "admin", "owner"].includes(authRole);
+
+  const requestedPlayerId = req.query.playerId
+    ? parseInt(req.query.playerId as string)
+    : undefined;
+
+  // Players may only see their own requests, regardless of query string.
+  const effectivePlayerId = isPrivileged ? requestedPlayerId : authUserId;
+
   let rows = await db.select().from(trainerMatchRequestsTable)
     .orderBy(desc(trainerMatchRequestsTable.createdAt));
-  if (playerId) rows = rows.filter(r => r.playerId === playerId);
+  if (effectivePlayerId) rows = rows.filter(r => r.playerId === effectivePlayerId);
 
   const playerIds = [...new Set(rows.map(r => r.playerId))];
   const players = playerIds.length
@@ -49,13 +59,23 @@ router.get("/trainer-match-requests", async (req, res): Promise<void> => {
 });
 
 router.post("/trainer-match-requests", async (req, res): Promise<void> => {
-  const { playerId, format, venue, requestedDate, requestedTime, notes } = req.body;
-  if (!playerId || !requestedDate || !requestedTime) {
-    res.status(400).json({ error: "playerId, requestedDate, requestedTime required" });
+  const authRole: string = (req as any).auth.role;
+  const authUserId: number = (req as any).auth.userId;
+  const isPrivileged = ["coach", "admin", "owner"].includes(authRole);
+
+  const { playerId: bodyPlayerId, format, venue, requestedDate, requestedTime, notes } = req.body;
+  // Players cannot create requests on behalf of others — always force to self.
+  // Privileged roles may specify a playerId; otherwise fall back to self.
+  const playerId = isPrivileged
+    ? (bodyPlayerId ?? authUserId)
+    : authUserId;
+
+  if (!requestedDate || !requestedTime) {
+    res.status(400).json({ error: "requestedDate, requestedTime required" });
     return;
   }
   const [row] = await db.insert(trainerMatchRequestsTable).values({
-    playerId: parseInt(playerId),
+    playerId: parseInt(String(playerId)),
     format: format ?? "4v4",
     venue: venue ?? "Padel Edition",
     requestedDate,

@@ -913,6 +913,84 @@
       "no_show": "No-show"
     }
   },
+  "playerTrainings": {
+    "title": "Group Trainings",
+    "subtitle": "Train with a coach in a small group",
+    "tabs": {
+      "available": "Available",
+      "myBookings": "My bookings",
+      "history": "History"
+    },
+    "empty": {
+      "available": "No trainings available right now. Check back soon.",
+      "myBookings": "You have no upcoming trainings yet.",
+      "history": "You haven't played in any group trainings yet."
+    },
+    "card": {
+      "withCoach": "With {{coach}}",
+      "category": "Level {{cat}}",
+      "spots": "{{count}}/{{max}} booked",
+      "free": "{{count}} free",
+      "full": "Full",
+      "address": "{{name}} · {{addr}}",
+      "duration": "{{min}} min",
+      "price": "{{price}} AED",
+      "book": "Book a spot",
+      "cancel": "Cancel my spot",
+      "locked": "Above your level",
+      "requestApproval": "Request approval",
+      "waitlist": "Join waitlist",
+      "past": "Completed",
+      "myStatus": {
+        "booked": "Booked",
+        "cancelled": "Cancelled",
+        "attended": "Attended",
+        "no_show": "No-show"
+      }
+    },
+    "bookModal": {
+      "title": "Confirm booking",
+      "summary": "{{date}} · {{coach}} · {{court}}",
+      "policyTitle": "Cancellation policy",
+      "policyFree": "Free cancellation up to 12 hours before the start.",
+      "policyLate": "Cancellations within 12 hours forfeit the spot.",
+      "confirm": "Confirm booking",
+      "cancel": "Back",
+      "booking": "Booking…",
+      "success": "Booked. See you on court!",
+      "errorFull": "This training just filled up.",
+      "errorAlready": "You already have a booking for this training.",
+      "errorLevel": "Your level doesn't allow this category yet.",
+      "errorGeneric": "Could not book. Try again."
+    },
+    "cancelModal": {
+      "title": "Cancel your spot?",
+      "warningLate": "Less than 12 hours before start — your spot will be forfeited.",
+      "warningFree": "More than 12 hours away — free cancellation.",
+      "confirm": "Cancel spot",
+      "keep": "Keep my spot",
+      "cancelling": "Cancelling…",
+      "success": "Booking cancelled",
+      "error": "Could not cancel. Try again."
+    },
+    "lockedModal": {
+      "title": "Above your level",
+      "body": "This training is for category {{cat}} — your current level is {{level}}. Your coach can approve you to join.",
+      "notesPlaceholder": "Tell the coach why you'd like to join…",
+      "send": "Send request",
+      "sending": "Sending…",
+      "success": "Request sent to coach",
+      "error": "Could not send request"
+    },
+    "waitlistModal": {
+      "title": "Join the waitlist?",
+      "body": "We'll text you if a spot opens up on this training.",
+      "confirm": "Join waitlist",
+      "joining": "Joining…",
+      "success": "You're on the waitlist",
+      "error": "Could not join waitlist"
+    }
+  },
   "videoAnalysisDetail": {
     "title": "Analysis Report #{{id}}",
     "deliveredOn": "Delivered on {{date}}",

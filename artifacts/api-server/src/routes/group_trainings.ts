@@ -155,17 +155,24 @@ router.get("/group-trainings", async (req, res): Promise<void> => {
       .select({ level: usersTable.level })
       .from(usersTable)
       .where(eq(usersTable.id, authUserId));
-    const myIdx = me ? (CATEGORY_INDEX[me.level] ?? -1) : -1;
+    // Player must have a known level to view trainings. Levels above the
+    // training categories (B, B+, A-, A) are valid players — they see
+    // everything (no category is "above" them).
+    const PLAYER_LEVELS = ["D-", "D", "D+", "C-", "C", "C+", "B-", "B", "B+", "A-", "A"];
+    const hasKnownLevel = !!me && PLAYER_LEVELS.includes(me.level);
 
     const now = Date.now();
-    const horizon = now + 1000 * 60 * 60 * 24 * 2;
+    // Horizon: 30 days so the player page can show a full upcoming list.
+    const horizon = now + 1000 * 60 * 60 * 24 * 30;
 
+    // Players see all open/full upcoming trainings; the frontend marks
+    // categories above the player's level as "locked" (request approval).
     rows = rows.filter((t) => {
       if (t.status !== "open" && t.status !== "full") return false;
       const ts = t.dateTime.getTime();
       if (ts < now || ts > horizon) return false;
-      const tIdx = CATEGORY_INDEX[t.category] ?? 99;
-      return myIdx >= 0 && tIdx <= myIdx;
+      if (!hasKnownLevel) return false;
+      return true;
     });
   }
 

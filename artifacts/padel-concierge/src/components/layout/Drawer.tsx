@@ -25,6 +25,7 @@ const navItems: NavItem[] = [
   { href: "/find-match",     labelKey: "nav.findMatch",     icon: "🎯" },
   { href: "/matches",        labelKey: "nav.matches",       icon: "🎾" },
   { href: "/match-requests", labelKey: "nav.requests",      icon: "📨", badgeKey: "pendingRequests" },
+  { href: "/group-trainings",labelKey: "nav.groupTrainings",icon: "🎓" },
   { href: "/bookings",       labelKey: "nav.bookings",      icon: "📅" },
   { href: "/courts",         labelKey: "nav.courts",        icon: "🏟️" },
   { href: "/members",        labelKey: "nav.members",       icon: "👤" },

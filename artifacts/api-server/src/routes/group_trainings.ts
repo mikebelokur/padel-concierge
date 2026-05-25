@@ -5,6 +5,7 @@ import {
   trainingBookingsTable,
   usersTable,
   activityLogsTable,
+  notificationsTable,
 } from "@workspace/db";
 import { and, eq, gte, lte, ne, sql, desc, inArray } from "drizzle-orm";
 import { z } from "zod/v4";
@@ -452,7 +453,7 @@ router.delete("/group-trainings/:id", async (req, res): Promise<void> => {
       ),
     );
 
-  // Notify each affected player: activity-log entry + email (best-effort).
+  // Notify each affected player: activity-log entry + in-app notification + email.
   if (affected.length > 0) {
     await db.insert(activityLogsTable).values(
       affected.map((a) => ({
@@ -462,6 +463,29 @@ router.delete("/group-trainings/:id", async (req, res): Promise<void> => {
         details: `Group training ${id} (${existing.category}, ${existing.courtName}) was cancelled by the coach.`,
       })),
     );
+
+    const whenStr = existing.dateTime.toISOString();
+    await db
+      .insert(notificationsTable)
+      .values(
+        affected.map((a) => ({
+          userId: a.userId,
+          kind: "training_cancelled_by_coach",
+          trainingId: id,
+          titleEn: "Training cancelled",
+          titleRu: "Тренировка отменена",
+          bodyEn: `${existing.category} at ${existing.courtName} on ${whenStr} was cancelled by the coach.`,
+          bodyRu: `${existing.category} — ${existing.courtName}, ${whenStr} отменена тренером.`,
+          link: `/group-trainings/${id}`,
+        })),
+      )
+      .onConflictDoNothing({
+        target: [
+          notificationsTable.userId,
+          notificationsTable.kind,
+          notificationsTable.trainingId,
+        ],
+      });
 
     const when = existing.dateTime.toISOString();
     const subject = `Group training cancelled / Тренировка отменена — ${existing.courtName}`;

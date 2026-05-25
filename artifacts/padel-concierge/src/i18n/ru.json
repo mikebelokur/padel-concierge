@@ -15,6 +15,11 @@
     "viewAll": "Все",
     "seeAll": "Смотреть все"
   },
+  "notifications": {
+    "title": "Уведомления",
+    "empty": "Пока нет уведомлений",
+    "markAllRead": "Прочитать все"
+  },
   "nav": {
     "coachHub": "Тренерский центр",
     "myClients": "Мои клиенты",

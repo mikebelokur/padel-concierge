@@ -6,6 +6,7 @@ import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { NotificationBell } from "@/components/NotificationBell";
 
 interface NavItem {
   href: string;
@@ -148,6 +149,9 @@ export function Drawer() {
           </Link>
         )}
 
+        {/* Notification bell */}
+        <NotificationBell />
+
         {/* Language toggle */}
         <LangToggle />
 
@@ -170,7 +174,10 @@ export function Drawer() {
             <div className="font-serif text-base tracking-tight">Padel Concierge</div>
             <div className="text-xs text-muted-foreground">Private Members Club · Dubai</div>
           </div>
-          <LangToggle />
+          <div className="flex items-center gap-1">
+            <NotificationBell />
+            <LangToggle />
+          </div>
         </div>
         <nav className="flex-1 overflow-y-auto py-2 px-3">
           <NavList items={visibleItems} location={location} pendingCount={pendingCount} pendingRequestsCount={pendingRequestsCount} t={t} />

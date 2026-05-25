@@ -15,6 +15,11 @@
     "viewAll": "View all",
     "seeAll": "See all"
   },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications yet",
+    "markAllRead": "Mark all read"
+  },
   "nav": {
     "coachHub": "Coach Hub",
     "myClients": "My Clients",

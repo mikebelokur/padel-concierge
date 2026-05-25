@@ -22,3 +22,5 @@ export * from "./feedback_aggregates";
 export * from "./compatibility_scores";
 export * from "./group_trainings";
 export * from "./training_bookings";
+export * from "./recurring_series";
+export * from "./notifications";

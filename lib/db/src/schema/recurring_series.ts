@@ -6,8 +6,8 @@ import {
   timestamp,
   boolean,
   numeric,
+  date,
   index,
-  uniqueIndex,
   check,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
@@ -15,14 +15,15 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
 
-export const groupTrainingsTable = pgTable(
-  "group_trainings",
+export const recurringSeriesTable = pgTable(
+  "recurring_series",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     coachId: integer("coach_id")
       .notNull()
       .references(() => usersTable.id, { onDelete: "restrict" }),
-    dateTime: timestamp("date_time", { withTimezone: true }).notNull(),
+    weekday: integer("weekday").notNull(),
+    startTime: text("start_time").notNull(),
     durationMinutes: integer("duration_minutes").notNull().default(90),
     category: text("category").notNull(),
     courtName: text("court_name").notNull(),
@@ -31,34 +32,28 @@ export const groupTrainingsTable = pgTable(
     priceAed: numeric("price_aed", { precision: 10, scale: 2 }).notNull(),
     descriptionEn: text("description_en"),
     descriptionRu: text("description_ru"),
-    status: text("status").notNull().default("open"),
-    isRecurring: boolean("is_recurring").notNull().default(false),
-    recurringSeriesId: uuid("recurring_series_id"),
-    recurringPattern: text("recurring_pattern"),
+    active: boolean("active").notNull().default(true),
+    untilDate: date("until_date"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    index("group_trainings_coach_date_idx").on(t.coachId, t.dateTime),
-    index("group_trainings_series_idx").on(t.recurringSeriesId),
-    uniqueIndex("group_trainings_series_datetime_uidx")
-      .on(t.recurringSeriesId, t.dateTime)
-      .where(sql`${t.recurringSeriesId} IS NOT NULL`),
+    index("recurring_series_coach_active_idx").on(t.coachId, t.active),
     check(
-      "group_trainings_category_check",
-      sql`${t.category} IN ('D-','D','D+','C-','C','C+','B-')`,
+      "recurring_series_weekday_check",
+      sql`${t.weekday} BETWEEN 0 AND 6`,
     ),
     check(
-      "group_trainings_status_check",
-      sql`${t.status} IN ('open','full','cancelled','completed')`,
+      "recurring_series_category_check",
+      sql`${t.category} IN ('D-','D','D+','C-','C','C+','B-')`,
     ),
   ],
 );
 
-export const insertGroupTrainingSchema = createInsertSchema(groupTrainingsTable).omit({
+export const insertRecurringSeriesSchema = createInsertSchema(recurringSeriesTable).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
 });
-export type GroupTraining = typeof groupTrainingsTable.$inferSelect;
-export type InsertGroupTraining = z.infer<typeof insertGroupTrainingSchema>;
+export type RecurringSeries = typeof recurringSeriesTable.$inferSelect;
+export type InsertRecurringSeries = z.infer<typeof insertRecurringSeriesSchema>;

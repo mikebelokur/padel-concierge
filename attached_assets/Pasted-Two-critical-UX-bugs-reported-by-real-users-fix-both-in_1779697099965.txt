@@ -1,0 +1,125 @@
+Two critical UX bugs reported by real users — fix both in this task.
+
+BUG #1 — "Email already registered" raw HTTP error
+(reported by Lena, 23 May 20:00)
+
+Problem:
+- User completed registration steps 1 and 2
+- On step 3 (Location), tapped submit
+- Got red banner: "HTTP 400 : Email already registered"
+- Error in English even with RU selected
+- User confused, quit
+
+Fix:
+1. ALL error messages on /register, /login, /password-reset must:
+   - Translate based on current language (EN/RU)
+   - Use user-friendly wording — NO HTTP codes, NO "HTTP 400"
+   - Offer 1-3 clear next actions
+
+2. Specifically for "Email already registered" — show as a CARD
+   (not flat red banner) with 3 action buttons:
+   
+   RU version:
+   - Title: "Этот email уже зарегистрирован"
+   - Body: "Похоже, ты уже создавал аккаунт."
+   - Action buttons:
+     • "Войти" → goes to /login with email pre-filled
+     • "Забыл пароль?" → goes to /password-reset with email pre-filled
+     • "Использовать другой email" → returns to step 1 with email field cleared and focused
+   
+   EN version:
+   - Title: "This email is already registered"
+   - Body: "Looks like you've already created an account."
+   - Actions:
+     • "Sign in" → /login with email pre-filled
+     • "Forgot password?" → /password-reset with email pre-filled
+     • "Use a different email" → returns to step 1
+
+3. Other registration errors that need RU/EN translation:
+   - "Invalid email format" → 
+     RU: "Похоже, в email опечатка. Проверь, пожалуйста"
+     EN: "Looks like there's a typo in the email. Please check"
+   - "Password too short" → 
+     RU: "Пароль должен быть минимум 8 символов"
+     EN: "Password must be at least 8 characters"
+   - "Passwords don't match" → must validate BEFORE submit, can't proceed past step 1 if mismatch
+     RU: "Пароли не совпадают"
+     EN: "Passwords don't match"
+   - Network error → 
+     RU: "Не удалось подключиться. Проверь интернет"
+     EN: "Connection failed. Check your internet"
+   - Server error 500 → 
+     RU: "Что-то пошло не так. Попробуй через минуту"
+     EN: "Something went wrong. Try again in a moment"
+
+4. EARLY DETECTION:
+   On step 1, when user enters email and tabs out of the field,
+   check via API if email is taken. If yes — show the friendly
+   card BEFORE they fill steps 2 and 3. Saves time and frustration.
+
+5. ERROR DESIGN:
+   - NOT a full-width red banner that scares users
+   - Inline subtle messages below the relevant field (orange/yellow 
+     for warnings, red only for hard blocks)
+   - For "email exists" — show as a CARD with 3 action buttons
+   - Apple HIG style: rounded corners, gentle animations
+
+BUG #2 — Page content stays in original language when toggle switches
+(reported by Daniel, 24 May 17:30)
+
+Problem:
+- User has EN selected (toggle shows EN highlighted)  
+- Left navigation menu IS in English: Home, Find Match, Matches, 
+  Requests, Bookings, Courts, Members, Assessment, Padel Rules, 
+  News & Tips
+- But page content stays in Russian: "Запросы на матч", "Личные", 
+  "К тренеру", "Полученные", "Отправленные"
+- Same likely happens RU → some pages stay English
+
+Fix:
+1. Audit ALL pages and components for hardcoded strings that 
+   DON'T use the useLanguage() hook:
+   - /match-requests page specifically (Daniel's case)
+   - All match-related components
+   - All tab labels, badge labels
+   - All empty states ("No matches yet", etc.)
+
+2. Move every hardcoded string to i18n keys in en.json and ru.json
+
+3. Apply useLanguage() hook to every page/component
+
+4. Verify by toggling EN↔RU on EVERY page — content must change
+
+5. Specific RU translations needed:
+   - "Match Requests" → "Запросы на матч" (already done)
+   - "Personal invitations and trainer requests" → 
+     "Личные приглашения и запросы к тренеру"
+   - "Personal" tab → "Личные"
+   - "To Trainer" tab → "К тренеру"
+   - "Received" tab → "Полученные"
+   - "Sent" tab → "Отправленные"
+   - "Invite" button → "Пригласить"
+   - "No requests yet" → "Пока нет запросов"
+
+VERIFICATION (mandatory):
+- Test scenario A: Register with new email, get to step 3, submit — should work
+- Test scenario B: Try to register with EXISTING email — must show friendly card with 3 buttons
+- Test scenario C: Toggle EN↔RU on /match-requests — both menu AND content must change
+- Test scenario D: Toggle EN↔RU on /assessment, /find-match, /matches, /profile, 
+  /settings, /bookings — content must change in ALL
+- Run pnpm typecheck — must pass
+- Run pnpm build — must pass
+
+After completion show me:
+- Screenshot of "Email already registered" friendly card in RU on iPhone (390pt)
+- Screenshot of the same in EN
+- Screenshot of /match-requests in EN (all English now)
+- Screenshot of /match-requests in RU (all Russian now)
+- List of all files modified
+- Confirmation that typecheck and build pass
+
+DO NOT:
+- Change UI design or layout
+- Touch business logic
+- Add new features
+- Take more than 30 minutes

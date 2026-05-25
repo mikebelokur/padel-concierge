@@ -1369,6 +1369,8 @@ export const UpdateGroupTrainingBody = zod.object({
   priceAed: zod.union([zod.number(), zod.string()]).optional(),
   descriptionEn: zod.string().nullish(),
   descriptionRu: zod.string().nullish(),
+  isRecurring: zod.boolean().optional(),
+  recurringPattern: zod.string().nullish(),
   status: zod.enum(["open", "full", "cancelled", "completed"]).optional(),
 });
 

@@ -3,6 +3,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { apiFetch } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -18,6 +19,7 @@ function LevelBadge({ level }: { level: string }) {
 }
 
 export default function CoachDashboard() {
+  const { t } = useLanguage();
   const today = new Date();
   const dayName = DAY_NAMES[today.getDay()];
   const dateStr = today.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
@@ -74,7 +76,7 @@ export default function CoachDashboard() {
                 className="inline-flex items-center justify-center gap-1.5 rounded-xl font-semibold text-white transition-all active:scale-[0.97]"
                 style={{ background: "rgba(212,175,55,0.12)", color: "#D4AF37", border: "1px solid rgba(212,175,55,0.3)", height: "44px", paddingLeft: "16px", paddingRight: "16px", fontSize: "14px" }}
               >
-                Group Trainings
+                {t("nav.groupTrainings")}
               </button>
             </Link>
             <Link href="/clients/new">

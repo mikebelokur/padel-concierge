@@ -1699,6 +1699,10 @@ components:
           type: ["string", "null"]
         descriptionRu:
           type: ["string", "null"]
+        isRecurring:
+          type: boolean
+        recurringPattern:
+          type: ["string", "null"]
         status:
           type: string
           enum: [open, full, cancelled, completed]

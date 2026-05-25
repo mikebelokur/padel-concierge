@@ -361,6 +361,8 @@ router.patch("/group-trainings/:id", async (req, res): Promise<void> => {
   if (b.priceAed !== undefined) update.priceAed = String(b.priceAed);
   if (b.descriptionEn !== undefined) update.descriptionEn = b.descriptionEn;
   if (b.descriptionRu !== undefined) update.descriptionRu = b.descriptionRu;
+  if (b.isRecurring !== undefined) update.isRecurring = b.isRecurring;
+  if (b.recurringPattern !== undefined) update.recurringPattern = b.recurringPattern;
   if (b.status !== undefined) update.status = b.status;
 
   const [row] = await db

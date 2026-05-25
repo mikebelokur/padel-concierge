@@ -433,6 +433,9 @@ export interface UpdateGroupTrainingBody {
   descriptionEn?: string | null;
   /** @nullable */
   descriptionRu?: string | null;
+  isRecurring?: boolean;
+  /** @nullable */
+  recurringPattern?: string | null;
   status?: UpdateGroupTrainingBodyStatus;
 }
 

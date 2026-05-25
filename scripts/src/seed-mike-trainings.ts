@@ -6,7 +6,7 @@ if (!DATABASE_URL) {
   process.exit(1);
 }
 
-const MIKE_USER_ID = 13;
+const MIKE_EMAIL = "misha.belokur@gmail.com";
 const COURT_NAME = "Padel 360";
 
 type Slot = {
@@ -93,6 +93,15 @@ async function main() {
   const client = new Client({ connectionString: DATABASE_URL });
   await client.connect();
   try {
+    const mikeRes = await client.query<{ id: number }>(
+      `SELECT id FROM users WHERE email = $1 LIMIT 1`,
+      [MIKE_EMAIL],
+    );
+    if (mikeRes.rows.length === 0) {
+      throw new Error(`Mike not found: no user with email ${MIKE_EMAIL}`);
+    }
+    const MIKE_USER_ID = mikeRes.rows[0].id;
+    console.log(`Resolved Mike (${MIKE_EMAIL}) -> userId=${MIKE_USER_ID}`);
     let inserted = 0;
     let skipped = 0;
     for (const s of SLOTS) {

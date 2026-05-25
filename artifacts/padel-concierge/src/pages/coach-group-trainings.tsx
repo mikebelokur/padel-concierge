@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
-import { useQueryClient, useQueries } from "@tanstack/react-query";
+import { useMemo, useState, useEffect } from "react";
+import { useQueryClient, useQueries, useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { apiFetch } from "@/lib/api";
 import {
   Dialog,
   DialogContent,
@@ -24,7 +25,24 @@ import {
 } from "@workspace/api-client-react";
 
 const CATEGORIES = ["D-", "D", "D+", "C-", "C", "C+", "B-"] as const;
-const COURTS = ["Padel 360", "Rukan", "Dubai Hills", "Dubai Sports City"];
+const FALLBACK_COURTS = ["Padel 360", "Rukan", "Dubai Hills", "Dubai Sports City"];
+
+type RecurringMeta = {
+  freq?: "WEEKLY";
+  weekday?: number;
+  time?: string;
+  until?: string | null;
+  tz?: string;
+};
+
+function parseRecurring(raw: string | null | undefined): RecurringMeta {
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw) as RecurringMeta;
+  } catch {
+    return {};
+  }
+}
 
 type FormState = {
   date: string;
@@ -38,6 +56,9 @@ type FormState = {
   descriptionEn: string;
   descriptionRu: string;
   isRecurring: boolean;
+  recurringWeekday: number;
+  recurringTime: string;
+  recurringUntil: string;
 };
 
 function blankForm(): FormState {
@@ -55,15 +76,21 @@ function blankForm(): FormState {
     descriptionEn: "",
     descriptionRu: "",
     isRecurring: false,
+    recurringWeekday: tomorrow.getDay(),
+    recurringTime: "19:00",
+    recurringUntil: "",
   };
 }
 
 function formFromTraining(t: GroupTraining): FormState {
   const dt = new Date(t.dateTime);
   const pad = (n: number) => String(n).padStart(2, "0");
+  const dateStr = `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`;
+  const timeStr = `${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+  const meta = parseRecurring(t.recurringPattern);
   return {
-    date: `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`,
-    time: `${pad(dt.getHours())}:${pad(dt.getMinutes())}`,
+    date: dateStr,
+    time: timeStr,
     durationMinutes: t.durationMinutes,
     category: t.category,
     courtName: t.courtName,
@@ -73,11 +100,20 @@ function formFromTraining(t: GroupTraining): FormState {
     descriptionEn: t.descriptionEn ?? "",
     descriptionRu: t.descriptionRu ?? "",
     isRecurring: t.isRecurring,
+    recurringWeekday: meta.weekday ?? dt.getDay(),
+    recurringTime: meta.time ?? timeStr,
+    recurringUntil: meta.until ?? "",
   };
 }
 
 function toIsoLocal(date: string, time: string): string {
   return new Date(`${date}T${time}:00`).toISOString();
+}
+
+function addDays(d: Date, n: number): Date {
+  const x = new Date(d);
+  x.setDate(x.getDate() + n);
+  return x;
 }
 
 function startOfWeek(d: Date): Date {
@@ -89,10 +125,21 @@ function startOfWeek(d: Date): Date {
   return x;
 }
 
-function addDays(d: Date, n: number): Date {
+function startOfDay(d: Date): Date {
   const x = new Date(d);
-  x.setDate(x.getDate() + n);
+  x.setHours(0, 0, 0, 0);
   return x;
+}
+
+function buildRecurringPattern(f: FormState): string {
+  const pattern: RecurringMeta = {
+    freq: "WEEKLY",
+    weekday: f.recurringWeekday,
+    time: f.recurringTime || f.time,
+    tz: "Asia/Dubai",
+  };
+  if (f.recurringUntil) pattern.until = f.recurringUntil;
+  return JSON.stringify(pattern);
 }
 
 const CARD_BG = "hsl(220 20% 6%)";
@@ -133,15 +180,17 @@ function StatusPill({ status, t }: { status: string; t: (k: string) => string })
 }
 
 function TrainingForm({
-  mode,
   initial,
   onSubmit,
   saving,
+  courtOptions,
+  weekdayLabels,
 }: {
-  mode: "create" | "edit";
   initial: FormState;
   onSubmit: (f: FormState) => void;
   saving: boolean;
+  courtOptions: string[];
+  weekdayLabels: string[];
 }) {
   const { t } = useLanguage();
   const [f, setF] = useState<FormState>(initial);
@@ -155,7 +204,7 @@ function TrainingForm({
   const labelCls = "text-muted-foreground mb-1 block";
 
   return (
-    <form onSubmit={handle} className="space-y-3" style={{ fontSize: "13px" }}>
+    <form onSubmit={handle} className="space-y-3 max-h-[70vh] overflow-y-auto pr-1" style={{ fontSize: "13px" }}>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className={labelCls}>{t("coachTrainings.form.date")}</label>
@@ -217,7 +266,7 @@ function TrainingForm({
           required
         />
         <datalist id="court-options">
-          {COURTS.map((c) => <option key={c} value={c} />)}
+          {courtOptions.map((c) => <option key={c} value={c} />)}
         </datalist>
       </div>
 
@@ -277,16 +326,57 @@ function TrainingForm({
         />
       </div>
 
-      <label className="flex items-center gap-2 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={f.isRecurring}
-          onChange={(e) => setF({ ...f, isRecurring: e.target.checked })}
-          className="accent-[#D4AF37]"
-        />
-        <span className="text-white">{t("coachTrainings.form.recurring")}</span>
-        <span className="text-muted-foreground ml-1">— {t("coachTrainings.form.recurringHint")}</span>
-      </label>
+      <div className="rounded-xl p-3" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.18)" }}>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={f.isRecurring}
+            onChange={(e) => setF({ ...f, isRecurring: e.target.checked })}
+            className="accent-[#D4AF37]"
+          />
+          <span className="text-white">{t("coachTrainings.form.recurring")}</span>
+        </label>
+
+        {f.isRecurring && (
+          <div className="mt-3 space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelCls}>{t("coachTrainings.form.recurringWeekday")}</label>
+                <select
+                  value={f.recurringWeekday}
+                  onChange={(e) => setF({ ...f, recurringWeekday: parseInt(e.target.value, 10) })}
+                  className={fieldCls}
+                >
+                  {weekdayLabels.map((lbl, i) => (
+                    <option key={i} value={i}>{lbl}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={labelCls}>{t("coachTrainings.form.recurringTime")}</label>
+                <input
+                  type="time"
+                  value={f.recurringTime}
+                  onChange={(e) => setF({ ...f, recurringTime: e.target.value })}
+                  className={fieldCls}
+                />
+              </div>
+            </div>
+            <div>
+              <label className={labelCls}>{t("coachTrainings.form.recurringUntil")}</label>
+              <input
+                type="date"
+                value={f.recurringUntil}
+                onChange={(e) => setF({ ...f, recurringUntil: e.target.value })}
+                className={fieldCls}
+              />
+              <div className="text-muted-foreground mt-1" style={{ fontSize: "11px" }}>
+                {t("coachTrainings.form.recurringHint")}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       <DialogFooter className="pt-2">
         <button
@@ -333,6 +423,23 @@ function BookingsPanel({ trainingId }: { trainingId: string }) {
   );
 }
 
+function useCourtNames(): string[] {
+  const { data } = useQuery({
+    queryKey: ["courts-list"],
+    queryFn: () => apiFetch("/courts"),
+    staleTime: 5 * 60 * 1000,
+  });
+  return useMemo(() => {
+    const fromApi = Array.isArray(data)
+      ? (data as Array<{ name?: string }>)
+          .map((c) => c?.name)
+          .filter((n): n is string => typeof n === "string" && n.length > 0)
+      : [];
+    const merged = Array.from(new Set([...fromApi, ...FALLBACK_COURTS]));
+    return merged;
+  }, [data]);
+}
+
 export default function CoachGroupTrainings() {
   const { t, language } = useLanguage();
   const { user } = useAuth();
@@ -340,9 +447,22 @@ export default function CoachGroupTrainings() {
   const qc = useQueryClient();
 
   const { data: trainings = [], isLoading } = useListGroupTrainings();
+  const courtOptions = useCourtNames();
   const [createOpen, setCreateOpen] = useState(false);
   const [editTraining, setEditTraining] = useState<GroupTraining | null>(null);
   const [detailTraining, setDetailTraining] = useState<GroupTraining | null>(null);
+  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
+
+  const weekdayLabels = useMemo(() => {
+    const locale = language === "ru" ? "ru-RU" : "en-GB";
+    // Sunday = 0 in JS Date.getDay()
+    const ref = new Date(2024, 0, 7); // Jan 7 2024 = Sunday
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(ref);
+      d.setDate(ref.getDate() + i);
+      return d.toLocaleDateString(locale, { weekday: "long" });
+    });
+  }, [language]);
 
   const createMut = useCreateGroupTraining({
     mutation: {
@@ -432,6 +552,14 @@ export default function CoachGroupTrainings() {
     });
   };
 
+  const formatTimeOnly = (iso: string) => {
+    const d = new Date(iso);
+    return d.toLocaleTimeString(language === "ru" ? "ru-RU" : "en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   const handleCreate = (f: FormState) => {
     createMut.mutate({
       data: {
@@ -445,14 +573,7 @@ export default function CoachGroupTrainings() {
         descriptionEn: f.descriptionEn || null,
         descriptionRu: f.descriptionRu || null,
         isRecurring: f.isRecurring,
-        recurringPattern: f.isRecurring
-          ? JSON.stringify({
-              freq: "WEEKLY",
-              weekday: new Date(toIsoLocal(f.date, f.time)).getDay(),
-              time: f.time,
-              tz: "Asia/Dubai",
-            })
-          : null,
+        recurringPattern: f.isRecurring ? buildRecurringPattern(f) : null,
       } as any,
     });
   };
@@ -472,14 +593,7 @@ export default function CoachGroupTrainings() {
         descriptionEn: f.descriptionEn || null,
         descriptionRu: f.descriptionRu || null,
         isRecurring: f.isRecurring,
-        recurringPattern: f.isRecurring
-          ? JSON.stringify({
-              freq: "WEEKLY",
-              weekday: new Date(toIsoLocal(f.date, f.time)).getDay(),
-              time: f.time,
-              tz: "Asia/Dubai",
-            })
-          : null,
+        recurringPattern: f.isRecurring ? buildRecurringPattern(f) : null,
       } as any,
     });
   };
@@ -489,6 +603,20 @@ export default function CoachGroupTrainings() {
     if (!window.confirm(t("coachTrainings.cancelConfirm", { count }))) return;
     cancelMut.mutate({ id: tr.id });
   };
+
+  // Calendar view: 14 upcoming days grouped by day
+  const calendarDays = useMemo(() => {
+    const today = startOfDay(new Date());
+    return Array.from({ length: 14 }, (_, i) => {
+      const day = addDays(today, i);
+      const dayEnd = addDays(day, 1);
+      const items = upcoming.filter((tr) => {
+        const ts = new Date(tr.dateTime).getTime();
+        return ts >= day.getTime() && ts < dayEnd.getTime();
+      });
+      return { day, items };
+    });
+  }, [upcoming]);
 
   return (
     <AppLayout>
@@ -518,48 +646,148 @@ export default function CoachGroupTrainings() {
           <StatCard label={t("coachTrainings.statNoShows")} value={noShowsLastWeek} />
         </div>
 
-        <h2 className="font-medium text-muted-foreground uppercase tracking-wider mb-3" style={{ fontSize: "11px", paddingLeft: "4px" }}>
-          {t("coachTrainings.upcomingHeader")}
-        </h2>
-
-        <div
-          className="rounded-[20px] overflow-hidden mb-6"
-          style={{ background: CARD_BG, border: CARD_BORDER }}
-        >
-          {isLoading ? (
-            <div className="text-center py-10 text-muted-foreground text-sm">…</div>
-          ) : upcoming.length === 0 ? (
-            <div className="text-center py-10 text-muted-foreground text-sm">{t("coachTrainings.noUpcoming")}</div>
-          ) : (
-            upcoming.map((tr, i) => (
-              <button
-                key={tr.id}
-                onClick={() => setDetailTraining(tr)}
-                className="w-full flex items-center justify-between px-5 cursor-pointer transition-colors hover:bg-white/[0.03] text-left"
-                style={{
-                  minHeight: "64px",
-                  borderTop: i === 0 ? "none" : CARD_BORDER,
-                }}
-              >
-                <div>
-                  <div className="text-white font-medium" style={{ fontSize: "14px" }}>
-                    {formatDateTime(tr.dateTime)} · {tr.category}
-                  </div>
-                  <div className="text-muted-foreground" style={{ fontSize: "12px" }}>
-                    {tr.courtName} · {tr.durationMinutes} min · {Number(tr.priceAed).toFixed(0)} AED
-                    {tr.isRecurring ? " · ↻" : ""}
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="font-mono text-white" style={{ fontSize: "13px" }}>
-                    {t("coachTrainings.openSlots", { count: tr.bookedCount ?? 0, max: tr.maxParticipants })}
-                  </span>
-                  <StatusPill status={tr.status} t={t} />
-                </div>
-              </button>
-            ))
-          )}
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-medium text-muted-foreground uppercase tracking-wider" style={{ fontSize: "11px", paddingLeft: "4px" }}>
+            {t("coachTrainings.upcomingHeader")}
+          </h2>
+          <div className="inline-flex rounded-xl overflow-hidden" style={{ border: CARD_BORDER, background: "rgba(255,255,255,0.03)" }}>
+            <button
+              onClick={() => setViewMode("list")}
+              className="px-3 py-1.5 transition-colors"
+              style={{
+                fontSize: "12px",
+                background: viewMode === "list" ? "#D4AF37" : "transparent",
+                color: viewMode === "list" ? "black" : "rgba(255,255,255,0.7)",
+                fontWeight: viewMode === "list" ? 600 : 400,
+              }}
+            >
+              {t("coachTrainings.viewList")}
+            </button>
+            <button
+              onClick={() => setViewMode("calendar")}
+              className="px-3 py-1.5 transition-colors"
+              style={{
+                fontSize: "12px",
+                background: viewMode === "calendar" ? "#D4AF37" : "transparent",
+                color: viewMode === "calendar" ? "black" : "rgba(255,255,255,0.7)",
+                fontWeight: viewMode === "calendar" ? 600 : 400,
+              }}
+            >
+              {t("coachTrainings.viewCalendar")}
+            </button>
+          </div>
         </div>
+
+        {viewMode === "list" ? (
+          <div
+            className="rounded-[20px] overflow-hidden mb-6"
+            style={{ background: CARD_BG, border: CARD_BORDER }}
+          >
+            {isLoading ? (
+              <div className="text-center py-10 text-muted-foreground text-sm">…</div>
+            ) : upcoming.length === 0 ? (
+              <div className="text-center py-10 text-muted-foreground text-sm">{t("coachTrainings.noUpcoming")}</div>
+            ) : (
+              upcoming.map((tr, i) => (
+                <button
+                  key={tr.id}
+                  onClick={() => setDetailTraining(tr)}
+                  className="w-full flex items-center justify-between px-5 cursor-pointer transition-colors hover:bg-white/[0.03] text-left"
+                  style={{
+                    minHeight: "64px",
+                    borderTop: i === 0 ? "none" : CARD_BORDER,
+                  }}
+                >
+                  <div>
+                    <div className="text-white font-medium" style={{ fontSize: "14px" }}>
+                      {formatDateTime(tr.dateTime)} · {tr.category}
+                    </div>
+                    <div className="text-muted-foreground" style={{ fontSize: "12px" }}>
+                      {tr.courtName} · {tr.durationMinutes} min · {Number(tr.priceAed).toFixed(0)} AED
+                      {tr.isRecurring ? " · ↻" : ""}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-white" style={{ fontSize: "13px" }}>
+                      {t("coachTrainings.openSlots", { count: tr.bookedCount ?? 0, max: tr.maxParticipants })}
+                    </span>
+                    <StatusPill status={tr.status} t={t} />
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+        ) : (
+          <div className="space-y-3 mb-6">
+            {calendarDays.map(({ day, items }) => {
+              const isToday = day.getTime() === startOfDay(new Date()).getTime();
+              const dayLabel = day.toLocaleDateString(language === "ru" ? "ru-RU" : "en-GB", {
+                weekday: "long",
+                day: "numeric",
+                month: "short",
+              });
+              return (
+                <div
+                  key={day.toISOString()}
+                  className="rounded-[16px] overflow-hidden"
+                  style={{ background: CARD_BG, border: CARD_BORDER }}
+                >
+                  <div
+                    className="px-4 py-2 flex items-center justify-between"
+                    style={{
+                      background: isToday ? "rgba(212,175,55,0.08)" : "rgba(255,255,255,0.02)",
+                      borderBottom: items.length > 0 ? CARD_BORDER : "none",
+                    }}
+                  >
+                    <span
+                      className="font-medium"
+                      style={{
+                        fontSize: "12px",
+                        color: isToday ? "#D4AF37" : "rgba(255,255,255,0.75)",
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      {dayLabel}
+                    </span>
+                    <span className="text-muted-foreground" style={{ fontSize: "11px" }}>
+                      {items.length === 0
+                        ? t("coachTrainings.calendarEmpty")
+                        : t("coachTrainings.calendarCount", { count: items.length })}
+                    </span>
+                  </div>
+                  {items.map((tr, i) => (
+                    <button
+                      key={tr.id}
+                      onClick={() => setDetailTraining(tr)}
+                      className="w-full px-4 py-2.5 flex items-center justify-between cursor-pointer transition-colors hover:bg-white/[0.03] text-left"
+                      style={{ borderTop: i === 0 ? "none" : CARD_BORDER }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono text-white" style={{ fontSize: "13px", minWidth: "44px" }}>
+                          {formatTimeOnly(tr.dateTime)}
+                        </span>
+                        <div>
+                          <div className="text-white" style={{ fontSize: "13px" }}>
+                            {tr.category} · {tr.courtName}
+                          </div>
+                          <div className="text-muted-foreground" style={{ fontSize: "11px" }}>
+                            {tr.durationMinutes} min · {Number(tr.priceAed).toFixed(0)} AED{tr.isRecurring ? " · ↻" : ""}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-white" style={{ fontSize: "12px" }}>
+                          {t("coachTrainings.openSlots", { count: tr.bookedCount ?? 0, max: tr.maxParticipants })}
+                        </span>
+                        <StatusPill status={tr.status} t={t} />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Create dialog */}
@@ -569,10 +797,11 @@ export default function CoachGroupTrainings() {
             <DialogTitle className="text-white">{t("coachTrainings.form.createTitle")}</DialogTitle>
           </DialogHeader>
           <TrainingForm
-            mode="create"
             initial={blankForm()}
             onSubmit={handleCreate}
             saving={createMut.isPending}
+            courtOptions={courtOptions}
+            weekdayLabels={weekdayLabels}
           />
         </DialogContent>
       </Dialog>
@@ -585,10 +814,11 @@ export default function CoachGroupTrainings() {
           </DialogHeader>
           {editTraining && (
             <TrainingForm
-              mode="edit"
               initial={formFromTraining(editTraining)}
               onSubmit={handleUpdate}
               saving={updateMut.isPending}
+              courtOptions={courtOptions}
+              weekdayLabels={weekdayLabels}
             />
           )}
         </DialogContent>

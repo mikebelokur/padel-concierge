@@ -6,7 +6,12 @@ if (!DATABASE_URL) {
   process.exit(1);
 }
 
-const MIKE_EMAIL = "misha.belokur@gmail.com";
+const MIKE_EMAIL_OVERRIDE = process.env.MIKE_EMAIL;
+const MIKE_EMAIL_CANDIDATES = [
+  "mikebelokur8@gmail.com",
+  "misha.belokur@gmail.com",
+  "misha.belokur8@gmail.com",
+];
 const COURT_NAME = "Padel 360";
 
 type Slot = {
@@ -93,15 +98,32 @@ async function main() {
   const client = new Client({ connectionString: DATABASE_URL });
   await client.connect();
   try {
-    const mikeRes = await client.query<{ id: number }>(
-      `SELECT id FROM users WHERE email = $1 LIMIT 1`,
-      [MIKE_EMAIL],
+    const candidates = MIKE_EMAIL_OVERRIDE
+      ? [MIKE_EMAIL_OVERRIDE]
+      : MIKE_EMAIL_CANDIDATES;
+    // Prefer a coach/admin/owner row to avoid landing on a player namesake.
+    const mikeRes = await client.query<{ id: number; email: string; role: string }>(
+      `SELECT id, email, role FROM users WHERE email = ANY($1::text[])
+       ORDER BY CASE role
+         WHEN 'owner' THEN 0
+         WHEN 'admin' THEN 1
+         WHEN 'coach' THEN 2
+         ELSE 9
+       END,
+       array_position($1::text[], email)
+       LIMIT 1`,
+      [candidates],
     );
     if (mikeRes.rows.length === 0) {
-      throw new Error(`Mike not found: no user with email ${MIKE_EMAIL}`);
+      throw new Error(
+        `Mike not found. Tried emails: ${candidates.join(", ")}. ` +
+          `Set MIKE_EMAIL env var to override.`,
+      );
     }
     const MIKE_USER_ID = mikeRes.rows[0].id;
-    console.log(`Resolved Mike (${MIKE_EMAIL}) -> userId=${MIKE_USER_ID}`);
+    console.log(
+      `Resolved Mike (${mikeRes.rows[0].email}, role=${mikeRes.rows[0].role}) -> userId=${MIKE_USER_ID}`,
+    );
     let inserted = 0;
     let skipped = 0;
     for (const s of SLOTS) {

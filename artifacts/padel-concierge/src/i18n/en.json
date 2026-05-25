@@ -819,6 +819,35 @@
     "risk": "⚠ Risk",
     "player": "Player"
   },
+  "userSegmentation": {
+    "title": "User Segmentation",
+    "subtitle": "Manage user types — affects matchmaking and visibility",
+    "counts": {
+      "real_user": "Real Users",
+      "seed_test": "Seed / Test",
+      "beta_tester": "Beta Testers"
+    },
+    "filter": {
+      "all": "All",
+      "real_user": "Real",
+      "seed_test": "Seed",
+      "beta_tester": "Beta"
+    },
+    "typeLabel": {
+      "real_user": "Real User",
+      "seed_test": "Seed / Test",
+      "beta_tester": "Beta Tester"
+    },
+    "betaBadge": "BETA",
+    "changeType": "Change type",
+    "confirmTitle": "Change user type?",
+    "confirmDesc": "Set {{name}} to «{{type}}»?",
+    "confirmButton": "Confirm",
+    "cancel": "Cancel",
+    "saving": "Saving…",
+    "toastSuccess": "User type updated",
+    "toastError": "Failed to update"
+  },
   "videoAnalysisDetail": {
     "title": "Analysis Report #{{id}}",
     "deliveredOn": "Delivered on {{date}}",

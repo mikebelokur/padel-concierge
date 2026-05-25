@@ -47,6 +47,7 @@ export const usersTable = pgTable("users", {
   levelQuiz: text("level_quiz"),
   physicalSelf: integer("physical_self"),
   warmupFormat: text("warmup_format"),
+  userType: text("user_type").notNull().default("real_user"),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({

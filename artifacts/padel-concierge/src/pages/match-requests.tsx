@@ -224,6 +224,14 @@ function PlayerCard({
               {t("matchRequests.matchBadge")}
             </span>
           )}
+          {(player as any).isBeta && (
+            <span
+              className="text-xs font-bold rounded-full px-2 py-0.5"
+              style={{ background: "rgba(100,180,255,0.12)", border: "1px solid rgba(100,180,255,0.3)", color: "#64b4ff" }}
+            >
+              {t("userSegmentation.betaBadge")}
+            </span>
+          )}
           {compatPct !== undefined && <CompatBadge pct={compatPct} />}
           <RiskWarning profile={reliability} />
         </div>

@@ -627,6 +627,42 @@ paths:
                 items:
                   $ref: "#/components/schemas/ActivityLog"
 
+  # ADMIN
+  /admin/users/{id}/user-type:
+    patch:
+      operationId: patchAdminUserType
+      tags: [admin]
+      summary: Set user type (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userType:
+                  type: string
+                  enum: [real_user, seed_test, beta_tester]
+              required:
+                - userType
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Bad request
+        "403":
+          description: Forbidden
+
   # COACH
   /coach/players:
     get:
@@ -779,6 +815,11 @@ components:
           type: ["string", "null"]
         archetype:
           type: ["string", "null"]
+        userType:
+          type: string
+          enum: [real_user, seed_test, beta_tester]
+        isBeta:
+          type: boolean
       required:
         - id
         - name
@@ -796,6 +837,7 @@ components:
         - language
         - isOnline
         - createdAt
+        - userType
 
     AvailabilityEntry:
       type: object

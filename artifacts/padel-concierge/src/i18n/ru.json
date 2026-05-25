@@ -819,6 +819,35 @@
     "risk": "⚠ Риск",
     "player": "Игрок"
   },
+  "userSegmentation": {
+    "title": "Сегментация пользователей",
+    "subtitle": "Управляй типами — влияет на подбор партнёров и видимость",
+    "counts": {
+      "real_user": "Реальные",
+      "seed_test": "Тест / Сид",
+      "beta_tester": "Бета"
+    },
+    "filter": {
+      "all": "Все",
+      "real_user": "Реальные",
+      "seed_test": "Тест",
+      "beta_tester": "Бета"
+    },
+    "typeLabel": {
+      "real_user": "Реальный",
+      "seed_test": "Тест / Сид",
+      "beta_tester": "Бета"
+    },
+    "betaBadge": "BETA",
+    "changeType": "Изменить тип",
+    "confirmTitle": "Изменить тип?",
+    "confirmDesc": "Установить «{{type}}» для {{name}}?",
+    "confirmButton": "Подтвердить",
+    "cancel": "Отмена",
+    "saving": "Сохраняем…",
+    "toastSuccess": "Тип обновлён",
+    "toastError": "Не удалось обновить"
+  },
   "videoAnalysisDetail": {
     "title": "Отчёт об анализе #{{id}}",
     "deliveredOn": "Доставлен {{date}}",

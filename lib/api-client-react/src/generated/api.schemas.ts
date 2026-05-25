@@ -35,6 +35,14 @@ export interface AvailabilityEntry {
   slots: string[][];
 }
 
+export type UserUserType = (typeof UserUserType)[keyof typeof UserUserType];
+
+export const UserUserType = {
+  real_user: "real_user",
+  seed_test: "seed_test",
+  beta_tester: "beta_tester",
+} as const;
+
 export interface User {
   id: number;
   name: string;
@@ -68,6 +76,8 @@ export interface User {
   lastLogin?: string | null;
   /** @nullable */
   archetype?: string | null;
+  userType: UserUserType;
+  isBeta?: boolean;
 }
 
 export interface AuthResponse {
@@ -330,4 +340,17 @@ export type ListVideoAnalysesParams = {
 
 export type GetActivityLogParams = {
   limit?: number;
+};
+
+export type PatchAdminUserTypeBodyUserType =
+  (typeof PatchAdminUserTypeBodyUserType)[keyof typeof PatchAdminUserTypeBodyUserType];
+
+export const PatchAdminUserTypeBodyUserType = {
+  real_user: "real_user",
+  seed_test: "seed_test",
+  beta_tester: "beta_tester",
+} as const;
+
+export type PatchAdminUserTypeBody = {
+  userType: PatchAdminUserTypeBodyUserType;
 };

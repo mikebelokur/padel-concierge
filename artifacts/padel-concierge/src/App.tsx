@@ -29,6 +29,7 @@ import VideoAnalysisDetail from "@/pages/video-analysis-detail";
 import Settings from "@/pages/settings";
 import CoachDashboard from "@/pages/coach";
 import Admin from "@/pages/admin";
+import AdminUsers from "@/pages/admin-users";
 import Courts from "@/pages/courts";
 import Members from "@/pages/members";
 import MatchRequests from "@/pages/match-requests";
@@ -142,6 +143,7 @@ function Router() {
 
       <Route path="/registrations">{() => <ProtectedRoute component={Registrations} allowedRoles={["admin", "owner"]} />}</Route>
       <Route path="/coach">{() => <ProtectedRoute component={CoachDashboard} allowedRoles={["coach", "admin", "owner"]} />}</Route>
+      <Route path="/admin/users">{() => <ProtectedRoute component={AdminUsers} allowedRoles={["admin", "owner"]} />}</Route>
       <Route path="/admin">{() => <ProtectedRoute component={Admin} allowedRoles={["admin", "owner"]} />}</Route>
 
       <Route component={NotFound} />

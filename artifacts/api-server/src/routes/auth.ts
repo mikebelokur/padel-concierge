@@ -39,6 +39,7 @@ function formatUser(user: typeof usersTable.$inferSelect) {
     levelQuiz: user.levelQuiz ?? null,
     physicalSelf: user.physicalSelf ?? null,
     warmupFormat: user.warmupFormat ?? null,
+    userType: user.userType ?? "real_user",
   };
 }
 

@@ -32,7 +32,15 @@ router.get("/users/find-matches", async (req, res): Promise<void> => {
   if (!me) { res.status(404).json({ error: "User not found" }); return; }
 
   const allUsers = await db.select().from(usersTable);
-  const others = allUsers.filter(u => u.id !== userId && u.approvalStatus === "approved");
+
+  const myUserType = me.userType ?? "real_user";
+  const others = allUsers.filter(u => {
+    if (u.id === userId) return false;
+    if (u.approvalStatus !== "approved") return false;
+    const uType = u.userType ?? "real_user";
+    if (myUserType === "seed_test") return uType === "seed_test";
+    return uType === "real_user" || uType === "beta_tester";
+  });
 
   const myLvl = levelIdx(me.level);
 
@@ -81,6 +89,7 @@ router.get("/users/find-matches", async (req, res): Promise<void> => {
       archetypeMatch: c.archetypeMatch,
       priority: c.priority,
       compatibilityScore: c.compatibilityScore,
+      isBeta: (c.user.userType ?? "real_user") === "beta_tester",
     })),
     noMatchesMessage: top3.length === 0
       ? "Подходящих игроков пока нет. Попробуй позже или расширь время доступности."

@@ -35,6 +35,7 @@ import type {
   LoginBody,
   Match,
   MatchSuggestions,
+  PatchAdminUserTypeBody,
   PaymentIntentResponse,
   PlayerStats,
   RegisterBody,
@@ -2529,6 +2530,93 @@ export function useGetActivityLog<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Set user type (admin only)
+ */
+export const getPatchAdminUserTypeUrl = (id: number) => {
+  return `/api/admin/users/${id}/user-type`;
+};
+
+export const patchAdminUserType = async (
+  id: number,
+  patchAdminUserTypeBody: PatchAdminUserTypeBody,
+  options?: RequestInit,
+): Promise<User> => {
+  return customFetch<User>(getPatchAdminUserTypeUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(patchAdminUserTypeBody),
+  });
+};
+
+export const getPatchAdminUserTypeMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof patchAdminUserType>>,
+    TError,
+    { id: number; data: BodyType<PatchAdminUserTypeBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof patchAdminUserType>>,
+  TError,
+  { id: number; data: BodyType<PatchAdminUserTypeBody> },
+  TContext
+> => {
+  const mutationKey = ["patchAdminUserType"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof patchAdminUserType>>,
+    { id: number; data: BodyType<PatchAdminUserTypeBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return patchAdminUserType(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PatchAdminUserTypeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof patchAdminUserType>>
+>;
+export type PatchAdminUserTypeMutationBody = BodyType<PatchAdminUserTypeBody>;
+export type PatchAdminUserTypeMutationError = ErrorType<void>;
+
+/**
+ * @summary Set user type (admin only)
+ */
+export const usePatchAdminUserType = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof patchAdminUserType>>,
+    TError,
+    { id: number; data: BodyType<PatchAdminUserTypeBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof patchAdminUserType>>,
+  TError,
+  { id: number; data: BodyType<PatchAdminUserTypeBody> },
+  TContext
+> => {
+  return useMutation(getPatchAdminUserTypeMutationOptions(options));
+};
 
 /**
  * @summary List all players (coach view)

@@ -71,6 +71,8 @@ export const LoginResponse = zod.object({
     createdAt: zod.string(),
     lastLogin: zod.string().nullish(),
     archetype: zod.string().nullish(),
+    userType: zod.enum(["real_user", "seed_test", "beta_tester"]),
+    isBeta: zod.boolean().optional(),
   }),
 });
 
@@ -107,6 +109,8 @@ export const GetMeResponse = zod.object({
   createdAt: zod.string(),
   lastLogin: zod.string().nullish(),
   archetype: zod.string().nullish(),
+  userType: zod.enum(["real_user", "seed_test", "beta_tester"]),
+  isBeta: zod.boolean().optional(),
 });
 
 /**
@@ -142,6 +146,8 @@ export const ListUsersResponseItem = zod.object({
   createdAt: zod.string(),
   lastLogin: zod.string().nullish(),
   archetype: zod.string().nullish(),
+  userType: zod.enum(["real_user", "seed_test", "beta_tester"]),
+  isBeta: zod.boolean().optional(),
 });
 export const ListUsersResponse = zod.array(ListUsersResponseItem);
 
@@ -182,6 +188,8 @@ export const GetUserResponse = zod.object({
   createdAt: zod.string(),
   lastLogin: zod.string().nullish(),
   archetype: zod.string().nullish(),
+  userType: zod.enum(["real_user", "seed_test", "beta_tester"]),
+  isBeta: zod.boolean().optional(),
 });
 
 /**
@@ -234,6 +242,8 @@ export const UpdateUserResponse = zod.object({
   createdAt: zod.string(),
   lastLogin: zod.string().nullish(),
   archetype: zod.string().nullish(),
+  userType: zod.enum(["real_user", "seed_test", "beta_tester"]),
+  isBeta: zod.boolean().optional(),
 });
 
 /**
@@ -282,6 +292,8 @@ export const UpdateAvailabilityResponse = zod.object({
   createdAt: zod.string(),
   lastLogin: zod.string().nullish(),
   archetype: zod.string().nullish(),
+  userType: zod.enum(["real_user", "seed_test", "beta_tester"]),
+  isBeta: zod.boolean().optional(),
 });
 
 /**
@@ -325,6 +337,8 @@ export const AddFavouriteResponse = zod.object({
   createdAt: zod.string(),
   lastLogin: zod.string().nullish(),
   archetype: zod.string().nullish(),
+  userType: zod.enum(["real_user", "seed_test", "beta_tester"]),
+  isBeta: zod.boolean().optional(),
 });
 
 /**
@@ -368,6 +382,8 @@ export const RemoveFavouriteResponse = zod.object({
   createdAt: zod.string(),
   lastLogin: zod.string().nullish(),
   archetype: zod.string().nullish(),
+  userType: zod.enum(["real_user", "seed_test", "beta_tester"]),
+  isBeta: zod.boolean().optional(),
 });
 
 /**
@@ -407,6 +423,8 @@ export const VerifyUserResponse = zod.object({
   createdAt: zod.string(),
   lastLogin: zod.string().nullish(),
   archetype: zod.string().nullish(),
+  userType: zod.enum(["real_user", "seed_test", "beta_tester"]),
+  isBeta: zod.boolean().optional(),
 });
 
 /**
@@ -1066,6 +1084,51 @@ export const GetActivityLogResponseItem = zod.object({
 export const GetActivityLogResponse = zod.array(GetActivityLogResponseItem);
 
 /**
+ * @summary Set user type (admin only)
+ */
+export const PatchAdminUserTypeParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const PatchAdminUserTypeBody = zod.object({
+  userType: zod.enum(["real_user", "seed_test", "beta_tester"]),
+});
+
+export const PatchAdminUserTypeResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  email: zod.string(),
+  phone: zod.string(),
+  level: zod.string(),
+  goal: zod.string(),
+  intensity: zod.string(),
+  locationLat: zod.number().nullish(),
+  locationLng: zod.number().nullish(),
+  locationName: zod.string().nullish(),
+  avatar: zod.string().nullish(),
+  verified: zod.boolean(),
+  verificationDate: zod.string().nullish(),
+  role: zod.string(),
+  favouritePlayers: zod.array(zod.number()),
+  availability: zod.array(
+    zod.object({
+      date: zod.string(),
+      slots: zod.array(zod.array(zod.string())),
+    }),
+  ),
+  matchesPlayed: zod.number(),
+  wins: zod.number(),
+  language: zod.string(),
+  isOnline: zod.boolean(),
+  lastActive: zod.string().nullish(),
+  createdAt: zod.string(),
+  lastLogin: zod.string().nullish(),
+  archetype: zod.string().nullish(),
+  userType: zod.enum(["real_user", "seed_test", "beta_tester"]),
+  isBeta: zod.boolean().optional(),
+});
+
+/**
  * @summary List all players (coach view)
  */
 export const ListCoachPlayersResponseItem = zod.object({
@@ -1098,6 +1161,8 @@ export const ListCoachPlayersResponseItem = zod.object({
   createdAt: zod.string(),
   lastLogin: zod.string().nullish(),
   archetype: zod.string().nullish(),
+  userType: zod.enum(["real_user", "seed_test", "beta_tester"]),
+  isBeta: zod.boolean().optional(),
 });
 export const ListCoachPlayersResponse = zod.array(ListCoachPlayersResponseItem);
 

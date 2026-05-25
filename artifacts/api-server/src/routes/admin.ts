@@ -66,6 +66,36 @@ router.delete("/admin/users/:id", async (req, res): Promise<void> => {
   res.json({ message: "User deleted" });
 });
 
+// PATCH /api/admin/users/:id/user-type — set user type
+router.patch("/admin/users/:id/user-type", async (req, res): Promise<void> => {
+  const auth = requireOwnerOrAdmin(req, res);
+  if (!auth) return;
+
+  const id = parseInt(req.params.id);
+  const { userType } = req.body;
+  const validTypes = ["real_user", "seed_test", "beta_tester"];
+  if (!userType || !validTypes.includes(userType)) {
+    res.status(400).json({ error: "Invalid userType" });
+    return;
+  }
+
+  const [user] = await db.update(usersTable)
+    .set({ userType })
+    .where(eq(usersTable.id, id))
+    .returning();
+
+  if (!user) { res.status(404).json({ error: "User not found" }); return; }
+
+  await db.insert(activityLogsTable).values({
+    userId: id,
+    userName: user.name,
+    action: "user_type_changed",
+    details: `User type set to ${userType} by admin`,
+  });
+
+  res.json(formatUser(user));
+});
+
 // PUT /api/admin/users/:id/role — set role
 router.put("/admin/users/:id/role", async (req, res): Promise<void> => {
   if (!requireOwnerOrAdmin(req, res)) return;

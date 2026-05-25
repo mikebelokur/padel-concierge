@@ -25,6 +25,19 @@ const CATEGORY_INDEX: Record<string, number> = Object.fromEntries(
   CATEGORIES.map((c, i) => [c, i]),
 );
 
+// Player levels extend above the training categories. Players at B/B+/A-/A
+// are valid and eligible for every category. Returns -1 for unknown levels.
+const PLAYER_LEVELS = [
+  "D-", "D", "D+", "C-", "C", "C+", "B-", "B", "B+", "A-", "A",
+] as const;
+const PLAYER_LEVEL_INDEX: Record<string, number> = Object.fromEntries(
+  PLAYER_LEVELS.map((l, i) => [l, i]),
+);
+function playerEligibilityIndex(level: string | null | undefined): number {
+  if (!level) return -1;
+  return PLAYER_LEVEL_INDEX[level] ?? -1;
+}
+
 const UuidSchema = z.string().uuid();
 
 function isCoachRole(role: string): boolean {
@@ -239,7 +252,7 @@ router.get("/group-trainings/:id", async (req, res): Promise<void> => {
       .select({ level: usersTable.level })
       .from(usersTable)
       .where(eq(usersTable.id, authUserId));
-    const myIdx = me ? (CATEGORY_INDEX[me.level] ?? -1) : -1;
+    const myIdx = playerEligibilityIndex(me?.level);
     const tIdx = CATEGORY_INDEX[t.category] ?? 99;
 
     const [activeBooking] = await db
@@ -504,7 +517,7 @@ router.post("/group-trainings/:id/book", async (req, res): Promise<void> => {
     res.status(404).json({ error: "User not found" });
     return;
   }
-  const myIdx = CATEGORY_INDEX[me.level] ?? -1;
+  const myIdx = playerEligibilityIndex(me.level);
   const tIdx = CATEGORY_INDEX[training.category] ?? 99;
   if (myIdx < 0 || tIdx > myIdx) {
     res

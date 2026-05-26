@@ -53,6 +53,15 @@ router.post("/bookings", async (req, res): Promise<void> => {
   if (!user) { res.status(404).json({ error: "User not found" }); return; }
   if (!match) { res.status(404).json({ error: "Match not found" }); return; }
 
+  // Task #137: block bookings when player has no level set
+  if (user.role === "player" && (!user.level || user.level.trim() === "")) {
+    res.status(400).json({
+      error: "Please set your padel level before booking a court.",
+      code: "LEVEL_REQUIRED",
+    });
+    return;
+  }
+
   const [booking] = await db.insert(bookingsTable).values({ userId, matchId }).returning();
 
   await db.insert(activityLogsTable).values({

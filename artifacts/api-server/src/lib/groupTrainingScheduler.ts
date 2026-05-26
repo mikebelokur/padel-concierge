@@ -38,8 +38,63 @@ export interface TickResult {
 
 export async function runGroupTrainingTick(): Promise<TickResult> {
   const generated = await generateRecurringInstances();
+  await transitionRegistrationWindows();
   const notified = await dispatchNotifications();
   return { generated, notified };
+}
+
+/**
+ * Auto-transition registration windows:
+ *   scheduled → open    when starts in ≤ 48h
+ *   open      → closed  when starts in ≤ 12h
+ * Triggers a per-user session-open email (reusing 12h cooldown) on
+ * scheduled→open transitions via dispatchSessionOpenEmails().
+ */
+async function transitionRegistrationWindows(): Promise<void> {
+  const now = new Date();
+  const in48h = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+  const in12h = new Date(now.getTime() + 12 * 60 * 60 * 1000);
+
+  // scheduled → open (48h window opens)
+  const opened = await db
+    .update(groupTrainingsTable)
+    .set({ status: "open", updatedAt: now })
+    .where(
+      and(
+        eq(groupTrainingsTable.status, "scheduled"),
+        lte(groupTrainingsTable.dateTime, in48h),
+        gte(groupTrainingsTable.dateTime, now),
+      ),
+    )
+    .returning({ id: groupTrainingsTable.id, category: groupTrainingsTable.category, dateTime: groupTrainingsTable.dateTime, courtName: groupTrainingsTable.courtName });
+
+  if (opened.length > 0) {
+    logger.info({ count: opened.length, ids: opened.map((o) => o.id) }, "groupTrainingScheduler: opened registration");
+    // Dispatch session-open emails (Task D — defined in sessionOpenMailer)
+    try {
+      const mod = await import("./sessionOpenMailer");
+      for (const t of opened) await mod.dispatchSessionOpenEmails(t);
+    } catch (err) {
+      logger.error({ err }, "sessionOpenMailer: dispatch failed");
+    }
+  }
+
+  // open → closed (12h window closes; full stays full)
+  const closed = await db
+    .update(groupTrainingsTable)
+    .set({ status: "closed", updatedAt: now })
+    .where(
+      and(
+        eq(groupTrainingsTable.status, "open"),
+        lte(groupTrainingsTable.dateTime, in12h),
+        gte(groupTrainingsTable.dateTime, now),
+      ),
+    )
+    .returning({ id: groupTrainingsTable.id });
+
+  if (closed.length > 0) {
+    logger.info({ count: closed.length, ids: closed.map((c) => c.id) }, "groupTrainingScheduler: closed registration");
+  }
 }
 
 async function generateRecurringInstances(): Promise<number> {
@@ -94,7 +149,7 @@ async function generateRecurringInstances(): Promise<number> {
         priceAed: String(s.priceAed),
         descriptionEn: s.descriptionEn ?? null,
         descriptionRu: s.descriptionRu ?? null,
-        status: "open" as const,
+        status: "scheduled" as const,
         isRecurring: true,
         recurringSeriesId: s.id,
         recurringPattern: `WEEKLY:${s.weekday}:${s.startTime}`,

@@ -49,13 +49,46 @@ const ALL_TYPES: UserType[] = ["real_user", "seed_test", "beta_tester"];
 const MIKE_EMAIL = "mikebelokur8@gmail.com";
 
 export default function AdminUsers() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const ru = language === "ru";
   const { toast } = useToast();
   const qc = useQueryClient();
   const { user: me } = useAuth();
 
   const [filter, setFilter] = useState<"all" | UserType>("all");
   const [search, setSearch] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
+  const [addForm, setAddForm] = useState({ name: "", email: "", phone: "", level: "D", role: "player" });
+  const [addError, setAddError] = useState<string | null>(null);
+  const [inviteResult, setInviteResult] = useState<{ inviteUrl: string; emailSent: boolean } | null>(null);
+
+  const addMutation = useMutation({
+    mutationFn: () =>
+      apiFetch<{ user: AdminUser; inviteUrl: string; emailSent: boolean }>("/admin/users", {
+        method: "POST",
+        body: JSON.stringify(addForm),
+      }),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["admin-users-seg"] });
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+      setInviteResult({ inviteUrl: data.inviteUrl, emailSent: data.emailSent });
+      setAddForm({ name: "", email: "", phone: "", level: "D", role: "player" });
+      toast({ title: ru ? "Игрок добавлен" : "Player added" });
+    },
+    onError: (err: any) => {
+      setAddError(err?.message ?? (ru ? "Ошибка" : "Error"));
+    },
+  });
+
+  const submitAdd = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddError(null);
+    if (!addForm.name.trim() || !addForm.email.trim()) {
+      setAddError(ru ? "Имя и e-mail обязательны" : "Name and email required");
+      return;
+    }
+    addMutation.mutate();
+  };
   // Reset to page 1 when filter or search changes — use a setter wrapper
   const setFilterAndReset = (v: "all" | UserType) => { setFilter(v); setPage(1); };
   const setSearchAndReset = (v: string) => { setSearch(v); setPage(1); };
@@ -105,14 +138,131 @@ export default function AdminUsers() {
       <div className="max-w-2xl mx-auto px-5 animate-fade-up" style={{ paddingTop: "28px", paddingBottom: "40px" }}>
 
         {/* Header */}
-        <header className="mb-6">
-          <h1 className="font-serif font-bold text-white mb-1" style={{ fontSize: "26px" }}>
-            {t("userSegmentation.title")}
-          </h1>
-          <p className="text-muted-foreground" style={{ fontSize: "15px" }}>
-            {t("userSegmentation.subtitle")}
-          </p>
+        <header className="mb-6 flex items-start justify-between gap-3">
+          <div>
+            <h1 className="font-serif font-bold text-white mb-1" style={{ fontSize: "26px" }}>
+              {t("userSegmentation.title")}
+            </h1>
+            <p className="text-muted-foreground" style={{ fontSize: "15px" }}>
+              {t("userSegmentation.subtitle")}
+            </p>
+          </div>
+          {!(me?.role === "player" && me?.email === MIKE_EMAIL) && (
+            <button
+              onClick={() => { setShowAdd(true); setInviteResult(null); setAddError(null); }}
+              className="rounded-full px-4 py-2 text-sm font-semibold flex-shrink-0"
+              style={{ background: "#D4AF37", color: "#000" }}
+            >
+              + {ru ? "Добавить игрока" : "Add player"}
+            </button>
+          )}
         </header>
+
+        {/* Add player modal */}
+        {showAdd && (
+          <div
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-5"
+            style={{ background: "rgba(0,0,0,0.7)" }}
+            onClick={() => { setShowAdd(false); setInviteResult(null); }}
+          >
+            <div
+              className="w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl p-6"
+              style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.10)" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {inviteResult ? (
+                <>
+                  <h2 className="font-serif text-white mb-2" style={{ fontSize: 20 }}>
+                    {ru ? "Приглашение отправлено" : "Invite sent"}
+                  </h2>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    {inviteResult.emailSent
+                      ? (ru ? "Письмо отправлено на e-mail." : "Email delivered to player.")
+                      : (ru ? "E-mail не настроен — отправьте ссылку вручную:" : "Email not configured — share the link manually:")}
+                  </p>
+                  <div className="rounded-lg p-3 text-xs font-mono break-all mb-4" style={{ background: "rgba(255,255,255,0.05)", color: "#D4AF37" }}>
+                    {inviteResult.inviteUrl}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => navigator.clipboard?.writeText(inviteResult.inviteUrl)}
+                      className="flex-1 rounded-full px-4 py-2.5 text-sm font-medium"
+                      style={{ background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.12)" }}
+                    >
+                      {ru ? "Скопировать" : "Copy link"}
+                    </button>
+                    <button
+                      onClick={() => { setShowAdd(false); setInviteResult(null); }}
+                      className="flex-1 rounded-full px-4 py-2.5 text-sm font-semibold"
+                      style={{ background: "#D4AF37", color: "#000" }}
+                    >
+                      {ru ? "Готово" : "Done"}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <form onSubmit={submitAdd}>
+                  <h2 className="font-serif text-white mb-4" style={{ fontSize: 20 }}>
+                    {ru ? "Добавить игрока" : "Add player"}
+                  </h2>
+                  <div className="flex flex-col gap-3">
+                    <input
+                      placeholder={ru ? "Имя" : "Name"}
+                      value={addForm.name}
+                      onChange={(e) => setAddForm((f) => ({ ...f, name: e.target.value }))}
+                      className="rounded-xl px-3.5 py-2.5 text-sm bg-transparent text-white placeholder:text-muted-foreground outline-none"
+                      style={{ border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.03)" }}
+                    />
+                    <input
+                      type="email"
+                      placeholder="E-mail"
+                      value={addForm.email}
+                      onChange={(e) => setAddForm((f) => ({ ...f, email: e.target.value }))}
+                      className="rounded-xl px-3.5 py-2.5 text-sm bg-transparent text-white placeholder:text-muted-foreground outline-none"
+                      style={{ border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.03)" }}
+                    />
+                    <input
+                      placeholder={ru ? "Телефон (необязательно)" : "Phone (optional)"}
+                      value={addForm.phone}
+                      onChange={(e) => setAddForm((f) => ({ ...f, phone: e.target.value }))}
+                      className="rounded-xl px-3.5 py-2.5 text-sm bg-transparent text-white placeholder:text-muted-foreground outline-none"
+                      style={{ border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.03)" }}
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <select
+                        value={addForm.level}
+                        onChange={(e) => setAddForm((f) => ({ ...f, level: e.target.value }))}
+                        className="rounded-xl px-3.5 py-2.5 text-sm text-white outline-none"
+                        style={{ border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.03)" }}
+                      >
+                        {["D-","D","D+","C-","C","C+","B-","B","B+","A-","A"].map(lv => <option key={lv} value={lv} style={{ background: "#0c1320" }}>{lv}</option>)}
+                      </select>
+                      <select
+                        value={addForm.role}
+                        onChange={(e) => setAddForm((f) => ({ ...f, role: e.target.value }))}
+                        className="rounded-xl px-3.5 py-2.5 text-sm text-white outline-none"
+                        style={{ border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.03)" }}
+                      >
+                        <option value="player" style={{ background: "#0c1320" }}>{ru ? "Игрок" : "Player"}</option>
+                        <option value="coach" style={{ background: "#0c1320" }}>{ru ? "Тренер" : "Coach"}</option>
+                        <option value="admin" style={{ background: "#0c1320" }}>Admin</option>
+                      </select>
+                    </div>
+                    {addError && <div className="text-xs text-red-400">{addError}</div>}
+                    <div className="flex gap-2 mt-2">
+                      <button type="button" onClick={() => setShowAdd(false)} className="flex-1 rounded-full px-4 py-2.5 text-sm font-medium" style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.12)" }}>
+                        {ru ? "Отмена" : "Cancel"}
+                      </button>
+                      <button type="submit" disabled={addMutation.isPending} className="flex-1 rounded-full px-4 py-2.5 text-sm font-semibold disabled:opacity-50" style={{ background: "#D4AF37", color: "#000" }}>
+                        {addMutation.isPending ? (ru ? "Отправка…" : "Sending…") : (ru ? "Отправить приглашение" : "Send invite")}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Count cards */}
         <div className="grid grid-cols-3 gap-3 mb-6">

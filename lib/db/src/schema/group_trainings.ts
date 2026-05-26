@@ -31,7 +31,7 @@ export const groupTrainingsTable = pgTable(
     priceAed: numeric("price_aed", { precision: 10, scale: 2 }).notNull(),
     descriptionEn: text("description_en"),
     descriptionRu: text("description_ru"),
-    status: text("status").notNull().default("open"),
+    status: text("status").notNull().default("scheduled"),
     isRecurring: boolean("is_recurring").notNull().default(false),
     recurringSeriesId: uuid("recurring_series_id"),
     recurringPattern: text("recurring_pattern"),
@@ -50,7 +50,7 @@ export const groupTrainingsTable = pgTable(
     ),
     check(
       "group_trainings_status_check",
-      sql`${t.status} IN ('open','full','cancelled','completed')`,
+      sql`${t.status} IN ('scheduled','open','closed','full','cancelled','completed')`,
     ),
   ],
 );

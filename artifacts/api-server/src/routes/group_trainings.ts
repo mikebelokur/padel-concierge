@@ -321,7 +321,7 @@ router.post("/group-trainings", async (req, res): Promise<void> => {
       priceAed: String(b.priceAed),
       descriptionEn: b.descriptionEn ?? null,
       descriptionRu: b.descriptionRu ?? null,
-      status: "open",
+      status: "scheduled",
       isRecurring: !!b.isRecurring,
       recurringPattern: b.recurringPattern ?? null,
     })
@@ -543,10 +543,21 @@ router.post("/group-trainings/:id/book", async (req, res): Promise<void> => {
   }
   const myIdx = playerEligibilityIndex(me.level);
   const tIdx = CATEGORY_INDEX[training.category] ?? 99;
-  if (myIdx < 0 || tIdx > myIdx) {
-    res
-      .status(403)
-      .json({ error: "Training category above your level", category: training.category });
+  // Task #137: standardize LEVEL_REQUIRED error code
+  if (!me.level || myIdx < 0) {
+    res.status(400).json({
+      error: "Please set your padel level before booking a training.",
+      code: "LEVEL_REQUIRED",
+    });
+    return;
+  }
+  if (tIdx > myIdx) {
+    res.status(403).json({
+      error: "Training category above your level",
+      code: "LEVEL_TOO_HIGH",
+      category: training.category,
+      yourLevel: me.level,
+    });
     return;
   }
 
@@ -558,6 +569,13 @@ router.post("/group-trainings/:id/book", async (req, res): Promise<void> => {
     if (!lockedRow) return { kind: "notfound" as const };
     if (lockedRow.status === "cancelled" || lockedRow.status === "completed") {
       return { kind: "not_bookable" as const };
+    }
+    // Registration window: only 'open' (and 'full' which transitions on its own) is bookable.
+    if (lockedRow.status === "scheduled") {
+      return { kind: "not_open_yet" as const };
+    }
+    if (lockedRow.status === "closed") {
+      return { kind: "closed" as const };
     }
 
     const existing = await tx
@@ -613,6 +631,14 @@ router.post("/group-trainings/:id/book", async (req, res): Promise<void> => {
   }
   if (txResult.kind === "not_bookable") {
     res.status(409).json({ error: "Training is not bookable", full: false });
+    return;
+  }
+  if (txResult.kind === "not_open_yet") {
+    res.status(409).json({ error: "Registration not open yet", reason: "scheduled" });
+    return;
+  }
+  if (txResult.kind === "closed") {
+    res.status(409).json({ error: "Registration closed", reason: "closed" });
     return;
   }
   if (txResult.kind === "already") {

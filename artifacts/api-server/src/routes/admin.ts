@@ -4,6 +4,10 @@ import { and, eq, ne, isNull, desc, inArray } from "drizzle-orm";
 import { getTokenFromRequest, verifyToken } from "../lib/auth";
 import { formatUser } from "./auth";
 import { sendReminderToUser, getReminderEligibility, REMINDER_MAX_TOTAL, REMINDER_COOLDOWN_HOURS } from "../lib/reminderJob";
+import { hashPassword } from "../lib/auth";
+import { sendInviteEmail } from "../lib/mail";
+import { generateInviteToken } from "./invite";
+import crypto from "crypto";
 
 const router: IRouter = Router();
 
@@ -267,6 +271,82 @@ router.post("/admin/incomplete-profiles/remind-all", async (req, res): Promise<v
   }
 
   res.json({ total: rows.length, sent, failed, skipped, cooldown, capped });
+});
+
+// POST /api/admin/users — coach/admin creates a new user and sends invite email
+router.post("/admin/users", async (req, res): Promise<void> => {
+  const auth = requireOwnerOrAdmin(req, res);
+  if (!auth) return;
+
+  const { name, email, phone, level, role } = (req.body ?? {}) as {
+    name?: string;
+    email?: string;
+    phone?: string;
+    level?: string;
+    role?: string;
+  };
+
+  if (!name || typeof name !== "string" || name.trim().length === 0) {
+    res.status(400).json({ error: "Name is required" });
+    return;
+  }
+  if (!email || typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    res.status(400).json({ error: "Valid email required" });
+    return;
+  }
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const existing = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(eq(usersTable.email, normalizedEmail));
+  if (existing.length > 0) {
+    res.status(409).json({ error: "Email already registered" });
+    return;
+  }
+
+  const validRoles = ["player", "coach", "admin"];
+  const finalRole = role && validRoles.includes(role) ? role : "player";
+
+  // Placeholder password (high-entropy, never used — user sets real one via invite)
+  const placeholder = crypto.randomBytes(32).toString("hex");
+  const { token: inviteToken, expiresAt } = generateInviteToken();
+
+  const [user] = await db
+    .insert(usersTable)
+    .values({
+      name: name.trim(),
+      email: normalizedEmail,
+      phone: phone ?? "",
+      passwordHash: hashPassword(placeholder),
+      level: level ?? "D",
+      role: finalRole,
+      source: "coach_added",
+      inviteStatus: "invited",
+      inviteToken,
+      inviteTokenExpiresAt: expiresAt,
+      approvalStatus: "approved",
+    })
+    .returning();
+
+  await db.insert(activityLogsTable).values({
+    userId: user.id,
+    userName: user.name,
+    action: "user_invited",
+    details: `Invited by ${auth.role} ${auth.userId} as ${finalRole}`,
+  });
+
+  const appUrl = process.env.APP_URL
+    ?? (process.env.REPLIT_DOMAINS ? `https://${process.env.REPLIT_DOMAINS.split(",")[0]}` : "http://localhost:80");
+  const inviteUrl = `${appUrl}/invite/${inviteToken}`;
+  const mailResult = await sendInviteEmail(user.email, user.name, inviteUrl);
+
+  res.status(201).json({
+    user: formatUser(user),
+    inviteUrl,
+    emailSent: mailResult.sent,
+    devInviteUrl: !mailResult.sent ? inviteUrl : undefined,
+  });
 });
 
 // PUT /api/admin/users/:id/role — set role

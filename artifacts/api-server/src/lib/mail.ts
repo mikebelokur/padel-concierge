@@ -288,6 +288,78 @@ export async function sendSetupReminderEmail(
   return reminderDevFallback(to, name, quizUrl);
 }
 
+// ---------------------------------------------------------------------------
+// Invite (magic-link onboarding) email
+// ---------------------------------------------------------------------------
+
+function buildInviteEmailHtml(name: string, inviteUrl: string): string {
+  return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background:#080c14;font-family:'Segoe UI',Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#080c14;padding:40px 16px;"><tr><td align="center">
+<table width="520" cellpadding="0" cellspacing="0" style="background:#0f1520;border-radius:16px;border:1px solid #1e2a40;overflow:hidden;max-width:520px;width:100%;">
+<tr><td style="padding:32px 40px 24px;border-bottom:1px solid #1e2a40;">
+<span style="font-family:Georgia,serif;font-size:22px;color:#D4AF37;letter-spacing:0.02em;">🎾 Padel Concierge</span>
+</td></tr>
+<tr><td style="padding:32px 40px 0;">
+<h2 style="margin:0 0 12px;font-size:20px;color:#e8eaf0;font-weight:600;">Welcome, ${name}</h2>
+<p style="margin:0 0 8px;font-size:15px;color:#8a9ab8;line-height:1.6;">Your coach has added you to Padel Concierge — Dubai's private padel matchmaking club. Click below to set your password and step on the court.</p>
+<p style="margin:0 0 8px;font-size:13px;color:#4d5f7c;">This invite link expires in 7 days.</p>
+<table cellpadding="0" cellspacing="0" style="margin:24px 0;"><tr><td style="border-radius:10px;background:#D4AF37;">
+<a href="${inviteUrl}" style="display:inline-block;padding:14px 32px;color:#000;font-size:15px;font-weight:700;text-decoration:none;border-radius:10px;">Activate my account →</a>
+</td></tr></table>
+</td></tr>
+<tr><td style="padding:0 40px;"><div style="border-top:1px solid #1e2a40;"></div></td></tr>
+<tr><td style="padding:32px 40px 0;">
+<h2 style="margin:0 0 12px;font-size:20px;color:#e8eaf0;font-weight:600;">Добро пожаловать, ${name}</h2>
+<p style="margin:0 0 8px;font-size:15px;color:#8a9ab8;line-height:1.6;">Тренер добавил вас в Padel Concierge — закрытый клуб по подбору партнёров в Дубае. Нажмите кнопку, чтобы задать пароль и выйти на корт.</p>
+<p style="margin:0 0 8px;font-size:13px;color:#4d5f7c;">Ссылка действительна 7 дней.</p>
+<table cellpadding="0" cellspacing="0" style="margin:24px 0;"><tr><td style="border-radius:10px;background:#1a2d52;border:1px solid #D4AF37;">
+<a href="${inviteUrl}" style="display:inline-block;padding:14px 32px;color:#D4AF37;font-size:15px;font-weight:700;text-decoration:none;border-radius:10px;">Активировать аккаунт →</a>
+</td></tr></table>
+</td></tr>
+<tr><td style="padding:0 40px 32px;"><div style="border-top:1px solid #1e2a40;padding-top:24px;">
+<p style="margin:0;font-size:12px;color:#3a4a63;line-height:1.6;">Padel Concierge · Dubai Private Members Club<br/><span style="word-break:break-all;color:#2a3a52;">${inviteUrl}</span></p>
+</div></td></tr>
+</table></td></tr></table></body></html>`;
+}
+
+export async function sendInviteEmail(
+  to: string,
+  name: string,
+  inviteUrl: string,
+): Promise<{ sent: boolean; devUrl?: string }> {
+  const subject = "Welcome to Padel Concierge / Добро пожаловать";
+  const html = buildInviteEmailHtml(name, inviteUrl);
+
+  if (RESEND_API_KEY) {
+    try {
+      const { Resend } = await import("resend");
+      const resend = new Resend(RESEND_API_KEY);
+      const { error } = await resend.emails.send({ from: FROM_ADDRESS, to, subject, html });
+      if (error) {
+        logger.error({ err: error, to }, "Resend error sending invite — dev fallback");
+        return inviteDevFallback(to, inviteUrl);
+      }
+      logger.info({ to }, "Invite email sent via Resend");
+      return { sent: true };
+    } catch (err) {
+      logger.error({ err, to }, "Resend exception sending invite — dev fallback");
+      return inviteDevFallback(to, inviteUrl);
+    }
+  }
+  return inviteDevFallback(to, inviteUrl);
+}
+
+function inviteDevFallback(to: string, inviteUrl: string): { sent: false; devUrl: string } {
+  logger.warn({ to }, "Invite email skipped — RESEND_API_KEY not configured");
+  console.log("\n========================================");
+  console.log(`DEV: Invite link for ${to}`);
+  console.log(inviteUrl);
+  console.log("========================================\n");
+  return { sent: false, devUrl: inviteUrl };
+}
+
 function reminderDevFallback(to: string, name: string, quizUrl: string): { sent: false; devUrl: string } {
   logger.warn({ to, name }, "Email sending skipped — RESEND_API_KEY not configured");
   console.log("\n========================================");

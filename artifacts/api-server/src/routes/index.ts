@@ -22,6 +22,7 @@ import groupTrainingsRouter from "./group_trainings";
 import notificationsRouter from "./notifications";
 import internalRouter from "./internal";
 import recurringSeriesRouter from "./recurring_series";
+import inviteRouter from "./invite";
 
 const router: IRouter = Router();
 
@@ -48,5 +49,6 @@ router.use(groupTrainingsRouter);
 router.use(notificationsRouter);
 router.use(internalRouter);
 router.use(recurringSeriesRouter);
+router.use(inviteRouter);
 
 export default router;

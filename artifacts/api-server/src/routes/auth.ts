@@ -41,6 +41,10 @@ function formatUser(user: typeof usersTable.$inferSelect) {
     warmupFormat: user.warmupFormat ?? null,
     userType: user.userType ?? "real_user",
     reminderOptOut: user.reminderOptOut,
+    source: user.source ?? "self_signup",
+    memberNumber: user.memberNumber,
+    badge: user.badge ?? null,
+    inviteStatus: user.inviteStatus ?? "not_invited",
   };
 }
 

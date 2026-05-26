@@ -1,0 +1,95 @@
+We just completed a project audit. Based on it, here's the next phase of 
+work to ship recurring Tuesday and Thursday group trainings as the live 
+launch product. Plan and execute the tasks below in this exact order. 
+Do not parallelize — each depends on the previous.
+
+TASK A: Add member identity fields to users table.
+
+Add columns:
+- source: enum ('self_signup', 'coach_added'), default 'self_signup'
+- member_number: integer, unique, auto-increment starting from 1
+- badge: string, nullable (values: 'founding_member', 'pioneer', 'beta_tester')
+- invite_status: enum ('not_invited', 'invited', 'activated', 'declined'), default 'not_invited'
+- invite_token: uuid, nullable
+- invite_token_expires_at: timestamptz, nullable
+
+Backfill member_number for existing 17 users in created_at order.
+
+Update Drizzle schema file accordingly.
+
+TASK B: Coach creates user + magic-link onboarding.
+
+Admin form at /admin/users → "Add player" button:
+- Fields: full name, phone (E.164), email (optional), level (D-/D/D+/C-/C/C+/B-),
+  badge (optional dropdown), member_number (optional override)
+- On submit:
+  - Create user with no password
+  - Set source='coach_added', invite_status='invited'
+  - Generate UUID invite_token, set invite_token_expires_at = now() + 24h
+  - Return the activation URL: /invite/:token to coach for manual sharing
+  - Show URL with copy button in admin UI
+
+Public route /invite/:token:
+- Validate token (exists, not expired, status='invited')
+- Show welcome screen: "Привет, [name]! Ты приглашён в Padel Concierge."
+- Display the badge if any ("Founding Member #001")
+- Single button "Войти"
+- On click: set invite_status='activated', issue JWT, redirect to /home
+
+Russian translations required. Mobile-first.
+
+TASK C: Auto-open and auto-close registration windows.
+
+Add status enum to group_trainings: 'scheduled', 'open', 'closed', 'cancelled'.
+Default status when created: 'scheduled'.
+
+Extend the existing groupTrainingScheduler (15-min interval):
+- For each session with status='scheduled': if date_time - now() <= 48h, 
+  set status='open' and emit notification to all eligible users 
+  (matching level OR one level above)
+- For each session with status='open': if date_time - now() <= 12h, 
+  set status='closed' (no more bookings accepted)
+
+UI:
+- /group-trainings page only shows sessions with status='open'
+- Coach admin page shows all statuses with badge indicators
+- Booking endpoint POST /group-trainings/:id/book returns 403 if status != 'open'
+
+Russian translations required.
+
+TASK D: Notification + email on session open.
+
+When a session transitions to status='open' in scheduler:
+- Insert a notification row for every eligible user (level match or one below)
+  with title_ru="Открыта запись на тренировку" and body_ru describing the session
+- Send an email via existing mail.ts to the same users with the same content
+  and a deep link back to the platform
+
+Reuse the existing reminder cooldown infrastructure to prevent spam — 
+no more than one session-open email per user per 12 hours total.
+
+Russian email template required.
+
+TASK E: Close existing Task #137 (level guard for bookings).
+
+Block POST /group-trainings/:id/book and POST /court-bookings with 
+400 LEVEL_REQUIRED if user has no level set, matching the pattern from 
+matchmaking guards.
+
+TASK F: Schema drift cleanup.
+
+Resolve drift between Drizzle schema and live DB:
+- Decide: keep player_profiles / match_logs / compatibility_scores / 
+  feedback_aggregates as future tables (then leave in schema, document as 
+  "not yet migrated") OR remove from schema (then delete files)
+- Add Drizzle schema files for pf_users, pf_quiz_results, court_bookings 
+  (these exist in DB but not in code)
+- Document the resolution in a /docs/schema-status.md file
+
+After all six tasks ship, seed 4 recurring_series rows via admin UI:
+- Tuesday 10:00, 120min, "Padel 360 court 2", 150 AED, level D, max 4
+- Tuesday 13:00, 90min, "Rukan court 1", 130 AED, level D-, max 4  
+- Thursday 10:00, 120min, "Padel 360 court 2", 150 AED, level D, max 4
+- Thursday 13:00, 90min, "Rukan court 1", 130 AED, level D-, max 4
+
+I'll do that seeding manually in the admin UI when Task A-F are merged.

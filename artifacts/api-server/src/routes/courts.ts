@@ -101,10 +101,41 @@ router.get("/court-bookings", async (req, res): Promise<void> => {
 router.post("/court-bookings", async (req, res): Promise<void> => {
   const token = getTokenFromRequest(req);
   const payload = token ? verifyToken(token) : null;
+  if (!payload) {
+    res.status(401).json({ error: "Authentication required" });
+    return;
+  }
 
-  const { userId, courtId, date, startTime } = req.body;
-  if (!userId || !courtId || !date || !startTime) {
-    res.status(400).json({ error: "userId, courtId, date, startTime required" });
+  const { userId: bodyUserId, courtId, date, startTime } = req.body;
+  if (!courtId || !date || !startTime) {
+    res.status(400).json({ error: "courtId, date, startTime required" });
+    return;
+  }
+
+  // Security: only admin/coach may book on behalf of another user; players are
+  // always bound to their own auth identity regardless of body payload.
+  const requestedUserId = bodyUserId ? Number(bodyUserId) : payload.userId;
+  const isPrivileged = payload.role === "admin" || payload.role === "coach";
+  if (!isPrivileged && requestedUserId !== payload.userId) {
+    res.status(403).json({ error: "Cannot book on behalf of another user" });
+    return;
+  }
+  const userId = requestedUserId;
+
+  // Task #137: gate court bookings behind a set player level
+  const [bookingUser] = await db
+    .select({ level: usersTable.level })
+    .from(usersTable)
+    .where(eq(usersTable.id, userId));
+  if (!bookingUser) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+  if (!bookingUser.level || bookingUser.level.trim() === "") {
+    res.status(400).json({
+      error: "Please set your padel level before booking a court.",
+      code: "LEVEL_REQUIRED",
+    });
     return;
   }
 

@@ -7,6 +7,8 @@ import {
   integer,
   real,
   check,
+  uuid,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
@@ -52,8 +54,21 @@ export const usersTable = pgTable("users", {
   userType: text("user_type").notNull().default("real_user"),
   reminderSentAt: timestamp("reminder_sent_at", { withTimezone: true }),
   reminderOptOut: boolean("reminder_opt_out").notNull().default(false),
+  source: text("source").notNull().default("self_signup"),
+  memberNumber: integer("member_number")
+    .notNull()
+    .default(sql`nextval('users_member_number_seq')`)
+    .unique(),
+  badge: text("badge"),
+  inviteStatus: text("invite_status").notNull().default("not_invited"),
+  inviteToken: uuid("invite_token"),
+  inviteTokenExpiresAt: timestamp("invite_token_expires_at", { withTimezone: true }),
 }, t => [
   check("users_user_type_check", sql`${t.userType} IN ('real_user', 'seed_test', 'beta_tester')`),
+  check("users_source_check", sql`${t.source} IN ('self_signup', 'coach_added')`),
+  check("users_badge_check", sql`${t.badge} IS NULL OR ${t.badge} IN ('founding_member', 'pioneer', 'beta_tester')`),
+  check("users_invite_status_check", sql`${t.inviteStatus} IN ('not_invited', 'invited', 'activated', 'declined')`),
+  uniqueIndex("users_invite_token_unique").on(t.inviteToken).where(sql`${t.inviteToken} IS NOT NULL`),
 ]);
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({

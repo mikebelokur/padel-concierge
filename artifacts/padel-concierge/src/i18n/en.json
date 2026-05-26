@@ -716,7 +716,11 @@
     "empty": "No analyses submitted yet.",
     "toastTitle": "Analysis Submitted",
     "toastDesc": "Our coaches will review it shortly.",
-    "toastError": "Submission Failed"
+    "toastError": "Submission Failed",
+    "status": {
+      "pending": "Pending",
+      "completed": "Completed"
+    }
   },
   "matchRequests": {
     "title": "Match Requests",

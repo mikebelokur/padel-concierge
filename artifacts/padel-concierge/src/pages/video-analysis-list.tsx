@@ -111,7 +111,11 @@ export default function VideoAnalysisList() {
                         ? "bg-green-500/10 text-green-400 border-green-500/20"
                         : "bg-white/5 text-muted-foreground border-white/10"
                     }`}>
-                      {analysis.status}
+                      {analysis.status === 'completed'
+                        ? t("videoAnalysis.status.completed")
+                        : analysis.status === 'pending'
+                        ? t("videoAnalysis.status.pending")
+                        : analysis.status}
                     </span>
                     {analysis.status === 'completed' && (
                       <Link href={`/video-analysis/${analysis.id}`}>

@@ -105,7 +105,7 @@ export default function Clients() {
                     </div>
                     <div className="text-muted-foreground truncate" style={{ fontSize: "13px" }}>
                       {client.phone && <span className="mr-2">📱 {client.phone}</span>}
-                      <span className="capitalize">{client.bookingPattern.replace("_", " ")}</span>
+                      <span>{client.bookingPattern === "on_demand" ? "По запросу" : client.bookingPattern === "recurring" ? "Регулярные" : client.bookingPattern}</span>
                       {client.pricePerSession && <span className="ml-2">· {client.pricePerSession} AED</span>}
                     </div>
                     {client.nextSessionPlan && (

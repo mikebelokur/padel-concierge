@@ -191,7 +191,7 @@ export default function CoachMessages() {
                             color: msg.direction === "out" ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.4)",
                           }}
                         >
-                          {new Date(msg.sentAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                          {new Date(msg.sentAt).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                         </div>
                       </div>
                     </div>

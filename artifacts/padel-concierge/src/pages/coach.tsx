@@ -249,7 +249,7 @@ export default function CoachDashboard() {
                   <div className="font-medium text-white" style={{ fontSize: "14px" }}>Видео #{v.id}</div>
                   <div className="flex items-center gap-2">
                     <span className="text-muted-foreground" style={{ fontSize: "13px" }}>
-                      {v.status === "pending" ? "Ожидает" : v.status === "in_progress" ? "В работе" : v.status}
+                      {v.status === "pending" ? "Ожидает" : v.status === "in_progress" ? "В работе" : v.status === "completed" ? "Готово" : v.status === "cancelled" ? "Отменено" : v.status}
                     </span>
                     <span className="text-muted-foreground" style={{ fontSize: "18px" }}>›</span>
                   </div>

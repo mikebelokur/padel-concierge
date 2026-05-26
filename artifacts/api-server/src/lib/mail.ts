@@ -2,7 +2,27 @@ import { logger } from "./logger";
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_ADDRESS = process.env.EMAIL_FROM ?? "Padel Concierge <onboarding@resend.dev>";
-const APP_URL = process.env.APP_URL ?? "https://padelconcierge.com";
+
+/**
+ * Resolve the public app URL.
+ *
+ * Resolution order:
+ *   1. APP_URL env var (explicit override — set this in production secrets)
+ *   2. REPLIT_DOMAINS — first entry is the canonical production domain when
+ *      deployed on Replit (automatically injected by the platform at runtime)
+ *   3. Hard-coded fallback for local dev without either variable set
+ */
+function resolveAppUrl(): string {
+  if (process.env.APP_URL) return process.env.APP_URL;
+  const replitDomains = process.env.REPLIT_DOMAINS;
+  if (replitDomains) {
+    const first = replitDomains.split(",")[0]?.trim();
+    if (first) return `https://${first}`;
+  }
+  return "https://padelconcierge.com";
+}
+
+const APP_URL = resolveAppUrl();
 
 function buildEmailHtml(resetUrl: string): string {
   return `<!DOCTYPE html>
@@ -141,12 +161,12 @@ export async function sendNotificationEmail(
       return { sent: false };
     }
   }
-  logger.warn({ to, subject }, "RESEND_API_KEY not configured — notification email not sent");
+  logger.warn({ to, subject }, "Email sending skipped — RESEND_API_KEY not configured");
   return { sent: false };
 }
 
 function devFallback(to: string, resetUrl: string): { sent: false; devUrl: string } {
-  logger.warn({ to }, "RESEND_API_KEY not configured — password reset email not sent");
+  logger.warn({ to }, "Email sending skipped — RESEND_API_KEY not configured");
   console.log("\n========================================");
   console.log(`DEV: Password reset link for ${to}`);
   console.log(resetUrl);
@@ -269,7 +289,7 @@ export async function sendSetupReminderEmail(
 }
 
 function reminderDevFallback(to: string, name: string, quizUrl: string): { sent: false; devUrl: string } {
-  logger.warn({ to, name }, "RESEND_API_KEY not configured — setup reminder email not sent");
+  logger.warn({ to, name }, "Email sending skipped — RESEND_API_KEY not configured");
   console.log("\n========================================");
   console.log(`DEV: Setup reminder for ${name} <${to}>`);
   console.log(`Quiz URL: ${quizUrl}`);

@@ -156,6 +156,14 @@ router.post("/matchmaking/suggest", async (req, res): Promise<void> => {
     return;
   }
 
+  if (!me.level || me.level.trim() === "") {
+    res.status(400).json({
+      error: "Level not set. Please complete the level assessment first.",
+      code: "LEVEL_REQUIRED",
+    });
+    return;
+  }
+
   const mySlots = parseSlots(me.availability);
 
   const candidates: {

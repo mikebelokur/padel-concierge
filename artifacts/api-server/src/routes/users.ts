@@ -25,11 +25,23 @@ function levelIdx(l: string): number {
 }
 
 router.get("/users/find-matches", async (req, res): Promise<void> => {
-  const userId = parseInt(String(req.query.userId), 10);
-  if (!userId || isNaN(userId)) { res.status(400).json({ error: "userId required" }); return; }
+  const auth = (req as any).auth as { userId: number; role: string };
+  const isPrivileged = ["coach", "admin", "owner"].includes(auth.role);
+  const requestedId = req.query.userId ? parseInt(String(req.query.userId), 10) : auth.userId;
+  if (!requestedId || isNaN(requestedId)) { res.status(400).json({ error: "userId required" }); return; }
+  // Players may only query find-matches for themselves; privileged roles may pass any userId.
+  const userId = isPrivileged ? requestedId : auth.userId;
 
   const [me] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
   if (!me) { res.status(404).json({ error: "User not found" }); return; }
+
+  if (!me.level || me.level.trim() === "") {
+    res.status(400).json({
+      error: "Level not set. Please complete the level assessment first.",
+      code: "LEVEL_REQUIRED",
+    });
+    return;
+  }
 
   const allUsers = await db.select().from(usersTable);
 

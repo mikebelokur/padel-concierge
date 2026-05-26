@@ -74,6 +74,17 @@ router.post("/trainer-match-requests", async (req, res): Promise<void> => {
     res.status(400).json({ error: "requestedDate, requestedTime required" });
     return;
   }
+
+  const [player] = await db.select({ level: usersTable.level }).from(usersTable).where(eq(usersTable.id, parseInt(String(playerId))));
+  if (!player) { res.status(404).json({ error: "Player not found" }); return; }
+  if (!player.level || player.level.trim() === "") {
+    res.status(400).json({
+      error: "Level not set. Please complete the level assessment first.",
+      code: "LEVEL_REQUIRED",
+    });
+    return;
+  }
+
   const [row] = await db.insert(trainerMatchRequestsTable).values({
     playerId: parseInt(String(playerId)),
     format: format ?? "4v4",

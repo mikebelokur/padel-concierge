@@ -66,6 +66,14 @@ router.post("/match-requests", async (req, res): Promise<void> => {
   const [to] = await db.select().from(usersTable).where(eq(usersTable.id, Number(toUserId)));
   if (!from || !to) { res.status(404).json({ error: "User not found" }); return; }
 
+  if (!from.level || from.level.trim() === "") {
+    res.status(400).json({
+      error: "Level not set. Please complete the level assessment first.",
+      code: "LEVEL_REQUIRED",
+    });
+    return;
+  }
+
   const [request] = await db.insert(matchRequestsTable).values({
     fromUserId: authUserId,
     toUserId: Number(toUserId),

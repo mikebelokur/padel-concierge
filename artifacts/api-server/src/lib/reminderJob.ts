@@ -3,12 +3,43 @@ import { eq, sql } from "drizzle-orm";
 import { sendSetupReminderEmail } from "./mail";
 import { logger } from "./logger";
 
+export const REMINDER_COOLDOWN_HOURS = 48;
+export const REMINDER_MAX_TOTAL = 5;
+
+export type ReminderBlockReason = "cooldown" | "max_reached";
+
+export type ReminderEligibility =
+  | { canSend: true; remaining: number; nextAllowedAt: null; reason: null }
+  | { canSend: false; remaining: number; nextAllowedAt: Date | null; reason: ReminderBlockReason };
+
+export function getReminderEligibility(lastSentAt: Date | null, count: number, now: Date = new Date()): ReminderEligibility {
+  const remaining = Math.max(0, REMINDER_MAX_TOTAL - count);
+  if (count >= REMINDER_MAX_TOTAL) {
+    return { canSend: false, remaining: 0, nextAllowedAt: null, reason: "max_reached" };
+  }
+  if (lastSentAt) {
+    const next = new Date(lastSentAt.getTime() + REMINDER_COOLDOWN_HOURS * 60 * 60 * 1000);
+    if (next.getTime() > now.getTime()) {
+      return { canSend: false, remaining, nextAllowedAt: next, reason: "cooldown" };
+    }
+  }
+  return { canSend: true, remaining, nextAllowedAt: null, reason: null };
+}
+
 async function logReminder(userId: number, triggeredBy: "auto" | "manual", senderUserId: number | null, delivered: boolean): Promise<void> {
   try {
     await db.insert(reminderLogsTable).values({ userId, triggeredBy, senderUserId, delivered });
   } catch (err) {
     logger.error({ err, userId }, "reminderJob: failed to write reminder log");
   }
+}
+
+async function getReminderCount(userId: number): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(reminderLogsTable)
+    .where(eq(reminderLogsTable.userId, userId));
+  return row?.count ?? 0;
 }
 
 const INTERVAL_MS = 60 * 60 * 1000;
@@ -19,14 +50,18 @@ async function runReminderJob(): Promise<void> {
 
   const cutoff = new Date(Date.now() - CUTOFF_HOURS * 60 * 60 * 1000);
 
-  let eligible: Array<{ id: number; email: string; name: string }>;
+  let candidates: Array<{ id: number; email: string; name: string; reminderSentAt: Date | null }>;
   try {
-    eligible = await db
-      .select({ id: usersTable.id, email: usersTable.email, name: usersTable.name })
+    candidates = await db
+      .select({
+        id: usersTable.id,
+        email: usersTable.email,
+        name: usersTable.name,
+        reminderSentAt: usersTable.reminderSentAt,
+      })
       .from(usersTable)
       .where(
         sql`${usersTable.archetype} IS NULL
-        AND ${usersTable.reminderSentAt} IS NULL
         AND ${usersTable.createdAt} < ${cutoff.toISOString()}
         AND ${usersTable.role} = 'player'`
       );
@@ -35,12 +70,33 @@ async function runReminderJob(): Promise<void> {
     return;
   }
 
-  if (eligible.length === 0) {
-    logger.info("reminderJob: no eligible users");
+  if (candidates.length === 0) {
+    logger.info("reminderJob: no candidate users");
     return;
   }
 
-  logger.info({ count: eligible.length }, "reminderJob: sending reminders");
+  let eligible: typeof candidates = [];
+  let blockedCooldown = 0;
+  let blockedCap = 0;
+
+  for (const user of candidates) {
+    const count = await getReminderCount(user.id);
+    const status = getReminderEligibility(user.reminderSentAt, count);
+    if (status.canSend) {
+      eligible.push(user);
+    } else if (status.reason === "cooldown") {
+      blockedCooldown++;
+    } else {
+      blockedCap++;
+    }
+  }
+
+  if (eligible.length === 0) {
+    logger.info({ blockedCooldown, blockedCap }, "reminderJob: no eligible users after cooldown/cap");
+    return;
+  }
+
+  logger.info({ count: eligible.length, blockedCooldown, blockedCap }, "reminderJob: sending reminders");
 
   for (const user of eligible) {
     try {
@@ -63,7 +119,13 @@ async function runReminderJob(): Promise<void> {
   }
 }
 
-export async function sendReminderToUser(userId: number, senderUserId: number | null = null): Promise<{ sent: boolean; alreadyDone: boolean }> {
+export type SendReminderResult = {
+  sent: boolean;
+  alreadyDone: boolean;
+  blocked: null | { reason: ReminderBlockReason; nextAllowedAt: string | null; remaining: number };
+};
+
+export async function sendReminderToUser(userId: number, senderUserId: number | null = null): Promise<SendReminderResult> {
   const [user] = await db
     .select({ id: usersTable.id, email: usersTable.email, name: usersTable.name, role: usersTable.role, archetype: usersTable.archetype, reminderSentAt: usersTable.reminderSentAt })
     .from(usersTable)
@@ -71,7 +133,21 @@ export async function sendReminderToUser(userId: number, senderUserId: number | 
 
   if (!user) throw new Error("User not found");
   if (user.role !== "player") throw new Error("Reminders can only be sent to players");
-  if (user.archetype !== null) return { sent: false, alreadyDone: true };
+  if (user.archetype !== null) return { sent: false, alreadyDone: true, blocked: null };
+
+  const count = await getReminderCount(userId);
+  const eligibility = getReminderEligibility(user.reminderSentAt, count);
+  if (!eligibility.canSend) {
+    return {
+      sent: false,
+      alreadyDone: false,
+      blocked: {
+        reason: eligibility.reason,
+        nextAllowedAt: eligibility.nextAllowedAt?.toISOString() ?? null,
+        remaining: eligibility.remaining,
+      },
+    };
+  }
 
   const result = await sendSetupReminderEmail(user.email, user.name);
 
@@ -84,7 +160,7 @@ export async function sendReminderToUser(userId: number, senderUserId: number | 
     logger.info({ userId, email: user.email }, "reminderJob: manual reminder sent");
   }
 
-  return { sent: result.sent, alreadyDone: false };
+  return { sent: result.sent, alreadyDone: false, blocked: null };
 }
 
 export function startReminderJob(): void {
@@ -98,5 +174,5 @@ export function startReminderJob(): void {
     });
   }, INTERVAL_MS).unref();
 
-  logger.info({ intervalMs: INTERVAL_MS, cutoffHours: CUTOFF_HOURS }, "reminderJob: scheduled");
+  logger.info({ intervalMs: INTERVAL_MS, cutoffHours: CUTOFF_HOURS, cooldownHours: REMINDER_COOLDOWN_HOURS, maxTotal: REMINDER_MAX_TOTAL }, "reminderJob: scheduled");
 }

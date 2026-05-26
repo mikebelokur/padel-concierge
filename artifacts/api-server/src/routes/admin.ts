@@ -3,7 +3,7 @@ import { db, usersTable, activityLogsTable, reminderLogsTable } from "@workspace
 import { and, eq, ne, isNull, desc, inArray } from "drizzle-orm";
 import { getTokenFromRequest, verifyToken } from "../lib/auth";
 import { formatUser } from "./auth";
-import { sendReminderToUser } from "../lib/reminderJob";
+import { sendReminderToUser, getReminderEligibility, REMINDER_MAX_TOTAL, REMINDER_COOLDOWN_HOURS } from "../lib/reminderJob";
 
 const router: IRouter = Router();
 
@@ -177,6 +177,7 @@ router.get("/admin/incomplete-profiles", async (req, res): Promise<void> => {
 
   res.json(rows.map(u => {
     const history = logsByUser.get(u.id) ?? [];
+    const eligibility = getReminderEligibility(u.reminderSentAt, history.length);
     return {
       id: u.id,
       name: u.name,
@@ -185,6 +186,12 @@ router.get("/admin/incomplete-profiles", async (req, res): Promise<void> => {
       reminderSentAt: u.reminderSentAt?.toISOString() ?? null,
       reminderCount: history.length,
       reminderHistory: history,
+      canRemind: eligibility.canSend,
+      remindBlockedReason: eligibility.canSend ? null : eligibility.reason,
+      nextReminderAllowedAt: eligibility.canSend ? null : eligibility.nextAllowedAt?.toISOString() ?? null,
+      remindersRemaining: eligibility.remaining,
+      reminderMaxTotal: REMINDER_MAX_TOTAL,
+      reminderCooldownHours: REMINDER_COOLDOWN_HOURS,
     };
   }));
 });
@@ -201,6 +208,18 @@ router.post("/admin/incomplete-profiles/:id/remind", async (req, res): Promise<v
     const result = await sendReminderToUser(id, auth.userId);
     if (result.alreadyDone) {
       res.status(400).json({ error: "Player has already completed their profile" });
+      return;
+    }
+    if (result.blocked) {
+      const errorMsg = result.blocked.reason === "max_reached"
+        ? "Достигнут лимит напоминаний для этого игрока"
+        : "Слишком рано для повторного напоминания";
+      res.status(429).json({
+        error: errorMsg,
+        reason: result.blocked.reason,
+        nextAllowedAt: result.blocked.nextAllowedAt,
+        remaining: result.blocked.remaining,
+      });
       return;
     }
     res.json({ sent: result.sent });
@@ -220,18 +239,23 @@ router.post("/admin/incomplete-profiles/remind-all", async (req, res): Promise<v
     .from(usersTable)
     .where(and(
       isNull(usersTable.archetype),
-      isNull(usersTable.reminderSentAt),
       eq(usersTable.role, "player"),
     ));
 
   let sent = 0;
   let failed = 0;
   let skipped = 0;
+  let cooldown = 0;
+  let capped = 0;
 
   for (const u of rows) {
     try {
       const result = await sendReminderToUser(u.id, auth.userId);
       if (result.alreadyDone) skipped++;
+      else if (result.blocked) {
+        if (result.blocked.reason === "cooldown") cooldown++;
+        else capped++;
+      }
       else if (result.sent) sent++;
       else failed++;
     } catch {
@@ -239,7 +263,7 @@ router.post("/admin/incomplete-profiles/remind-all", async (req, res): Promise<v
     }
   }
 
-  res.json({ total: rows.length, sent, failed, skipped });
+  res.json({ total: rows.length, sent, failed, skipped, cooldown, capped });
 });
 
 // PUT /api/admin/users/:id/role — set role

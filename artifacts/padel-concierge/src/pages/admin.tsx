@@ -150,7 +150,15 @@ export default function Admin() {
         toast({ title: "Письмо не доставлено", description: "Почтовый сервер недоступен. Повторите позже.", variant: "destructive" });
       }
     },
-    onError: (e: unknown) => toast({ title: "Ошибка", description: translateError(e).message, variant: "destructive" }),
+    onError: (e: unknown) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-incomplete-profiles"] });
+      const msg = translateError(e).message;
+      if (msg.includes("лимит напоминаний") || msg.includes("Слишком рано")) {
+        toast({ title: "Слишком часто", description: msg, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Ошибка", description: msg, variant: "destructive" });
+    },
   });
 
   const remindAllMutation = useMutation({
@@ -195,7 +203,26 @@ export default function Admin() {
       senderName: string | null;
       delivered: boolean;
     }>;
+    canRemind: boolean;
+    remindBlockedReason: "cooldown" | "max_reached" | null;
+    nextReminderAllowedAt: string | null;
+    remindersRemaining: number;
+    reminderMaxTotal: number;
+    reminderCooldownHours: number;
   }>;
+
+  const formatTimeUntil = (iso: string): string => {
+    const diffMs = new Date(iso).getTime() - Date.now();
+    if (diffMs <= 0) return "сейчас";
+    const totalMin = Math.ceil(diffMs / 60000);
+    if (totalMin < 60) return `через ${totalMin} мин`;
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    if (h < 24) return m > 0 ? `через ${h} ч ${m} мин` : `через ${h} ч`;
+    const d = Math.floor(h / 24);
+    const rh = h % 24;
+    return rh > 0 ? `через ${d} д ${rh} ч` : `через ${d} д`;
+  };
 
   const tabs = [
     { id: "overview", label: t("admin.overview") },
@@ -644,7 +671,7 @@ export default function Admin() {
                 </span>
               )}
               {(() => {
-                const pendingReminderCount = incompleteList.filter(u => !u.reminderSentAt).length;
+                const pendingReminderCount = incompleteList.filter(u => u.canRemind).length;
                 return (
                   <button
                     type="button"
@@ -766,6 +793,21 @@ export default function Admin() {
                       {u.reminderSentAt && (
                         <div className="text-muted-foreground mt-0.5" style={{ fontSize: "11px" }}>последнее: {timeAgo(u.reminderSentAt)}</div>
                       )}
+                      {!u.canRemind && u.remindBlockedReason === "cooldown" && u.nextReminderAllowedAt && (
+                        <div className="mt-0.5" style={{ fontSize: "11px", color: "rgba(251,146,60,0.7)" }}>
+                          можно {formatTimeUntil(u.nextReminderAllowedAt)}
+                        </div>
+                      )}
+                      {!u.canRemind && u.remindBlockedReason === "max_reached" && (
+                        <div className="mt-0.5" style={{ fontSize: "11px", color: "rgba(248,113,113,0.8)" }}>
+                          лимит {u.reminderMaxTotal} достигнут
+                        </div>
+                      )}
+                      {u.canRemind && u.reminderCount > 0 && (
+                        <div className="text-muted-foreground mt-0.5" style={{ fontSize: "11px" }}>
+                          осталось: {u.remindersRemaining} из {u.reminderMaxTotal}
+                        </div>
+                      )}
                     </div>
 
                     {/* Remind button */}
@@ -782,8 +824,14 @@ export default function Admin() {
                           background: "rgba(251,146,60,0.08)",
                         }}
                         onClick={() => remindMutation.mutate(u.id)}
-                        disabled={remindMutation.isPending}
-                        title={u.reminderSentAt ? "Отправить повторное напоминание" : "Отправить напоминание"}
+                        disabled={remindMutation.isPending || !u.canRemind}
+                        title={
+                          !u.canRemind && u.remindBlockedReason === "cooldown" && u.nextReminderAllowedAt
+                            ? `Можно отправить ${formatTimeUntil(u.nextReminderAllowedAt)} (минимум ${u.reminderCooldownHours} ч между напоминаниями)`
+                            : !u.canRemind && u.remindBlockedReason === "max_reached"
+                              ? `Достигнут лимит в ${u.reminderMaxTotal} напоминаний для этого игрока`
+                              : u.reminderSentAt ? "Отправить повторное напоминание" : "Отправить напоминание"
+                        }
                       >
                         {u.reminderSentAt ? "Повторить" : "Напомнить"}
                       </button>

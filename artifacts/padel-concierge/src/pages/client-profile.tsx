@@ -349,7 +349,7 @@ function BehavioralStats({
                       {canEdit && (
                         <button
                           type="button"
-                          aria-label={`Remove flag ${flag}`}
+                          aria-label={`Удалить метку ${flag}`}
                           disabled={removeFlag.isPending}
                           onClick={() => removeFlag.mutate(flag)}
                           className="ml-0.5 leading-none text-amber-400/60 hover:text-red-400 transition-colors disabled:opacity-40"
@@ -370,6 +370,25 @@ function BehavioralStats({
 }
 
 const DAY_NAMES = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+
+const SESSION_STATUS_LABELS: Record<string, string> = {
+  completed: "Проведено",
+  scheduled: "Запланировано",
+  cancelled: "Отменено",
+  canceled: "Отменено",
+  no_show: "Не пришёл",
+  pending: "Ожидается",
+  in_progress: "В процессе",
+};
+
+const NOTE_CATEGORY_LABELS: Record<string, string> = {
+  technique: "Техника",
+  tactics: "Тактика",
+  fitness: "Физика",
+  mental: "Психология",
+  strategy: "Стратегия",
+  general: "Общее",
+};
 
 export default function ClientProfile() {
   const [, params] = useRoute("/clients/:id");
@@ -912,14 +931,14 @@ export default function ClientProfile() {
                           <span className="font-medium text-white" style={{ fontSize: "14px" }}>{s.topic}</span>
                         </div>
                         <div className="text-muted-foreground" style={{ fontSize: "12px" }}>
-                          {s.date} · {s.time} · {s.durationMinutes} min{s.court ? ` · ${s.court}` : ""}
+                          {s.date} · {s.time} · {s.durationMinutes} мин{s.court ? ` · ${s.court}` : ""}
                         </div>
                       </div>
                       <span
-                        className="inline-flex items-center rounded-full border capitalize text-muted-foreground flex-shrink-0"
+                        className="inline-flex items-center rounded-full border text-muted-foreground flex-shrink-0"
                         style={{ fontSize: "11px", padding: "2px 8px", border: "1px solid rgba(255,255,255,0.10)" }}
                       >
-                        {s.status}
+                        {SESSION_STATUS_LABELS[s.status] ?? s.status}
                       </span>
                     </div>
                     {s.drillsCovered?.length > 0 && (
@@ -1141,7 +1160,7 @@ export default function ClientProfile() {
                     <div>
                       <p className="font-medium text-white" style={{ fontSize: "14px" }}>❓ {note.question}</p>
                       <p className="text-muted-foreground mt-0.5" style={{ fontSize: "12px" }}>
-                        {new Date(note.recordedAt).toLocaleDateString("ru-RU")} · {note.category}
+                        {new Date(note.recordedAt).toLocaleDateString("ru-RU")} · {NOTE_CATEGORY_LABELS[note.category] ?? note.category}
                       </p>
                     </div>
                     {note.coachResponse ? (

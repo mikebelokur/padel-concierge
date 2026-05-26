@@ -1,7 +1,15 @@
-import { db, usersTable } from "@workspace/db";
+import { db, usersTable, reminderLogsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { sendSetupReminderEmail } from "./mail";
 import { logger } from "./logger";
+
+async function logReminder(userId: number, triggeredBy: "auto" | "manual", senderUserId: number | null, delivered: boolean): Promise<void> {
+  try {
+    await db.insert(reminderLogsTable).values({ userId, triggeredBy, senderUserId, delivered });
+  } catch (err) {
+    logger.error({ err, userId }, "reminderJob: failed to write reminder log");
+  }
+}
 
 const INTERVAL_MS = 60 * 60 * 1000;
 const CUTOFF_HOURS = 24;
@@ -44,6 +52,7 @@ async function runReminderJob(): Promise<void> {
           .set({ reminderSentAt: new Date() })
           .where(sql`${usersTable.id} = ${user.id}`);
 
+        await logReminder(user.id, "auto", null, true);
         logger.info({ userId: user.id, email: user.email }, "reminderJob: reminder sent and timestamp saved");
       } else {
         logger.warn({ userId: user.id, email: user.email }, "reminderJob: email not delivered — will retry next run");
@@ -54,7 +63,7 @@ async function runReminderJob(): Promise<void> {
   }
 }
 
-export async function sendReminderToUser(userId: number): Promise<{ sent: boolean; alreadyDone: boolean }> {
+export async function sendReminderToUser(userId: number, senderUserId: number | null = null): Promise<{ sent: boolean; alreadyDone: boolean }> {
   const [user] = await db
     .select({ id: usersTable.id, email: usersTable.email, name: usersTable.name, role: usersTable.role, archetype: usersTable.archetype, reminderSentAt: usersTable.reminderSentAt })
     .from(usersTable)
@@ -71,6 +80,7 @@ export async function sendReminderToUser(userId: number): Promise<{ sent: boolea
       .update(usersTable)
       .set({ reminderSentAt: new Date() })
       .where(eq(usersTable.id, userId));
+    await logReminder(userId, "manual", senderUserId, true);
     logger.info({ userId, email: user.email }, "reminderJob: manual reminder sent");
   }
 

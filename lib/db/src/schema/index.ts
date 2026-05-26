@@ -24,3 +24,4 @@ export * from "./group_trainings";
 export * from "./training_bookings";
 export * from "./recurring_series";
 export * from "./notifications";
+export * from "./reminder_logs";

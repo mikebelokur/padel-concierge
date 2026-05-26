@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { db, usersTable, activityLogsTable } from "@workspace/db";
-import { and, eq, ne, isNull } from "drizzle-orm";
+import { db, usersTable, activityLogsTable, reminderLogsTable } from "@workspace/db";
+import { and, eq, ne, isNull, desc, inArray } from "drizzle-orm";
 import { getTokenFromRequest, verifyToken } from "../lib/auth";
 import { formatUser } from "./auth";
 import { sendReminderToUser } from "../lib/reminderJob";
@@ -136,24 +136,69 @@ router.get("/admin/incomplete-profiles", async (req, res): Promise<void> => {
     .where(and(isNull(usersTable.archetype), eq(usersTable.role, "player")))
     .orderBy(usersTable.createdAt);
 
-  res.json(rows.map(u => ({
-    id: u.id,
-    name: u.name,
-    email: u.email,
-    createdAt: u.createdAt.toISOString(),
-    reminderSentAt: u.reminderSentAt?.toISOString() ?? null,
-  })));
+  const userIds = rows.map(r => r.id);
+  const logs = userIds.length === 0
+    ? []
+    : await db
+        .select({
+          id: reminderLogsTable.id,
+          userId: reminderLogsTable.userId,
+          sentAt: reminderLogsTable.sentAt,
+          triggeredBy: reminderLogsTable.triggeredBy,
+          senderUserId: reminderLogsTable.senderUserId,
+          delivered: reminderLogsTable.delivered,
+        })
+        .from(reminderLogsTable)
+        .where(inArray(reminderLogsTable.userId, userIds))
+        .orderBy(desc(reminderLogsTable.sentAt));
+
+  const senderIds = Array.from(new Set(logs.map(l => l.senderUserId).filter((v): v is number => v != null)));
+  const senders = senderIds.length === 0
+    ? []
+    : await db
+        .select({ id: usersTable.id, name: usersTable.name })
+        .from(usersTable)
+        .where(inArray(usersTable.id, senderIds));
+  const senderNameById = new Map(senders.map(s => [s.id, s.name]));
+
+  const logsByUser = new Map<number, Array<{ id: number; sentAt: string; triggeredBy: string; senderUserId: number | null; senderName: string | null; delivered: boolean }>>();
+  for (const l of logs) {
+    const list = logsByUser.get(l.userId) ?? [];
+    list.push({
+      id: l.id,
+      sentAt: l.sentAt.toISOString(),
+      triggeredBy: l.triggeredBy,
+      senderUserId: l.senderUserId,
+      senderName: l.senderUserId != null ? senderNameById.get(l.senderUserId) ?? null : null,
+      delivered: l.delivered,
+    });
+    logsByUser.set(l.userId, list);
+  }
+
+  res.json(rows.map(u => {
+    const history = logsByUser.get(u.id) ?? [];
+    return {
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      createdAt: u.createdAt.toISOString(),
+      reminderSentAt: u.reminderSentAt?.toISOString() ?? null,
+      reminderCount: history.length,
+      reminderHistory: history,
+    };
+  }));
 });
 
 // POST /api/admin/incomplete-profiles/:id/remind — manually send reminder
 router.post("/admin/incomplete-profiles/:id/remind", async (req, res): Promise<void> => {
-  if (!requireOwnerOrAdmin(req, res)) return;
+  const auth = requireOwnerOrAdmin(req, res);
+  if (!auth) return;
 
   const id = parseInt(req.params.id);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid user id" }); return; }
 
   try {
-    const result = await sendReminderToUser(id);
+    const result = await sendReminderToUser(id, auth.userId);
     if (result.alreadyDone) {
       res.status(400).json({ error: "Player has already completed their profile" });
       return;

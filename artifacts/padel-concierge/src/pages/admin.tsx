@@ -60,6 +60,7 @@ export default function Admin() {
   const [activeTab, setActiveTab] = useState<"overview" | "registrations" | "incomplete">("overview");
   const [search, setSearch] = useState("");
   const [editingLevel, setEditingLevel] = useState<Record<number, string>>({});
+  const [expandedReminders, setExpandedReminders] = useState<Record<number, boolean>>({});
 
   const { data: stats } = useGetDashboardStats({
     query: { queryKey: getGetDashboardStatsQueryKey(), refetchInterval: 30000 },
@@ -164,6 +165,15 @@ export default function Admin() {
     email: string;
     createdAt: string;
     reminderSentAt: string | null;
+    reminderCount: number;
+    reminderHistory: Array<{
+      id: number;
+      sentAt: string;
+      triggeredBy: string;
+      senderUserId: number | null;
+      senderName: string | null;
+      delivered: boolean;
+    }>;
   }>;
 
   const tabs = [
@@ -651,10 +661,14 @@ export default function Admin() {
                 {incompleteList.map((u, i) => (
                   <div
                     key={u.id}
+                    style={{
+                      borderBottom: i < incompleteList.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                    }}
+                  >
+                  <div
                     className="flex flex-col sm:grid items-center gap-3 px-5 py-4"
                     style={{
                       gridTemplateColumns: "1fr 160px 140px 140px",
-                      borderBottom: i < incompleteList.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
                     }}
                   >
                     {/* Player info */}
@@ -678,13 +692,17 @@ export default function Admin() {
 
                     {/* Reminder status */}
                     <div>
-                      {u.reminderSentAt ? (
-                        <span
-                          className="inline-flex items-center rounded-full border"
+                      {u.reminderCount > 0 ? (
+                        <button
+                          type="button"
+                          onClick={() => setExpandedReminders(prev => ({ ...prev, [u.id]: !prev[u.id] }))}
+                          className="inline-flex items-center gap-1 rounded-full border transition-colors hover:bg-white/5"
                           style={{ padding: "3px 10px", fontSize: "11px", color: "#4ade80", borderColor: "rgba(74,222,128,0.25)", background: "rgba(74,222,128,0.06)" }}
+                          title="Показать историю напоминаний"
                         >
-                          ✓ Отправлено
-                        </span>
+                          <span>✓ Отправлено {u.reminderCount}×</span>
+                          <span style={{ fontSize: "9px", opacity: 0.7 }}>{expandedReminders[u.id] ? "▲" : "▼"}</span>
+                        </button>
                       ) : (
                         <span
                           className="inline-flex items-center rounded-full border"
@@ -694,7 +712,7 @@ export default function Admin() {
                         </span>
                       )}
                       {u.reminderSentAt && (
-                        <div className="text-muted-foreground mt-0.5" style={{ fontSize: "11px" }}>{timeAgo(u.reminderSentAt)}</div>
+                        <div className="text-muted-foreground mt-0.5" style={{ fontSize: "11px" }}>последнее: {timeAgo(u.reminderSentAt)}</div>
                       )}
                     </div>
 
@@ -718,6 +736,60 @@ export default function Admin() {
                         {u.reminderSentAt ? "Повторить" : "Напомнить"}
                       </button>
                     </div>
+                  </div>
+
+                  {expandedReminders[u.id] && u.reminderHistory.length > 0 && (
+                    <div
+                      className="px-5 pb-4"
+                      style={{ background: "rgba(255,255,255,0.02)" }}
+                    >
+                      <div
+                        className="rounded-lg overflow-hidden"
+                        style={{ border: "1px solid rgba(255,255,255,0.06)" }}
+                      >
+                        <div
+                          className="grid px-3 py-2"
+                          style={{
+                            gridTemplateColumns: "180px 100px 1fr 100px",
+                            fontSize: "10px",
+                            fontWeight: 500,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.05em",
+                            color: "rgba(255,255,255,0.35)",
+                            borderBottom: "1px solid rgba(255,255,255,0.06)",
+                          }}
+                        >
+                          <span>Когда</span>
+                          <span>Источник</span>
+                          <span>Кем</span>
+                          <span>Статус</span>
+                        </div>
+                        {u.reminderHistory.map((h, hi) => (
+                          <div
+                            key={h.id}
+                            className="grid px-3 py-2"
+                            style={{
+                              gridTemplateColumns: "180px 100px 1fr 100px",
+                              fontSize: "12px",
+                              color: "rgba(255,255,255,0.75)",
+                              borderBottom: hi < u.reminderHistory.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                            }}
+                          >
+                            <span>{fmtDate(h.sentAt)} · {timeAgo(h.sentAt)}</span>
+                            <span style={{ color: h.triggeredBy === "manual" ? "#fb923c" : "rgba(255,255,255,0.55)" }}>
+                              {h.triggeredBy === "manual" ? "Вручную" : "Авто"}
+                            </span>
+                            <span className="text-muted-foreground truncate">
+                              {h.triggeredBy === "manual" ? (h.senderName ?? "Админ") : "Система"}
+                            </span>
+                            <span style={{ color: h.delivered ? "#4ade80" : "#f87171" }}>
+                              {h.delivered ? "Доставлено" : "Ошибка"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   </div>
                 ))}
               </div>

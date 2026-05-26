@@ -1,0 +1,69 @@
+Diagnostics report — login is broken for everyone, not just Misha
+TL;DR
+The Drizzle users schema (in code) lists two columns — reminder_sent_at and reminder_opt_out — that do not exist in the live database. Every login query SELECT * FROM users therefore fails with Postgres error "column reminder_sent_at does not exist" and returns HTTP 500 before any password check runs. This is pre-existing schema drift, not caused by Task A.
+
+1. API server status
+Running. Last restart: 2026‑05‑26 18:30:31 UTC (PID 410, port 8080). Booted cleanly, no crashes since.
+
+2. Server log tail — /api/auth/login errors
+Every login attempt errors identically:
+
+Error: Failed query: select "id", "name", "email", ..., "reminder_sent_at",
+       "reminder_opt_out", "source", "member_number", "badge",
+       "invite_status", "invite_token", "invite_token_expires_at"
+from "users" where "users"."email" = $1
+params: misha.belokur@gmail.com
+    at routes/auth.ts:169
+caused by (from earlier reminderJob run): column "reminder_sent_at" does not exist
+
+Returned HTTP 500 at 18:41:22, 18:41:24, 18:42:59 — all login attempts. The reminderJob hits the same drift on startup (18:30:31).
+
+3. SELECT … WHERE email = 'misha.belokur@gmail.com'
+Row exists and looks healthy:
+
+id	email	name	role	approval_status	password_hash
+13	misha.belokur@gmail.com	Misha (Owner)	owner	approved	d30d… (len 64)
+Note: role is owner, not admin/coach.
+
+4. password_hash sanity
+Non-null, length 64, starts with d30d…. That's NOT bcrypt (bcrypt starts with $2… and is ~60 chars). It's a 64-char hex string — consistent with SHA-256 (matches hashPassword in lib/auth.ts, which uses crypto.createHash, not bcrypt). This is the project's actual scheme — not a bug, just contradicts your "bcrypt $2" expectation. Same scheme is used everywhere; Misha's hash is well-formed.
+
+5. Did Task A break things?
+No. All 7 Task A columns are present in the live DB (source, member_number, badge, invite_status, invite_token, invite_token_expires_at). member_number is NOT NULL but backfilled — 0/17 users missing it. The constraint is satisfied.
+
+6. Drift evidence — root cause
+Columns the Drizzle schema queries vs. what actually exists in users:
+
+Column	In code (lib/db/src/schema/users.ts)	In live DB
+reminder_sent_at	✅ yes	❌ MISSING
+reminder_opt_out	✅ yes	❌ MISSING
+source, member_number, badge, invite_* (Task A)	✅	✅
+All other columns	✅	✅
+These two reminder_* columns were added to the schema file in an earlier session (audit references reminder feature dated 2026-05-25 / 8570f9e) but the ALTER TABLE for them never landed in this DB. They've been silently broken since then — login worked previously only because Postgres tolerated something else, or this DB was restored without them. The reminderJob startup error in logs has been firing on every restart.
+
+7. SESSION_SECRET
+Set, length 88. Unchanged across restarts (env var, not a runtime value).
+
+8. curl probes against localhost:80/api/auth/login
+Test	Status	Outcome
+misha.belokur@gmail.com + wrong password	HTTP 500	DB query crash, never reaches password check
+admin@padelconcierge.com + admin123 (known-good from replit.md)	HTTP 500	Same crash — confirms it's not Misha-specific
+nobody@example.com + anything	HTTP 500	Same crash — confirms it's not user-data dependent
+All three return the same column reminder_sent_at does not exist Drizzle error. Login is broken for 100% of users, including the seeded test accounts.
+
+The 500 also leaks a stack trace in the HTML response because there's no error handler converting Drizzle errors to JSON — that's a secondary issue.
+
+Recommended fix (NOT applied — awaiting your decision)
+Two options, both ~1 minute:
+
+Option A — add the missing columns (matches schema intent, keeps reminder feature working):
+
+ALTER TABLE users
+  ADD COLUMN reminder_sent_at timestamptz,
+  ADD COLUMN reminder_opt_out boolean NOT NULL DEFAULT false;
+
+Option B — remove the columns from the Drizzle schema (if you don't want the reminder feature). Higher blast radius (reminderJob, admin reminder routes, reminder_logs joins).
+
+My recommendation: Option A. It restores login immediately, fixes the long-running reminderJob startup error, and matches what the codebase already expects. Should be followed up by adding a global error handler so a future schema drift returns clean JSON instead of an HTML stack trace.
+
+Want me to apply Option A?

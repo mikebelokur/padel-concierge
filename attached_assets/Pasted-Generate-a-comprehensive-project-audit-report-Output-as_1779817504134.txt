@@ -1,0 +1,57 @@
+Generate a comprehensive project audit report. Output as a single markdown 
+document. Do not write or modify any code. Read-only audit.
+
+Section 1: Completed tasks inventory
+For every task in "Done" column on the task board, output a table with:
+| # | Task title | Date completed | Brief description (1 line) | Files/routes/tables touched |
+
+Group by category:
+- Authentication & user management
+- Onboarding & level assessment (quiz)
+- Matchmaking & player visibility
+- Admin tools & reminders
+- Translations & UI polish
+- Infrastructure & misc
+
+Section 2: Current database schema
+List every table currently in the database with all columns, types, and 
+foreign keys. Use this format:
+
+users (table)
+- id: uuid, primary key
+- email: string, unique
+- level: enum (D-, D, D+, C-, C, C+, B-)
+- ...
+
+For each table also note: row count as of now, last modified date.
+
+Section 3: Current routes inventory
+List every route currently registered in the Express app:
+- Method (GET/POST/PUT/DELETE)
+- Path
+- Auth requirement (public / requireAuth / requireAdmin)
+- Brief purpose
+
+Group by area (auth, sessions, users, admin, matchmaking, etc).
+
+Section 4: Active and queued tasks
+For "Active" and "Queued" columns, list:
+- Task number, title, full description, current status, blockers if any
+
+Section 5: Active integrations & external services
+List what's currently wired up:
+- Database (PostgreSQL — confirmed via Drizzle)
+- MongoDB (status: configured or just placeholder?)
+- Telegram bot @PadelCoachAssistant (status: token in Secrets, wired or not?)
+- Email service (which provider, status)
+- Any cron jobs / background workers currently running
+
+Section 6: Known gaps and TODOs
+List every TODO/FIXME comment in code, every "later" or "v2" reference, 
+every commented-out block that suggests planned but unimplemented work.
+
+Section 7: Last 10 git commits
+Output git log of last 10 commits with date, message, files changed count.
+
+Save the full report to /docs/project-audit-2026-05-26.md and also paste 
+the full content in chat response.

@@ -194,6 +194,7 @@ export default function Admin() {
     email: string;
     createdAt: string;
     reminderSentAt: string | null;
+    reminderOptOut: boolean;
     reminderCount: number;
     reminderHistory: Array<{
       id: number;
@@ -204,7 +205,7 @@ export default function Admin() {
       delivered: boolean;
     }>;
     canRemind: boolean;
-    remindBlockedReason: "cooldown" | "max_reached" | null;
+    remindBlockedReason: "cooldown" | "max_reached" | "opted_out" | null;
     nextReminderAllowedAt: string | null;
     remindersRemaining: number;
     reminderMaxTotal: number;
@@ -759,7 +760,18 @@ export default function Admin() {
                         {u.name?.[0] ?? "?"}
                       </div>
                       <div className="min-w-0">
-                        <div className="font-medium text-white truncate" style={{ fontSize: "14px" }}>{u.name}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="font-medium text-white truncate" style={{ fontSize: "14px" }}>{u.name}</div>
+                          {u.reminderOptOut && (
+                            <span
+                              className="inline-flex items-center rounded-full border shrink-0"
+                              style={{ padding: "1px 8px", fontSize: "10px", color: "#a3a3a3", borderColor: "rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.04)" }}
+                              title="Игрок отписался от напоминаний"
+                            >
+                              🔕 Отписался
+                            </span>
+                          )}
+                        </div>
                         <div className="text-muted-foreground truncate" style={{ fontSize: "12px" }}>{u.email}</div>
                       </div>
                     </div>
@@ -826,11 +838,13 @@ export default function Admin() {
                         onClick={() => remindMutation.mutate(u.id)}
                         disabled={remindMutation.isPending || !u.canRemind}
                         title={
-                          !u.canRemind && u.remindBlockedReason === "cooldown" && u.nextReminderAllowedAt
-                            ? `Можно отправить ${formatTimeUntil(u.nextReminderAllowedAt)} (минимум ${u.reminderCooldownHours} ч между напоминаниями)`
-                            : !u.canRemind && u.remindBlockedReason === "max_reached"
-                              ? `Достигнут лимит в ${u.reminderMaxTotal} напоминаний для этого игрока`
-                              : u.reminderSentAt ? "Отправить повторное напоминание" : "Отправить напоминание"
+                          !u.canRemind && u.remindBlockedReason === "opted_out"
+                            ? "Игрок отписался от напоминаний"
+                            : !u.canRemind && u.remindBlockedReason === "cooldown" && u.nextReminderAllowedAt
+                              ? `Можно отправить ${formatTimeUntil(u.nextReminderAllowedAt)} (минимум ${u.reminderCooldownHours} ч между напоминаниями)`
+                              : !u.canRemind && u.remindBlockedReason === "max_reached"
+                                ? `Достигнут лимит в ${u.reminderMaxTotal} напоминаний для этого игрока`
+                                : u.reminderSentAt ? "Отправить повторное напоминание" : "Отправить напоминание"
                         }
                       >
                         {u.reminderSentAt ? "Повторить" : "Напомнить"}

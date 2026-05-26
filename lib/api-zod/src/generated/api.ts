@@ -210,6 +210,7 @@ export const UpdateUserBody = zod.object({
   locationName: zod.string().nullish(),
   avatar: zod.string().nullish(),
   language: zod.string().optional(),
+  reminderOptOut: zod.boolean().optional(),
 });
 
 export const UpdateUserResponse = zod.object({

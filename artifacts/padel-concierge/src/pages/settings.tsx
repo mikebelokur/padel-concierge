@@ -22,6 +22,32 @@ export default function Settings() {
     phone: user?.phone || "",
     locationName: user?.locationName || "",
   });
+  const [reminderOptOut, setReminderOptOut] = useState<boolean>(Boolean((user as any)?.reminderOptOut));
+  const [savingOptOut, setSavingOptOut] = useState(false);
+
+  const handleReminderOptOutChange = async (next: boolean) => {
+    if (!user) return;
+    const prev = reminderOptOut;
+    setReminderOptOut(next);
+    setSavingOptOut(true);
+    try {
+      await apiFetch(`/users/${user.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ reminderOptOut: next }),
+      });
+      toast({
+        title: next ? "Напоминания отключены" : "Напоминания включены",
+        description: next
+          ? "Мы больше не будем присылать письма о настройке профиля."
+          : "Вы снова будете получать письма о настройке профиля.",
+      });
+    } catch (e: unknown) {
+      setReminderOptOut(prev);
+      toast({ title: t("settings.updateFailed"), description: translateError(e).message, variant: "destructive" });
+    } finally {
+      setSavingOptOut(false);
+    }
+  };
 
   const handleLanguageChange = (lang: Language) => {
     setLanguage(lang);
@@ -123,6 +149,36 @@ export default function Settings() {
             </div>
           );
         })()}
+
+        <div className="rounded-[20px] bg-card border border-white/5">
+          <div className="px-6 pt-5 pb-3">
+            <div className="text-base font-medium">Email-уведомления</div>
+          </div>
+          <div className="px-6 pb-6">
+            <label className="flex items-start justify-between gap-4 cursor-pointer">
+              <div className="min-w-0">
+                <div className="text-sm font-medium text-white">Напоминания о настройке профиля</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Мы присылаем email, пока вы не пройдёте опрос архетипа. Отключите, если не хотите больше получать такие письма.
+                </div>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={!reminderOptOut}
+                onClick={() => handleReminderOptOutChange(!reminderOptOut)}
+                disabled={savingOptOut}
+                className="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50"
+                style={{ background: reminderOptOut ? "rgba(255,255,255,0.15)" : "#D4AF37" }}
+              >
+                <span
+                  className="inline-block h-5 w-5 transform rounded-full bg-white transition-transform"
+                  style={{ transform: reminderOptOut ? "translateX(2px)" : "translateX(22px)" }}
+                />
+              </button>
+            </label>
+          </div>
+        </div>
 
         <div className="rounded-[20px] bg-card border border-white/5">
           <div className="px-6 pt-5 pb-3">

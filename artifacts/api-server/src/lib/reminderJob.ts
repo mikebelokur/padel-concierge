@@ -63,7 +63,8 @@ async function runReminderJob(): Promise<void> {
       .where(
         sql`${usersTable.archetype} IS NULL
         AND ${usersTable.createdAt} < ${cutoff.toISOString()}
-        AND ${usersTable.role} = 'player'`
+        AND ${usersTable.role} = 'player'
+        AND ${usersTable.reminderOptOut} = false`
       );
   } catch (err) {
     logger.error({ err }, "reminderJob: DB query failed");
@@ -127,13 +128,14 @@ export type SendReminderResult = {
 
 export async function sendReminderToUser(userId: number, senderUserId: number | null = null): Promise<SendReminderResult> {
   const [user] = await db
-    .select({ id: usersTable.id, email: usersTable.email, name: usersTable.name, role: usersTable.role, archetype: usersTable.archetype, reminderSentAt: usersTable.reminderSentAt })
+    .select({ id: usersTable.id, email: usersTable.email, name: usersTable.name, role: usersTable.role, archetype: usersTable.archetype, reminderSentAt: usersTable.reminderSentAt, reminderOptOut: usersTable.reminderOptOut })
     .from(usersTable)
     .where(eq(usersTable.id, userId));
 
   if (!user) throw new Error("User not found");
   if (user.role !== "player") throw new Error("Reminders can only be sent to players");
   if (user.archetype !== null) return { sent: false, alreadyDone: true, blocked: null };
+  if (user.reminderOptOut) return { sent: false, alreadyDone: true, blocked: null };
 
   const count = await getReminderCount(userId);
   const eligibility = getReminderEligibility(user.reminderSentAt, count);

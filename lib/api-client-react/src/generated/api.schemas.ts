@@ -100,6 +100,7 @@ export interface UpdateUserBody {
   /** @nullable */
   avatar?: string | null;
   language?: string;
+  reminderOptOut?: boolean;
 }
 
 export interface UpdateAvailabilityBody {

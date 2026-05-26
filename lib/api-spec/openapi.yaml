@@ -1106,6 +1106,8 @@ components:
           type: ["string", "null"]
         language:
           type: string
+        reminderOptOut:
+          type: boolean
 
     UpdateAvailabilityBody:
       type: object

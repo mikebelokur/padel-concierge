@@ -40,6 +40,7 @@ function formatUser(user: typeof usersTable.$inferSelect) {
     physicalSelf: user.physicalSelf ?? null,
     warmupFormat: user.warmupFormat ?? null,
     userType: user.userType ?? "real_user",
+    reminderOptOut: user.reminderOptOut,
   };
 }
 

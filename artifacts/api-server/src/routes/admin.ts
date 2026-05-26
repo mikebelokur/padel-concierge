@@ -131,6 +131,7 @@ router.get("/admin/incomplete-profiles", async (req, res): Promise<void> => {
       email: usersTable.email,
       createdAt: usersTable.createdAt,
       reminderSentAt: usersTable.reminderSentAt,
+      reminderOptOut: usersTable.reminderOptOut,
     })
     .from(usersTable)
     .where(and(isNull(usersTable.archetype), eq(usersTable.role, "player")))
@@ -184,10 +185,11 @@ router.get("/admin/incomplete-profiles", async (req, res): Promise<void> => {
       email: u.email,
       createdAt: u.createdAt.toISOString(),
       reminderSentAt: u.reminderSentAt?.toISOString() ?? null,
+      reminderOptOut: u.reminderOptOut,
       reminderCount: history.length,
       reminderHistory: history,
-      canRemind: eligibility.canSend,
-      remindBlockedReason: eligibility.canSend ? null : eligibility.reason,
+      canRemind: eligibility.canSend && !u.reminderOptOut,
+      remindBlockedReason: u.reminderOptOut ? "opted_out" : (eligibility.canSend ? null : eligibility.reason),
       nextReminderAllowedAt: eligibility.canSend ? null : eligibility.nextAllowedAt?.toISOString() ?? null,
       remindersRemaining: eligibility.remaining,
       reminderMaxTotal: REMINDER_MAX_TOTAL,
@@ -240,6 +242,7 @@ router.post("/admin/incomplete-profiles/remind-all", async (req, res): Promise<v
     .where(and(
       isNull(usersTable.archetype),
       eq(usersTable.role, "player"),
+      eq(usersTable.reminderOptOut, false),
     ));
 
   let sent = 0;

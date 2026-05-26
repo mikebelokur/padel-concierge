@@ -334,6 +334,7 @@ router.patch("/users/:id", async (req, res): Promise<void> => {
     ...(parsed.data.locationLng !== undefined && { locationLng: parsed.data.locationLng }),
     ...(parsed.data.avatar !== undefined && { avatar: parsed.data.avatar }),
     ...(parsed.data.language && { language: parsed.data.language }),
+    ...(parsed.data.reminderOptOut !== undefined && { reminderOptOut: parsed.data.reminderOptOut }),
   }).where(eq(usersTable.id, id)).returning();
 
   if (!user) { res.status(404).json({ error: "User not found" }); return; }

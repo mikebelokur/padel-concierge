@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useQuery, useQueries, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Input } from "@/components/ui/input";
@@ -267,6 +267,9 @@ export default function MatchRequests() {
   const qc = useQueryClient();
   const isCoach = user?.role === "coach" || user?.role === "admin" || user?.role === "owner";
 
+  const [showLevelGate, setShowLevelGate] = useState(false);
+  const hasLevel = !user || !!user.level;
+
   const [mainTab, setMainTab] = useState<"personal" | "trainer">("personal");
   const [personalTab, setPersonalTab] = useState<"received" | "sent">("received");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -489,7 +492,10 @@ export default function MatchRequests() {
           </div>
           {mainTab === "personal" && (
             <button
-              onClick={() => { setShowSend(true); setDialogTab("smart"); setSelectedPlayer(null); setSearch(""); }}
+              onClick={() => {
+                if (!hasLevel) { setShowLevelGate(true); return; }
+                setShowSend(true); setDialogTab("smart"); setSelectedPlayer(null); setSearch("");
+              }}
               className="rounded-full font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] flex-shrink-0"
               style={{ height: "44px", padding: "0 20px", fontSize: "15px", background: "#D4AF37", color: "#000" }}
             >
@@ -817,7 +823,10 @@ export default function MatchRequests() {
                     </div>
 
                     <button
-                      onClick={() => trainerRequestMutation.mutate()}
+                      onClick={() => {
+                        if (!hasLevel) { setShowLevelGate(true); return; }
+                        trainerRequestMutation.mutate();
+                      }}
                       disabled={trainerRequestMutation.isPending || !trDate}
                       className="w-full rounded-[14px] font-semibold transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
                       style={{ height: "52px", fontSize: "15px", background: "#D4AF37", color: "#000" }}
@@ -1258,6 +1267,41 @@ export default function MatchRequests() {
             >
               {assignMutation.isPending ? t("matchRequests.assign.creating") : t("matchRequests.assign.createMatch").replace("{{n}}", String(1 + selectedCandidates.length))}
             </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* ── NO LEVEL GATE ── */}
+      <Dialog open={showLevelGate} onOpenChange={setShowLevelGate}>
+        <DialogContent className="bg-card border-white/10 text-foreground max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl">{t("dashboard.noLevelBannerTitle")}</DialogTitle>
+          </DialogHeader>
+          <p className="text-muted-foreground" style={{ fontSize: "14px" }}>
+            {t("dashboard.noLevelBannerDesc")}
+          </p>
+          <div className="flex gap-3 mt-4">
+            <button
+              onClick={() => setShowLevelGate(false)}
+              className="flex-1 rounded-[12px] font-medium transition-all"
+              style={{
+                height: "44px",
+                fontSize: "14px",
+                background: "rgba(255,255,255,0.07)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                color: "rgba(255,255,255,0.7)",
+              }}
+            >
+              {t("matchRequests.dialog.change")}
+            </button>
+            <Link href="/assessment" className="flex-1">
+              <button
+                onClick={() => setShowLevelGate(false)}
+                className="w-full rounded-[12px] font-semibold transition-all hover:opacity-90"
+                style={{ height: "44px", fontSize: "14px", background: "#D4AF37", color: "#000" }}
+              >
+                {t("dashboard.noLevelBannerCta")}
+              </button>
+            </Link>
           </div>
         </DialogContent>
       </Dialog>

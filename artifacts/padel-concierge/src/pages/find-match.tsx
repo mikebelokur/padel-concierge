@@ -6,6 +6,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { apiFetch } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { translateError } from "@/lib/errorMessages";
+import { NoLevelGate } from "@/components/NoLevelGate";
 
 interface Candidate {
   user: {
@@ -205,6 +206,10 @@ export default function FindMatch() {
 
   const showEmpty = !loading && !error && candidates !== null && candidates.length === 0;
   const showResults = !loading && !error && candidates !== null && candidates.length > 0;
+
+  if (user && !user.level) {
+    return <NoLevelGate />;
+  }
 
   return (
     <AppLayout>

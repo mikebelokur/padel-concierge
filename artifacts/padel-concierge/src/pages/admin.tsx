@@ -153,6 +153,27 @@ export default function Admin() {
     onError: (e: unknown) => toast({ title: "Ошибка", description: translateError(e).message, variant: "destructive" }),
   });
 
+  const remindAllMutation = useMutation({
+    mutationFn: () => apiFetch(`/admin/incomplete-profiles/remind-all`, { method: "POST" }),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-incomplete-profiles"] });
+      const sent = data?.sent ?? 0;
+      const failed = data?.failed ?? 0;
+      const skipped = data?.skipped ?? 0;
+      const total = data?.total ?? 0;
+      if (total === 0) {
+        toast({ title: "Нет получателей", description: "Все игроки уже получили напоминание." });
+      } else {
+        toast({
+          title: `✅ Отправлено ${sent} из ${total}`,
+          description: `Пропущено: ${skipped}. Ошибок: ${failed}.`,
+          variant: failed > 0 && sent === 0 ? "destructive" : undefined,
+        });
+      }
+    },
+    onError: (e: unknown) => toast({ title: "Ошибка", description: translateError(e).message, variant: "destructive" }),
+  });
+
   const filteredUsers = (users as any[]).filter((u: any) =>
     !search ||
     u.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -606,7 +627,7 @@ export default function Admin() {
         {/* ─── INCOMPLETE PROFILES TAB ─── */}
         {activeTab === "incomplete" && (
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               {incompleteList.length > 0 ? (
                 <span
                   className="inline-flex items-center rounded-full border"
@@ -622,6 +643,37 @@ export default function Admin() {
                   ✅ Все профили заполнены
                 </span>
               )}
+              {(() => {
+                const pendingReminderCount = incompleteList.filter(u => !u.reminderSentAt).length;
+                return (
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center rounded-xl font-medium transition-all active:scale-[0.97] disabled:opacity-50 ml-auto"
+                    style={{
+                      height: "36px",
+                      paddingLeft: "14px",
+                      paddingRight: "14px",
+                      fontSize: "13px",
+                      border: "1px solid rgba(251,146,60,0.35)",
+                      color: "#fb923c",
+                      background: "rgba(251,146,60,0.08)",
+                    }}
+                    onClick={() => {
+                      if (pendingReminderCount === 0) {
+                        toast({ title: "Нет получателей", description: "Все игроки уже получили напоминание." });
+                        return;
+                      }
+                      if (window.confirm(`Отправить напоминание ${pendingReminderCount} игрокам?`)) {
+                        remindAllMutation.mutate();
+                      }
+                    }}
+                    disabled={remindAllMutation.isPending || pendingReminderCount === 0}
+                    title={pendingReminderCount === 0 ? "Все игроки уже получили напоминание" : `Отправить напоминание ${pendingReminderCount} игрокам`}
+                  >
+                    {remindAllMutation.isPending ? "Отправка…" : `Напомнить всем (${pendingReminderCount})`}
+                  </button>
+                );
+              })()}
             </div>
 
             {incompleteLoading ? (

@@ -210,6 +210,38 @@ router.post("/admin/incomplete-profiles/:id/remind", async (req, res): Promise<v
   }
 });
 
+// POST /api/admin/incomplete-profiles/remind-all — bulk send reminders
+router.post("/admin/incomplete-profiles/remind-all", async (req, res): Promise<void> => {
+  const auth = requireOwnerOrAdmin(req, res);
+  if (!auth) return;
+
+  const rows = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(and(
+      isNull(usersTable.archetype),
+      isNull(usersTable.reminderSentAt),
+      eq(usersTable.role, "player"),
+    ));
+
+  let sent = 0;
+  let failed = 0;
+  let skipped = 0;
+
+  for (const u of rows) {
+    try {
+      const result = await sendReminderToUser(u.id, auth.userId);
+      if (result.alreadyDone) skipped++;
+      else if (result.sent) sent++;
+      else failed++;
+    } catch {
+      failed++;
+    }
+  }
+
+  res.json({ total: rows.length, sent, failed, skipped });
+});
+
 // PUT /api/admin/users/:id/role — set role
 router.put("/admin/users/:id/role", async (req, res): Promise<void> => {
   if (!requireOwnerOrAdmin(req, res)) return;

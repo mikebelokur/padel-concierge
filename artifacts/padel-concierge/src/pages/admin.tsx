@@ -57,7 +57,7 @@ export default function Admin() {
   const { toast } = useToast();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<"overview" | "registrations">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "registrations" | "incomplete">("overview");
   const [search, setSearch] = useState("");
   const [editingLevel, setEditingLevel] = useState<Record<number, string>>({});
 
@@ -134,11 +134,37 @@ export default function Admin() {
     onError: (e: unknown) => toast({ title: "Ошибка", description: translateError(e).message, variant: "destructive" }),
   });
 
+  const { data: incompleteProfiles = [], isLoading: incompleteLoading } = useQuery({
+    queryKey: ["admin-incomplete-profiles"],
+    queryFn: () => apiFetch("/admin/incomplete-profiles"),
+  });
+
+  const remindMutation = useMutation({
+    mutationFn: (id: number) => apiFetch(`/admin/incomplete-profiles/${id}/remind`, { method: "POST" }),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-incomplete-profiles"] });
+      if (data?.sent) {
+        toast({ title: "✅ Напоминание отправлено" });
+      } else {
+        toast({ title: "Письмо не доставлено", description: "Почтовый сервер недоступен. Повторите позже.", variant: "destructive" });
+      }
+    },
+    onError: (e: unknown) => toast({ title: "Ошибка", description: translateError(e).message, variant: "destructive" }),
+  });
+
   const filteredUsers = (users as any[]).filter((u: any) =>
     !search ||
     u.name.toLowerCase().includes(search.toLowerCase()) ||
     u.email.toLowerCase().includes(search.toLowerCase())
   );
+
+  const incompleteList = incompleteProfiles as Array<{
+    id: number;
+    name: string;
+    email: string;
+    createdAt: string;
+    reminderSentAt: string | null;
+  }>;
 
   const tabs = [
     { id: "overview", label: t("admin.overview") },
@@ -146,6 +172,11 @@ export default function Admin() {
       id: "registrations",
       label: t("admin.registrations"),
       badge: pending.length > 0 ? pending.length : null,
+    },
+    {
+      id: "incomplete",
+      label: "Незаполненные профили",
+      badge: incompleteList.length > 0 ? incompleteList.length : null,
     },
   ] as const;
 
@@ -557,6 +588,138 @@ export default function Admin() {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ─── INCOMPLETE PROFILES TAB ─── */}
+        {activeTab === "incomplete" && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              {incompleteList.length > 0 ? (
+                <span
+                  className="inline-flex items-center rounded-full border"
+                  style={{ padding: "4px 12px", fontSize: "13px", color: "#fb923c", borderColor: "rgba(251,146,60,0.30)", background: "rgba(251,146,60,0.08)" }}
+                >
+                  {incompleteList.length} игроков без архетипа
+                </span>
+              ) : (
+                <span
+                  className="inline-flex items-center rounded-full border"
+                  style={{ padding: "4px 12px", fontSize: "13px", color: "#4ade80", borderColor: "rgba(74,222,128,0.25)", background: "rgba(74,222,128,0.08)" }}
+                >
+                  ✅ Все профили заполнены
+                </span>
+              )}
+            </div>
+
+            {incompleteLoading ? (
+              <div className="text-center py-16 text-muted-foreground" style={{ fontSize: "14px" }}>Загрузка…</div>
+            ) : incompleteList.length === 0 ? (
+              <div
+                className="rounded-[20px] text-center py-16"
+                style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
+              >
+                <div style={{ fontSize: "40px", marginBottom: "12px" }}>🎯</div>
+                <div className="font-medium text-white mb-1" style={{ fontSize: "16px" }}>Всё в порядке</div>
+                <div className="text-muted-foreground" style={{ fontSize: "14px" }}>Нет игроков с незаполненным профилем.</div>
+              </div>
+            ) : (
+              <div
+                className="rounded-[20px] overflow-hidden"
+                style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
+              >
+                {/* Header row */}
+                <div
+                  className="hidden sm:grid px-5 py-3"
+                  style={{
+                    gridTemplateColumns: "1fr 160px 140px 140px",
+                    borderBottom: "1px solid rgba(255,255,255,0.06)",
+                    fontSize: "11px",
+                    fontWeight: 500,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    color: "rgba(255,255,255,0.35)",
+                  }}
+                >
+                  <span>Игрок</span>
+                  <span>Дата регистрации</span>
+                  <span>Напоминание</span>
+                  <span />
+                </div>
+                {incompleteList.map((u, i) => (
+                  <div
+                    key={u.id}
+                    className="flex flex-col sm:grid items-center gap-3 px-5 py-4"
+                    style={{
+                      gridTemplateColumns: "1fr 160px 140px 140px",
+                      borderBottom: i < incompleteList.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                    }}
+                  >
+                    {/* Player info */}
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className="rounded-full flex items-center justify-center font-serif flex-shrink-0"
+                        style={{ width: "36px", height: "36px", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.5)", fontSize: "13px", border: "1px solid rgba(255,255,255,0.08)" }}
+                      >
+                        {u.name?.[0] ?? "?"}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-medium text-white truncate" style={{ fontSize: "14px" }}>{u.name}</div>
+                        <div className="text-muted-foreground truncate" style={{ fontSize: "12px" }}>{u.email}</div>
+                      </div>
+                    </div>
+
+                    {/* Registration date */}
+                    <div className="text-muted-foreground" style={{ fontSize: "12px" }}>
+                      {fmtDate(u.createdAt)}
+                    </div>
+
+                    {/* Reminder status */}
+                    <div>
+                      {u.reminderSentAt ? (
+                        <span
+                          className="inline-flex items-center rounded-full border"
+                          style={{ padding: "3px 10px", fontSize: "11px", color: "#4ade80", borderColor: "rgba(74,222,128,0.25)", background: "rgba(74,222,128,0.06)" }}
+                        >
+                          ✓ Отправлено
+                        </span>
+                      ) : (
+                        <span
+                          className="inline-flex items-center rounded-full border"
+                          style={{ padding: "3px 10px", fontSize: "11px", color: "rgba(255,255,255,0.35)", borderColor: "rgba(255,255,255,0.10)", background: "transparent" }}
+                        >
+                          Не отправлено
+                        </span>
+                      )}
+                      {u.reminderSentAt && (
+                        <div className="text-muted-foreground mt-0.5" style={{ fontSize: "11px" }}>{timeAgo(u.reminderSentAt)}</div>
+                      )}
+                    </div>
+
+                    {/* Remind button */}
+                    <div className="flex justify-end">
+                      <button
+                        className="inline-flex items-center justify-center rounded-xl font-medium transition-all active:scale-[0.97] disabled:opacity-50"
+                        style={{
+                          height: "36px",
+                          paddingLeft: "14px",
+                          paddingRight: "14px",
+                          fontSize: "13px",
+                          border: "1px solid rgba(251,146,60,0.35)",
+                          color: "#fb923c",
+                          background: "rgba(251,146,60,0.08)",
+                        }}
+                        onClick={() => remindMutation.mutate(u.id)}
+                        disabled={remindMutation.isPending}
+                        title={u.reminderSentAt ? "Отправить повторное напоминание" : "Отправить напоминание"}
+                      >
+                        {u.reminderSentAt ? "Повторить" : "Напомнить"}
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>

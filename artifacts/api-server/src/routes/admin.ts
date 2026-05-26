@@ -1,8 +1,9 @@
 import { Router, type IRouter } from "express";
 import { db, usersTable, activityLogsTable } from "@workspace/db";
-import { eq, ne } from "drizzle-orm";
+import { and, eq, ne, isNull } from "drizzle-orm";
 import { getTokenFromRequest, verifyToken } from "../lib/auth";
 import { formatUser } from "./auth";
+import { sendReminderToUser } from "../lib/reminderJob";
 
 const router: IRouter = Router();
 
@@ -117,6 +118,51 @@ router.patch("/admin/users/:id/user-type", async (req, res): Promise<void> => {
   });
 
   res.json(formatUser(user));
+});
+
+// GET /api/admin/incomplete-profiles — players (role='player') with archetype IS NULL
+router.get("/admin/incomplete-profiles", async (req, res): Promise<void> => {
+  if (!requireOwnerOrAdmin(req, res)) return;
+
+  const rows = await db
+    .select({
+      id: usersTable.id,
+      name: usersTable.name,
+      email: usersTable.email,
+      createdAt: usersTable.createdAt,
+      reminderSentAt: usersTable.reminderSentAt,
+    })
+    .from(usersTable)
+    .where(and(isNull(usersTable.archetype), eq(usersTable.role, "player")))
+    .orderBy(usersTable.createdAt);
+
+  res.json(rows.map(u => ({
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    createdAt: u.createdAt.toISOString(),
+    reminderSentAt: u.reminderSentAt?.toISOString() ?? null,
+  })));
+});
+
+// POST /api/admin/incomplete-profiles/:id/remind — manually send reminder
+router.post("/admin/incomplete-profiles/:id/remind", async (req, res): Promise<void> => {
+  if (!requireOwnerOrAdmin(req, res)) return;
+
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid user id" }); return; }
+
+  try {
+    const result = await sendReminderToUser(id);
+    if (result.alreadyDone) {
+      res.status(400).json({ error: "Player has already completed their profile" });
+      return;
+    }
+    res.json({ sent: result.sent });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    res.status(404).json({ error: message });
+  }
 });
 
 // PUT /api/admin/users/:id/role — set role

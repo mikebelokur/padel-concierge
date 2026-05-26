@@ -1,5 +1,5 @@
 import { db, usersTable } from "@workspace/db";
-import { isNull, lt, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { sendSetupReminderEmail } from "./mail";
 import { logger } from "./logger";
 
@@ -52,6 +52,29 @@ async function runReminderJob(): Promise<void> {
       logger.error({ err, userId: user.id }, "reminderJob: failed to send reminder");
     }
   }
+}
+
+export async function sendReminderToUser(userId: number): Promise<{ sent: boolean; alreadyDone: boolean }> {
+  const [user] = await db
+    .select({ id: usersTable.id, email: usersTable.email, name: usersTable.name, role: usersTable.role, archetype: usersTable.archetype, reminderSentAt: usersTable.reminderSentAt })
+    .from(usersTable)
+    .where(eq(usersTable.id, userId));
+
+  if (!user) throw new Error("User not found");
+  if (user.role !== "player") throw new Error("Reminders can only be sent to players");
+  if (user.archetype !== null) return { sent: false, alreadyDone: true };
+
+  const result = await sendSetupReminderEmail(user.email, user.name);
+
+  if (result.sent) {
+    await db
+      .update(usersTable)
+      .set({ reminderSentAt: new Date() })
+      .where(eq(usersTable.id, userId));
+    logger.info({ userId, email: user.email }, "reminderJob: manual reminder sent");
+  }
+
+  return { sent: result.sent, alreadyDone: false };
 }
 
 export function startReminderJob(): void {

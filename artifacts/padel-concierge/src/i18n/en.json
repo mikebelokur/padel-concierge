@@ -43,7 +43,11 @@
   "home": {
     "tagline": "The private members club for serious padel players. Precise matchmaking, certified skill levels, and premium play analytics.",
     "getStarted": "Get Started",
-    "login": "Login"
+    "login": "Login",
+    "participantsLabel": "Registered in Padel Concierge:",
+    "participantsCount_one": "{{count}} player",
+    "participantsCount_other": "{{count}} players",
+    "participantsTooltip": "At 100+ players, automatic match suggestions unlock"
   },
   "login": {
     "title": "Welcome Back",

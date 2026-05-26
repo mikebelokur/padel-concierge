@@ -43,7 +43,13 @@
   "home": {
     "tagline": "Закрытый клуб для серьёзных падел-игроков. Точный подбор партнёров, сертифицированные уровни и премиальная аналитика.",
     "getStarted": "Вступить",
-    "login": "Войти"
+    "login": "Войти",
+    "participantsLabel": "Зарегистрировано в Padel Concierge:",
+    "participantsCount_one": "{{count}} игрок",
+    "participantsCount_few": "{{count}} игрока",
+    "participantsCount_many": "{{count}} игроков",
+    "participantsCount_other": "{{count}} игроков",
+    "participantsTooltip": "При 100+ игроках откроется автоматический подбор матчей"
   },
   "login": {
     "title": "С возвращением",

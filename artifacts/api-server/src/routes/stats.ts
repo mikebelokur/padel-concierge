@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, usersTable, matchesTable, bookingsTable, videoAnalysesTable, activityLogsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { GetActivityLogQueryParams } from "@workspace/api-zod";
 import { requireAuth, requireAdmin } from "../middleware/auth";
 
@@ -123,6 +123,25 @@ router.get("/stats/activity", requireAdmin, async (req, res): Promise<void> => {
     details: l.details ?? null,
     createdAt: l.createdAt.toISOString(),
   })).reverse());
+});
+
+const CATEGORY_ORDER = ["D-", "D", "D+", "C-", "C", "C+", "B-"] as const;
+
+router.get("/stats/participants", async (_req, res): Promise<void> => {
+  const rows = await db
+    .select({ level: usersTable.level, c: sql<number>`count(*)::int` })
+    .from(usersTable)
+    .where(eq(usersTable.userType, "real_user"))
+    .groupBy(usersTable.level);
+  const byCategory: Record<string, number> = {};
+  let total = 0;
+  for (const c of CATEGORY_ORDER) byCategory[c] = 0;
+  for (const r of rows) {
+    const n = Number(r.c);
+    total += n;
+    if (r.level in byCategory) byCategory[r.level] = n;
+  }
+  res.json({ total, byCategory, threshold: 100 });
 });
 
 export default router;

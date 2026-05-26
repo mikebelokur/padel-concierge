@@ -33,9 +33,9 @@ export default function Clients() {
         {/* Header */}
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h1 className="font-serif font-bold text-white mb-0.5" style={{ fontSize: "28px" }}>Clients</h1>
+            <h1 className="font-serif font-bold text-white mb-0.5" style={{ fontSize: "28px" }}>Клиенты</h1>
             <p className="text-muted-foreground" style={{ fontSize: "14px" }}>
-              {(clients as any[]).length} coaching clients
+              {(clients as any[]).length} клиентов
             </p>
           </div>
           <Link href="/clients/new">
@@ -43,7 +43,7 @@ export default function Clients() {
               className="inline-flex items-center justify-center gap-1.5 rounded-xl font-semibold text-black transition-all active:scale-[0.97]"
               style={{ background: "#D4AF37", height: "44px", paddingLeft: "16px", paddingRight: "16px", fontSize: "14px" }}
             >
-              + New Client
+              + Новый клиент
             </button>
           </Link>
         </div>
@@ -52,7 +52,7 @@ export default function Clients() {
         <div className="mb-5">
           <input
             type="text"
-            placeholder="Search clients…"
+            placeholder="Поиск клиентов…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full max-w-sm text-white placeholder-muted-foreground outline-none rounded-xl transition-all"
@@ -68,10 +68,10 @@ export default function Clients() {
         </div>
 
         {isLoading ? (
-          <div className="text-center py-16 text-muted-foreground" style={{ fontSize: "14px" }}>Loading…</div>
+          <div className="text-center py-16 text-muted-foreground" style={{ fontSize: "14px" }}>Загрузка…</div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground" style={{ fontSize: "14px" }}>
-            {search ? "No clients match your search" : "No clients yet"}
+            {search ? "Клиенты не найдены" : "Клиентов пока нет"}
           </div>
         ) : (
           <div
@@ -120,7 +120,7 @@ export default function Clients() {
                     <div className="text-right">
                       <LevelBadge level={client.level} />
                       <div className="text-muted-foreground mt-0.5 text-right" style={{ fontSize: "11px" }}>
-                        {client.totalSessions} sessions
+                        {client.totalSessions} сессий
                       </div>
                     </div>
                     <span className="text-muted-foreground" style={{ fontSize: "20px" }}>›</span>

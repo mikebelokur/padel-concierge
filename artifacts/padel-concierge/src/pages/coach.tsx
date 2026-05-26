@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAY_NAMES = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
 
 function LevelBadge({ level }: { level: string }) {
   return (
@@ -22,7 +22,7 @@ export default function CoachDashboard() {
   const { t } = useLanguage();
   const today = new Date();
   const dayName = DAY_NAMES[today.getDay()];
-  const dateStr = today.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+  const dateStr = today.toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" });
 
   const { data: clients = [] } = useQuery({
     queryKey: ["coaching-clients"],
@@ -84,7 +84,7 @@ export default function CoachDashboard() {
                 className="inline-flex items-center justify-center gap-1.5 rounded-xl font-semibold text-black transition-all active:scale-[0.97]"
                 style={{ background: "#D4AF37", height: "44px", paddingLeft: "16px", paddingRight: "16px", fontSize: "14px" }}
               >
-                + Add Client
+                + Добавить клиента
               </button>
             </Link>
           </div>
@@ -93,10 +93,10 @@ export default function CoachDashboard() {
         {/* Stats row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
           {[
-            { label: "Active Clients", value: activeClients.length, icon: "👥", gold: false },
-            { label: "Pending Videos", value: pendingVideos.length, icon: "🎬", gold: false },
-            { label: "Unread Messages", value: unreadMessages.length, icon: "💬", gold: false },
-            { label: "Revenue This Week", value: `${weekRevenue} AED`, icon: "💰", gold: true },
+            { label: "Активные клиенты", value: activeClients.length, icon: "👥", gold: false },
+            { label: "Видео на проверке", value: pendingVideos.length, icon: "🎬", gold: false },
+            { label: "Непрочитанные", value: unreadMessages.length, icon: "💬", gold: false },
+            { label: "Доход за неделю", value: `${weekRevenue} AED`, icon: "💰", gold: true },
           ].map(({ label, value, icon, gold }) => (
             <div
               key={label}
@@ -125,15 +125,15 @@ export default function CoachDashboard() {
           style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
         >
           <div className="flex items-center justify-between px-5 pt-5 pb-3">
-            <div className="font-medium text-white" style={{ fontSize: "16px" }}>Today — {dayName}</div>
+            <div className="font-medium text-white" style={{ fontSize: "16px" }}>Сегодня — {dayName}</div>
             {(todaySessions as any[]).length === 0 && (
-              <span className="text-muted-foreground" style={{ fontSize: "12px" }}>No sessions today</span>
+              <span className="text-muted-foreground" style={{ fontSize: "12px" }}>Нет сессий сегодня</span>
             )}
           </div>
 
           {(todaySessions as any[]).length === 0 ? (
             <div className="text-center pb-8 text-muted-foreground" style={{ fontSize: "14px" }}>
-              Free day — no scheduled sessions 🏖️
+              Свободный день — сессий нет 🏖️
             </div>
           ) : (
             <div>
@@ -157,7 +157,7 @@ export default function CoachDashboard() {
                     <div>
                       <div className="font-medium text-white" style={{ fontSize: "14px" }}>{session.client?.name}</div>
                       <div className="text-muted-foreground" style={{ fontSize: "12px" }}>
-                        {session.startTime} – {session.endTime} · {session.court || "Court TBD"}
+                        {session.startTime} – {session.endTime} · {session.court || "Корт не указан"}
                       </div>
                     </div>
                   </div>
@@ -167,7 +167,7 @@ export default function CoachDashboard() {
                       className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border"
                       style={{ color: "#4ade80", borderColor: "rgba(74,222,128,0.25)", background: "rgba(74,222,128,0.08)" }}
                     >
-                      Recurring
+                      Регулярно
                     </span>
                   </div>
                 </div>
@@ -179,7 +179,7 @@ export default function CoachDashboard() {
         {/* Clients overview */}
         <div className="mb-2">
           <h2 className="font-medium text-muted-foreground uppercase tracking-wider mb-3" style={{ fontSize: "11px", paddingLeft: "4px" }}>
-            Clients
+            Клиенты
           </h2>
         </div>
         <div
@@ -187,7 +187,7 @@ export default function CoachDashboard() {
           style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
         >
           {(clients as any[]).length === 0 ? (
-            <div className="text-center py-10 text-muted-foreground" style={{ fontSize: "14px" }}>No clients yet</div>
+            <div className="text-center py-10 text-muted-foreground" style={{ fontSize: "14px" }}>Клиентов пока нет</div>
           ) : (
             (clients as any[]).map((client: any, i: number) => (
               <Link key={client.id} href={`/clients/${client.id}`}>
@@ -208,7 +208,7 @@ export default function CoachDashboard() {
                     <div>
                       <div className="font-medium text-white" style={{ fontSize: "15px" }}>{client.name}</div>
                       <div className="text-muted-foreground" style={{ fontSize: "13px" }}>
-                        {client.totalSessions} sessions · {client.totalRevenue} AED
+                        {client.totalSessions} сессий · {client.totalRevenue} AED
                       </div>
                     </div>
                   </div>
@@ -229,7 +229,7 @@ export default function CoachDashboard() {
             style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.06)" }}
           >
             <div className="flex items-center gap-2 px-5 pt-5 pb-3">
-              <span className="font-medium text-white" style={{ fontSize: "15px" }}>🎬 Video Analysis Queue</span>
+              <span className="font-medium text-white" style={{ fontSize: "15px" }}>🎬 Очередь видеоанализа</span>
               <span
                 className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold"
                 style={{ background: "rgba(212,175,55,0.15)", color: "#D4AF37", border: "1px solid rgba(212,175,55,0.25)" }}
@@ -246,9 +246,11 @@ export default function CoachDashboard() {
                     borderTop: "1px solid rgba(255,255,255,0.06)",
                   }}
                 >
-                  <div className="font-medium text-white" style={{ fontSize: "14px" }}>Video #{v.id}</div>
+                  <div className="font-medium text-white" style={{ fontSize: "14px" }}>Видео #{v.id}</div>
                   <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground capitalize" style={{ fontSize: "13px" }}>{v.status}</span>
+                    <span className="text-muted-foreground" style={{ fontSize: "13px" }}>
+                      {v.status === "pending" ? "Ожидает" : v.status === "in_progress" ? "В работе" : v.status}
+                    </span>
                     <span className="text-muted-foreground" style={{ fontSize: "18px" }}>›</span>
                   </div>
                 </div>
@@ -265,7 +267,7 @@ export default function CoachDashboard() {
           >
             <div className="flex items-center justify-between px-5 pt-5 pb-3">
               <div className="flex items-center gap-2">
-                <span className="font-medium text-white" style={{ fontSize: "15px" }}>💬 New Messages</span>
+                <span className="font-medium text-white" style={{ fontSize: "15px" }}>💬 Новые сообщения</span>
                 <span
                   className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold"
                   style={{ background: "rgba(250,204,21,0.12)", color: "#facc15", border: "1px solid rgba(250,204,21,0.25)" }}
@@ -275,7 +277,7 @@ export default function CoachDashboard() {
               </div>
               <Link href="/messages">
                 <span className="font-medium transition-opacity hover:opacity-70" style={{ fontSize: "14px", color: "#D4AF37" }}>
-                  View all
+                  Смотреть все
                 </span>
               </Link>
             </div>

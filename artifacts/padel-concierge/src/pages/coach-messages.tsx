@@ -62,8 +62,8 @@ export default function CoachMessages() {
           style={{ borderRight: "1px solid rgba(255,255,255,0.06)" }}
         >
           <div className="px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-            <h2 className="font-serif font-bold text-white mb-0.5" style={{ fontSize: "20px" }}>Messages</h2>
-            <p className="text-muted-foreground" style={{ fontSize: "12px" }}>WhatsApp conversations</p>
+            <h2 className="font-serif font-bold text-white mb-0.5" style={{ fontSize: "20px" }}>Сообщения</h2>
+            <p className="text-muted-foreground" style={{ fontSize: "12px" }}>Переписка в WhatsApp</p>
           </div>
           <div className="flex-1 overflow-y-auto">
             {latestPerClient.map((c: any, i: number) => (
@@ -101,7 +101,7 @@ export default function CoachMessages() {
                   <div className="min-w-0 flex-1">
                     <div className="font-medium text-white truncate" style={{ fontSize: "14px" }}>{c.name}</div>
                     <div className="text-muted-foreground truncate" style={{ fontSize: "12px" }}>
-                      {c.lastMessage ? c.lastMessage.content : "No messages yet"}
+                      {c.lastMessage ? c.lastMessage.content : "Нет сообщений"}
                     </div>
                   </div>
                 </div>
@@ -114,7 +114,7 @@ export default function CoachMessages() {
         <div className={cn(selectedClient ? "flex" : "hidden sm:flex", "flex-1 flex-col")}>
           {!selectedClient ? (
             <div className="flex-1 flex items-center justify-center text-muted-foreground" style={{ fontSize: "14px" }}>
-              Select a client to view messages
+              Выберите клиента для просмотра сообщений
             </div>
           ) : (
             <>
@@ -151,14 +151,14 @@ export default function CoachMessages() {
                     className="inline-flex items-center justify-center rounded-xl font-medium text-white transition-all hover:bg-white/[0.06] active:scale-[0.97]"
                     style={{ border: "1px solid rgba(255,255,255,0.12)", height: "44px", paddingLeft: "14px", paddingRight: "14px", fontSize: "13px" }}
                   >
-                    📅 Send Slots
+                    📅 Отправить слоты
                   </button>
                   <Link href={`/clients/${selectedClient.id}`}>
                     <button
                       className="inline-flex items-center justify-center rounded-xl font-medium text-muted-foreground transition-all hover:bg-white/[0.06] hover:text-white active:scale-[0.97]"
                       style={{ height: "44px", paddingLeft: "14px", paddingRight: "14px", fontSize: "13px" }}
                     >
-                      View Profile
+                      Профиль
                     </button>
                   </Link>
                 </div>
@@ -167,7 +167,7 @@ export default function CoachMessages() {
               {/* Messages */}
               <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
                 {(thread as any[]).length === 0 ? (
-                  <div className="text-center text-muted-foreground py-8" style={{ fontSize: "14px" }}>No messages yet</div>
+                  <div className="text-center text-muted-foreground py-8" style={{ fontSize: "14px" }}>Нет сообщений</div>
                 ) : (
                   (thread as any[]).map((msg: any) => (
                     <div key={msg.id} className={cn("flex", msg.direction === "out" ? "justify-end" : "justify-start")}>
@@ -204,7 +204,7 @@ export default function CoachMessages() {
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="Message…"
+                    placeholder="Сообщение…"
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && draft.trim() && sendMessage.mutate(draft.trim())}
@@ -224,11 +224,11 @@ export default function CoachMessages() {
                     className="inline-flex items-center justify-center rounded-xl font-semibold text-black transition-all active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed"
                     style={{ background: "#D4AF37", height: "44px", paddingLeft: "20px", paddingRight: "20px", fontSize: "14px", flexShrink: 0 }}
                   >
-                    Send
+                    Отправить
                   </button>
                 </div>
                 <p className="text-muted-foreground mt-2" style={{ fontSize: "11px" }}>
-                  Messages saved in-app. Connect Twilio to sync with real WhatsApp.
+                  Сообщения сохраняются в приложении. Подключите Twilio для синхронизации с WhatsApp.
                 </p>
               </div>
             </>

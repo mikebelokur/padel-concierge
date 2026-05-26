@@ -1,0 +1,71 @@
+Fix all schema drift identified in the audit. Single coordinated migration.
+
+PART 1 — Create reminder_logs table
+
+It's referenced in code (lib/db/src/schema/reminder_logs.ts) and 
+reminderJob.ts but missing in DB. Create it matching the schema file:
+- id serial primary key
+- user_id int FK users(id)
+- sent_at timestamptz default now()
+- triggered_by text (values 'auto' | 'manual')
+- sender_user_id int nullable FK users(id)  
+- delivered boolean default true
+
+Verify reminderJob startup error stops after migration.
+
+PART 2 — Fix matches.conflict_occurred type
+
+Change Drizzle schema in lib/db/src/schema/matches.ts from 
+text("conflict_occurred").default("false") to 
+boolean("conflict_occurred").default(false).
+
+DB column is already boolean — only the code declaration is wrong. 
+No DB change needed, only the schema file.
+
+Update any code that writes "false" or "true" as strings to write 
+booleans instead.
+
+PART 3 — Add match_requests.match_id column
+
+This tracks which match was created when a request was accepted.
+
+ALTER TABLE match_requests ADD COLUMN match_id INTEGER REFERENCES matches(id).
+
+Verify Drizzle schema already declares it (it does per audit).
+
+PART 4 — Remove 4 unused drafted tables from code
+
+Delete these schema files (they describe tables that don't exist 
+in DB and aren't used):
+- lib/db/src/schema/compatibility_scores.ts
+- lib/db/src/schema/feedback_aggregates.ts
+- lib/db/src/schema/match_logs.ts
+- lib/db/src/schema/player_profiles.ts
+
+Remove their exports from lib/db/src/schema/index.ts.
+
+This unblocks drizzle-kit push from the rename prompt against pf_users 
+that has been stalling all recent migrations.
+
+PART 5 — Add Drizzle schema for pf_users and pf_quiz_results
+
+Create lib/db/src/schema/pf_users.ts and lib/db/src/schema/pf_quiz_results.ts 
+matching the live DB columns. Export from index.ts.
+
+PART 6 — Verify
+
+Run drizzle-kit push and confirm it runs without manual prompts.
+
+Run the same drift audit query as before and confirm zero drift across 
+all tables.
+
+Test these flows still work after migration:
+- Login as misha.belokur@gmail.com
+- Admin /admin/incomplete-profiles loads without errors
+- POST /admin/incomplete-profiles/remind-all returns success (or correct 
+  business error, not DB error)
+- GET /api/match-requests loads without errors
+
+Report: clean drift output, any errors during migration, any test failures.
+
+Update /docs/schema-status.md to reflect resolved state.

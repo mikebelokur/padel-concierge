@@ -703,7 +703,7 @@ export default function CoachGroupTrainings() {
                       {formatDateTime(tr.dateTime)} · {tr.category}
                     </div>
                     <div className="text-muted-foreground" style={{ fontSize: "12px" }}>
-                      {tr.courtName} · {tr.durationMinutes} min · {Number(tr.priceAed).toFixed(0)} AED
+                      {tr.courtName} · {tr.durationMinutes} {t("coachTrainings.minutesShort")} · {Number(tr.priceAed).toFixed(0)} AED
                       {tr.isRecurring ? " · ↻" : ""}
                     </div>
                   </div>
@@ -771,7 +771,7 @@ export default function CoachGroupTrainings() {
                             {tr.category} · {tr.courtName}
                           </div>
                           <div className="text-muted-foreground" style={{ fontSize: "11px" }}>
-                            {tr.durationMinutes} min · {Number(tr.priceAed).toFixed(0)} AED{tr.isRecurring ? " · ↻" : ""}
+                            {tr.durationMinutes} {t("coachTrainings.minutesShort")} · {Number(tr.priceAed).toFixed(0)} AED{tr.isRecurring ? " · ↻" : ""}
                           </div>
                         </div>
                       </div>
@@ -837,7 +837,7 @@ export default function CoachGroupTrainings() {
               <div className="space-y-4">
                 <div className="text-muted-foreground" style={{ fontSize: "13px" }}>
                   {detailTraining.courtName}
-                  {detailTraining.courtAddress ? ` · ${detailTraining.courtAddress}` : ""} · {detailTraining.durationMinutes} min · {Number(detailTraining.priceAed).toFixed(0)} AED
+                  {detailTraining.courtAddress ? ` · ${detailTraining.courtAddress}` : ""} · {detailTraining.durationMinutes} {t("coachTrainings.minutesShort")} · {Number(detailTraining.priceAed).toFixed(0)} AED
                 </div>
                 <div>
                   <div className="text-muted-foreground uppercase tracking-wider mb-2" style={{ fontSize: "11px" }}>

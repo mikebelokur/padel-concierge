@@ -888,6 +888,7 @@
     "viewCalendar": "Calendar",
     "calendarEmpty": "—",
     "calendarCount": "{{count}} session(s)",
+    "minutesShort": "min",
     "form": {
       "createTitle": "New group training",
       "editTitle": "Edit training",

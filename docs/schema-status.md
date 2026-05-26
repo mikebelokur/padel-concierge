@@ -15,6 +15,13 @@ below must be reconciled before production cutover.
 
 ## Known drift (as of 2026-05-26)
 
+### Resolved
+
+| Table.Column | Resolution |
+|---|---|
+| `users.reminder_sent_at` | ✅ Added to live DB via `ALTER TABLE users ADD COLUMN reminder_sent_at timestamptz` on 2026-05-26. Was causing 500 on every `/api/auth/login` and reminderJob startup. |
+| `users.reminder_opt_out` | ✅ Added to live DB via `ALTER TABLE users ADD COLUMN reminder_opt_out boolean NOT NULL DEFAULT false` on 2026-05-26. |
+
 ### In live DB but not in Drizzle schema
 
 | Table | Origin | Plan |

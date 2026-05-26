@@ -34,7 +34,7 @@ function formatMatch(m: typeof matchesTable.$inferSelect) {
     balanceScore: m.balanceScore ?? null,
     setScores: m.setScores,
     playerRatings,
-    conflictOccurred: m.conflictOccurred === "true",
+    conflictOccurred: m.conflictOccurred,
     overallNote: m.overallNote,
     createdAt: m.createdAt.toISOString(),
   };
@@ -183,7 +183,7 @@ router.patch("/matches/:id", async (req, res): Promise<void> => {
   if (req.body.clubName) setObj.clubName = req.body.clubName;
   if (req.body.setScores !== undefined) setObj.setScores = req.body.setScores;
   if (req.body.playerRatings !== undefined) setObj.playerRatings = JSON.stringify(req.body.playerRatings);
-  if (req.body.conflictOccurred !== undefined) setObj.conflictOccurred = String(req.body.conflictOccurred);
+  if (req.body.conflictOccurred !== undefined) setObj.conflictOccurred = req.body.conflictOccurred === true || req.body.conflictOccurred === "true";
   if (req.body.overallNote !== undefined) setObj.overallNote = req.body.overallNote;
 
   // absentPlayerIds is valid even as the only change (updates MongoDB, not Postgres)
@@ -230,7 +230,7 @@ router.patch("/matches/:id", async (req, res): Promise<void> => {
           archetype: null,
         })),
         setScores: match.setScores,
-        conflictOccurred: match.conflictOccurred === "true",
+        conflictOccurred: match.conflictOccurred,
         overallNote: match.overallNote,
       }),
       { route: "PATCH /matches/:id", matchId: match.id }

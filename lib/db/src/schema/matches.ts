@@ -5,6 +5,7 @@ import {
   timestamp,
   real,
   integer,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -24,7 +25,7 @@ export const matchesTable = pgTable("matches", {
   balanceScore: real("balance_score"),
   setScores: text("set_scores").notNull().default(""),
   playerRatings: text("player_ratings").notNull().default("{}"),
-  conflictOccurred: text("conflict_occurred").notNull().default("false"),
+  conflictOccurred: boolean("conflict_occurred").notNull().default(false),
   overallNote: text("overall_note").notNull().default(""),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

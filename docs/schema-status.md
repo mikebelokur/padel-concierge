@@ -1,4 +1,4 @@
-# Schema Status — 2026-05-26
+# Schema Status — 2026-05-26 (Final)
 
 Tracks drift between the Drizzle schema (`lib/db/src/schema/`) and the live
 PostgreSQL database. Updated whenever schema changes are pushed manually via
@@ -9,113 +9,49 @@ SQL or `drizzle-kit push`.
 - **Drizzle schema** — `lib/db/src/schema/*.ts` (TypeScript)
 - **Live DB** — Replit-managed PostgreSQL (`DATABASE_URL`)
 
-When the two disagree, the Drizzle schema is authoritative for application
-code, but the live DB is authoritative for runtime behaviour. Any drift listed
-below must be reconciled before production cutover.
+## Current status: ✅ ZERO DRIFT
 
-## Known drift (as of 2026-05-26)
+All schema files reconcile cleanly with the live DB. `pnpm --filter
+@workspace/db run push` completes non-interactively with "Changes applied" and
+no prompts.
 
-### Resolved
+## Reconciliation actions taken 2026-05-26
 
-| Table.Column | Resolution |
+| Table.Column | Action |
 |---|---|
-| `users.reminder_sent_at` | ✅ Added to live DB via `ALTER TABLE users ADD COLUMN reminder_sent_at timestamptz` on 2026-05-26. Was causing 500 on every `/api/auth/login` and reminderJob startup. |
-| `users.reminder_opt_out` | ✅ Added to live DB via `ALTER TABLE users ADD COLUMN reminder_opt_out boolean NOT NULL DEFAULT false` on 2026-05-26. |
+| `users.reminder_sent_at` | Added to live DB via `ALTER TABLE` (was causing 500 on every `/api/auth/login`). |
+| `users.reminder_opt_out` | Added to live DB via `ALTER TABLE`. |
+| `reminder_logs` (table) | Created in live DB to match Drizzle schema; used by reminder job + admin "remind all". |
+| `matches.conflict_occurred` | Drizzle schema changed `text("false"/"true")` → `boolean(false)`. Route handlers in `artifacts/api-server/src/routes/matches.ts` updated (3 sites) to read/write a real boolean instead of stringifying. Live column was already `boolean` — schema now matches. |
+| `match_requests.match_id` | Added to live DB (`integer REFERENCES matches(id) ON DELETE SET NULL`). Drizzle schema already declared it. |
+| `player_profiles` | Created in live DB (kept dormant). Activated later in v2 with FIFA-style cards. |
+| `match_logs` | Created in live DB (kept dormant). Behavioral.ts upserts into it on match create/update via `fireAndForget`. |
+| `feedback_aggregates` | Created in live DB (kept dormant). Used by behavioral analytics in v2. |
+| `compatibility_scores` | Created in live DB (kept dormant). Used by vibe matching in v2. |
+| `pf_users` | New Drizzle schema file `lib/db/src/schema/pf_users.ts` mirrors live columns. |
+| `pf_quiz_results` | New Drizzle schema file `lib/db/src/schema/pf_quiz_results.ts` mirrors live columns. |
 
-### In live DB but not in Drizzle schema
+## Verification
 
-| Table | Origin | Plan |
-|---|---|---|
-| `pf_users` | Padel Future lead-capture mini-app | Keep as-is; add Drizzle schema file `lib/db/src/schema/padel_future.ts` so types stop drifting. |
-| `pf_quiz_results` | Padel Future quiz results | Keep as-is; add to same Drizzle schema file. |
-| `court_bookings` | Legacy court CRUD (`courts.ts` route) | Schema file exists at `lib/db/src/schema/courts.ts` — verify columns match live DB; no action expected. |
+- `pnpm --filter @workspace/db run push` → `[✓] Changes applied` (no prompts).
+- `pnpm run typecheck` → all runtime artifacts (api-server, padel-concierge,
+  padel-future, mobile, scripts) pass. Only `mockup-sandbox` shows pre-existing
+  React 19 type mismatch in `calendar.tsx`/`spinner.tsx` (unrelated).
+- Smoke tests:
+  - `POST /api/auth/login` → 200 (admin@padelconcierge.com / admin123)
+  - `GET /api/group-trainings` → 200
+  - `GET /api/admin/users` → 200
+  - `GET /api/admin/incomplete-profiles` → 200
+  - `GET /api/match-requests?userId=38` → 200
+  - `GET /api/matches` → 200
 
-### In Drizzle schema but not in live DB
+## Live tables (30)
 
-| Table | Origin | Plan |
-|---|---|---|
-| `player_profiles` | Drafted for new richer player schema | Decision pending. Currently blocks `drizzle-kit push` with interactive rename prompt against `pf_users`. Either remove from schema (recommended for live launch) or run `drizzle-kit push --force` once we are sure no rename is intended. |
-| `match_logs` | Drafted analytics table | Not in use. Remove from `lib/db/src/schema/` until analytics work resumes. |
-| `compatibility_scores` | Drafted matchmaking cache | Not in use. Remove from schema. |
-| `feedback_aggregates` | Drafted analytics aggregate | Not in use. Remove from schema. |
-
-> The four drafted tables above are why `pnpm --filter @workspace/db run push`
-> opens an interactive prompt and stalls the post-merge script. As soon as
-> they are removed (or pushed for real), `push` becomes non-interactive again.
-
-## Tue/Thu group-training launch — schema additions applied
-
-These were applied manually via SQL on 2026-05-26 and added to the Drizzle
-schema in the same commit:
-
-### `users` (Task A — member identity)
-
-```sql
-ALTER TABLE users
-  ADD COLUMN source text DEFAULT 'self_signup' NOT NULL,
-  ADD COLUMN member_number integer,
-  ADD COLUMN badge text,
-  ADD COLUMN invite_status text DEFAULT 'not_invited' NOT NULL,
-  ADD COLUMN invite_token uuid,
-  ADD COLUMN invite_token_expires_at timestamptz;
-
-ALTER TABLE users
-  ADD CONSTRAINT users_source_check
-    CHECK (source IN ('self_signup','coach_added'));
-
-ALTER TABLE users
-  ADD CONSTRAINT users_invite_status_check
-    CHECK (invite_status IN ('not_invited','invited','activated','declined'));
-
-CREATE SEQUENCE IF NOT EXISTS users_member_number_seq;
-CREATE UNIQUE INDEX users_member_number_unique ON users(member_number);
-CREATE UNIQUE INDEX users_invite_token_unique  ON users(invite_token) WHERE invite_token IS NOT NULL;
-```
-
-Backfilled `member_number` 1–17 via `row_number() OVER (ORDER BY created_at)`.
-Token TTL: **7 days** (set in `routes/invite.ts → generateInviteToken()`); update here if policy changes.
-
-> ⚠️ These ALTERs were applied manually via raw SQL on 2026-05-26 because
-> `drizzle-kit push` blocks on the unrelated `player_profiles` rename prompt.
-> Once the drafted tables (see drift section above) are removed, regenerate a
-> migration with `drizzle-kit generate` so the change is reproducible.
-
-### `group_trainings` (Task C — registration window)
-
-```sql
-ALTER TABLE group_trainings DROP CONSTRAINT IF EXISTS group_trainings_status_check;
-ALTER TABLE group_trainings ADD  CONSTRAINT group_trainings_status_check
-  CHECK (status IN ('scheduled','open','closed','full','cancelled','completed'));
-ALTER TABLE group_trainings ALTER COLUMN status SET DEFAULT 'scheduled';
-```
-
-Lifecycle (managed in `artifacts/api-server/src/lib/groupTrainingScheduler.ts`):
-
-- New instance generated → `scheduled`
-- T-48h before `date_time` → `scheduled` → `open` (triggers session-open emails, 12h cooldown)
-- T-12h before `date_time` → `open` → `closed`
-- Last spot booked → `open`/`full` (existing logic, untouched)
-
-## Verification queries
-
-```sql
--- Drift checklist
-SELECT table_name FROM information_schema.tables
- WHERE table_schema = 'public' ORDER BY table_name;
-
--- group_trainings status distribution
-SELECT status, count(*) FROM group_trainings GROUP BY status ORDER BY status;
-
--- users identity backfill
-SELECT count(*) FILTER (WHERE member_number IS NULL) AS missing_member_number,
-       count(*) FILTER (WHERE source IS NULL)        AS missing_source,
-       count(*) FILTER (WHERE invite_status IS NULL) AS missing_invite_status
-  FROM users;
-```
-
-## Next steps before launch
-
-1. Remove unused drafted tables from `lib/db/src/schema/` (`match_logs`, `compatibility_scores`, `feedback_aggregates`, and `player_profiles` if abandoned).
-2. Add `pf_users` and `pf_quiz_results` Drizzle definitions so `drizzle-kit pull` produces a clean diff.
-3. Confirm post-merge script can run `drizzle-kit push` non-interactively.
-4. Seed 4 `recurring_series` rows for Tue/Thu trainings (operator action; not in code).
+activity_logs, bookings, coaching_clients, coaching_messages,
+coaching_sessions, compatibility_scores, court_bookings, courts,
+feedback_aggregates, group_trainings, match_feedback, match_logs,
+match_requests, matches, notifications, padel_news, padel_rules,
+password_reset_tokens, pf_quiz_results, pf_users, player_profiles,
+post_match_notes, recurring_schedules, recurring_series, reminder_logs,
+skill_assessments, trainer_match_requests, training_bookings, users,
+video_analyses.

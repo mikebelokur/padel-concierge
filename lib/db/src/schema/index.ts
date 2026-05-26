@@ -25,3 +25,5 @@ export * from "./training_bookings";
 export * from "./recurring_series";
 export * from "./notifications";
 export * from "./reminder_logs";
+export * from "./pf_users";
+export * from "./pf_quiz_results";

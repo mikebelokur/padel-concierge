@@ -10,6 +10,7 @@
     "backfill-user-types": "tsx ./src/backfill-user-types.ts",
     "add-reminder-column": "tsx ./src/add-reminder-column.ts",
     "seed-mike-trainings": "tsx ./src/seed-mike-trainings.ts",
+    "seed-feature-flags": "tsx ./src/seed-feature-flags.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {

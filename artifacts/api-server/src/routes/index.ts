@@ -23,6 +23,7 @@ import notificationsRouter from "./notifications";
 import internalRouter from "./internal";
 import recurringSeriesRouter from "./recurring_series";
 import inviteRouter from "./invite";
+import adminUserProfileRouter from "./admin_user_profile";
 
 const router: IRouter = Router();
 
@@ -39,6 +40,7 @@ router.use(courtsRouter);
 router.use(matchRequestsRouter);
 router.use(assessmentsRouter);
 router.use(adminRouter);
+router.use(adminUserProfileRouter);
 router.use(coachingRouter);
 router.use(padelRulesRouter);
 router.use(padelNewsRouter);

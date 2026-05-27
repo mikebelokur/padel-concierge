@@ -6,6 +6,7 @@ import { apiFetch } from "@/lib/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { FoundingMemberPill, foundingAvatarStyle } from "@/components/FoundingMemberBadge";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -340,7 +341,11 @@ export default function AdminUsers() {
                   {/* Avatar */}
                   <div
                     className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-serif flex-shrink-0"
-                    style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.8)" }}
+                    style={{
+                      background: "rgba(255,255,255,0.08)",
+                      color: "rgba(255,255,255,0.8)",
+                      ...(foundingAvatarStyle((user as { memberNumber?: number }).memberNumber, (user as { badge?: string | null }).badge) ?? {}),
+                    }}
                   >
                     {user.name[0]}
                   </div>
@@ -349,6 +354,7 @@ export default function AdminUsers() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-medium text-sm text-white truncate">{user.name}</span>
+                      <FoundingMemberPill memberNumber={(user as { memberNumber?: number }).memberNumber} badge={(user as { badge?: string | null }).badge} />
                       {user.verified && (
                         <span style={{ color: "#D4AF37", fontSize: "11px" }}>✓</span>
                       )}

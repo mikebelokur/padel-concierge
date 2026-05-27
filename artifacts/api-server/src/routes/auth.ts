@@ -45,6 +45,7 @@ function formatUser(user: typeof usersTable.$inferSelect) {
     memberNumber: user.memberNumber,
     badge: user.badge ?? null,
     inviteStatus: user.inviteStatus ?? "not_invited",
+    coachingClientId: user.coachingClientId ?? null,
   };
 }
 

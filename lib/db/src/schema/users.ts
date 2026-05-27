@@ -63,6 +63,7 @@ export const usersTable = pgTable("users", {
   inviteStatus: text("invite_status").notNull().default("not_invited"),
   inviteToken: uuid("invite_token"),
   inviteTokenExpiresAt: timestamp("invite_token_expires_at", { withTimezone: true }),
+  coachingClientId: integer("coaching_client_id"),
 }, t => [
   check("users_user_type_check", sql`${t.userType} IN ('real_user', 'seed_test', 'beta_tester')`),
   check("users_source_check", sql`${t.source} IN ('self_signup', 'coach_added')`),

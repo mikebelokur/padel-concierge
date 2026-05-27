@@ -1,0 +1,211 @@
+Overnight build. Plan all 7 tasks below, then execute sequentially. 
+Do not parallelize. Pause and request clarification only if blocked. 
+Otherwise proceed through the night.
+
+Goal: After tonight, the coach (Misha) has a complete in-platform 
+client management surface, the system is ready to onboard real users 
+via magic-link, and Veronika can be seeded as Member #001 with the 
+founding_member badge.
+
+==========================================
+TASK 1 — Unified client profile page for coach
+==========================================
+
+Build /admin/clients/:userId — a single page where the coach sees 
+everything about a player in one view.
+
+Sections (in this order, mobile-first):
+
+1. Hero card
+   - Avatar (initials if no photo), name, member_number (#001 style if set)
+   - Level badge (D-/D/.../B-), archetype tag, source (self_signup / coach_added)
+   - Online indicator (using existing is_online + last_active fields)
+   - Quick actions: "Send message", "Add session note", "Mark training complete"
+
+2. Stats strip (3-4 metric cards)
+   - Total sessions count (from coaching_sessions)
+   - Group trainings attended (from training_bookings)
+   - Total revenue (sum of session prices)
+   - Last seen (relative time)
+
+3. Timeline (vertical, newest first)
+   Merge events from these sources into a single chronological feed:
+   - coaching_sessions (1:1 training)
+   - training_bookings (group training booked or attended)
+   - post_match_notes (notes after matches)
+   - coaching_messages (in-platform messages)
+   - skill_assessments (level reassessments)
+   - notifications sent to this user
+   
+   Each timeline item shows: date, type icon, title, expandable detail.
+
+4. Skills progress
+   - Pull from skill_assessments computed_level over time
+   - Simple line chart showing level progression
+   - Latest archetype with description
+
+5. Sessions package
+   - From coaching_clients.package_type, sessions_in_package, sessions_used
+   - Visual progress (e.g. 7/10 used)
+   - Button "Add session" decrements counter
+
+6. Notes
+   - Free-text coach notes from coaching_clients.notes
+   - Editable inline
+   - Tags from coaching_clients.tags
+
+Russian translations required. Use existing dark theme + gold accents.
+
+==========================================
+TASK 2 — Merge coaching_clients into users where applicable
+==========================================
+
+For the 4 existing coaching_clients rows, find or create matching 
+users rows and link them.
+
+Add column users.coaching_client_id INTEGER nullable, FK to coaching_clients.id.
+
+For each coaching_clients row:
+- If a users row exists with matching phone OR email, link them (set coaching_client_id)
+- If no match, create a users row with source='coach_added', invite_status='not_invited' 
+  (no magic-link yet, just a profile shell)
+- Set role='coaching_client' for newly created ones
+
+This keeps coaching_clients intact for legacy but makes /admin/clients/:userId 
+the single entry point for any client view.
+
+Update /admin route to redirect from /admin/coaching to /admin/clients.
+
+==========================================
+TASK 3 — Add Veronika as Member #001 with founding_member badge
+==========================================
+
+Seed her record directly:
+
+INSERT INTO users (
+  name, email, phone, password_hash, role, level, source, 
+  member_number, badge, invite_status, invite_token, 
+  invite_token_expires_at, approval_status, language
+) VALUES (
+  'Veronika', 
+  'veronika.padelconcierge@example.com', 
+  '+971500000001',
+  '',
+  'player',
+  'D',
+  'coach_added',
+  1,
+  'founding_member',
+  'invited',
+  gen_random_uuid(),
+  NOW() + INTERVAL '7 days',
+  'approved',
+  'ru'
+);
+
+Output the invite URL to chat so I can save it to give her in person.
+
+After seeding, verify she appears in /admin/users list and in 
+/admin/clients/:id view with #001 badge prominently displayed.
+
+==========================================
+TASK 4 — Visual treatment for Member #001 badge
+==========================================
+
+When member_number = 1 OR badge = 'founding_member', show a distinctive 
+visual treatment everywhere her name/avatar appears:
+
+- Small gold "#001" pill next to her name
+- Subtle gold border on her avatar
+- On her profile page, hero card has gold border and a "Founding Member" 
+  ribbon
+- In any list (admin users, session participants, match suggestions), 
+  her row has a small gold accent
+
+Use existing gold (#D4AF37) accent. Subtle, not flashy. Premium feel, 
+not gaming feel.
+
+==========================================
+TASK 5 — Sasha re-registration check + cleanup
+==========================================
+
+A user named Sasha (Александр) attempted to register earlier today 
+during the schema-drift outage. Check if he has re-registered by 
+running:
+
+SELECT id, name, email, level, archetype, source, member_number, created_at 
+FROM users 
+WHERE created_at > NOW() - INTERVAL '12 hours' 
+  AND source = 'self_signup'
+ORDER BY created_at DESC;
+
+If Sasha is found:
+- Verify his profile is complete (level + archetype set)
+- Tag him as beta_tester (badge='beta_tester')
+- Log a note that he was the first real self-signup test
+
+If not found, leave a clear log entry "Sasha re-registration pending" 
+so I can chase him in the morning.
+
+==========================================
+TASK 6 — Session lifecycle polish
+==========================================
+
+Issues observed in the four seeded recurring sessions visible at 
+/group-trainings:
+
+1. Tuesday/Thursday 13:00–14:30 session displays as "12:00–13:30". 
+   Fix the timezone — Dubai is UTC+4. Sessions should be stored 
+   and displayed in Dubai local time.
+
+2. The D− Thursday session shows "Padel 360" as location, but the 
+   intended location was "Rukan". Update the seed data or admin 
+   override to set Rukan court 1 for D− sessions on Tue and Thu 13:00.
+
+3. Coach display name shows "Misha (Owner)". For player-facing UI, 
+   show just "Misha" or "Misha B." — never the role label.
+   For admin/coach views, show role badge separately.
+
+4. Session card currently shows "Удлинённая тренировка D — Padel 360" 
+   and "Еженедельная тренировка D− — Padel 360" — these descriptions 
+   are auto-generated and feel template-y. Make them blank by default 
+   unless the coach explicitly sets a description. Coaches add their 
+   own copy.
+
+==========================================
+TASK 7 — PWA install flow (add to home screen)
+==========================================
+
+Make the app installable as a PWA on iOS and Android home screen.
+
+1. Add manifest.json with name "Padel Concierge", short_name "Padel", 
+   icons (use placeholder gold "P" on black for now, 192x192 and 512x512), 
+   theme_color "#0a0a0a", background_color "#0a0a0a", display "standalone".
+
+2. Add service worker that caches static assets (minimal, just for 
+   installability — no offline functionality yet).
+
+3. Add an in-app prompt: small banner on mobile after second visit 
+   that says "Добавь на главный экран — будет как приложение" with 
+   one-tap instructions for iOS (Safari share → Add to Home Screen) 
+   and Android (Chrome → Install app).
+
+4. Test that the manifest loads, lighthouse audit passes 
+   "Installable" check.
+
+==========================================
+END
+==========================================
+
+After all 7 tasks ship:
+
+- Run full schema drift audit one more time. Confirm zero drift.
+- Restart API server.
+- Verify the homepage, /group-trainings, /admin/users, /admin/clients/:id 
+  all load without errors.
+- Output a single end-of-night summary report with what shipped, 
+  what failed, and any open questions for me in the morning.
+
+If you hit a blocker on any task, leave a clear "BLOCKED on Task N: 
+[reason]" message and SKIP to the next task. Don't sit waiting for 
+me overnight.

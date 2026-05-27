@@ -53,6 +53,8 @@ import LevelQuizAdmin from "@/pages/level-quiz-admin";
 import PlayerProfilePage from "@/pages/player-profile";
 import FindMatch from "@/pages/find-match";
 import Invite from "@/pages/invite";
+import AdminClientProfile from "@/pages/admin-client-profile";
+import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 
 setAuthTokenGetter(() => localStorage.getItem("token"));
 
@@ -156,6 +158,8 @@ function Router() {
       )}</Route>
       <Route path="/coach">{() => <ProtectedRoute component={CoachDashboard} allowedRoles={["coach", "admin", "owner"]} />}</Route>
       <Route path="/admin/users">{() => <ProtectedRoute component={AdminUsers} allowedRoles={["admin", "owner"]} allowedEmails={["mikebelokur8@gmail.com"]} />}</Route>
+      <Route path="/admin/clients/:userId">{() => <ProtectedRoute component={AdminClientProfile} allowedRoles={["admin", "owner", "coach"]} />}</Route>
+      <Route path="/admin/coaching">{() => <Redirect to="/admin/users" />}</Route>
       <Route path="/admin">{() => <ProtectedRoute component={Admin} allowedRoles={["admin", "owner"]} />}</Route>
 
       <Route component={NotFound} />
@@ -175,6 +179,7 @@ function App() {
                 <Drawer />
                 <Router />
                 <DevToolbar />
+                <PWAInstallBanner />
               </DrawerProvider>
             </WouterRouter>
             <Toaster />

@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { pool } from "@workspace/db";
-import { requireAuth, requireAdminOrCoach } from "../middleware/auth";
+import { requireAuth, requireMode } from "../middleware/auth";
+
+const requireAdminOrCoach = requireMode("coach", "admin", "developer");
 
 const router = Router();
 

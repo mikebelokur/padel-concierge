@@ -3,21 +3,23 @@ import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useActiveMode, type Mode } from "@/hooks/useActiveMode";
 
 interface NavItem {
   href: string;
   label: string;
   icon: string;
   roles?: string[];
+  modes?: Mode[];
   dividerBefore?: boolean;
   badgeKey?: string;
 }
 
 const navItems: NavItem[] = [
-  { href: "/coach",         label: "Coach Hub",        icon: "🏆", roles: ["coach", "admin", "owner"] },
-  { href: "/clients",       label: "My Clients",       icon: "👥", roles: ["coach", "admin", "owner"] },
-  { href: "/messages",      label: "Messages",          icon: "💬", roles: ["coach", "admin", "owner"] },
-  { href: "/registrations", label: "Registrations",     icon: "🆕", roles: ["admin", "owner"], badgeKey: "pending" },
+  { href: "/coach",         label: "Coach Hub",        icon: "🏆", modes: ["coach", "admin", "developer"] },
+  { href: "/clients",       label: "My Clients",       icon: "👥", modes: ["coach", "admin", "developer"] },
+  { href: "/messages",      label: "Messages",          icon: "💬", modes: ["coach", "admin", "developer"] },
+  { href: "/registrations", label: "Registrations",     icon: "🆕", modes: ["admin", "developer"], badgeKey: "pending" },
   { href: "/dashboard",     label: "Dashboard",         icon: "◈",  dividerBefore: true },
   { href: "/matches",       label: "Matches",           icon: "🎾" },
   { href: "/match-requests",label: "Requests",          icon: "📨" },
@@ -28,30 +30,33 @@ const navItems: NavItem[] = [
   { href: "/video-analysis",label: "Video Analysis",    icon: "🎬" },
   { href: "/quiz",          label: "Archetype Quiz",    icon: "🧠" },
   { href: "/level-quiz",    label: "Level Quiz",        icon: "📊" },
-  { href: "/level-quiz/admin", label: "Level Quiz Results", icon: "📋", roles: ["admin", "owner", "coach"] },
+  { href: "/level-quiz/admin", label: "Level Quiz Results", icon: "📋", modes: ["coach", "admin", "developer"] },
   { href: "/rules",         label: "Padel Rules",       icon: "📖", dividerBefore: true },
   { href: "/news",          label: "News & Tips",       icon: "📰" },
   { href: "/settings",      label: "Settings",          icon: "⚙️", dividerBefore: true },
-  { href: "/admin",         label: "Admin Panel",       icon: "🔧", roles: ["admin", "owner"] },
+  { href: "/admin",         label: "Admin Panel",       icon: "🔧", modes: ["admin", "developer"] },
 ];
 
 export function Sidebar() {
   const [location] = useLocation();
   const { user, logout } = useAuth();
+  const { activeMode } = useActiveMode();
 
-  const isOwnerOrAdmin = user?.role === "owner" || user?.role === "admin";
+  const canSeeAdmin = activeMode === "admin" || activeMode === "developer";
 
   const { data: pendingData } = useQuery({
     queryKey: ["pending-count"],
     queryFn: () => apiFetch("/admin/registrations/count"),
-    enabled: isOwnerOrAdmin,
+    enabled: canSeeAdmin,
     refetchInterval: 30000,
   });
   const pendingCount = (pendingData as any)?.count ?? 0;
 
-  const visibleItems = navItems.filter(
-    (item) => !item.roles || (user?.role && item.roles.includes(user.role))
-  );
+  const visibleItems = navItems.filter((item) => {
+    if (item.modes) return item.modes.includes(activeMode);
+    if (item.roles) return !!user?.role && item.roles.includes(user.role);
+    return true;
+  });
 
   const isOwner = user?.role === "owner";
 

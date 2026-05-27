@@ -13,28 +13,38 @@ const router: IRouter = Router();
 
 const MIKE_EMAIL = "mikebelokur8@gmail.com";
 
-function requireOwnerOrAdmin(req: any, res: any): { userId: number; role: string } | null {
+async function requireOwnerOrAdmin(req: any, res: any): Promise<{ userId: number; role: string } | null> {
   const token = getTokenFromRequest(req);
   if (!token) { res.status(401).json({ error: "Unauthorized" }); return null; }
   const payload = verifyToken(token);
   if (!payload) { res.status(401).json({ error: "Unauthorized" }); return null; }
-  if (!["admin", "owner"].includes(payload.role)) {
+  const [u] = await db
+    .select({ modeAdmin: usersTable.modeAdmin, modeDeveloper: usersTable.modeDeveloper })
+    .from(usersTable)
+    .where(eq(usersTable.id, payload.userId));
+  if (!u || !(u.modeAdmin || u.modeDeveloper)) {
     res.status(403).json({ error: "Forbidden" });
     return null;
   }
   return payload;
 }
 
-// Extended guard for GET /admin/users: admin/owner OR Mike's account (read-only segmentation view)
+// Extended guard for GET /admin/users: admin/developer modes OR Mike (read-only segmentation)
 async function requireAdminUserListAccess(req: any, res: any): Promise<{ userId: number; role: string } | null> {
   const token = getTokenFromRequest(req);
   if (!token) { res.status(401).json({ error: "Unauthorized" }); return null; }
   const payload = verifyToken(token);
   if (!payload) { res.status(401).json({ error: "Unauthorized" }); return null; }
-  if (["admin", "owner"].includes(payload.role)) return payload;
-  // Mike exception: specific player email has read-only access to the user-segmentation page
-  const [user] = await db.select({ email: usersTable.email }).from(usersTable).where(eq(usersTable.id, payload.userId));
-  if (user?.email === MIKE_EMAIL) return payload;
+  const [u] = await db
+    .select({
+      email: usersTable.email,
+      modeAdmin: usersTable.modeAdmin,
+      modeDeveloper: usersTable.modeDeveloper,
+    })
+    .from(usersTable)
+    .where(eq(usersTable.id, payload.userId));
+  if (u && (u.modeAdmin || u.modeDeveloper)) return payload;
+  if (u?.email === MIKE_EMAIL) return payload;
   res.status(403).json({ error: "Forbidden" });
   return null;
 }
@@ -55,7 +65,7 @@ router.get("/admin/users", async (req, res): Promise<void> => {
 
 // PUT /api/admin/users/:id/level — set skill level
 router.put("/admin/users/:id/level", async (req, res): Promise<void> => {
-  if (!requireOwnerOrAdmin(req, res)) return;
+  if (!await requireOwnerOrAdmin(req, res)) return;
   const id = parseInt(req.params.id);
   const { level } = req.body;
   if (!level) { res.status(400).json({ error: "Level is required" }); return; }
@@ -79,7 +89,7 @@ router.put("/admin/users/:id/level", async (req, res): Promise<void> => {
 
 // DELETE /api/admin/users/:id — delete user
 router.delete("/admin/users/:id", async (req, res): Promise<void> => {
-  const auth = requireOwnerOrAdmin(req, res);
+  const auth = await requireOwnerOrAdmin(req, res);
   if (!auth) return;
 
   const id = parseInt(req.params.id);
@@ -96,7 +106,7 @@ router.delete("/admin/users/:id", async (req, res): Promise<void> => {
 
 // PATCH /api/admin/users/:id/user-type — set user type
 router.patch("/admin/users/:id/user-type", async (req, res): Promise<void> => {
-  const auth = requireOwnerOrAdmin(req, res);
+  const auth = await requireOwnerOrAdmin(req, res);
   if (!auth) return;
 
   const id = parseInt(req.params.id);
@@ -126,7 +136,7 @@ router.patch("/admin/users/:id/user-type", async (req, res): Promise<void> => {
 
 // GET /api/admin/incomplete-profiles — players (role='player') with archetype IS NULL
 router.get("/admin/incomplete-profiles", async (req, res): Promise<void> => {
-  if (!requireOwnerOrAdmin(req, res)) return;
+  if (!await requireOwnerOrAdmin(req, res)) return;
 
   const rows = await db
     .select({
@@ -204,7 +214,7 @@ router.get("/admin/incomplete-profiles", async (req, res): Promise<void> => {
 
 // POST /api/admin/incomplete-profiles/:id/remind — manually send reminder
 router.post("/admin/incomplete-profiles/:id/remind", async (req, res): Promise<void> => {
-  const auth = requireOwnerOrAdmin(req, res);
+  const auth = await requireOwnerOrAdmin(req, res);
   if (!auth) return;
 
   const id = parseInt(req.params.id);
@@ -237,7 +247,7 @@ router.post("/admin/incomplete-profiles/:id/remind", async (req, res): Promise<v
 
 // POST /api/admin/incomplete-profiles/remind-all — bulk send reminders
 router.post("/admin/incomplete-profiles/remind-all", async (req, res): Promise<void> => {
-  const auth = requireOwnerOrAdmin(req, res);
+  const auth = await requireOwnerOrAdmin(req, res);
   if (!auth) return;
 
   const rows = await db
@@ -275,7 +285,7 @@ router.post("/admin/incomplete-profiles/remind-all", async (req, res): Promise<v
 
 // POST /api/admin/users — coach/admin creates a new user and sends invite email
 router.post("/admin/users", async (req, res): Promise<void> => {
-  const auth = requireOwnerOrAdmin(req, res);
+  const auth = await requireOwnerOrAdmin(req, res);
   if (!auth) return;
 
   const { name, email, phone, level, role } = (req.body ?? {}) as {
@@ -351,7 +361,7 @@ router.post("/admin/users", async (req, res): Promise<void> => {
 
 // PUT /api/admin/users/:id/role — set role
 router.put("/admin/users/:id/role", async (req, res): Promise<void> => {
-  if (!requireOwnerOrAdmin(req, res)) return;
+  if (!await requireOwnerOrAdmin(req, res)) return;
   const id = parseInt(req.params.id);
   const { role } = req.body;
   const validRoles = ["player", "coach", "admin", "owner"];

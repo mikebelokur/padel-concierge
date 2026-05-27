@@ -2,11 +2,13 @@ import { Router, type IRouter } from "express";
 import { db, usersTable, matchesTable, bookingsTable, videoAnalysesTable, activityLogsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { GetActivityLogQueryParams } from "@workspace/api-zod";
-import { requireAuth, requireAdmin } from "../middleware/auth";
+import { requireAuth, requireMode } from "../middleware/auth";
+
+const requireAdminMode = requireMode("admin", "developer");
 
 const router: IRouter = Router();
 
-router.get("/stats/dashboard", requireAdmin, async (_req, res): Promise<void> => {
+router.get("/stats/dashboard", requireAdminMode, async (_req, res): Promise<void> => {
   const users = await db.select().from(usersTable);
   const matches = await db.select().from(matchesTable);
   const bookings = await db.select().from(bookingsTable);
@@ -107,7 +109,7 @@ router.get("/stats/player/:id", requireAuth, async (req, res): Promise<void> => 
   });
 });
 
-router.get("/stats/activity", requireAdmin, async (req, res): Promise<void> => {
+router.get("/stats/activity", requireAdminMode, async (req, res): Promise<void> => {
   const params = GetActivityLogQueryParams.safeParse(req.query);
   const limit = params.success && params.data.limit ? params.data.limit : 50;
 

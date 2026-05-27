@@ -1049,6 +1049,14 @@ components:
           enum: [real_user, seed_test, beta_tester]
         isBeta:
           type: boolean
+        modePlayer:
+          type: boolean
+        modeCoach:
+          type: boolean
+        modeAdmin:
+          type: boolean
+        modeDeveloper:
+          type: boolean
       required:
         - id
         - name
@@ -1067,6 +1075,10 @@ components:
         - isOnline
         - createdAt
         - userType
+        - modePlayer
+        - modeCoach
+        - modeAdmin
+        - modeDeveloper
 
     AvailabilityEntry:
       type: object

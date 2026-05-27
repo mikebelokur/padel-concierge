@@ -3,10 +3,10 @@ import { db, usersTable, matchesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { formatUser } from "./auth";
 import { formatMatch } from "./matches";
-import { requireAuth } from "../middleware/auth";
+import { requireMode } from "../middleware/auth";
 
 const router: IRouter = Router();
-router.use(requireAuth);
+router.use(requireMode("coach", "admin", "developer"));
 
 router.get("/coach/players", async (_req, res): Promise<void> => {
   const players = await db.select().from(usersTable)

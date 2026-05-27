@@ -73,6 +73,10 @@ export const LoginResponse = zod.object({
     archetype: zod.string().nullish(),
     userType: zod.enum(["real_user", "seed_test", "beta_tester"]),
     isBeta: zod.boolean().optional(),
+    modePlayer: zod.boolean(),
+    modeCoach: zod.boolean(),
+    modeAdmin: zod.boolean(),
+    modeDeveloper: zod.boolean(),
   }),
 });
 
@@ -111,6 +115,10 @@ export const GetMeResponse = zod.object({
   archetype: zod.string().nullish(),
   userType: zod.enum(["real_user", "seed_test", "beta_tester"]),
   isBeta: zod.boolean().optional(),
+  modePlayer: zod.boolean(),
+  modeCoach: zod.boolean(),
+  modeAdmin: zod.boolean(),
+  modeDeveloper: zod.boolean(),
 });
 
 /**
@@ -148,6 +156,10 @@ export const ListUsersResponseItem = zod.object({
   archetype: zod.string().nullish(),
   userType: zod.enum(["real_user", "seed_test", "beta_tester"]),
   isBeta: zod.boolean().optional(),
+  modePlayer: zod.boolean(),
+  modeCoach: zod.boolean(),
+  modeAdmin: zod.boolean(),
+  modeDeveloper: zod.boolean(),
 });
 export const ListUsersResponse = zod.array(ListUsersResponseItem);
 
@@ -190,6 +202,10 @@ export const GetUserResponse = zod.object({
   archetype: zod.string().nullish(),
   userType: zod.enum(["real_user", "seed_test", "beta_tester"]),
   isBeta: zod.boolean().optional(),
+  modePlayer: zod.boolean(),
+  modeCoach: zod.boolean(),
+  modeAdmin: zod.boolean(),
+  modeDeveloper: zod.boolean(),
 });
 
 /**
@@ -245,6 +261,10 @@ export const UpdateUserResponse = zod.object({
   archetype: zod.string().nullish(),
   userType: zod.enum(["real_user", "seed_test", "beta_tester"]),
   isBeta: zod.boolean().optional(),
+  modePlayer: zod.boolean(),
+  modeCoach: zod.boolean(),
+  modeAdmin: zod.boolean(),
+  modeDeveloper: zod.boolean(),
 });
 
 /**
@@ -295,6 +315,10 @@ export const UpdateAvailabilityResponse = zod.object({
   archetype: zod.string().nullish(),
   userType: zod.enum(["real_user", "seed_test", "beta_tester"]),
   isBeta: zod.boolean().optional(),
+  modePlayer: zod.boolean(),
+  modeCoach: zod.boolean(),
+  modeAdmin: zod.boolean(),
+  modeDeveloper: zod.boolean(),
 });
 
 /**
@@ -340,6 +364,10 @@ export const AddFavouriteResponse = zod.object({
   archetype: zod.string().nullish(),
   userType: zod.enum(["real_user", "seed_test", "beta_tester"]),
   isBeta: zod.boolean().optional(),
+  modePlayer: zod.boolean(),
+  modeCoach: zod.boolean(),
+  modeAdmin: zod.boolean(),
+  modeDeveloper: zod.boolean(),
 });
 
 /**
@@ -385,6 +413,10 @@ export const RemoveFavouriteResponse = zod.object({
   archetype: zod.string().nullish(),
   userType: zod.enum(["real_user", "seed_test", "beta_tester"]),
   isBeta: zod.boolean().optional(),
+  modePlayer: zod.boolean(),
+  modeCoach: zod.boolean(),
+  modeAdmin: zod.boolean(),
+  modeDeveloper: zod.boolean(),
 });
 
 /**
@@ -426,6 +458,10 @@ export const VerifyUserResponse = zod.object({
   archetype: zod.string().nullish(),
   userType: zod.enum(["real_user", "seed_test", "beta_tester"]),
   isBeta: zod.boolean().optional(),
+  modePlayer: zod.boolean(),
+  modeCoach: zod.boolean(),
+  modeAdmin: zod.boolean(),
+  modeDeveloper: zod.boolean(),
 });
 
 /**
@@ -1123,6 +1159,10 @@ export const ListAdminUsersResponseItem = zod.object({
   archetype: zod.string().nullish(),
   userType: zod.enum(["real_user", "seed_test", "beta_tester"]),
   isBeta: zod.boolean().optional(),
+  modePlayer: zod.boolean(),
+  modeCoach: zod.boolean(),
+  modeAdmin: zod.boolean(),
+  modeDeveloper: zod.boolean(),
 });
 export const ListAdminUsersResponse = zod.array(ListAdminUsersResponseItem);
 
@@ -1169,6 +1209,10 @@ export const PatchAdminUserTypeResponse = zod.object({
   archetype: zod.string().nullish(),
   userType: zod.enum(["real_user", "seed_test", "beta_tester"]),
   isBeta: zod.boolean().optional(),
+  modePlayer: zod.boolean(),
+  modeCoach: zod.boolean(),
+  modeAdmin: zod.boolean(),
+  modeDeveloper: zod.boolean(),
 });
 
 /**
@@ -1206,6 +1250,10 @@ export const ListCoachPlayersResponseItem = zod.object({
   archetype: zod.string().nullish(),
   userType: zod.enum(["real_user", "seed_test", "beta_tester"]),
   isBeta: zod.boolean().optional(),
+  modePlayer: zod.boolean(),
+  modeCoach: zod.boolean(),
+  modeAdmin: zod.boolean(),
+  modeDeveloper: zod.boolean(),
 });
 export const ListCoachPlayersResponse = zod.array(ListCoachPlayersResponseItem);
 

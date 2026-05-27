@@ -7,21 +7,24 @@ import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/NotificationBell";
+import { useActiveMode, type Mode } from "@/hooks/useActiveMode";
+import { ModeSwitcher } from "@/components/layout/ModeSwitcher";
 
 interface NavItem {
   href: string;
   labelKey: string;
   icon: string;
   roles?: string[];
+  modes?: Mode[];
   dividerBefore?: boolean;
   badgeKey?: string;
 }
 
 const navItems: NavItem[] = [
-  { href: "/coach",          labelKey: "nav.coachHub",      icon: "🏆", roles: ["coach", "admin", "owner"] },
-  { href: "/clients",        labelKey: "nav.myClients",     icon: "👥", roles: ["coach", "admin", "owner"] },
-  { href: "/messages",       labelKey: "nav.messages",      icon: "💬", roles: ["coach", "admin", "owner"] },
-  { href: "/registrations",  labelKey: "nav.registrations", icon: "🆕", roles: ["admin", "owner"], badgeKey: "pending" },
+  { href: "/coach",          labelKey: "nav.coachHub",      icon: "🏆", modes: ["coach", "admin", "developer"] },
+  { href: "/clients",        labelKey: "nav.myClients",     icon: "👥", modes: ["coach", "admin", "developer"] },
+  { href: "/messages",       labelKey: "nav.messages",      icon: "💬", modes: ["coach", "admin", "developer"] },
+  { href: "/registrations",  labelKey: "nav.registrations", icon: "🆕", modes: ["admin", "developer"], badgeKey: "pending" },
   { href: "/dashboard",      labelKey: "nav.dashboard",     icon: "◈",  dividerBefore: true },
   { href: "/find-match",     labelKey: "nav.findMatch",     icon: "🎯" },
   { href: "/matches",        labelKey: "nav.matches",       icon: "🎾" },
@@ -35,7 +38,7 @@ const navItems: NavItem[] = [
   { href: "/rules",          labelKey: "nav.padelRules",    icon: "📖", dividerBefore: true },
   { href: "/news",           labelKey: "nav.newsAndTips",   icon: "📰" },
   { href: "/settings",       labelKey: "nav.settings",      icon: "⚙️",  dividerBefore: true },
-  { href: "/admin",          labelKey: "nav.adminPanel",    icon: "🔧", roles: ["admin", "owner"] },
+  { href: "/admin",          labelKey: "nav.adminPanel",    icon: "🔧", modes: ["admin", "developer"] },
 ];
 
 const BOTTOM_TABS: { href: string; icon: (p: { active: boolean }) => React.ReactElement; labelKey: string; badgeKey?: string }[] = [
@@ -51,14 +54,15 @@ export function Drawer() {
   const { user, logout } = useAuth();
   const { open, openDrawer, closeDrawer } = useDrawer();
   const { language, setLanguage, t } = useLanguage();
+  const { activeMode } = useActiveMode();
 
-  const isOwnerOrAdmin = user?.role === "owner" || user?.role === "admin";
+  const canSeeAdmin = activeMode === "admin" || activeMode === "developer";
   const isOwner = user?.role === "owner";
 
   const { data: pendingData } = useQuery({
     queryKey: ["pending-count"],
     queryFn: () => apiFetch("/admin/registrations/count"),
-    enabled: isOwnerOrAdmin,
+    enabled: canSeeAdmin,
     refetchInterval: 30000,
   });
   const pendingCount = (pendingData as any)?.count ?? 0;
@@ -77,9 +81,11 @@ export function Drawer() {
   });
   const pendingRequestsCount = (pendingRequestsData as any)?.count ?? 0;
 
-  const visibleItems = navItems.filter(
-    (item) => !item.roles || (user?.role && item.roles.includes(user.role))
-  );
+  const visibleItems = navItems.filter((item) => {
+    if (item.modes) return item.modes.includes(activeMode);
+    if (item.roles) return !!user?.role && item.roles.includes(user.role);
+    return true;
+  });
 
   const handleLanguageSwitch = (lang: Language) => {
     setLanguage(lang);
@@ -140,7 +146,7 @@ export function Drawer() {
         </div>
 
         {/* Pending badge — mobile */}
-        {isOwnerOrAdmin && pendingCount > 0 && (
+        {canSeeAdmin && pendingCount > 0 && (
           <Link href="/registrations">
             <div className="lg:hidden flex items-center gap-1.5 bg-yellow-500/10 border border-yellow-500/30 rounded-full px-2.5 py-1 cursor-pointer">
               <span className="text-yellow-400 text-xs font-bold">{pendingCount}</span>
@@ -148,6 +154,9 @@ export function Drawer() {
             </div>
           </Link>
         )}
+
+        {/* Mode switcher */}
+        <ModeSwitcher />
 
         {/* Notification bell */}
         <NotificationBell />

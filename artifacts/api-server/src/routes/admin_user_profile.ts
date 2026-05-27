@@ -12,10 +12,10 @@ import {
   notificationsTable,
 } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
-import { requireAuth } from "../middleware/auth";
+import { requireMode } from "../middleware/auth";
 
 const router: IRouter = Router();
-router.use(requireAuth);
+router.use(requireMode("coach", "admin", "developer"));
 
 type TimelineItem = {
   id: string;

@@ -64,6 +64,10 @@ export const usersTable = pgTable("users", {
   inviteToken: uuid("invite_token"),
   inviteTokenExpiresAt: timestamp("invite_token_expires_at", { withTimezone: true }),
   coachingClientId: integer("coaching_client_id"),
+  modePlayer: boolean("mode_player").notNull().default(true),
+  modeCoach: boolean("mode_coach").notNull().default(false),
+  modeAdmin: boolean("mode_admin").notNull().default(false),
+  modeDeveloper: boolean("mode_developer").notNull().default(false),
 }, t => [
   check("users_user_type_check", sql`${t.userType} IN ('real_user', 'seed_test', 'beta_tester')`),
   check("users_source_check", sql`${t.source} IN ('self_signup', 'coach_added')`),

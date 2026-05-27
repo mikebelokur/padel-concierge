@@ -1,6 +1,45 @@
 import { Request, Response, NextFunction } from "express";
 import { getTokenFromRequest, verifyToken } from "../lib/auth";
-import { pool } from "@workspace/db";
+import { pool, db, usersTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
+
+export type Mode = "player" | "coach" | "admin" | "developer";
+
+export function requireMode(...modes: Mode[]) {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const token = getTokenFromRequest(req);
+    if (!token) { res.status(401).json({ error: "Unauthorized" }); return; }
+    const payload = verifyToken(token);
+    if (!payload) { res.status(401).json({ error: "Unauthorized" }); return; }
+
+    try {
+      const [user] = await db
+        .select({
+          modePlayer: usersTable.modePlayer,
+          modeCoach: usersTable.modeCoach,
+          modeAdmin: usersTable.modeAdmin,
+          modeDeveloper: usersTable.modeDeveloper,
+        })
+        .from(usersTable)
+        .where(eq(usersTable.id, payload.userId));
+      if (!user) { res.status(401).json({ error: "Unauthorized" }); return; }
+
+      const hasAny = modes.some((m) => {
+        if (m === "player") return user.modePlayer;
+        if (m === "coach") return user.modeCoach;
+        if (m === "admin") return user.modeAdmin;
+        if (m === "developer") return user.modeDeveloper;
+        return false;
+      });
+      if (!hasAny) { res.status(403).json({ error: "Forbidden" }); return; }
+
+      (req as any).auth = { ...payload, modes: user };
+      next();
+    } catch {
+      res.status(500).json({ error: "Internal error" });
+    }
+  };
+}
 
 export function requireAuth(req: Request, res: Response, next: NextFunction): void {
   const token = getTokenFromRequest(req);

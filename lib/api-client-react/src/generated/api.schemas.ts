@@ -78,6 +78,10 @@ export interface User {
   archetype?: string | null;
   userType: UserUserType;
   isBeta?: boolean;
+  modePlayer: boolean;
+  modeCoach: boolean;
+  modeAdmin: boolean;
+  modeDeveloper: boolean;
 }
 
 export interface AuthResponse {

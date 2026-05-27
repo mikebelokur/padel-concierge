@@ -4,6 +4,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { useActiveMode } from "@/hooks/useActiveMode";
 import { LanguageProvider, useLanguage, type Language } from "@/contexts/LanguageContext";
 import { DrawerProvider } from "@/contexts/DrawerContext";
 import { Drawer } from "@/components/layout/Drawer";
@@ -81,14 +82,27 @@ function ProtectedRoute({
   component: Component,
   allowedRoles,
   allowedEmails,
+  allowedModes,
 }: {
   component: React.ComponentType;
   allowedRoles?: string[];
   allowedEmails?: string[];
+  allowedModes?: Array<"player" | "coach" | "admin" | "developer">;
 }) {
   const { user, isLoading } = useAuth();
+  const { activeMode } = useActiveMode();
   if (isLoading) return null;
   if (!user) return <Redirect to="/login" />;
+  if (allowedModes && allowedModes.length > 0) {
+    if (!allowedModes.includes(activeMode)) {
+      return <Redirect to="/dashboard" />;
+    }
+    return (
+      <ErrorBoundary>
+        <Component />
+      </ErrorBoundary>
+    );
+  }
   const roleOk = !allowedRoles || allowedRoles.includes(user.role);
   const emailOk = allowedEmails && allowedEmails.includes(user.email);
   if (!roleOk && !emailOk) {
@@ -125,14 +139,14 @@ function Router() {
       <Route path="/members">{() => <ProtectedRoute component={Members} />}</Route>
       <Route path="/players/:id">{() => <ProtectedRoute component={PlayerProfilePage} />}</Route>
       <Route path="/match-requests">{() => <ProtectedRoute component={MatchRequests} />}</Route>
-      <Route path="/match-log/:id">{() => <ProtectedRoute component={MatchLog} allowedRoles={["coach", "admin", "owner"]} />}</Route>
+      <Route path="/match-log/:id">{() => <ProtectedRoute component={MatchLog} allowedModes={["coach", "admin", "developer"]} />}</Route>
       <Route path="/match-feedback/:id">{() => <ProtectedRoute component={MatchFeedback} />}</Route>
       <Route path="/assessment">{() => <ProtectedRoute component={Assessment} />}</Route>
 
-      <Route path="/clients/new">{() => <ProtectedRoute component={ClientNew} allowedRoles={["coach", "admin", "owner"]} />}</Route>
-      <Route path="/clients/:id">{() => <ProtectedRoute component={ClientProfile} allowedRoles={["coach", "admin", "owner"]} />}</Route>
-      <Route path="/clients">{() => <ProtectedRoute component={Clients} allowedRoles={["coach", "admin", "owner"]} />}</Route>
-      <Route path="/messages">{() => <ProtectedRoute component={CoachMessages} allowedRoles={["coach", "admin", "owner"]} />}</Route>
+      <Route path="/clients/new">{() => <ProtectedRoute component={ClientNew} allowedModes={["coach", "admin", "developer"]} />}</Route>
+      <Route path="/clients/:id">{() => <ProtectedRoute component={ClientProfile} allowedModes={["coach", "admin", "developer"]} />}</Route>
+      <Route path="/clients">{() => <ProtectedRoute component={Clients} allowedModes={["coach", "admin", "developer"]} />}</Route>
+      <Route path="/messages">{() => <ProtectedRoute component={CoachMessages} allowedModes={["coach", "admin", "developer"]} />}</Route>
       <Route path="/rules">{() => <ProtectedRoute component={PadelRules} />}</Route>
       <Route path="/news">{() => <ProtectedRoute component={PadelNews} />}</Route>
 
@@ -147,20 +161,20 @@ function Router() {
       <Route path="/level-quiz" component={LevelQuiz} />
       <Route path="/level-quiz/result" component={LevelQuizResult} />
       <Route path="/level-quiz/profile" component={LevelQuizProfile} />
-      <Route path="/level-quiz/admin">{() => <ProtectedRoute component={LevelQuizAdmin} allowedRoles={["admin", "owner", "coach"]} />}</Route>
+      <Route path="/level-quiz/admin">{() => <ProtectedRoute component={LevelQuizAdmin} allowedModes={["coach", "admin", "developer"]} />}</Route>
 
-      <Route path="/registrations">{() => <ProtectedRoute component={Registrations} allowedRoles={["admin", "owner"]} />}</Route>
-      <Route path="/coach/group-trainings">{() => <ProtectedRoute component={CoachGroupTrainings} allowedRoles={["coach", "admin", "owner"]} />}</Route>
+      <Route path="/registrations">{() => <ProtectedRoute component={Registrations} allowedModes={["admin", "developer"]} />}</Route>
+      <Route path="/coach/group-trainings">{() => <ProtectedRoute component={CoachGroupTrainings} allowedModes={["coach", "admin", "developer"]} />}</Route>
       <Route path="/group-trainings">{() => (
         <Suspense fallback={null}>
           <ProtectedRoute component={GroupTrainings} />
         </Suspense>
       )}</Route>
-      <Route path="/coach">{() => <ProtectedRoute component={CoachDashboard} allowedRoles={["coach", "admin", "owner"]} />}</Route>
-      <Route path="/admin/users">{() => <ProtectedRoute component={AdminUsers} allowedRoles={["admin", "owner"]} allowedEmails={["mikebelokur8@gmail.com"]} />}</Route>
-      <Route path="/admin/clients/:userId">{() => <ProtectedRoute component={AdminClientProfile} allowedRoles={["admin", "owner", "coach"]} />}</Route>
+      <Route path="/coach">{() => <ProtectedRoute component={CoachDashboard} allowedModes={["coach", "admin", "developer"]} />}</Route>
+      <Route path="/admin/users">{() => <ProtectedRoute component={AdminUsers} allowedModes={["admin", "developer"]} />}</Route>
+      <Route path="/admin/clients/:userId">{() => <ProtectedRoute component={AdminClientProfile} allowedModes={["coach", "admin", "developer"]} />}</Route>
       <Route path="/admin/coaching">{() => <Redirect to="/admin/users" />}</Route>
-      <Route path="/admin">{() => <ProtectedRoute component={Admin} allowedRoles={["admin", "owner"]} />}</Route>
+      <Route path="/admin">{() => <ProtectedRoute component={Admin} allowedModes={["admin", "developer"]} />}</Route>
 
       <Route component={NotFound} />
     </Switch>

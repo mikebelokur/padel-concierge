@@ -29,6 +29,11 @@ const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(authRouter);
+// inviteRouter is PUBLIC (new users have no JWT yet). It must be mounted
+// before any router that calls `router.use(requireAuth)` at its root —
+// otherwise that middleware fires first and rejects /api/invite/* with 401
+// before invite's handlers are reached.
+router.use(inviteRouter);
 router.use(padelFutureRouter);
 router.use(statsRouter);
 router.use(usersRouter);
@@ -51,6 +56,5 @@ router.use(groupTrainingsRouter);
 router.use(notificationsRouter);
 router.use(internalRouter);
 router.use(recurringSeriesRouter);
-router.use(inviteRouter);
 
 export default router;

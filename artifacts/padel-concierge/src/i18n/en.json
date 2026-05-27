@@ -38,7 +38,38 @@
     "newsAndTips": "News & Tips",
     "groupTrainings": "Group Trainings",
     "settings": "Settings",
-    "adminPanel": "Admin Panel"
+    "adminPanel": "Admin Panel",
+    "training": "Training",
+    "play": "Matches",
+    "profile": "Profile",
+    "archetypeQuiz": "Archetype Quiz",
+    "levelQuiz": "Level Quiz",
+    "levelQuizResults": "Level Quiz Results",
+    "adminUsers": "Users"
+  },
+  "training": {
+    "title": "Training",
+    "subtitle": "Calendar, group sessions, your coach, and progress.",
+    "myCalendar": "My calendar",
+    "myCalendarDesc": "Your upcoming bookings and sessions.",
+    "group": "Group trainings",
+    "groupDesc": "Coach-run group sessions you can join.",
+    "myCoach": "My coach",
+    "myCoachDesc": "Chat with your coach and request slots.",
+    "progress": "Progress",
+    "progressDesc": "Your level, stats and growth areas."
+  },
+  "play": {
+    "title": "Matches",
+    "subtitle": "Find partners, manage matches and requests.",
+    "findMatch": "Find a match",
+    "findMatchDesc": "Smart suggestions for tomorrow and beyond.",
+    "myMatches": "My matches",
+    "myMatchesDesc": "Upcoming and recent matches.",
+    "requests": "Requests",
+    "requestsDesc": "Incoming and outgoing match suggestions.",
+    "partners": "Partners",
+    "partnersDesc": "Browse the member roster."
   },
   "home": {
     "tagline": "The private members club for serious padel players. Precise matchmaking, certified skill levels, and premium play analytics.",

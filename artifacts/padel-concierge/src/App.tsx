@@ -14,6 +14,8 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { DevToolbar } from "@/components/DevToolbar";
 
 import Home from "@/pages/home";
+import TrainingHub from "@/pages/training-hub";
+import PlayHub from "@/pages/play-hub";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import ForgotPassword from "@/pages/forgot-password";
@@ -126,6 +128,8 @@ function Router() {
       <Route path="/invite/:token" component={Invite} />
 
       <Route path="/dashboard">{() => <ProtectedRoute component={Dashboard} />}</Route>
+      <Route path="/training">{() => <ProtectedRoute component={TrainingHub} />}</Route>
+      <Route path="/play">{() => <ProtectedRoute component={PlayHub} />}</Route>
       <Route path="/find-match">{() => <ProtectedRoute component={FindMatch} />}</Route>
 
       <Route path="/matches/suggest">{() => <ProtectedRoute component={MatchSuggest} />}</Route>

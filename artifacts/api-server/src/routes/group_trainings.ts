@@ -179,10 +179,13 @@ router.get("/group-trainings", async (req, res): Promise<void> => {
     // Horizon: 30 days so the player page can show a full upcoming list.
     const horizon = now + 1000 * 60 * 60 * 24 * 30;
 
-    // Players see all open/full upcoming trainings; the frontend marks
-    // categories above the player's level as "locked" (request approval).
+    // Players see upcoming trainings in scheduled / open / full / closed
+    // status. The frontend renders inline labels ("Opens in Xh", "Closed",
+    // "Closing in Xh") and marks categories above the player's level as
+    // "locked" (request approval).
+    const VISIBLE = new Set(["scheduled", "open", "full", "closed"]);
     rows = rows.filter((t) => {
-      if (t.status !== "open" && t.status !== "full") return false;
+      if (!VISIBLE.has(t.status)) return false;
       const ts = t.dateTime.getTime();
       if (ts < now || ts > horizon) return false;
       if (!hasKnownLevel) return false;

@@ -335,7 +335,9 @@ export type GroupTrainingStatus =
   (typeof GroupTrainingStatus)[keyof typeof GroupTrainingStatus];
 
 export const GroupTrainingStatus = {
+  scheduled: "scheduled",
   open: "open",
+  closed: "closed",
   full: "full",
   cancelled: "cancelled",
   completed: "completed",

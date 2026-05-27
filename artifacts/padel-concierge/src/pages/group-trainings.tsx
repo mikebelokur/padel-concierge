@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import { apiFetch } from "@/lib/api";
 import {
   Dialog,
@@ -111,6 +113,49 @@ function timeOnly(iso: string): string {
 
 function hoursUntil(iso: string): number {
   return (new Date(iso).getTime() - Date.now()) / (1000 * 60 * 60);
+}
+
+// Registration window: opens 48h before start, closes 12h before start.
+const REG_OPEN_HOURS_BEFORE = 48;
+const REG_CLOSE_HOURS_BEFORE = 12;
+
+type RegWindow =
+  | { kind: "scheduled"; opensInHours: number }
+  | { kind: "open"; closesInHours: number }
+  | { kind: "closing_soon"; closesInHours: number }
+  | { kind: "closed" }
+  | { kind: "none" };
+
+function registrationWindow(training: GroupTraining): RegWindow {
+  const h = hoursUntil(training.dateTime);
+  if (training.status === "scheduled") {
+    return { kind: "scheduled", opensInHours: Math.max(0, h - REG_OPEN_HOURS_BEFORE) };
+  }
+  if (training.status === "closed") {
+    return { kind: "closed" };
+  }
+  if (training.status === "open" || training.status === "full") {
+    const closesInHours = h - REG_CLOSE_HOURS_BEFORE;
+    if (closesInHours > 0 && closesInHours <= 24) {
+      return { kind: "closing_soon", closesInHours };
+    }
+    return { kind: "open", closesInHours };
+  }
+  return { kind: "none" };
+}
+
+function formatHoursLabel(
+  hours: number,
+  t: (k: string, v?: Record<string, string | number>) => string,
+): string {
+  if (hours >= 24) {
+    const d = Math.round(hours / 24);
+    return t("playerTrainings.window.days", { count: d });
+  }
+  if (hours >= 1) {
+    return t("playerTrainings.window.hours", { count: Math.round(hours) });
+  }
+  return t("playerTrainings.window.minutes", { count: Math.max(1, Math.round(hours * 60)) });
 }
 
 function CategoryBadge({ cat }: { cat: string }) {
@@ -247,12 +292,17 @@ function TrainingCard({
   const locked = !isPast && myIdx >= 0 && tCatIdx > myIdx && myBookingStatus !== "booked";
   const isBooked = myBookingStatus === "booked";
   const isFull = training.bookedCount >= training.maxParticipants && !isBooked;
+  const win = registrationWindow(training);
+  const notOpenYet = win.kind === "scheduled";
+  const regClosed = win.kind === "closed";
 
   const cta: CardAction = (() => {
     if (isPast) return { kind: "none" };
     if (training.status === "cancelled") return { kind: "none" };
     if (isBooked) return { kind: "cancel", training };
     if (locked) return { kind: "locked", training };
+    if (notOpenYet) return { kind: "none" };
+    if (regClosed) return { kind: "none" };
     if (isFull) return { kind: "waitlist", training };
     return { kind: "book", training };
   })();
@@ -270,6 +320,17 @@ function TrainingCard({
       default:
         return "";
     }
+  })();
+
+  const disabledLabel = (() => {
+    if (notOpenYet && win.kind === "scheduled") {
+      return t("playerTrainings.card.opensIn", {
+        in: formatHoursLabel(win.opensInHours, t),
+      });
+    }
+    if (regClosed) return t("playerTrainings.card.regClosed");
+    if (training.status === "cancelled") return t("playerTrainings.card.cancelledByCoach");
+    return t("playerTrainings.card.past");
   })();
 
   const ctaBg = (() => {
@@ -307,6 +368,30 @@ function TrainingCard({
           <div className="flex items-center gap-2 mb-0.5 flex-wrap">
             <CategoryBadge cat={training.category} />
             <StatusBadge status={training.status} locked={locked} isPast={isPast} t={t} />
+            {!isPast && win.kind === "scheduled" && (
+              <span
+                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs"
+                style={{ color: "#94a3b8", background: "rgba(148,163,184,0.12)", border: "1px solid #94a3b840" }}
+              >
+                ⏳ {t("playerTrainings.card.opensIn", { in: formatHoursLabel(win.opensInHours, t) })}
+              </span>
+            )}
+            {!isPast && win.kind === "closing_soon" && (
+              <span
+                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs"
+                style={{ color: "#fbbf24", background: "rgba(251,191,36,0.12)", border: "1px solid #fbbf2440" }}
+              >
+                ⏰ {t("playerTrainings.card.closingIn", { in: formatHoursLabel(win.closesInHours, t) })}
+              </span>
+            )}
+            {!isPast && win.kind === "closed" && (
+              <span
+                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs"
+                style={{ color: "#f87171", background: "rgba(248,113,113,0.12)", border: "1px solid #f8717140" }}
+              >
+                {t("playerTrainings.card.regClosed")}
+              </span>
+            )}
             {isBooked && !isPast && (
               <span
                 className="inline-flex items-center px-2 py-0.5 rounded-full text-xs"
@@ -408,9 +493,7 @@ function TrainingCard({
             cursor: "not-allowed",
           }}
         >
-          {training.status === "cancelled"
-            ? t("playerTrainings.card.cancelledByCoach")
-            : t("playerTrainings.card.past")}
+          {disabledLabel}
         </button>
       ) : (
         <button
@@ -453,6 +536,7 @@ function BookModal({
   const { t } = useLanguage();
   const { toast } = useToast();
   const qc = useQueryClient();
+  const [, navigate] = useLocation();
 
   const bookMut = useBookGroupTraining({
     mutation: {
@@ -471,11 +555,80 @@ function BookModal({
       onError: (err: any) => {
         const status = err?.response?.status ?? err?.status;
         const body = err?.response?.data ?? {};
-        let msg = t("playerTrainings.bookModal.errorGeneric");
-        if (status === 409 && body?.alreadyBooked) msg = t("playerTrainings.bookModal.errorAlready");
-        else if (status === 409) msg = t("playerTrainings.bookModal.errorFull");
-        else if (status === 403) msg = t("playerTrainings.bookModal.errorLevel");
-        toast({ title: msg, variant: "destructive" });
+        const code = body?.code as string | undefined;
+        const reason = body?.reason as string | undefined;
+
+        // LEVEL_REQUIRED — deep-link to quiz so the player can set their level.
+        if (status === 400 && code === "LEVEL_REQUIRED") {
+          toast({
+            title: t("playerTrainings.bookModal.errorLevelRequiredTitle"),
+            description: t("playerTrainings.bookModal.errorLevelRequiredBody"),
+            variant: "destructive",
+            action: (
+              <ToastAction
+                altText={t("playerTrainings.bookModal.errorLevelRequiredAction")}
+                onClick={() => {
+                  onClose();
+                  navigate("/quiz");
+                }}
+              >
+                {t("playerTrainings.bookModal.errorLevelRequiredAction")}
+              </ToastAction>
+            ),
+          });
+          return;
+        }
+
+        // LEVEL_TOO_HIGH — above player's level.
+        if (status === 403 && code === "LEVEL_TOO_HIGH") {
+          toast({
+            title: t("playerTrainings.bookModal.errorLevelTooHigh", {
+              cat: body?.category ?? training.category,
+              level: body?.yourLevel ?? "—",
+            }),
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Registration window: not open yet.
+        if (status === 409 && reason === "scheduled") {
+          const h = hoursUntil(training.dateTime) - REG_OPEN_HOURS_BEFORE;
+          toast({
+            title:
+              h > 0
+                ? t("playerTrainings.bookModal.errorScheduledIn", {
+                    in: formatHoursLabel(h, t),
+                  })
+                : t("playerTrainings.bookModal.errorScheduled"),
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Registration window: closed.
+        if (status === 409 && reason === "closed") {
+          toast({
+            title: t("playerTrainings.bookModal.errorClosed"),
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (status === 409 && body?.alreadyBooked) {
+          toast({ title: t("playerTrainings.bookModal.errorAlready"), variant: "destructive" });
+          return;
+        }
+        if (status === 409 && body?.full) {
+          toast({ title: t("playerTrainings.bookModal.errorFull"), variant: "destructive" });
+          return;
+        }
+        // Legacy fallback: 403 without code, or any other 409.
+        if (status === 403) {
+          toast({ title: t("playerTrainings.bookModal.errorLevel"), variant: "destructive" });
+          return;
+        }
+        toast({ title: t("playerTrainings.bookModal.errorGeneric"), variant: "destructive" });
       },
     },
   });

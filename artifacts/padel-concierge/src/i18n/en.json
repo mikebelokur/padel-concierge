@@ -958,6 +958,9 @@
       "requestApproval": "Request approval",
       "waitlist": "Join waitlist",
       "past": "Completed",
+      "opensIn": "Opens in {{in}}",
+      "closingIn": "Closing in {{in}}",
+      "regClosed": "Registration closed",
       "myStatus": {
         "booked": "Booked",
         "cancelled": "Cancelled",
@@ -978,7 +981,19 @@
       "errorFull": "This training just filled up.",
       "errorAlready": "You already have a booking for this training.",
       "errorLevel": "Your level doesn't allow this category yet.",
+      "errorLevelTooHigh": "This training is for category {{cat}} — your level is {{level}}. Ask the coach to approve you.",
+      "errorLevelRequiredTitle": "Set your level first",
+      "errorLevelRequiredBody": "Take the 13-question quiz to get your level — it only takes 2 minutes.",
+      "errorLevelRequiredAction": "Take the quiz",
+      "errorScheduled": "Registration isn't open yet — it opens 48 hours before the start.",
+      "errorScheduledIn": "Registration opens in {{in}}. Come back then.",
+      "errorClosed": "Registration closed — it closes 12 hours before the start.",
       "errorGeneric": "Could not book. Try again."
+    },
+    "window": {
+      "days": "{{count}}d",
+      "hours": "{{count}}h",
+      "minutes": "{{count}}m"
     },
     "cancelModal": {
       "title": "Cancel your spot?",

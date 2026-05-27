@@ -1618,7 +1618,7 @@ components:
           type: ["string", "null"]
         status:
           type: string
-          enum: [open, full, cancelled, completed]
+          enum: [scheduled, open, closed, full, cancelled, completed]
         isRecurring:
           type: boolean
         recurringSeriesId:

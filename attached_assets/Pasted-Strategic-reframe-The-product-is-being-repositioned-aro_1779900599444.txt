@@ -1,0 +1,206 @@
+Strategic reframe. The product is being repositioned around three 
+distinct access tiers and two clearly named product lines. Plan and 
+execute the following audit + implementation in order.
+
+==========================================
+PART 1 — ROLE-BASED VISIBILITY ARCHITECTURE
+==========================================
+
+Implement four view tiers controlled by mode flags. A user has ONE 
+account but can have MULTIPLE mode flags. Modes cascade upward — 
+higher modes include access to all lower modes.
+
+User table additions:
+- mode_player: boolean, default true (everyone is a player by default)
+- mode_coach: boolean, default false
+- mode_admin: boolean, default false
+- mode_developer: boolean, default false
+
+Tier definitions:
+
+1. DEVELOPER tier — mode_developer = true (currently only misha.belokur@gmail.com).
+   Sees all routes including dev-only experiments, audit dashboards,
+   future product drafts, raw data views.
+
+2. ADMIN tier — mode_admin = true.
+   Sees everything COACH and PLAYER see, PLUS:
+   - Account management (create/edit/delete users)
+   - Coach roster management
+   - Player segmentation tools
+   - Statistics dashboards
+   - Future: organizers, clubs, multi-tenant management
+   Does NOT see developer-only experiments.
+
+3. COACH tier — mode_coach = true.
+   Sees coaching workflow:
+   - My students list
+   - Calendar of my sessions (1:1 + group)
+   - Session notes and progress tracking
+   - In-app messaging with students
+
+4. PLAYER tier — mode_player = true (default for everyone).
+   Sees player workflow:
+   - My calendar (upcoming trainings)
+   - Group trainings I can join
+   - Matchmaking (find a match)
+   - My profile and progress
+   - In-app messaging with my coach
+
+UI behavior:
+- If user has only mode_player=true: no mode switcher visible, sees 
+  player UI only.
+- If user has 2+ modes: show mode switcher in top-right corner with 
+  current mode label and dropdown of available modes.
+- Selected mode persists per session in localStorage.
+- Switching mode does NOT log out or change identity — same user, 
+  different view layer.
+
+Route guards check the CURRENTLY SELECTED mode, not the user's max 
+mode. This lets a developer test player experience by switching to 
+player mode and verifying admin/coach UI is genuinely hidden.
+
+Seed mode flags:
+- misha.belokur@gmail.com: all four modes = true
+- Existing admin/owner accounts: mode_admin = true, mode_player = true
+- Coaching clients: mode_player = true (NOT mode_coach — they are 
+  students who happen to be tracked in coaching_clients table)
+- All other existing users: keep current behavior, default mode_player=true
+
+Implement via:
+- Server-side route guards (return 403 if active mode doesn't match)
+- Client-side navigation hides (don't render links to forbidden routes)
+- Feature flag table: feature_flags(name, min_tier, status='shipped'|'partial'|'dev_only')
+
+==========================================
+PART 2 — AUDIT EVERY ROUTE AND PAGE
+==========================================
+
+For every route and page in the app, classify:
+
+STATUS:
+- SHIPPED: works end-to-end, all buttons functional, fully Russian-translated, 
+  error states handled, mobile-friendly
+- PARTIAL: core flow works but some buttons/states/text incomplete
+- DEV_ONLY: experimental, broken, or unfinished
+
+TIER VISIBILITY (decide for each):
+- Show to PLAYER mode? yes/no
+- Show to COACH mode? yes/no
+- Show to ADMIN mode? yes/no
+- Show to DEVELOPER mode? always yes
+
+Output as a single table: route | status | player | coach | admin | notes.
+
+Pay extra attention to flagging anything that:
+- Has English text mixed with Russian
+- Has buttons that 404 or do nothing
+- Has placeholder data not from real DB
+- Has misaligned spacing or broken layout
+- Looks like a half-finished prototype
+
+==========================================
+PART 3 — TWO-PRODUCT INFORMATION ARCHITECTURE
+==========================================
+
+Restructure the player-facing app into two named product zones in 
+the bottom navigation:
+
+PRODUCT A — "Тренировки" (Training Calendar)
+Primary bottom nav section. Contains:
+- "Мой календарь" — upcoming sessions (1:1 + group I'm registered for)
+- "Групповые" — open group sessions I can join
+- "Мой тренер" — direct line to my coach (messaging + book session)
+- "Прогресс" — my goals + skills progression chart
+
+PRODUCT B — "Матчи" (Matchmaking)
+Primary bottom nav section. Contains:
+- "Найти матч" — matchmaking suggestions based on my level + archetype
+- "Мои матчи" — upcoming + past matches
+- "Заявки" — incoming/outgoing match requests
+- "Партнёры" — favorites + history of who I played with
+
+Tertiary (less prominent in nav):
+- "Профиль" — my info, level, archetype
+- "Правила" — padel rules library
+- "Настройки"
+
+Hide from PLAYER mode: any admin tab, any coaching CRM tab, any 
+half-built feature.
+
+For COACH mode, replace PRODUCT B (Matchmaking) with PRODUCT C: 
+"Мои ученики" (Client management) — list of students, sessions, 
+notes, messaging.
+
+==========================================
+PART 4 — VISUAL POLISH SWEEP
+==========================================
+
+Pass over all SHIPPED player-facing pages and apply:
+
+1. Typography: minimum 17pt body text, 22pt+ headings, generous line-height. 
+   Apple HIG mobile standards.
+2. Spacing: consistent 16px / 24px / 32px gaps. No cramped sections, no 
+   uneven margins.
+3. Touch targets: every tappable element at least 44pt × 44pt.
+4. Color: deep black background #0a0a0a, gold accent #D4AF37 for primary 
+   actions, neutral grays for secondary text. No more than 3 surface 
+   layers in any single view.
+5. Buttons: full-width on mobile, single primary action per screen, clear 
+   loading/disabled states.
+6. Bottom nav: 4-5 icons max, large clear labels, current section 
+   highlighted in gold.
+7. Empty states: every list view has a designed empty state with 
+   illustration or helpful copy, never just a blank screen.
+8. Date/time: always Dubai timezone, format "чт, 28 мая · 10:00" 
+   (no seconds, no timezone string).
+
+Skip pages classified as PARTIAL or DEV_ONLY in Part 2 — those will 
+be hidden from production, no point polishing.
+
+==========================================
+PART 5 — VERONIKA AS MEMBER #001
+==========================================
+
+Add columns to users: source, member_number, badge, invite_status, 
+invite_token, invite_token_expires_at.
+
+Founding member numbering starts at 1 with Veronika. Misha (owner) 
+keeps member_number = NULL — owner status is separate and uncontested. 
+This makes Veronika's #001 meaningful as the first real client.
+
+Seed Veronika: name='Veronika', role='player', mode_player=true, 
+level='D', member_number=1, badge='founding_member', 
+source='coach_added', invite_status='invited', generate invite_token 
+with 7-day expiry.
+
+Output invite URL to chat so Misha can save it.
+
+Visual treatment: when member_number=1 OR badge='founding_member', 
+show gold "#001" pill next to name, gold avatar border, "Основатель" 
+ribbon on profile hero. Subtle premium feel — not gaming.
+
+==========================================
+PART 6 — PWA INSTALLABLE
+==========================================
+
+Add manifest.json (Padel Concierge, gold P icon 192/512, theme #0a0a0a, 
+standalone), service worker for installability, in-app banner on mobile 
+second visit with iOS/Android install instructions. Lighthouse 
+installable check must pass.
+
+==========================================
+PART 7 — END-OF-RUN REPORT
+==========================================
+
+Output a single markdown report covering:
+1. Final route audit table with statuses
+2. List of features now hidden from PLAYER mode
+3. List of features still PARTIAL but visible to ADMIN/DEVELOPER 
+   (so Misha can prioritize)
+4. Visual polish before/after summary
+5. Veronika invite URL (saved to docs/veronika-invite.md for safekeeping)
+6. PWA Lighthouse score
+7. Any blockers or open questions for Misha to answer in the morning
+
+If blocked on any task, log "BLOCKED on Part N: [reason]" and continue 
+to next part. Don't wait.

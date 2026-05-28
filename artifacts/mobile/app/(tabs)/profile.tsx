@@ -1,10 +1,12 @@
-import { useGetPlayerStats } from "@workspace/api-client-react";
+import { useGetPlayerStats, useUpdateUser } from "@workspace/api-client-react";
 import { Feather } from "@expo/vector-icons";
 import type { ComponentProps } from "react";
+import { useState } from "react";
 import { router } from "expo-router";
 import {
   ActivityIndicator,
   Alert,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -18,6 +20,18 @@ import { useAuth } from "@/context/AuthContext";
 import { StatCard } from "@/components/StatCard";
 
 type FeatherName = ComponentProps<typeof Feather>["name"];
+
+const LANGUAGE_OPTIONS: { code: "en" | "ru" | "ar"; label: string }[] = [
+  { code: "en", label: "English" },
+  { code: "ru", label: "Русский" },
+  { code: "ar", label: "عربي" },
+];
+
+const LANGUAGE_LABELS: Record<string, string> = {
+  en: "English",
+  ru: "Русский",
+  ar: "عربي",
+};
 
 const ARCHETYPE_LABELS: Record<string, { label: string; icon: FeatherName }> = {
   "pro-ambitious": { label: "Pro Ambitious", icon: "zap" },
@@ -38,7 +52,9 @@ const LEVEL_COLORS: Record<string, string> = {
 export default function ProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
+  const updateUserMutation = useUpdateUser();
+  const [languagePickerOpen, setLanguagePickerOpen] = useState(false);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : 0;
@@ -59,6 +75,31 @@ export default function ProfileScreen() {
   const archetype = archetypeKey ? ARCHETYPE_LABELS[archetypeKey] : null;
   const levelColor = LEVEL_COLORS[user?.level ?? "C"] ?? colors.mutedForeground;
 
+  const handleLanguageChange = (lang: "en" | "ru" | "ar") => {
+    if (!user || user.language === lang) return;
+    const prev = user;
+    const next = { ...user, language: lang };
+    updateUser(next);
+    updateUserMutation.mutate(
+      { id: user.id, data: { language: lang } },
+      {
+        onError: () => {
+          updateUser(prev);
+          Alert.alert("Update failed", "Could not save your language preference.");
+        },
+      },
+    );
+  };
+
+  const handleLanguagePress = () => {
+    setLanguagePickerOpen(true);
+  };
+
+  const handleLanguageSelect = (lang: "en" | "ru" | "ar") => {
+    setLanguagePickerOpen(false);
+    handleLanguageChange(lang);
+  };
+
   const handleLogout = () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
       { text: "Cancel", style: "cancel" },
@@ -73,11 +114,25 @@ export default function ProfileScreen() {
     ]);
   };
 
-  const detailItems: { icon: FeatherName; label: string; value?: string | null }[] = [
+  const detailItems: {
+    icon: FeatherName;
+    label: string;
+    value?: string | null;
+    onPress?: () => void;
+    testID?: string;
+  }[] = [
     { icon: "target", label: "Goal", value: user?.goal },
     { icon: "zap", label: "Intensity", value: user?.intensity },
     { icon: "map-pin", label: "Location", value: user?.locationName },
-    { icon: "globe", label: "Language", value: user?.language },
+    {
+      icon: "globe",
+      label: "Language",
+      value: user?.language
+        ? LANGUAGE_LABELS[user.language] ?? user.language
+        : LANGUAGE_LABELS.en,
+      onPress: handleLanguagePress,
+      testID: "language-row",
+    },
   ];
 
   return (
@@ -215,26 +270,55 @@ export default function ProfileScreen() {
           Details
         </Text>
         {detailItems
-          .filter((item) => item.value)
-          .map((item) => (
-            <View
-              key={item.label}
-              style={[styles.infoRow, { borderBottomColor: colors.border }]}
-            >
-              <Feather name={item.icon} size={16} color={colors.mutedForeground} />
-              <Text
-                style={[styles.infoLabel, { color: colors.mutedForeground }]}
+          .filter((item) => item.value || item.onPress)
+          .map((item) => {
+            const content = (
+              <>
+                <Feather name={item.icon} size={16} color={colors.mutedForeground} />
+                <Text
+                  style={[styles.infoLabel, { color: colors.mutedForeground }]}
+                >
+                  {item.label}
+                </Text>
+                <Text
+                  style={[styles.infoValue, { color: colors.foreground }]}
+                  numberOfLines={1}
+                >
+                  {item.value}
+                </Text>
+                {item.onPress ? (
+                  <Feather
+                    name="chevron-right"
+                    size={16}
+                    color={colors.mutedForeground}
+                  />
+                ) : null}
+              </>
+            );
+            if (item.onPress) {
+              return (
+                <Pressable
+                  key={item.label}
+                  onPress={item.onPress}
+                  testID={item.testID}
+                  style={({ pressed }) => [
+                    styles.infoRow,
+                    { borderBottomColor: colors.border, opacity: pressed ? 0.6 : 1 },
+                  ]}
+                >
+                  {content}
+                </Pressable>
+              );
+            }
+            return (
+              <View
+                key={item.label}
+                style={[styles.infoRow, { borderBottomColor: colors.border }]}
               >
-                {item.label}
-              </Text>
-              <Text
-                style={[styles.infoValue, { color: colors.foreground }]}
-                numberOfLines={1}
-              >
-                {item.value}
-              </Text>
-            </View>
-          ))}
+                {content}
+              </View>
+            );
+          })}
       </View>
 
       <Pressable
@@ -255,6 +339,73 @@ export default function ProfileScreen() {
           Sign Out
         </Text>
       </Pressable>
+
+      <Modal
+        visible={languagePickerOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setLanguagePickerOpen(false)}
+      >
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => setLanguagePickerOpen(false)}
+        >
+          <Pressable
+            style={[
+              styles.modalSheet,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+                borderRadius: colors.radius,
+              },
+            ]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <Text style={[styles.modalTitle, { color: colors.foreground }]}>
+              Language
+            </Text>
+            {LANGUAGE_OPTIONS.map((opt) => {
+              const selected = (user?.language ?? "en") === opt.code;
+              return (
+                <Pressable
+                  key={opt.code}
+                  onPress={() => handleLanguageSelect(opt.code)}
+                  testID={`language-option-${opt.code}`}
+                  style={({ pressed }) => [
+                    styles.modalOption,
+                    {
+                      borderBottomColor: colors.border,
+                      opacity: pressed ? 0.6 : 1,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[styles.modalOptionLabel, { color: colors.foreground }]}
+                  >
+                    {opt.label}
+                  </Text>
+                  {selected ? (
+                    <Feather name="check" size={18} color={colors.primary} />
+                  ) : null}
+                </Pressable>
+              );
+            })}
+            <Pressable
+              onPress={() => setLanguagePickerOpen(false)}
+              style={({ pressed }) => [
+                styles.modalCancel,
+                { opacity: pressed ? 0.6 : 1 },
+              ]}
+            >
+              <Text
+                style={[styles.modalCancelText, { color: colors.mutedForeground }]}
+              >
+                Cancel
+              </Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </ScrollView>
   );
 }
@@ -388,6 +539,46 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     fontSize: 15,
+    fontWeight: "600" as const,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  modalSheet: {
+    width: "100%",
+    maxWidth: 360,
+    borderWidth: 1,
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 8,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: "700" as const,
+    marginBottom: 8,
+  },
+  modalOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+  },
+  modalOptionLabel: {
+    fontSize: 15,
+    fontWeight: "500" as const,
+  },
+  modalCancel: {
+    alignItems: "center",
+    paddingVertical: 14,
+    marginTop: 4,
+  },
+  modalCancelText: {
+    fontSize: 14,
     fontWeight: "600" as const,
   },
 });

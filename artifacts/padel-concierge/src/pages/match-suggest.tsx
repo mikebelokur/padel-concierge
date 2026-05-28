@@ -4,6 +4,7 @@ import { useQueries } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { formatDubaiDate, formatDubaiTime } from "@/lib/datetime";
 import { Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ARCHETYPE_META, type Archetype } from "@/lib/archetypes";
@@ -53,7 +54,7 @@ function RiskWarning({ profile, warningLabel }: { profile?: PlayerProfile; warni
 
 export default function MatchSuggest() {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { data: suggestions, isLoading } = useGetMatchSuggestions(
     { userId: user?.id || 0 },
     { query: { enabled: !!user?.id, queryKey: getGetMatchSuggestionsQueryKey({ userId: user?.id || 0 }) } }
@@ -109,7 +110,7 @@ export default function MatchSuggest() {
         <div className="p-5 flex-1 flex flex-col justify-between space-y-5">
           <div>
             <div className="font-serif text-xl mb-1">{match.clubName}</div>
-            <div className="text-sm text-muted-foreground">{match.date} {t("matchSuggest.at")} {match.time}</div>
+            <div className="text-sm text-muted-foreground">{match.date && match.time ? `${formatDubaiDate(`${match.date}T${match.time}:00+04:00`, language)} ${t("matchSuggest.at")} ${formatDubaiTime(`${match.date}T${match.time}:00+04:00`, language)}` : `${match.date ?? ""} ${t("matchSuggest.at")} ${match.time ?? ""}`}</div>
           </div>
 
           <div className="space-y-3">

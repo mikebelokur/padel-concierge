@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { formatDubaiDate, formatDubaiTime } from "@/lib/datetime";
 
 const PAYMENT_STATUS_STYLES: Record<string, { bg: string; border: string; color: string }> = {
   completed: { bg: "rgba(34,197,94,0.12)",   border: "rgba(34,197,94,0.3)",   color: "#4ade80" },
@@ -36,7 +37,7 @@ export default function BookingDetail() {
   const params = useParams();
   const bookingId = Number(params.id);
   const queryClient = useQueryClient();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { data: booking, isLoading } = useGetBooking(bookingId, {
     query: { enabled: !!bookingId, queryKey: getGetBookingQueryKey(bookingId) },
   });
@@ -116,7 +117,7 @@ export default function BookingDetail() {
             </span>
           </div>
           <p className="text-muted-foreground" style={{ fontSize: "14px" }}>
-            {booking.match?.clubName} · {booking.match?.date}
+            {booking.match?.clubName} · {booking.match?.date && booking.match?.time ? formatDubaiDate(`${booking.match.date}T${booking.match.time}:00+04:00`, language) : (booking.match?.date ?? "")}
           </p>
         </header>
 
@@ -132,8 +133,14 @@ export default function BookingDetail() {
             className="rounded-[20px] overflow-hidden"
             style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.07)" }}
           >
-            <InfoRow label={t("bookingDetail.date")} value={booking.match?.date} />
-            <InfoRow label={t("bookingDetail.time")} value={booking.match?.time} />
+            <InfoRow
+              label={t("bookingDetail.date")}
+              value={booking.match?.date && booking.match?.time ? formatDubaiDate(`${booking.match.date}T${booking.match.time}:00+04:00`, language) : booking.match?.date}
+            />
+            <InfoRow
+              label={t("bookingDetail.time")}
+              value={booking.match?.date && booking.match?.time ? formatDubaiTime(`${booking.match.date}T${booking.match.time}:00+04:00`, language) : booking.match?.time}
+            />
             <InfoRow label={t("bookingDetail.format")} value={booking.match?.format} />
             <div
               className="flex items-center justify-between px-5"

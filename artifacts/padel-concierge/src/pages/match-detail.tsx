@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { formatDubaiDate, formatDubaiTime } from "@/lib/datetime";
 
 const PHASE_DURATIONS = [180, 180, 120, 120];
 
@@ -35,7 +36,7 @@ export default function MatchDetail() {
   const [, setLocation] = useLocation();
   const createBooking = useCreateBooking();
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const phases = [
     { title: t("matchDetail.warmupPhase1Title"), duration: PHASE_DURATIONS[0], desc: t("matchDetail.warmupPhase1Desc") },
@@ -115,7 +116,7 @@ export default function MatchDetail() {
             </span>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-muted-foreground" style={{ fontSize: "14px" }}>{match.date} · {match.time}</span>
+            <span className="text-muted-foreground" style={{ fontSize: "14px" }}>{match.date && match.time ? `${formatDubaiDate(`${match.date}T${match.time}:00+04:00`, language)} · ${formatDubaiTime(`${match.date}T${match.time}:00+04:00`, language)}` : `${match.date ?? ""} · ${match.time ?? ""}`}</span>
             <span
               className="rounded-full px-2.5 py-0.5 font-medium"
               style={{ fontSize: "12px", background: fStyle.bg, border: `1px solid ${fStyle.border}`, color: fStyle.color }}

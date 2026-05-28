@@ -5,6 +5,13 @@ import { useGetPlayerStats, useListBookings, getGetPlayerStatsQueryKey, getListB
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Link } from "wouter";
 import { ARCHETYPE_META, type Archetype } from "@/lib/archetypes";
+import { formatDubaiDate, formatDubaiTime } from "@/lib/datetime";
+
+function formatMatchDateTime(date: string | undefined, time: string | undefined, locale: string): string {
+  if (!date || !time) return [date, time].filter(Boolean).join(" · ");
+  const iso = `${date}T${time}:00+04:00`;
+  return `${formatDubaiDate(iso, locale)} · ${formatDubaiTime(iso, locale)}`;
+}
 
 function levelLabel(level: string, t: (k: string) => string) {
   const n = parseFloat(level);
@@ -19,7 +26,7 @@ const BANNER_DISMISS_KEY = "dismissed_no_level_banner_v1";
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const userId = user?.id ?? 0;
 
   const [bannerDismissed, setBannerDismissed] = useState<boolean>(
@@ -236,7 +243,7 @@ export default function Dashboard() {
                           {b.match?.clubName}
                         </div>
                         <div className="text-muted-foreground" style={{ fontSize: "13px" }}>
-                          {b.match?.date} · {b.match?.time}
+                          {formatMatchDateTime(b.match?.date, b.match?.time, language)}
                         </div>
                       </div>
                       <span

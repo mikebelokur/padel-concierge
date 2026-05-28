@@ -5,6 +5,13 @@ import { useListBookings } from "@workspace/api-client-react";
 import { Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { formatDubaiDate, formatDubaiTime } from "@/lib/datetime";
+
+function formatMatchDateTime(date: string | undefined, time: string | undefined, locale: string): string {
+  if (!date || !time) return [date, time].filter(Boolean).join(" · ");
+  const iso = `${date}T${time}:00+04:00`;
+  return `${formatDubaiDate(iso, locale)} · ${formatDubaiTime(iso, locale)}`;
+}
 
 const PAYMENT_STATUS_STYLES: Record<string, { bg: string; border: string; color: string }> = {
   completed: { bg: "rgba(34,197,94,0.12)",  border: "rgba(34,197,94,0.3)",  color: "#4ade80" },
@@ -75,7 +82,7 @@ function BookingCardSkeleton({ upcoming = false }: { upcoming?: boolean }) {
 
 export default function Bookings() {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { data: bookings, isLoading, refetch } = useListBookings({ userId: user?.id });
   const { pullY, isRefreshing } = usePullToRefresh(refetch);
 
@@ -179,7 +186,7 @@ export default function Bookings() {
                                   {booking.match?.clubName ?? "Match"}
                                 </div>
                                 <div className="text-muted-foreground mt-0.5" style={{ fontSize: "13px" }}>
-                                  {booking.match?.date} · {booking.match?.time}
+                                  {formatMatchDateTime(booking.match?.date, booking.match?.time, language)}
                                   {booking.match?.format && ` · ${booking.match.format}`}
                                 </div>
                               </div>
@@ -253,7 +260,7 @@ export default function Bookings() {
                                   {booking.match?.clubName ?? "Match"}
                                 </div>
                                 <div className="text-muted-foreground mt-0.5" style={{ fontSize: "13px" }}>
-                                  {booking.match?.date} · {booking.match?.time}
+                                  {formatMatchDateTime(booking.match?.date, booking.match?.time, language)}
                                   {booking.match?.format && ` · ${booking.match.format}`}
                                 </div>
                               </div>

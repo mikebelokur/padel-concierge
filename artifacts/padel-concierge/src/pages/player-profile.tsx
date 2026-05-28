@@ -5,7 +5,13 @@ import { apiFetch } from "@/lib/api";
 import { ARCHETYPE_META, type Archetype } from "@/lib/archetypes";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { formatDubaiMonthYear } from "@/lib/datetime";
+import { formatDubaiMonthYear, formatDubaiDate, formatDubaiTime } from "@/lib/datetime";
+
+function formatMatchDateTime(date: string | undefined, time: string | undefined, locale: string): string {
+  if (!date || !time) return [date, time].filter(Boolean).join(" · ");
+  const iso = `${date}T${time}:00+04:00`;
+  return `${formatDubaiDate(iso, locale)} · ${formatDubaiTime(iso, locale)}`;
+}
 import {
   reliabilityColor,
   reliabilityBarColor,
@@ -326,7 +332,7 @@ export default function PlayerProfilePage() {
                             </span>
                           </div>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-xs text-muted-foreground">{m.date} · {m.time}</span>
+                            <span className="text-xs text-muted-foreground">{formatMatchDateTime(m.date, m.time, language)}</span>
                             {opponents.length > 0 && (
                               <span className="text-xs text-muted-foreground">{t("playerProfile.vs")} {opponents.map(p => p.name).join(", ")}</span>
                             )}

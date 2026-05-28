@@ -4,6 +4,13 @@ import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useListMatches } from "@workspace/api-client-react";
 import { Link } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { formatDubaiDate, formatDubaiTime } from "@/lib/datetime";
+
+function formatMatchDateTime(date: string | undefined, time: string | undefined, locale: string): string {
+  if (!date || !time) return [date, time].filter(Boolean).join(" · ");
+  const iso = `${date}T${time}:00+04:00`;
+  return `${formatDubaiDate(iso, locale)} · ${formatDubaiTime(iso, locale)}`;
+}
 
 const FORMAT_COLORS: Record<string, { bg: string; border: string; color: string }> = {
   classic:    { bg: "rgba(212,175,55,0.12)",  border: "rgba(212,175,55,0.35)",  color: "#D4AF37" },
@@ -77,7 +84,7 @@ function MatchCardSkeleton() {
 export default function Matches() {
   const { data: matches, isLoading, refetch } = useListMatches();
   const { pullY, isRefreshing } = usePullToRefresh(refetch);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   return (
     <AppLayout>
@@ -171,7 +178,7 @@ export default function Matches() {
                             {match.clubName}
                           </div>
                           <div className="text-muted-foreground mt-0.5" style={{ fontSize: "13px" }}>
-                            {match.date} · {match.time}
+                            {formatMatchDateTime(match.date, match.time, language)}
                           </div>
                         </div>
                         <span

@@ -8,6 +8,8 @@ import {
   View,
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
+import { useAuth } from "@/context/AuthContext";
+import { formatMatchDateTime } from "@/lib/datetime";
 
 interface MatchCardProps {
   match: Match;
@@ -30,21 +32,10 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: "Cancelled",
 };
 
-function formatDate(dateStr: string): string {
-  try {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
-  } catch {
-    return dateStr;
-  }
-}
-
 export function MatchCard({ match, tag, tagColor }: MatchCardProps) {
   const colors = useColors();
+  const { user } = useAuth();
+  const locale = user?.language ?? "en";
 
   const levelColor =
     LEVEL_COLORS[match.levelMin ?? "C"] ?? colors.mutedForeground;
@@ -127,7 +118,7 @@ export function MatchCard({ match, tag, tagColor }: MatchCardProps) {
         <View style={styles.detailItem}>
           <Feather name="calendar" size={12} color={colors.mutedForeground} />
           <Text style={[styles.detailText, { color: colors.mutedForeground }]}>
-            {formatDate(match.date)} · {match.time}
+            {formatMatchDateTime(match.date, match.time, locale)}
           </Text>
         </View>
         <View style={styles.detailItem}>

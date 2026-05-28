@@ -16,18 +16,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
-
-function formatDate(dateStr: string): string {
-  try {
-    return new Date(dateStr).toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-    });
-  } catch {
-    return dateStr;
-  }
-}
+import { formatMatchDateTime } from "@/lib/datetime";
 
 type BookingStep = "confirm" | "success";
 
@@ -37,6 +26,7 @@ export default function BookMatchScreen() {
   const { matchId } = useLocalSearchParams<{ matchId: string }>();
   const { user } = useAuth();
   const [step, setStep] = useState<BookingStep>("confirm");
+  const locale = user?.language ?? "en";
 
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
 
@@ -114,7 +104,7 @@ export default function BookMatchScreen() {
           Booking confirmed for {match.clubName}
         </Text>
         <Text style={[styles.successDate, { color: colors.mutedForeground }]}>
-          {formatDate(match.date)} · {match.time}
+          {formatMatchDateTime(match.date, match.time, locale, "long")}
         </Text>
 
         <View style={styles.successActions}>
@@ -186,7 +176,7 @@ export default function BookMatchScreen() {
             {
               icon: "calendar" as const,
               label: "Date & Time",
-              value: `${formatDate(match.date)} · ${match.time}`,
+              value: formatMatchDateTime(match.date, match.time, locale, "long"),
             },
             {
               icon: "grid" as const,

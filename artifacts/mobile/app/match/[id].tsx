@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
+import { formatMatchDateTime } from "@/lib/datetime";
 
 type FeatherName = ComponentProps<typeof Feather>["name"];
 
@@ -24,19 +25,6 @@ const FORMAT_INFO: Record<string, string> = {
   Simplified: "2 sets",
   Rotation: "Partner swap every 15–20 min",
 };
-
-function formatDate(dateStr: string): string {
-  try {
-    return new Date(dateStr).toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  } catch {
-    return dateStr;
-  }
-}
 
 interface InfoRowProps {
   icon: FeatherName;
@@ -91,6 +79,8 @@ export default function MatchDetailScreen() {
 
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
   const topPad = Platform.OS === "web" ? 67 : insets.top;
+
+  const locale = user?.language ?? "en";
 
   const { data: match, isLoading, error } = useGetMatch(Number(id));
 
@@ -205,7 +195,7 @@ export default function MatchDetailScreen() {
           <View style={styles.dateRow}>
             <Feather name="calendar" size={14} color={colors.mutedForeground} />
             <Text style={[styles.dateText, { color: colors.mutedForeground }]}>
-              {formatDate(match.date)} · {match.time}
+              {formatMatchDateTime(match.date, match.time, locale, "long")}
             </Text>
           </View>
         </View>

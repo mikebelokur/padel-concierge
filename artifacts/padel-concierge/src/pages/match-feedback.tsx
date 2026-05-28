@@ -6,6 +6,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const POSITIVE_TRAITS = [
   "Позитивный и весёлый",
@@ -53,6 +54,7 @@ export default function MatchFeedback() {
   const [, params] = useRoute("/match-feedback/:id");
   const matchId = params?.id;
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const { data: match, isLoading } = useQuery({
     queryKey: ["match", matchId],
@@ -142,6 +144,29 @@ export default function MatchFeedback() {
         <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/20 text-xs text-amber-400">
           🔒 Твоё имя будет скрыто. Авторы отзывов не раскрываются.
         </div>
+
+        {players.length === 0 && (
+          <div
+            className="rounded-[20px] p-10 text-center"
+            style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.07)" }}
+          >
+            <div className="text-3xl mb-3">📝</div>
+            <div className="text-white font-medium mb-1" style={{ fontSize: "17px" }}>
+              {t("matchFeedback.emptyTitle")}
+            </div>
+            <div className="text-muted-foreground mb-4" style={{ fontSize: "14px" }}>
+              {t("matchFeedback.emptyHint")}
+            </div>
+            <Link href="/matches">
+              <button
+                className="rounded-full font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
+                style={{ height: "44px", padding: "0 24px", fontSize: "15px", background: "#D4AF37", color: "#000" }}
+              >
+                {t("matchFeedback.backToMatches")}
+              </button>
+            </Link>
+          </div>
+        )}
 
         {players.map(player => {
           const fb = feedbacks[player.userId] ?? { rating: 5, traits: [], comment: "" };

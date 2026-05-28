@@ -208,6 +208,8 @@
     "videoAnalysis": "Видеоанализ",
     "upcomingMatches": "Предстоящие игры",
     "noUpcomingMatches": "Нет запланированных игр",
+    "noUpcomingTitle": "Пока нет запланированных игр",
+    "noUpcomingHint": "Найди партнёра — и следующий матч появится здесь.",
     "recentActivity": "Последние события",
     "retake": "Пересдать",
     "takeQuiz": "Пройти тест",
@@ -296,7 +298,11 @@
     "winTrend": "Динамика побед (30 дней)",
     "formatBreakdown": "Форматы матчей",
     "archetypeMatch": "Совпадение",
-    "warmupBadge": "🔥 Разминка"
+    "warmupBadge": "🔥 Разминка",
+    "noWinTrendTitle": "Пока нет истории матчей",
+    "noWinTrendHint": "Сыграй первые матчи, чтобы увидеть динамику побед.",
+    "noFormatTitle": "Пока нет сыгранных форматов",
+    "noFormatHint": "Разбивка по форматам появится после нескольких матчей."
   },
   "settings": {
     "title": "Настройки",
@@ -660,6 +666,8 @@
     "subtitle": "Предстоящие и прошедшие матчи.",
     "emptyTitle": "Нет бронирований",
     "emptyHint": "Запишись на матч, чтобы увидеть бронирования.",
+    "emptyPastTitle": "Пока нет сыгранных матчей",
+    "emptyPastHint": "История матчей появится здесь после первой игры.",
     "findMatch": "Найти матч",
     "upcoming": "Предстоящие",
     "past": "Прошедшие",
@@ -1109,6 +1117,21 @@
     "metricDecision": "Качество решений",
     "metricPositioning": "Позиционирование",
     "metricShot": "Выбор ударов",
-    "metricTempo": "Стабильность темпа"
+    "metricTempo": "Стабильность темпа",
+    "emptyMetricsTitle": "Метрики ещё не выставлены",
+    "emptyMetricsHint": "Тренер ещё оценивает этот отчёт — загляни позже.",
+    "emptyStrengths": "Сильные стороны пока не отмечены.",
+    "emptyKeyErrors": "Ключевые ошибки пока не отмечены.",
+    "emptyActionPlanTitle": "Плана действий пока нет",
+    "emptyActionPlanHint": "Тренер ещё не добавил следующие шаги к этому отчёту."
+  },
+  "matchFeedback": {
+    "emptyTitle": "Некого оценивать",
+    "emptyHint": "Мы пока не нашли партнёров по этому матчу.",
+    "backToMatches": "← К матчам"
+  },
+  "playerProfileExtras": {
+    "noMatchesTitle": "Пока нет матчей",
+    "noMatchesHint": "Как только игрок сыграет первый матч, он появится здесь."
   }
 }

@@ -213,7 +213,7 @@ export default function Bookings() {
                 </section>
               )}
 
-              {past.length > 0 && (
+              {(past.length > 0 || upcoming.length > 0) && (
                 <section>
                   <div
                     className="uppercase font-semibold mb-3"
@@ -221,6 +221,20 @@ export default function Bookings() {
                   >
                     {t("bookings.past")}
                   </div>
+                  {past.length === 0 ? (
+                    <div
+                      className="rounded-[20px] p-10 text-center"
+                      style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.07)" }}
+                    >
+                      <div className="text-3xl mb-3">🗂️</div>
+                      <div className="text-white font-medium mb-1" style={{ fontSize: "17px" }}>
+                        {t("bookings.emptyPastTitle")}
+                      </div>
+                      <div className="text-muted-foreground" style={{ fontSize: "14px" }}>
+                        {t("bookings.emptyPastHint")}
+                      </div>
+                    </div>
+                  ) : (
                   <div className="space-y-3">
                     {past.map(booking => {
                       const ps = paymentStyle(booking.paymentStatus ?? "pending");
@@ -264,6 +278,7 @@ export default function Bookings() {
                       );
                     })}
                   </div>
+                  )}
                 </section>
               )}
             </div>

@@ -497,7 +497,7 @@ export default function Profile() {
           <SectionLabel>{t("profile.winTrend")}</SectionLabel>
           <Card style={{ padding: "20px" }}>
             <div style={{ height: "200px" }}>
-              {stats?.winTrend ? (
+              {stats?.winTrend && stats.winTrend.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={stats.winTrend}>
                     <XAxis dataKey="date" stroke="rgba(255,255,255,0.2)" fontSize={11} />
@@ -507,8 +507,14 @@ export default function Profile() {
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground" style={{ fontSize: "14px" }}>
-                  No data yet
+                <div className="flex flex-col items-center justify-center h-full text-center px-4">
+                  <div className="text-3xl mb-3">📈</div>
+                  <div className="text-white font-medium mb-1" style={{ fontSize: "17px" }}>
+                    {t("profile.noWinTrendTitle")}
+                  </div>
+                  <div className="text-muted-foreground" style={{ fontSize: "14px" }}>
+                    {t("profile.noWinTrendHint")}
+                  </div>
                 </div>
               )}
             </div>
@@ -519,7 +525,7 @@ export default function Profile() {
           <SectionLabel>{t("profile.formatBreakdown")}</SectionLabel>
           <Card style={{ padding: "20px" }}>
             <div style={{ height: "200px" }}>
-              {stats?.formatBreakdown ? (
+              {stats?.formatBreakdown && stats.formatBreakdown.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -538,8 +544,14 @@ export default function Profile() {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground" style={{ fontSize: "14px" }}>
-                  No data yet
+                <div className="flex flex-col items-center justify-center h-full text-center px-4">
+                  <div className="text-3xl mb-3">🥧</div>
+                  <div className="text-white font-medium mb-1" style={{ fontSize: "17px" }}>
+                    {t("profile.noFormatTitle")}
+                  </div>
+                  <div className="text-muted-foreground" style={{ fontSize: "14px" }}>
+                    {t("profile.noFormatHint")}
+                  </div>
                 </div>
               )}
             </div>

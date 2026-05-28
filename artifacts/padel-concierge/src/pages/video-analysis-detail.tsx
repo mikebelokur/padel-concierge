@@ -37,52 +37,94 @@ export default function VideoAnalysisDetail() {
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <h4 className="font-serif text-lg mb-4 text-green-400">{t("videoAnalysisDetail.strengths")}</h4>
-              <ul className="space-y-2">
-                {report.strengths?.map((s: string, i: number) => (
-                  <li key={i} className="flex gap-2 text-sm"><span className="text-green-500">•</span> <span>{s}</span></li>
-                ))}
-              </ul>
+              {report.strengths?.length ? (
+                <ul className="space-y-2">
+                  {report.strengths.map((s: string, i: number) => (
+                    <li key={i} className="flex gap-2 text-sm"><span className="text-green-500">•</span> <span>{s}</span></li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-sm text-muted-foreground italic">{t("videoAnalysisDetail.emptyStrengths")}</div>
+              )}
             </div>
             <div>
               <h4 className="font-serif text-lg mb-4 text-red-400">{t("videoAnalysisDetail.keyErrors")}</h4>
-              <ul className="space-y-2">
-                {report.keyErrors?.map((s: string, i: number) => (
-                  <li key={i} className="flex gap-2 text-sm"><span className="text-red-500">•</span> <span>{s}</span></li>
-                ))}
-              </ul>
+              {report.keyErrors?.length ? (
+                <ul className="space-y-2">
+                  {report.keyErrors.map((s: string, i: number) => (
+                    <li key={i} className="flex gap-2 text-sm"><span className="text-red-500">•</span> <span>{s}</span></li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-sm text-muted-foreground italic">{t("videoAnalysisDetail.emptyKeyErrors")}</div>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
+        {(() => {
+          const metrics = [
             { label: t("videoAnalysisDetail.metricDecision"), val: report.decisionQuality },
             { label: t("videoAnalysisDetail.metricPositioning"), val: report.positioning },
             { label: t("videoAnalysisDetail.metricShot"), val: report.shotSelection },
             { label: t("videoAnalysisDetail.metricTempo"), val: report.tempoConsistency },
-          ].map((metric, i) => (
-            <div key={i} className="rounded-[20px] bg-card border border-white/5 text-center p-6">
-              <div className="text-4xl font-mono text-accent mb-2">{metric.val}%</div>
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">{metric.label}</div>
+          ];
+          const hasMetrics = metrics.some(m => typeof m.val === "number" && m.val > 0);
+          return hasMetrics ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {metrics.map((metric, i) => (
+                <div key={i} className="rounded-[20px] bg-card border border-white/5 text-center p-6">
+                  <div className="text-4xl font-mono text-accent mb-2">{metric.val ?? 0}%</div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wider">{metric.label}</div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          ) : (
+            <div
+              className="rounded-[20px] p-10 text-center"
+              style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.07)" }}
+            >
+              <div className="text-3xl mb-3">📊</div>
+              <div className="text-white font-medium mb-1" style={{ fontSize: "17px" }}>
+                {t("videoAnalysisDetail.emptyMetricsTitle")}
+              </div>
+              <div className="text-muted-foreground" style={{ fontSize: "14px" }}>
+                {t("videoAnalysisDetail.emptyMetricsHint")}
+              </div>
+            </div>
+          );
+        })()}
 
         <div className="rounded-[20px] bg-card border border-white/5">
           <div className="px-6 pt-5 pb-3">
             <div className="text-base font-medium">{t("videoAnalysisDetail.actionPlan")}</div>
           </div>
           <div className="px-6 pb-6">
-            <div className="space-y-4">
-              {report.actionPlan?.map((step: string, i: number) => (
-                <div key={i} className="flex gap-4 items-start p-4 rounded-lg bg-background border border-white/5">
-                  <div className="w-8 h-8 rounded-full bg-primary/20 flex-shrink-0 flex items-center justify-center font-mono text-primary text-sm">
-                    {i + 1}
+            {report.actionPlan?.length ? (
+              <div className="space-y-4">
+                {report.actionPlan.map((step: string, i: number) => (
+                  <div key={i} className="flex gap-4 items-start p-4 rounded-lg bg-background border border-white/5">
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex-shrink-0 flex items-center justify-center font-mono text-primary text-sm">
+                      {i + 1}
+                    </div>
+                    <div className="pt-1 text-sm">{step}</div>
                   </div>
-                  <div className="pt-1 text-sm">{step}</div>
+                ))}
+              </div>
+            ) : (
+              <div
+                className="rounded-[16px] p-8 text-center"
+                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+              >
+                <div className="text-3xl mb-3">🗒️</div>
+                <div className="text-white font-medium mb-1" style={{ fontSize: "17px" }}>
+                  {t("videoAnalysisDetail.emptyActionPlanTitle")}
                 </div>
-              ))}
-            </div>
+                <div className="text-muted-foreground" style={{ fontSize: "14px" }}>
+                  {t("videoAnalysisDetail.emptyActionPlanHint")}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

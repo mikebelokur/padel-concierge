@@ -294,7 +294,18 @@ export default function PlayerProfilePage() {
             {bookingsLoading ? (
               <div className="text-sm text-muted-foreground animate-pulse">{t("playerProfile.loadingMatches")}</div>
             ) : recentMatches.length === 0 ? (
-              <div className="text-sm text-muted-foreground italic">{t("playerProfile.noMatches")}</div>
+              <div
+                className="rounded-[20px] p-10 text-center"
+                style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.07)" }}
+              >
+                <div className="text-3xl mb-3">🎾</div>
+                <div className="text-white font-medium mb-1" style={{ fontSize: "17px" }}>
+                  {t("playerProfileExtras.noMatchesTitle")}
+                </div>
+                <div className="text-muted-foreground" style={{ fontSize: "14px" }}>
+                  {t("playerProfileExtras.noMatchesHint")}
+                </div>
+              </div>
             ) : (
               <div className="space-y-2">
                 {recentMatches.map((booking) => {

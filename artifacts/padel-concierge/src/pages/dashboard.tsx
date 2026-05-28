@@ -202,9 +202,18 @@ export default function Dashboard() {
 
             {upcoming.length === 0 ? (
               <div>
-                <p className="text-muted-foreground mb-4" style={{ fontSize: "15px" }}>
-                  {t("dashboard.noUpcomingMatches")}
-                </p>
+                <div
+                  className="rounded-[20px] p-6 text-center mb-3"
+                  style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+                >
+                  <div className="text-3xl mb-3">🎾</div>
+                  <div className="text-white font-medium mb-1" style={{ fontSize: "17px" }}>
+                    {t("dashboard.noUpcomingTitle")}
+                  </div>
+                  <div className="text-muted-foreground" style={{ fontSize: "14px" }}>
+                    {t("dashboard.noUpcomingHint")}
+                  </div>
+                </div>
                 <Link href="/matches/suggest">
                   <button
                     className="w-full rounded-[12px] border border-white/12 text-white/70 font-medium transition-all hover:border-white/20 hover:text-white"

@@ -206,6 +206,8 @@
     "videoAnalysis": "Video Analysis",
     "upcomingMatches": "Upcoming Sessions",
     "noUpcomingMatches": "No upcoming sessions",
+    "noUpcomingTitle": "No upcoming sessions",
+    "noUpcomingHint": "Find a partner and your next match will show up here.",
     "recentActivity": "Recent Activity",
     "retake": "Retake",
     "takeQuiz": "Take Quiz",
@@ -294,7 +296,11 @@
     "winTrend": "Win Trend (Last 30 Days)",
     "formatBreakdown": "Format Breakdown",
     "archetypeMatch": "Match",
-    "warmupBadge": "🔥 Warm-up"
+    "warmupBadge": "🔥 Warm-up",
+    "noWinTrendTitle": "No match history yet",
+    "noWinTrendHint": "Play your first matches to see your win trend.",
+    "noFormatTitle": "No formats played yet",
+    "noFormatHint": "Your format breakdown shows up after a few matches."
   },
   "settings": {
     "title": "Settings",
@@ -658,6 +664,8 @@
     "subtitle": "Your upcoming and past matches.",
     "emptyTitle": "No bookings yet",
     "emptyHint": "Join a match to see your bookings here.",
+    "emptyPastTitle": "No past matches yet",
+    "emptyPastHint": "Your match history will appear here after you play.",
     "findMatch": "Find a Match",
     "upcoming": "Upcoming",
     "past": "Past",
@@ -1107,6 +1115,21 @@
     "metricDecision": "Decision Quality",
     "metricPositioning": "Positioning",
     "metricShot": "Shot Selection",
-    "metricTempo": "Tempo Consistency"
+    "metricTempo": "Tempo Consistency",
+    "emptyMetricsTitle": "No metrics yet",
+    "emptyMetricsHint": "The coach is still scoring this report — check back soon.",
+    "emptyStrengths": "No strengths captured yet.",
+    "emptyKeyErrors": "No key errors captured yet.",
+    "emptyActionPlanTitle": "No action plan yet",
+    "emptyActionPlanHint": "Your coach hasn't added next steps to this report."
+  },
+  "matchFeedback": {
+    "emptyTitle": "No players to review",
+    "emptyHint": "We couldn't find any teammates on this match yet.",
+    "backToMatches": "← Back to matches"
+  },
+  "playerProfileExtras": {
+    "noMatchesTitle": "No matches yet",
+    "noMatchesHint": "Once they play their first match, you'll see it here."
   }
 }

@@ -1,0 +1,182 @@
+Big multi-task build. Plan in Plan mode, break into sequenced subtasks,
+verify each before next. Build in background.
+
+GOAL: Enable Alexander as a limited organizer-admin who can enter live 
+club data and 2-week court availability in a Booking.com-style system. 
+Player tier gets richer profile and progress tracking. Misha (developer) 
+gets a roadmap visualizer to see the full architecture.
+
+==========================================
+TASK 1 — Organizer mode-flag for Alexander
+==========================================
+
+Extend the mode system:
+- Add column users.mode_organizer boolean default false
+- Update mode-switcher UI to include "Организатор" option when 
+  mode_organizer=true
+- Update route guards to recognize organizer tier
+
+Organizer tier sees:
+- /admin/clubs (full edit)
+- /admin/courts (full edit)
+- /admin/availability (full edit — see Task 3)
+- /admin/tournaments (placeholder — for future Q4)
+- Their own player profile (as a regular user)
+
+Organizer tier does NOT see:
+- /admin/users (user management)
+- /admin/finance (any financial data)
+- Misha's coaching client list
+- Developer experiments
+
+Seed: create Alexander as a user with mode_organizer=true, mode_player=true.
+Misha will give Alexander credentials separately.
+
+==========================================
+TASK 2 — Booking.com-style club profiles
+==========================================
+
+Extend clubs table:
+- id, name, slug, logo_url, cover_photo_url
+- gallery_urls (JSON array)
+- description_ru, description_en
+- address, area (Dubai district), lat, lng
+- phone (E.164), whatsapp, website, instagram
+- tier (premium / standard / community)
+- amenities (JSON: parking, showers, cafe, pro_shop, indoor, outdoor, 
+  rental_rackets, coaching_available)
+- court_count, surface_type, price_range_min, price_range_max
+- opening_hours (JSON: per weekday open/close)
+- active boolean, created_at, updated_at
+
+Admin UI /admin/clubs (admin OR organizer mode, mobile-first):
+- List view: all clubs with logo, name, area, tier, court count
+- Add/Edit form sections (Booking.com style):
+  · Basic info (name, area, tier)
+  · Photos (logo + cover + gallery upload)
+  · Contact (phone, whatsapp, website, instagram)
+  · Location (address + map pin)
+  · Amenities (checkboxes)
+  · Courts (count, surface, price range)
+  · Hours (per-day open/close)
+
+Seed 5 premium clubs (Alexander fills exact details later):
+- Padel Edition, Padel 700, Padel 360, Padel One, Pause Padel
+Mark tier='premium', leave fields as placeholders.
+
+Player-facing /clubs page:
+- Browse by area, filter by tier
+- Card: logo, photo, name, area, tap for detail
+- Detail: full profile, map, phone (tap-to-call), hours, 
+  "Доступные слоты" section (filled in Task 3)
+
+==========================================
+TASK 3 — Two-week court availability grid
+==========================================
+
+Create courts table linked to clubs:
+- id, club_id FK, court_number, name, surface, indoor, active
+
+Create court_availability table:
+- id, court_id FK, date, start_time, end_time
+- status (available / interest_logged / booked / blocked)
+- price_aed, level_suitability (D-/D/D+/C-/C/C+/B-/any)
+- added_by (user id), notes, created_at
+
+Admin UI /admin/availability (mobile-first, daily operational tool):
+- Pick club → see all its courts
+- Calendar strip showing next 14 days
+- Tap a day → grid of time slots per court
+- Tap empty slot → mark "available" with price (quick entry)
+- Tap available slot → toggle to "booked" or "blocked"
+- Bulk actions (CRITICAL for Alexander's speed):
+  · "Copy this day's slots to next week"
+  · "Mark all 18:00-22:00 available for all courts this week"
+  · "Block this weekend across club"
+- Visual: available=green, interest_logged=amber, booked=gray, blocked=red
+
+Speed-optimized — Alexander enters dozens of slots daily. Under 60 sec 
+per evening of slots.
+
+Player-facing on club detail page:
+- "Свободные слоты" section, next 14 days
+- Filter by date, time of day, price, level
+- Player taps available slot → "Интересно" button → 
+  sends Misha+Alexander notification "Игрок X заинтересован в слоте Y"
+- Slot status changes to interest_logged
+- Misha/Alexander coordinates booking with club, marks slot booked
+
+NO auto-booking. NO auto-matching. Human curation only at this stage.
+
+==========================================
+TASK 4 — Personal progress metrics for players
+==========================================
+
+After every confirmed match or group training, optionally prompt player:
+"Что ты хочешь зафиксировать после игры?"
+
+Player picks 0-3 metrics from a curated list, OR writes their own custom:
+- Серия побед
+- Процент выигранных розыгрышей у сетки
+- Матчи без unforced errors
+- Стабильность подачи
+- Количество удачных bandejas
+- Количество удачных víboras
+- Время реакции на mid-court
+- Партнёрская синергия (1-10 self-rated)
+- Уровень удовольствия от матча (1-10)
+- [+ Custom: свободный текст]
+
+Schema:
+- player_metrics table: id, user_id, match_id (nullable), metric_name, 
+  value (numeric), notes, recorded_at
+- player_metric_preferences table: id, user_id, metric_name, active boolean
+
+Player profile gets new "Мои метрики" section:
+- Shows last 30 days of tracked metrics
+- Simple line/bar charts per metric
+- "Что меня делает гордым" — pinned metric, prominently displayed
+
+Russian UI. Mobile-first. Optional (player can skip the post-match prompt).
+
+==========================================
+TASK 5 — Calendar export (.ics)
+==========================================
+
+For every confirmed session (group training, 1:1 coaching, match):
+- Show "Добавить в календарь" button on the session detail page
+- Generate .ics file with: title, date/time in Dubai TZ, location 
+  (pull from clubs table: name + address), duration, description
+- One tap opens it in Apple/Google/Outlook calendar
+- Works universally, no OAuth needed
+
+Russian UI on the button.
+
+==========================================
+TASK 6 — Roadmap visualizer (developer view)
+==========================================
+
+Internal page at /dev/roadmap (developer mode only) showing:
+- All 4 audience tiers (Developer, Admin, Coach, Player) as cards
+- For each tier: list of routes/features assigned, status (shipped/
+  partial/dev_only), recent activity
+- Communication lines diagram: arrows between tiers showing data flow
+- Future audiences (Organizers Q4 2026, Clubs 2027) as dotted boxes
+- Live counts: total users per role, sessions this week, slots logged
+
+This is Misha's "single pane of glass" to see the whole product 
+architecture. Read-only dashboard, no edits.
+
+==========================================
+EXECUTION
+==========================================
+
+Order: Task 1 → 2 → 3 → 4 → 5 → 6.
+Tasks 1-3 are the critical path. Tasks 4-5 polish player experience. 
+Task 6 is Misha's visibility tool.
+
+If blocked on any task, log "BLOCKED on Task N: [reason]" and skip 
+to next.
+
+After all tasks: schema drift audit, restart API, end-of-run report 
+covering what shipped per task, blockers, open questions.

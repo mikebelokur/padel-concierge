@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, matchRequestsTable, usersTable, activityLogsTable, matchesTable } from "@workspace/db";
 import { and, eq, gt, or } from "drizzle-orm";
 import { requireAuth } from "../middleware/auth";
+import { sendPushToUser } from "../lib/push";
 
 const router: IRouter = Router();
 router.use(requireAuth);
@@ -98,6 +99,13 @@ router.post("/match-requests", async (req, res): Promise<void> => {
     },
   ]);
 
+  void sendPushToUser(to.id, {
+    title: "New match request",
+    body: `${from.name} wants to play${proposedDate ? ` on ${proposedDate}` : ""}`,
+    url: "/match-requests",
+    tag: `match-req-${request.id}`,
+  });
+
   res.status(201).json(await formatRequest(request));
 });
 
@@ -185,6 +193,24 @@ router.patch("/match-requests/:id", async (req, res): Promise<void> => {
       action: `match_request_${status}`,
       details: `${status === "accepted" ? "Accepted" : "Declined"} match request from ${fromUser.name}`,
     });
+  }
+
+  if (fromUser && toUser) {
+    if (status === "accepted" || status === "declined") {
+      void sendPushToUser(fromUser.id, {
+        title: status === "accepted" ? "Match request accepted" : "Match request declined",
+        body: `${toUser.name} ${status} your match request${existing.proposedDate ? ` for ${existing.proposedDate}` : ""}`,
+        url: "/match-requests",
+        tag: `match-req-${request.id}-${status}`,
+      });
+    } else if (status === "cancelled") {
+      void sendPushToUser(toUser.id, {
+        title: "Match request cancelled",
+        body: `${fromUser.name} cancelled their match request`,
+        url: "/match-requests",
+        tag: `match-req-${request.id}-cancelled`,
+      });
+    }
   }
 
   res.json(await formatRequest(request));

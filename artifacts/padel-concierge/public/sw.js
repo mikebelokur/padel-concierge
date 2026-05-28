@@ -28,3 +28,41 @@ self.addEventListener("fetch", (e) => {
     }).catch(() => cached))
   );
 });
+
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { title: "Padel Concierge", body: event.data ? event.data.text() : "" };
+  }
+  const title = data.title || "Padel Concierge";
+  const options = {
+    body: data.body || "",
+    icon: "/icons/icon-192.png",
+    badge: "/icons/icon-192.png",
+    tag: data.tag,
+    data: { url: data.url || "/" },
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || "/";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      for (const c of clients) {
+        try {
+          const u = new URL(c.url);
+          if (u.origin === self.location.origin) {
+            c.focus();
+            if ("navigate" in c) return c.navigate(targetUrl);
+            return c.postMessage({ type: "navigate", url: targetUrl });
+          }
+        } catch {}
+      }
+      return self.clients.openWindow(targetUrl);
+    })
+  );
+});

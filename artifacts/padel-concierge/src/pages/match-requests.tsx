@@ -10,6 +10,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/api";
+import { recordMatchInteraction } from "@/lib/push";
+import { triggerPushPrompt } from "@/components/PushOptInPrompt";
 import { cn } from "@/lib/utils";
 import { ARCHETYPE_META, archetypeCompatibility, type Archetype } from "@/lib/archetypes";
 import { ReliabilityDot, CompatBadge } from "@/components/ReliabilityBadge";
@@ -389,6 +391,7 @@ export default function MatchRequests() {
       }
       qc.invalidateQueries({ queryKey: ["match-requests"] });
       qc.invalidateQueries({ queryKey: ["match"] });
+      if (vars.status === "accepted" && recordMatchInteraction()) triggerPushPrompt();
     },
   });
 
@@ -412,6 +415,7 @@ export default function MatchRequests() {
       setShowSend(false);
       setSelectedPlayer(null);
       setMessage(""); setProposedDate(""); setProposedTime("");
+      if (recordMatchInteraction()) triggerPushPrompt();
     },
     onError: (e: unknown) => toast({ title: t("matchRequests.toasts.error"), description: translateError(e, lang).message, variant: "destructive" }),
   });

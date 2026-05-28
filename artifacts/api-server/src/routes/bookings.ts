@@ -5,6 +5,7 @@ import { CreateBookingBody, UpdateBookingBody, ListBookingsQueryParams, ConfirmP
 import { formatMatch } from "./matches";
 import { logger } from "../lib/logger";
 import { requireAuth } from "../middleware/auth";
+import { sendPushToUser } from "../lib/push";
 
 const router: IRouter = Router();
 router.use(requireAuth);
@@ -117,6 +118,13 @@ router.patch("/bookings/:id", async (req, res): Promise<void> => {
         action: "booking_cancelled",
         details: `Cancelled booking #${booking.id}`,
       });
+      const [m] = await db.select().from(matchesTable).where(eq(matchesTable.id, booking.matchId));
+      void sendPushToUser(booking.userId, {
+        title: "Booking cancelled",
+        body: m ? `Your booking at ${m.clubName} on ${m.date} was cancelled` : "Your booking was cancelled",
+        url: "/bookings",
+        tag: `booking-${booking.id}-cancelled`,
+      });
     }
   }
 
@@ -211,6 +219,12 @@ router.post("/bookings/:id/confirm-payment", async (req, res): Promise<void> => 
       userName: user.name,
       action: "payment_completed",
       details: `Paid 120 AED for match at ${match.clubName}`,
+    });
+    void sendPushToUser(booking.userId, {
+      title: "Booking confirmed",
+      body: `${match.clubName} · ${match.date} ${match.time}`,
+      url: "/bookings",
+      tag: `booking-${booking.id}-confirmed`,
     });
   }
 

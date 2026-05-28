@@ -204,6 +204,22 @@ function ClubSlotsSection({ clubId }: { clubId: number }) {
       }),
   });
 
+  const bookMutation = useMutation({
+    mutationFn: (slotId: number) =>
+      apiFetch(`/slots/${slotId}/book`, { method: "POST" }),
+    onSuccess: () => {
+      toast({ title: t("clubDetail.bookedToast") });
+      qc.invalidateQueries({ queryKey: key });
+      qc.invalidateQueries({ queryKey: ["bookings"] });
+    },
+    onError: (e) =>
+      toast({
+        title: t("common.error"),
+        description: translateError(e).message,
+        variant: "destructive",
+      }),
+  });
+
   const grouped = slots.reduce<Record<string, ClubSlot[]>>((acc, s) => {
     (acc[s.date] ||= []).push(s);
     return acc;
@@ -237,6 +253,7 @@ function ClubSlotsSection({ clubId }: { clubId: number }) {
               <ul className="space-y-2">
                 {grouped[d].map((s) => {
                   const alreadyInterested = !!user && s.interestedUserIds.includes(user.id);
+                  const isTaken = s.status === "taken";
                   return (
                     <li
                       key={s.id}
@@ -257,20 +274,38 @@ function ClubSlotsSection({ clubId }: { clubId: number }) {
                           {s.notes && <span>· {s.notes}</span>}
                         </div>
                       </div>
-                      <button
-                        onClick={() => !alreadyInterested && interestMutation.mutate(s.id)}
-                        disabled={alreadyInterested || interestMutation.isPending}
-                        className={
-                          alreadyInterested
-                            ? "rounded-lg border border-white/10 text-muted-foreground text-xs px-3 py-2"
-                            : "rounded-lg bg-primary text-black font-semibold text-xs px-3 py-2 hover:bg-primary/90 disabled:opacity-60"
-                        }
-                        style={{ minHeight: "36px" }}
-                      >
-                        {alreadyInterested
-                          ? t("clubDetail.interestedDone")
-                          : t("clubDetail.interested")}
-                      </button>
+                      <div className="flex flex-col gap-1.5 shrink-0">
+                        {isTaken ? (
+                          <span className="rounded-lg border border-white/10 text-muted-foreground text-xs px-3 py-2 text-center">
+                            {t("clubDetail.taken")}
+                          </span>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => bookMutation.mutate(s.id)}
+                              disabled={bookMutation.isPending}
+                              className="rounded-lg bg-primary text-black font-semibold text-xs px-3 py-2 hover:bg-primary/90 disabled:opacity-60"
+                              style={{ minHeight: "36px" }}
+                            >
+                              {bookMutation.isPending ? t("common.loading") : t("clubDetail.book")}
+                            </button>
+                            <button
+                              onClick={() => !alreadyInterested && interestMutation.mutate(s.id)}
+                              disabled={alreadyInterested || interestMutation.isPending}
+                              className={
+                                alreadyInterested
+                                  ? "rounded-lg border border-white/10 text-muted-foreground text-xs px-3 py-2"
+                                  : "rounded-lg border border-white/10 text-foreground/80 text-xs px-3 py-2 hover:border-primary/40 disabled:opacity-60"
+                              }
+                              style={{ minHeight: "36px" }}
+                            >
+                              {alreadyInterested
+                                ? t("clubDetail.interestedDone")
+                                : t("clubDetail.interested")}
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </li>
                   );
                 })}

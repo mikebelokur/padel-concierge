@@ -79,7 +79,10 @@
     "court": "Корт",
     "interested": "Интересно",
     "interestedDone": "Вы записались",
-    "interestRegistered": "Миша получил уведомление"
+    "interestRegistered": "Миша получил уведомление",
+    "book": "Забронировать",
+    "bookedToast": "Слот забронирован — смотри Бронирования",
+    "taken": "Забронировано"
   },
   "adminSlots": {
     "title": "Ручные слоты",

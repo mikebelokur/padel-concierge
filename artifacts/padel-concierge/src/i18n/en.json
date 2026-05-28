@@ -79,7 +79,10 @@
     "court": "Court",
     "interested": "Interested",
     "interestedDone": "You're on the list",
-    "interestRegistered": "Misha has been notified"
+    "interestRegistered": "Misha has been notified",
+    "book": "Book",
+    "bookedToast": "Slot booked — see Bookings",
+    "taken": "Booked"
   },
   "adminSlots": {
     "title": "Manual Slots",

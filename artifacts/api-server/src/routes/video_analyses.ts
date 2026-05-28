@@ -58,6 +58,7 @@ router.post("/video-analysis", async (req, res): Promise<void> => {
       userName: user.name,
       action: "video_uploaded",
       details: `Uploaded video for analysis (${parsed.data.playerShirtColor} shirt)`,
+      detailsParams: { shirtColor: parsed.data.playerShirtColor },
     });
   }
 
@@ -100,6 +101,7 @@ router.patch("/video-analysis/:id", async (req, res): Promise<void> => {
         userName: user.name,
         action: "analysis_delivered",
         details: `Video analysis delivered in ${responseTime?.toFixed(1)}h`,
+        detailsParams: { hours: Number(responseTime?.toFixed(1) ?? 0) },
       });
     }
   }

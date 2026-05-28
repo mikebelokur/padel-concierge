@@ -287,6 +287,12 @@ router.patch("/players/:id/profile/flags", async (req, res): Promise<void> => {
     userName: "Coach",
     action: "profile_flags_updated",
     details: `Player ${id} (${entity.kind}): flags=${JSON.stringify(responsePayload.behavioralFlags)}, score=${responsePayload.reliabilityScore}`,
+    detailsParams: {
+      playerId: id,
+      kind: entity.kind,
+      flags: responsePayload.behavioralFlags,
+      score: responsePayload.reliabilityScore,
+    },
   });
 
   res.json(responsePayload);
@@ -360,6 +366,7 @@ router.patch("/users/:id/availability", async (req, res): Promise<void> => {
     userName: user.name,
     action: "updated_availability",
     details: null,
+    detailsParams: {},
   });
 
   res.json(formatUser(user));
@@ -418,6 +425,7 @@ router.post("/users/:id/archetype", async (req, res): Promise<void> => {
     userName: user.name,
     action: "archetype_set",
     details: `Архетип: ${archetype}${warmUpPreference ? " · предпочитает разминку" : ""}`,
+    detailsParams: { archetype, warmUpPreference: !!warmUpPreference },
   });
 
   res.json(formatUser(user));
@@ -437,6 +445,7 @@ router.post("/users/:id/verify", async (req, res): Promise<void> => {
     userName: user.name,
     action: "verified",
     details: "Player verified by coach",
+    detailsParams: {},
   });
 
   res.json(formatUser(user));

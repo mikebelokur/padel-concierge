@@ -314,6 +314,12 @@ export interface PlayerStats {
   frequentPartners: FrequentPartner[];
 }
 
+/**
+ * Language-neutral params for client-side i18n rendering. Key is `activityLog.<action>`.
+ * @nullable
+ */
+export type ActivityLogDetailsParams = { [key: string]: unknown } | null;
+
 export interface ActivityLog {
   id: number;
   userId: number;
@@ -321,6 +327,11 @@ export interface ActivityLog {
   action: string;
   /** @nullable */
   details?: string | null;
+  /**
+   * Language-neutral params for client-side i18n rendering. Key is `activityLog.<action>`.
+   * @nullable
+   */
+  detailsParams?: ActivityLogDetailsParams;
   createdAt: string;
 }
 

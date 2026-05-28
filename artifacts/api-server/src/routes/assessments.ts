@@ -65,6 +65,7 @@ router.post("/assessments", async (req, res): Promise<void> => {
     userName: user.name,
     action: "assessment_completed",
     details: `Skill assessment completed — WPT level ${computedLevel}`,
+    detailsParams: { level: computedLevel },
   });
 
   res.status(201).json({

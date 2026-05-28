@@ -125,6 +125,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     userName: user.name,
     action: "registered",
     details: `New ${user.role} registered`,
+    detailsParams: { role: user.role },
   });
 
   const token = generateToken(user.id, user.role);
@@ -181,7 +182,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   }
 
   await db.update(usersTable).set({ lastLogin: new Date(), isOnline: true, lastActive: new Date() }).where(eq(usersTable.id, user.id));
-  await db.insert(activityLogsTable).values({ userId: user.id, userName: user.name, action: "logged_in", details: null });
+  await db.insert(activityLogsTable).values({ userId: user.id, userName: user.name, action: "logged_in", details: null, detailsParams: {} });
 
   const token = generateToken(user.id, user.role);
   res.json({ token, user: formatUser({ ...user, lastLogin: new Date(), isOnline: true }) });

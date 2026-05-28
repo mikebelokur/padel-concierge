@@ -82,6 +82,7 @@ router.put("/admin/users/:id/level", async (req, res): Promise<void> => {
     userName: user.name,
     action: "level_updated",
     details: `Level manually set to ${level} by admin`,
+    detailsParams: { level },
   });
 
   res.json(formatUser(user));
@@ -129,6 +130,7 @@ router.patch("/admin/users/:id/user-type", async (req, res): Promise<void> => {
     userName: user.name,
     action: "user_type_changed",
     details: `User type set to ${userType} by admin`,
+    detailsParams: { userType },
   });
 
   res.json(formatUser(user));
@@ -344,6 +346,7 @@ router.post("/admin/users", async (req, res): Promise<void> => {
     userName: user.name,
     action: "user_invited",
     details: `Invited by ${auth.role} ${auth.userId} as ${finalRole}`,
+    detailsParams: { role: finalRole, invitedBy: auth.role, invitedById: auth.userId },
   });
 
   const appUrl = process.env.APP_URL

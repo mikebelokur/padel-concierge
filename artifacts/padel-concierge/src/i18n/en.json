@@ -544,12 +544,30 @@
       "wrong": "💡 In padel, rushing a shot is more often a mistake than a solution.",
       "wrongExplanation": "patience and timing"
     },
-    "lq2": { "text": "After a wall shot — should you immediately take position at the net?", "wrongExplanation": "positioning after the wall" },
-    "lq3": { "text": "When your partner makes a mistake — is it better to immediately tell them what they did wrong?", "wrongExplanation": "team psychology" },
-    "lq4": { "text": "A full-power smash — always the best choice when the ball is high?", "wrongExplanation": "smash tactics" },
-    "lq5": { "text": "Three mistakes in a row is normal — no need to change your whole game plan?", "wrongExplanation": "consistency and mental resilience" },
-    "lq6": { "text": "Court position is more important than shot power?", "wrongExplanation": "positioning over power" },
-    "lq7": { "text": "Against weak opponents you can relax and stop thinking about tactics?", "wrongExplanation": "focus against any opponent" }
+    "lq2": {
+      "text": "After a wall shot — should you immediately take position at the net?",
+      "wrongExplanation": "positioning after the wall"
+    },
+    "lq3": {
+      "text": "When your partner makes a mistake — is it better to immediately tell them what they did wrong?",
+      "wrongExplanation": "team psychology"
+    },
+    "lq4": {
+      "text": "A full-power smash — always the best choice when the ball is high?",
+      "wrongExplanation": "smash tactics"
+    },
+    "lq5": {
+      "text": "Three mistakes in a row is normal — no need to change your whole game plan?",
+      "wrongExplanation": "consistency and mental resilience"
+    },
+    "lq6": {
+      "text": "Court position is more important than shot power?",
+      "wrongExplanation": "positioning over power"
+    },
+    "lq7": {
+      "text": "Against weak opponents you can relax and stop thinking about tactics?",
+      "wrongExplanation": "focus against any opponent"
+    }
   },
   "levelQuizResult": {
     "yourLevel": "Your level",
@@ -612,16 +630,46 @@
     "continueBtn": "Continue →",
     "yes": "✓  Yes",
     "no": "✗  No",
-    "q1": { "label": "Goal", "text": "Why did you start playing padel?" },
-    "q2": { "label": "Motivation", "text": "What matters more to you on the court?" },
-    "q3": { "label": "Ideal", "text": "What does your ideal game look like?" },
-    "q4": { "label": "Shot", "text": "When the ball is coming at you — is it better to wait for the right moment and then strike?" },
-    "q5": { "label": "Wall", "text": "After a bounce off the wall — should you immediately take position at the net?" },
-    "q6": { "label": "Partner", "text": "When your partner makes a mistake — is it better to immediately tell them what they did wrong?" },
-    "q7": { "label": "Smash", "text": "A full-power smash — always the best choice when the ball is high?" },
-    "q8": { "label": "Mindset", "text": "Three mistakes in a row — it's normal, no need to change the whole game plan?" },
-    "q9": { "label": "Position", "text": "Court position is more important than shot power?" },
-    "q10": { "label": "Strategy", "text": "Against weak opponents you can relax and not think about tactics?" },
+    "q1": {
+      "label": "Goal",
+      "text": "Why did you start playing padel?"
+    },
+    "q2": {
+      "label": "Motivation",
+      "text": "What matters more to you on the court?"
+    },
+    "q3": {
+      "label": "Ideal",
+      "text": "What does your ideal game look like?"
+    },
+    "q4": {
+      "label": "Shot",
+      "text": "When the ball is coming at you — is it better to wait for the right moment and then strike?"
+    },
+    "q5": {
+      "label": "Wall",
+      "text": "After a bounce off the wall — should you immediately take position at the net?"
+    },
+    "q6": {
+      "label": "Partner",
+      "text": "When your partner makes a mistake — is it better to immediately tell them what they did wrong?"
+    },
+    "q7": {
+      "label": "Smash",
+      "text": "A full-power smash — always the best choice when the ball is high?"
+    },
+    "q8": {
+      "label": "Mindset",
+      "text": "Three mistakes in a row — it's normal, no need to change the whole game plan?"
+    },
+    "q9": {
+      "label": "Position",
+      "text": "Court position is more important than shot power?"
+    },
+    "q10": {
+      "label": "Strategy",
+      "text": "Against weak opponents you can relax and not think about tactics?"
+    },
     "q1Options": [
       "Friends invited me — I loved it",
       "Saw it on Instagram and wanted to try",
@@ -691,16 +739,79 @@
       "lv45": "Near-professional level. You dominate most amateur games.",
       "lv50": "Professional or near-professional standard. Exceptional all-round game."
     },
-    "q1": { "text": "How long have you been playing padel?", "opt0": "Less than 6 months", "opt1": "6–12 months", "opt2": "1–3 years", "opt3": "3–5 years", "opt4": "5+ years" },
-    "q2": { "text": "How often do you play per week?", "opt0": "Less than once a week", "opt1": "Once a week", "opt2": "2–3 times a week", "opt3": "4–5 times a week", "opt4": "Daily or more" },
-    "q3": { "text": "Have you participated in padel tournaments?", "opt0": "Never", "opt1": "Local / club tournaments", "opt2": "Regional competitions", "opt3": "National events", "opt4": "International / WPT events" },
-    "q4": { "text": "How consistent is your forehand drive?", "opt0": "I'm still learning it", "opt1": "I can do it but it's inconsistent", "opt2": "Reliable in normal rallies", "opt3": "Controlled with power & direction" },
-    "q5": { "text": "How confident are you with your backhand?", "opt0": "Very uncomfortable", "opt1": "Basic slice only", "opt2": "Consistent slice and drive", "opt3": "Advanced — slice, drive, and counter" },
-    "q6": { "text": "Rate your net volley control:", "opt0": "I avoid the net", "opt1": "Comfortable with basic volleys", "opt2": "Good volley placement", "opt3": "Aggressive, precise volleys under pressure" },
-    "q7": { "text": "Can you execute a bandeja?", "opt0": "What is a bandeja?", "opt1": "I know it but can't execute it yet", "opt2": "Yes, in open situations", "opt3": "Yes, reliably under pressure" },
-    "q8": { "text": "How do you handle pressure in close matches?", "opt0": "I fall apart under pressure", "opt1": "I get nervous but manage", "opt2": "I stay composed most of the time", "opt3": "I raise my level under pressure" },
-    "q9": { "text": "How would you describe your tactical understanding?", "opt0": "I just try to return the ball", "opt1": "Basic patterns (cross, lob)", "opt2": "I use positions and patterns intentionally", "opt3": "Deep tactical game — control the point structure" },
-    "q10": { "text": "What is your strongest aspect of the game?", "opt0": "I don't have a clear strength yet", "opt1": "Defense — I keep the ball in play", "opt2": "One specific shot (serve, volley, etc.)", "opt3": "All-round — comfortable in all areas" }
+    "q1": {
+      "text": "How long have you been playing padel?",
+      "opt0": "Less than 6 months",
+      "opt1": "6–12 months",
+      "opt2": "1–3 years",
+      "opt3": "3–5 years",
+      "opt4": "5+ years"
+    },
+    "q2": {
+      "text": "How often do you play per week?",
+      "opt0": "Less than once a week",
+      "opt1": "Once a week",
+      "opt2": "2–3 times a week",
+      "opt3": "4–5 times a week",
+      "opt4": "Daily or more"
+    },
+    "q3": {
+      "text": "Have you participated in padel tournaments?",
+      "opt0": "Never",
+      "opt1": "Local / club tournaments",
+      "opt2": "Regional competitions",
+      "opt3": "National events",
+      "opt4": "International / WPT events"
+    },
+    "q4": {
+      "text": "How consistent is your forehand drive?",
+      "opt0": "I'm still learning it",
+      "opt1": "I can do it but it's inconsistent",
+      "opt2": "Reliable in normal rallies",
+      "opt3": "Controlled with power & direction"
+    },
+    "q5": {
+      "text": "How confident are you with your backhand?",
+      "opt0": "Very uncomfortable",
+      "opt1": "Basic slice only",
+      "opt2": "Consistent slice and drive",
+      "opt3": "Advanced — slice, drive, and counter"
+    },
+    "q6": {
+      "text": "Rate your net volley control:",
+      "opt0": "I avoid the net",
+      "opt1": "Comfortable with basic volleys",
+      "opt2": "Good volley placement",
+      "opt3": "Aggressive, precise volleys under pressure"
+    },
+    "q7": {
+      "text": "Can you execute a bandeja?",
+      "opt0": "What is a bandeja?",
+      "opt1": "I know it but can't execute it yet",
+      "opt2": "Yes, in open situations",
+      "opt3": "Yes, reliably under pressure"
+    },
+    "q8": {
+      "text": "How do you handle pressure in close matches?",
+      "opt0": "I fall apart under pressure",
+      "opt1": "I get nervous but manage",
+      "opt2": "I stay composed most of the time",
+      "opt3": "I raise my level under pressure"
+    },
+    "q9": {
+      "text": "How would you describe your tactical understanding?",
+      "opt0": "I just try to return the ball",
+      "opt1": "Basic patterns (cross, lob)",
+      "opt2": "I use positions and patterns intentionally",
+      "opt3": "Deep tactical game — control the point structure"
+    },
+    "q10": {
+      "text": "What is your strongest aspect of the game?",
+      "opt0": "I don't have a clear strength yet",
+      "opt1": "Defense — I keep the ball in play",
+      "opt2": "One specific shot (serve, volley, etc.)",
+      "opt3": "All-round — comfortable in all areas"
+    }
   },
   "matchDetail": {
     "notFound": "Match not found",
@@ -1222,5 +1333,64 @@
   "playerProfileExtras": {
     "noMatchesTitle": "No matches yet",
     "noMatchesHint": "Once they play their first match, you'll see it here."
+  },
+  "activityLog": {
+    "action": {
+      "registered": "registered",
+      "logged_in": "logged in",
+      "match_booked": "booked a match",
+      "match_created": "created a match",
+      "match_scheduled_with": "scheduled a match",
+      "payment_completed": "completed payment",
+      "warmup_completed": "completed warm-up",
+      "verified": "was verified",
+      "video_uploaded": "uploaded a video",
+      "analysis_delivered": "received video analysis",
+      "assessment_completed": "completed assessment",
+      "match_request_sent": "sent a match request",
+      "match_request_received": "received a match request",
+      "match_request_accepted": "accepted a match request",
+      "match_request_declined": "declined a match request",
+      "match_request_cancelled": "cancelled a match request",
+      "court_booked": "booked a court",
+      "updated_availability": "updated availability",
+      "level_updated": "had level updated",
+      "user_type_changed": "had user type changed",
+      "user_invited": "was invited",
+      "profile_flags_updated": "had profile flags updated",
+      "archetype_set": "set archetype",
+      "training_booked": "booked a group training",
+      "training_cancelled_notify": "had a training cancelled",
+      "invite_accepted": "accepted invite"
+    },
+    "details": {
+      "registered": "New {{role}} registered",
+      "logged_in": "",
+      "match_booked": "Booked match at {{clubName}} on {{date}}",
+      "match_created": "Match at {{clubName}} on {{date}}",
+      "match_scheduled_with": "Match scheduled with {{name}} on {{date}}",
+      "payment_completed": "Paid {{amount}} {{currency}} for match at {{clubName}}",
+      "warmup_completed": "Warm-up completed for match #{{matchId}}",
+      "verified": "Player verified by coach",
+      "video_uploaded": "Uploaded video for analysis ({{shirtColor}} shirt)",
+      "analysis_delivered": "Video analysis delivered in {{hours}}h",
+      "assessment_completed": "Skill assessment completed — WPT level {{level}}",
+      "match_request_sent": "Sent match request to {{name}}",
+      "match_request_received": "Received match request from {{name}}",
+      "match_request_accepted": "Accepted match request from {{name}}",
+      "match_request_declined": "Declined match request from {{name}}",
+      "match_request_cancelled": "Cancelled match request",
+      "court_booked": "Booked {{courtName}} on {{date}} at {{startTime}}",
+      "updated_availability": "",
+      "level_updated": "Level manually set to {{level}} by admin",
+      "user_type_changed": "User type set to {{userType}} by admin",
+      "user_invited": "Invited as {{role}} by {{invitedBy}}",
+      "profile_flags_updated": "Player {{playerId}} ({{kind}}): score {{score}}",
+      "archetype_set": "Archetype: {{archetype}}",
+      "booking_cancelled": "Cancelled booking #{{bookingId}}",
+      "training_booked": "Booked group training #{{trainingId}} ({{category}})",
+      "training_cancelled_notify": "Group training #{{trainingId}} ({{category}}, {{courtName}}) was cancelled by the coach",
+      "invite_accepted": "Invited member #{{memberNumber}} activated account"
+    }
   }
 }

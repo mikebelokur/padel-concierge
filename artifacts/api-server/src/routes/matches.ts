@@ -103,6 +103,7 @@ router.post("/matches", async (req, res): Promise<void> => {
       userName: validPlayers[0].name,
       action: "match_created",
       details: `Match at ${clubName} on ${date}`,
+      detailsParams: { clubName, date },
     });
   }
 

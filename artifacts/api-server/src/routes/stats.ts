@@ -123,6 +123,7 @@ router.get("/stats/activity", requireAdminMode, async (req, res): Promise<void> 
     userName: l.userName,
     action: l.action,
     details: l.details ?? null,
+    detailsParams: (l.detailsParams as Record<string, unknown> | null) ?? null,
     createdAt: l.createdAt.toISOString(),
   })).reverse());
 });

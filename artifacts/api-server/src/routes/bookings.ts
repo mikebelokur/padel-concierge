@@ -70,6 +70,7 @@ router.post("/bookings", async (req, res): Promise<void> => {
     userName: user.name,
     action: "match_booked",
     details: `Booked match at ${match.clubName} on ${match.date}`,
+    detailsParams: { clubName: match.clubName, date: match.date },
   });
 
   res.status(201).json(await formatBooking(booking));
@@ -105,6 +106,7 @@ router.patch("/bookings/:id", async (req, res): Promise<void> => {
         userName: user.name,
         action: "warmup_completed",
         details: `Warm-up completed for match #${booking.matchId}`,
+        detailsParams: { matchId: booking.matchId },
       });
     }
   }
@@ -117,6 +119,7 @@ router.patch("/bookings/:id", async (req, res): Promise<void> => {
         userName: user.name,
         action: "booking_cancelled",
         details: `Cancelled booking #${booking.id}`,
+        detailsParams: { bookingId: booking.id },
       });
       const [m] = await db.select().from(matchesTable).where(eq(matchesTable.id, booking.matchId));
       void sendPushToUser(booking.userId, {
@@ -233,6 +236,7 @@ router.post("/bookings/:id/confirm-payment", async (req, res): Promise<void> => 
       userName: user.name,
       action: "payment_completed",
       details: `Paid 120 AED for match at ${match.clubName}`,
+      detailsParams: { amount: 120, currency: "AED", clubName: match.clubName },
     });
     void sendPushToUser(booking.userId, {
       title: {

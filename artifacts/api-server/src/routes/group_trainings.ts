@@ -464,6 +464,11 @@ router.delete("/group-trainings/:id", async (req, res): Promise<void> => {
         userName: a.name,
         action: "training_cancelled_notify",
         details: `Group training ${id} (${existing.category}, ${existing.courtName}) was cancelled by the coach.`,
+        detailsParams: {
+          trainingId: id,
+          category: existing.category,
+          courtName: existing.courtName,
+        },
       })),
     );
 
@@ -658,6 +663,7 @@ router.post("/group-trainings/:id/book", async (req, res): Promise<void> => {
     userName: me.name,
     action: "training_booked",
     details: `Booked group training ${id} (${training.category})`,
+    detailsParams: { trainingId: id, category: training.category },
   });
 
   res.status(201).json(serializeBooking(txResult.booking));

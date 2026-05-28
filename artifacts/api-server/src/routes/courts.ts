@@ -170,6 +170,7 @@ router.post("/court-bookings", async (req, res): Promise<void> => {
       userName: user.name,
       action: "court_booked",
       details: `Booked ${court.name} on ${date} at ${startTime}`,
+      detailsParams: { courtName: court.name, date, startTime },
     });
   }
 

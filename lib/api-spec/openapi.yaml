@@ -1716,6 +1716,10 @@ components:
           type: string
         details:
           type: ["string", "null"]
+        detailsParams:
+          type: ["object", "null"]
+          additionalProperties: true
+          description: Language-neutral params for client-side i18n rendering. Key is `activityLog.<action>`.
         createdAt:
           type: string
       required:

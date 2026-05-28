@@ -15,6 +15,7 @@ interface ActivityLog {
   userName: string;
   action: string;
   details: string | null;
+  detailsParams: Record<string, unknown> | null;
   createdAt: string;
 }
 
@@ -224,16 +225,26 @@ export default function Members() {
                             <span className="font-medium text-sm">{log.userName}</span>
                             <span className="text-muted-foreground text-sm">
                               {" "}
-                              {log.action?.replace(/_/g, " ")}
+                              {t(`activityLog.action.${log.action}`, {
+                                defaultValue: log.action?.replace(/_/g, " "),
+                              })}
                               {" "}
                               <span className="text-base">{ACTION_ICONS[log.action] ?? "•"}</span>
                             </span>
                           </div>
                           <span className="text-xs text-muted-foreground shrink-0">{timeAgo(log.createdAt)}</span>
                         </div>
-                        {log.details && (
-                          <p className="text-xs text-muted-foreground mt-0.5 truncate">{log.details}</p>
-                        )}
+                        {(() => {
+                          const detailText = log.detailsParams
+                            ? t(`activityLog.details.${log.action}`, {
+                                ...(log.detailsParams as Record<string, unknown>),
+                                defaultValue: log.details ?? "",
+                              })
+                            : log.details ?? "";
+                          return detailText ? (
+                            <p className="text-xs text-muted-foreground mt-0.5 truncate">{detailText}</p>
+                          ) : null;
+                        })()}
                       </div>
                     </div>
                   </div>

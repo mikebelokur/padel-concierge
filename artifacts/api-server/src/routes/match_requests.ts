@@ -90,12 +90,14 @@ router.post("/match-requests", async (req, res): Promise<void> => {
       userName: from.name,
       action: "match_request_sent",
       details: `Sent match request to ${to.name}`,
+      detailsParams: { name: to.name },
     },
     {
       userId: to.id,
       userName: to.name,
       action: "match_request_received",
       details: `Received match request from ${from.name}`,
+      detailsParams: { name: from.name },
     },
   ]);
 
@@ -185,8 +187,9 @@ router.patch("/match-requests/:id", async (req, res): Promise<void> => {
     await db.insert(activityLogsTable).values({
       userId: fromUser.id,
       userName: fromUser.name,
-      action: "match_created",
+      action: "match_scheduled_with",
       details: `Match scheduled with ${toUser.name} on ${existing.proposedDate}`,
+      detailsParams: { name: toUser.name, date: existing.proposedDate },
     });
   }
 
@@ -201,6 +204,7 @@ router.patch("/match-requests/:id", async (req, res): Promise<void> => {
       userName: toUser.name,
       action: `match_request_${status}`,
       details: `${status === "accepted" ? "Accepted" : "Declined"} match request from ${fromUser.name}`,
+      detailsParams: { name: fromUser.name },
     });
   }
 

@@ -88,6 +88,7 @@ router.post("/invite/:token/accept", async (req, res): Promise<void> => {
     userName: user.name,
     action: "invite_accepted",
     details: `Invited member #${user.memberNumber} activated account`,
+    detailsParams: { memberNumber: user.memberNumber },
   });
 
   const authToken = generateToken(updated.id, updated.role);

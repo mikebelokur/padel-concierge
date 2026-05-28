@@ -1118,6 +1118,12 @@ export const GetActivityLogResponseItem = zod.object({
   userName: zod.string(),
   action: zod.string(),
   details: zod.string().nullish(),
+  detailsParams: zod
+    .record(zod.string(), zod.unknown())
+    .nullish()
+    .describe(
+      "Language-neutral params for client-side i18n rendering. Key is `activityLog.<action>`.",
+    ),
   createdAt: zod.string(),
 });
 export const GetActivityLogResponse = zod.array(GetActivityLogResponseItem);

@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { ARCHETYPE_META, archetypeCompatibility, type Archetype } from "@/lib/archetypes";
 import { ReliabilityDot, CompatBadge } from "@/components/ReliabilityBadge";
 import { translateError, type Lang } from "@/lib/errorMessages";
+import { formatDubaiDate } from "@/lib/datetime";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -245,7 +246,7 @@ function PlayerCard({
               <span className="text-muted-foreground/50">·</span>
               <ReliabilityDot score={reliabilityScore} />
               {isScoreOverridden && (
-                <span title="Score overridden by coach" className="text-xs font-mono" style={{ color: "rgba(100,180,255,0.7)" }}>✎</span>
+                <span title={t("matchRequests.scoreOverridden")} className="text-xs font-mono" style={{ color: "rgba(100,180,255,0.7)" }}>✎</span>
               )}
             </span>
           )}
@@ -295,6 +296,7 @@ export default function MatchRequests() {
   const [selectedCandidates, setSelectedCandidates] = useState<number[]>([]);
 
   const today = new Date().toISOString().split("T")[0];
+  const formatProposedDate = (d: string) => formatDubaiDate(`${d}T12:00:00+04:00`, language);
 
   useEffect(() => {
     localStorage.setItem("matchRequestsLastVisit", new Date().toISOString());
@@ -315,7 +317,7 @@ export default function MatchRequests() {
 
   const { data: smartMatches } = useQuery({
     queryKey: ["find-matches", user?.id],
-    queryFn: () => apiFetch<{ matches: User[]; noMatchesMessage: string | null }>(`/users/find-matches?userId=${user?.id}`),
+    queryFn: () => apiFetch<{ matches: User[]; noMatches?: boolean; noMatchesMessage: string | null }>(`/users/find-matches?userId=${user?.id}`),
     enabled: !!user?.id && showSend,
   });
 
@@ -667,7 +669,7 @@ export default function MatchRequests() {
                                 </div>
                                 {r.proposedDate && (
                                   <div className="text-muted-foreground mt-0.5" style={{ fontSize: "13px" }}>
-                                    {r.proposedDate}{r.proposedTime ? ` ${t("matchRequests.at")} ${r.proposedTime}` : ""}
+                                    {formatProposedDate(r.proposedDate)}{r.proposedTime ? ` ${t("matchRequests.at")} ${r.proposedTime}` : ""}
                                   </div>
                                 )}
                                 {r.message && (
@@ -860,7 +862,7 @@ export default function MatchRequests() {
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <div className="font-medium text-white" style={{ fontSize: "14px" }}>{r.format} · {r.venue}</div>
-                              <div className="text-muted-foreground mt-0.5" style={{ fontSize: "12px" }}>{r.requestedDate} {t("matchRequests.at")} {r.requestedTime}</div>
+                              <div className="text-muted-foreground mt-0.5" style={{ fontSize: "12px" }}>{formatProposedDate(r.requestedDate)} {t("matchRequests.at")} {r.requestedTime}</div>
                               {r.notes && <div className="text-muted-foreground/60 mt-1 italic" style={{ fontSize: "12px" }}>"{r.notes}"</div>}
                             </div>
                             <span
@@ -971,7 +973,7 @@ export default function MatchRequests() {
                         <div className="grid grid-cols-3 gap-2 mb-4">
                           {[
                             { label: t("matchRequests.trainer.format"), value: r.format },
-                            { label: t("matchRequests.trainer.date"), value: r.requestedDate },
+                            { label: t("matchRequests.trainer.date"), value: formatProposedDate(r.requestedDate) },
                             { label: t("matchRequests.trainer.time"), value: r.requestedTime },
                           ].map(({ label, value }) => (
                             <div key={label} className="rounded-[10px] px-3 py-2" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
@@ -1050,8 +1052,8 @@ export default function MatchRequests() {
                   )}
                   {!smartMatches ? (
                     <div className="text-center py-6 text-sm text-muted-foreground">{t("matchRequests.dialog.searching")}</div>
-                  ) : smartMatches.noMatchesMessage ? (
-                    <div className="text-center py-8 text-sm text-muted-foreground">{smartMatches.noMatchesMessage}</div>
+                  ) : (smartMatches.noMatches ?? !!smartMatches.noMatchesMessage) ? (
+                    <div className="text-center py-8 text-sm text-muted-foreground">{t("matchRequests.dialog.noSmartMatches")}</div>
                   ) : (
                     <div className="space-y-2">
                       <div className="flex items-center gap-1.5 mb-1">
@@ -1174,7 +1176,7 @@ export default function MatchRequests() {
             <DialogTitle className="font-serif text-xl">{t("matchRequests.assign.title")}</DialogTitle>
             {assignTarget && (
               <p className="text-sm text-muted-foreground">
-                {assignTarget.player?.name} · {assignTarget.format} · {assignTarget.requestedDate} {assignTarget.requestedTime}
+                {assignTarget.player?.name} · {assignTarget.format} · {formatProposedDate(assignTarget.requestedDate)} {t("matchRequests.at")} {assignTarget.requestedTime}
               </p>
             )}
           </DialogHeader>

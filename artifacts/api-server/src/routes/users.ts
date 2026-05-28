@@ -103,6 +103,7 @@ router.get("/users/find-matches", async (req, res): Promise<void> => {
       compatibilityScore: c.compatibilityScore,
       isBeta: (c.user.userType ?? "real_user") === "beta_tester",
     })),
+    noMatches: top3.length === 0,
     noMatchesMessage: top3.length === 0
       ? "Подходящих игроков пока нет. Попробуй позже или расширь время доступности."
       : null,

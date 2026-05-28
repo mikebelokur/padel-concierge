@@ -890,7 +890,8 @@
       "messageLabel": "Message (optional)",
       "messagePlaceholder": "Shall we play this weekend?",
       "sendTo": "Send request → {{name}}",
-      "sending": "Sending..."
+      "sending": "Sending...",
+      "noSmartMatches": "No matching players right now. Try again later or widen your availability."
     },
     "assign": {
       "title": "Assign partners",
@@ -903,7 +904,8 @@
     "riskTitle": "Warning: {{details}}",
     "reliabilityScore": "reliability {{score}}/100",
     "risk": "⚠ Risk",
-    "player": "Player"
+    "player": "Player",
+    "scoreOverridden": "Score overridden by coach"
   },
   "userSegmentation": {
     "title": "User Segmentation",

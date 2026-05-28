@@ -84,7 +84,7 @@ export default function MatchLog() {
             <p className="text-sm text-muted-foreground mt-1">{m.clubName} · {m.date} · {m.time}</p>
           </div>
           <Link href="/matches">
-            <button className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent font-medium text-foreground px-4 h-9 text-sm transition-all hover:bg-white/5">
+            <button className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent font-medium text-foreground px-5 h-11 text-sm transition-all hover:bg-white/5">
               ← Назад
             </button>
           </Link>
@@ -205,7 +205,7 @@ export default function MatchLog() {
               <div className="flex gap-2">
                 <button
                   className={cn(
-                    "inline-flex items-center justify-center rounded-lg px-3 h-9 text-sm font-medium transition-all",
+                    "inline-flex items-center justify-center rounded-lg px-3 h-11 text-sm font-medium transition-all",
                     !conflict ? "bg-primary text-black" : "border border-white/10 text-foreground hover:bg-white/5"
                   )}
                   onClick={() => setConflict(false)}
@@ -214,7 +214,7 @@ export default function MatchLog() {
                 </button>
                 <button
                   className={cn(
-                    "inline-flex items-center justify-center rounded-lg px-3 h-9 text-sm font-medium transition-all",
+                    "inline-flex items-center justify-center rounded-lg px-3 h-11 text-sm font-medium transition-all",
                     conflict ? "bg-destructive text-white" : "border border-white/10 text-foreground hover:bg-white/5"
                   )}
                   onClick={() => setConflict(true)}

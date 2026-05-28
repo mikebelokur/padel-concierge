@@ -133,7 +133,7 @@ export default function MatchFeedback() {
             <p className="text-sm text-muted-foreground mt-1">{m.clubName} · {m.date}</p>
           </div>
           <Link href="/matches">
-            <button className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent font-medium text-foreground px-4 h-9 text-sm transition-all hover:bg-white/5">
+            <button className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent font-medium text-foreground px-5 h-11 text-sm transition-all hover:bg-white/5">
               ← Назад
             </button>
           </Link>

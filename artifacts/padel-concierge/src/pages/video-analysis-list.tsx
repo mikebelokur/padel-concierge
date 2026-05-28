@@ -119,7 +119,7 @@ export default function VideoAnalysisList() {
                     </span>
                     {analysis.status === 'completed' && (
                       <Link href={`/video-analysis/${analysis.id}`}>
-                        <button className="inline-flex items-center justify-center rounded-xl bg-white/10 text-foreground font-medium px-4 h-9 text-sm transition-all hover:bg-white/15">
+                        <button className="inline-flex items-center justify-center rounded-xl bg-white/10 text-foreground font-medium px-5 h-11 text-sm transition-all hover:bg-white/15">
                           {t("videoAnalysis.viewReport")}
                         </button>
                       </Link>
@@ -129,8 +129,17 @@ export default function VideoAnalysisList() {
               </div>
             ))}
             {analyses?.length === 0 && (
-              <div className="text-center py-12 text-muted-foreground border border-white/5 rounded-lg border-dashed">
-                {t("videoAnalysis.empty")}
+              <div
+                className="rounded-[20px] p-10 text-center"
+                style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.07)" }}
+              >
+                <div className="text-3xl mb-3">🎥</div>
+                <div className="text-white font-medium mb-1" style={{ fontSize: "17px" }}>
+                  {t("videoAnalysis.empty")}
+                </div>
+                <div className="text-muted-foreground" style={{ fontSize: "14px" }}>
+                  {t("videoAnalysis.emptyHint")}
+                </div>
               </div>
             )}
           </div>

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/api";
 import { translateError } from "@/lib/errorMessages";
@@ -43,6 +44,7 @@ const SURFACE_COLORS: Record<string, string> = {
 
 export default function Courts() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -74,19 +76,23 @@ export default function Courts() {
       body: JSON.stringify({ userId: user?.id, courtId: selectedCourt?.id, date: bookDate, startTime: bookTime }),
     }),
     onSuccess: () => {
-      toast({ title: "Court booked!", description: `${selectedCourt?.name} on ${bookDate} at ${bookTime}` });
+      toast({
+        title: t("courtsPage.toastBooked"),
+        description: `${selectedCourt?.name} · ${bookDate} · ${bookTime}`,
+      });
       qc.invalidateQueries({ queryKey: ["court-bookings"] });
       qc.invalidateQueries({ queryKey: ["court-availability"] });
       setShowModal(false);
       setBookTime("");
     },
-    onError: (e: unknown) => toast({ title: "Ошибка", description: translateError(e).message, variant: "destructive" }),
+    onError: (e: unknown) =>
+      toast({ title: t("common.error"), description: translateError(e).message, variant: "destructive" }),
   });
 
   const cancelMutation = useMutation({
     mutationFn: (id: number) => apiFetch(`/court-bookings/${id}/cancel`, { method: "PATCH" }),
     onSuccess: () => {
-      toast({ title: "Booking cancelled" });
+      toast({ title: t("courtsPage.toastCancelled") });
       qc.invalidateQueries({ queryKey: ["court-bookings"] });
     },
   });
@@ -98,13 +104,26 @@ export default function Courts() {
     <AppLayout>
       <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-6 sm:space-y-10">
         <header>
-          <h1 className="text-3xl font-serif mb-2">Courts</h1>
-          <p className="text-muted-foreground">Book a premium court in Dubai. All courts include equipment and coaching access.</p>
+          <h1 className="text-3xl font-serif mb-2">{t("courtsPage.title")}</h1>
+          <p className="text-muted-foreground">{t("courtsPage.subtitle")}</p>
         </header>
 
         {/* Court Grid */}
         {isLoading ? (
-          <div className="text-muted-foreground">Loading courts...</div>
+          <div className="text-muted-foreground">{t("courtsPage.loading")}</div>
+        ) : courts.length === 0 ? (
+          <div
+            className="rounded-[20px] p-10 text-center"
+            style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.07)" }}
+          >
+            <div className="text-3xl mb-3">🏟️</div>
+            <div className="text-white font-medium mb-1" style={{ fontSize: "17px" }}>
+              {t("courtsPage.emptyTitle")}
+            </div>
+            <div className="text-muted-foreground" style={{ fontSize: "14px" }}>
+              {t("courtsPage.emptyHint")}
+            </div>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {courts.map((court) => (
@@ -117,7 +136,7 @@ export default function Courts() {
                     </span>
                     {court.indoor && (
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs border text-primary bg-primary/10 border-primary/20">
-                        Indoor
+                        {t("courtsPage.indoor")}
                       </span>
                     )}
                   </div>
@@ -137,12 +156,13 @@ export default function Courts() {
                     )}
                   </div>
                   <div className="flex items-center justify-between pt-1">
-                    <span className="font-mono text-primary">{court.pricePerHour} AED<span className="text-muted-foreground text-xs">/hr</span></span>
+                    <span className="font-mono text-primary">{court.pricePerHour} AED<span className="text-muted-foreground text-xs">/{t("courtsPage.hr")}</span></span>
                     <button
-                      className="inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-4 h-9 text-sm transition-all hover:bg-primary/90"
+                      className="inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-4 text-sm transition-all hover:bg-primary/90"
+                      style={{ minHeight: "44px", paddingLeft: "20px", paddingRight: "20px" }}
                       onClick={() => { setSelectedCourt(court); setShowModal(true); setBookDate(""); setBookTime(""); }}
                     >
-                      Book Now
+                      {t("courtsPage.bookNow")}
                     </button>
                   </div>
                 </div>
@@ -154,7 +174,7 @@ export default function Courts() {
         {/* My Bookings */}
         {upcomingBookings.length > 0 && (
           <section>
-            <h2 className="text-xl font-serif mb-4">My Upcoming Court Bookings</h2>
+            <h2 className="text-xl font-serif mb-4">{t("courtsPage.myUpcoming")}</h2>
             <div className="space-y-3">
               {upcomingBookings.map((b) => (
                 <div key={b.id} className="rounded-[20px] bg-card border border-white/5">
@@ -169,10 +189,11 @@ export default function Courts() {
                     <div className="flex items-center gap-3">
                       <span className="font-mono text-sm text-muted-foreground">{b.totalPrice} AED</span>
                       <button
-                        className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent font-medium text-muted-foreground px-4 h-9 text-sm transition-all hover:text-destructive hover:border-destructive/30"
+                        className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent font-medium text-muted-foreground px-4 text-sm transition-all hover:text-destructive hover:border-destructive/30"
+                        style={{ minHeight: "44px", paddingLeft: "18px", paddingRight: "18px" }}
                         onClick={() => cancelMutation.mutate(b.id)}
                       >
-                        Cancel
+                        {t("common.cancel")}
                       </button>
                     </div>
                   </div>
@@ -186,12 +207,12 @@ export default function Courts() {
         <Dialog open={showModal} onOpenChange={setShowModal}>
           <DialogContent className="bg-card border-white/10 text-foreground max-w-md">
             <DialogHeader>
-              <DialogTitle className="font-serif text-xl">Book {selectedCourt?.name}</DialogTitle>
+              <DialogTitle className="font-serif text-xl">{t("courtsPage.bookDialogTitle", { name: selectedCourt?.name ?? "" })}</DialogTitle>
               <p className="text-sm text-muted-foreground">{selectedCourt?.address}</p>
             </DialogHeader>
             <div className="space-y-5 mt-2">
               <div className="space-y-2">
-                <Label>Date</Label>
+                <Label>{t("courtsPage.date")}</Label>
                 <Input
                   type="date"
                   min={today}
@@ -202,7 +223,7 @@ export default function Courts() {
               </div>
               {bookDate && (
                 <div className="space-y-2">
-                  <Label>Time Slot</Label>
+                  <Label>{t("courtsPage.timeSlot")}</Label>
                   <div className="grid grid-cols-3 gap-2">
                     {slots.map((s) => (
                       <button
@@ -224,13 +245,14 @@ export default function Courts() {
                 </div>
               )}
               <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                <span className="text-muted-foreground text-sm">Total: <span className="font-mono text-foreground">{selectedCourt?.pricePerHour} AED</span></span>
+                <span className="text-muted-foreground text-sm">{t("courtsPage.total")}: <span className="font-mono text-foreground">{selectedCourt?.pricePerHour} AED</span></span>
                 <button
-                  className="inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-5 h-11 text-sm transition-all hover:bg-primary/90 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-5 text-sm transition-all hover:bg-primary/90 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ minHeight: "44px" }}
                   onClick={() => bookMutation.mutate()}
                   disabled={!bookDate || !bookTime || bookMutation.isPending}
                 >
-                  {bookMutation.isPending ? "Booking..." : "Confirm Booking"}
+                  {bookMutation.isPending ? t("courtsPage.booking") : t("courtsPage.confirmBooking")}
                 </button>
               </div>
             </div>

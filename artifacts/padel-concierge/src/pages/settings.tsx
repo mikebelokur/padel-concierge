@@ -124,7 +124,7 @@ export default function Settings() {
                       </div>
                     </div>
                     <Link href="/quiz">
-                      <button className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent font-medium text-foreground px-4 h-9 text-sm transition-all hover:bg-white/5">
+                      <button className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent font-medium text-foreground px-5 h-11 text-sm transition-all hover:bg-white/5">
                         {t("settings.retakeTest")}
                       </button>
                     </Link>
@@ -133,7 +133,7 @@ export default function Settings() {
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-muted-foreground">{t("settings.archetypeNotSet")}</p>
                     <Link href="/quiz">
-                      <button className="ml-4 shrink-0 inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-4 h-9 text-sm transition-all hover:bg-primary/90">
+                      <button className="ml-4 shrink-0 inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-5 h-11 text-sm transition-all hover:bg-primary/90">
                         {t("settings.takeTest")}
                       </button>
                     </Link>

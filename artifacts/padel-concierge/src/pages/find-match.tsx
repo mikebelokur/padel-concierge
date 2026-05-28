@@ -7,6 +7,7 @@ import { apiFetch } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { translateError } from "@/lib/errorMessages";
 import { NoLevelGate } from "@/components/NoLevelGate";
+import { formatDubaiShortDate } from "@/lib/datetime";
 
 interface Candidate {
   user: {
@@ -86,19 +87,7 @@ function formatSharedDates(slots: { start: string }[], language: string): string
     if (!seen.has(key)) { seen.add(key); dates.push(d); }
   }
   dates.sort((a, b) => a.getTime() - b.getTime());
-  if (language === "ru") {
-    const byMonth = new Map<string, number[]>();
-    for (const d of dates) {
-      const month = d.toLocaleDateString("ru-RU", { month: "long", timeZone: "Asia/Dubai" });
-      const day = Number(d.toLocaleDateString("en-GB", { day: "numeric", timeZone: "Asia/Dubai" }));
-      if (!byMonth.has(month)) byMonth.set(month, []);
-      byMonth.get(month)!.push(day);
-    }
-    return [...byMonth.entries()].map(([m, days]) => `${days.join(", ")} ${m}`).join("; ");
-  }
-  return dates
-    .map((d) => d.toLocaleDateString("en-GB", { month: "short", day: "numeric", timeZone: "Asia/Dubai" }))
-    .join(", ");
+  return dates.map((d) => formatDubaiShortDate(d, language)).join(", ");
 }
 
 function SkeletonCard() {

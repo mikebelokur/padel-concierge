@@ -63,20 +63,24 @@ const LEVEL_INDEX = Object.fromEntries(LEVEL_ORDER.map((l, i) => [l, i]));
 
 type SortKey = "name" | "level" | "reliability" | "matches";
 
-function timeAgo(iso: string) {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
+function useTimeAgo() {
+  const { t } = useLanguage();
+  return (iso: string) => {
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return t("members.timeAgo.justNow");
+    if (mins < 60) return t("members.timeAgo.mins", { count: mins });
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return t("members.timeAgo.hours", { count: hrs });
+    const days = Math.floor(hrs / 24);
+    return t("members.timeAgo.days", { count: days });
+  };
 }
 
 export default function Members() {
   const { user: authUser } = useAuth();
   const { t } = useLanguage();
+  const timeAgo = useTimeAgo();
   const isStaff = ["coach", "admin", "owner"].includes(authUser?.role ?? "");
 
   const [search, setSearch] = useState("");
@@ -193,6 +197,19 @@ export default function Members() {
             <h2 className="text-lg font-medium">{t("members.liveActivityFeed")}</h2>
             {actLoading ? (
               <div className="text-muted-foreground text-sm">{t("members.loadingActivity")}</div>
+            ) : activity.length === 0 ? (
+              <div
+                className="rounded-[20px] p-10 text-center"
+                style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.07)" }}
+              >
+                <div className="text-3xl mb-3">📡</div>
+                <div className="text-white font-medium mb-1" style={{ fontSize: "17px" }}>
+                  {t("members.emptyActivityTitle")}
+                </div>
+                <div className="text-muted-foreground" style={{ fontSize: "14px" }}>
+                  {t("members.emptyActivityHint")}
+                </div>
+              </div>
             ) : (
               <div className="space-y-2">
                 {activity.map((log) => (
@@ -406,14 +423,14 @@ export default function Members() {
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   placeholder={t("members.search")}
-                  className="pl-9 bg-white/5 border-white/10 focus:border-primary/50 h-9 text-sm"
+                  className="pl-9 bg-white/5 border-white/10 focus:border-primary/50 h-11 text-sm"
                 />
               </div>
 
               <select
                 value={levelFilter}
                 onChange={e => setLevelFilter(e.target.value)}
-                className="h-9 px-3 rounded-md bg-white/5 border border-white/10 text-sm text-foreground focus:outline-none focus:border-primary/50 cursor-pointer"
+                className="h-11 px-3 rounded-md bg-white/5 border border-white/10 text-sm text-foreground focus:outline-none focus:border-primary/50 cursor-pointer"
               >
                 <option value="all">{t("members.all")}</option>
                 {levelOptions.map(l => (

@@ -6,13 +6,13 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Link } from "wouter";
 import { ARCHETYPE_META, type Archetype } from "@/lib/archetypes";
 
-function levelLabel(level: string) {
+function levelLabel(level: string, t: (k: string) => string) {
   const n = parseFloat(level);
   if (isNaN(n)) return level;
-  if (n < 2.0) return "Beginner";
-  if (n < 3.0) return "Intermediate";
-  if (n < 4.0) return "Advanced";
-  return "Elite";
+  if (n < 2.0) return t("dashboard.levelBeginner");
+  if (n < 3.0) return t("dashboard.levelIntermediate");
+  if (n < 4.0) return t("dashboard.levelAdvanced");
+  return t("dashboard.levelElite");
 }
 
 const BANNER_DISMISS_KEY = "dismissed_no_level_banner_v1";
@@ -107,7 +107,7 @@ export default function Dashboard() {
         {/* ── GREETING ── */}
         <header className="mb-8">
           <p className="text-muted-foreground mb-1" style={{ fontSize: "15px" }}>
-            Padel Concierge
+            {t("common.brand")}
           </p>
           <h1
             className="font-serif font-bold text-white"
@@ -128,7 +128,7 @@ export default function Dashboard() {
               WPT {user?.level ?? "—"}
             </span>
             <span className="text-muted-foreground" style={{ fontSize: "13px" }}>
-              {levelLabel(user?.level ?? "")}
+              {levelLabel(user?.level ?? "", t)}
             </span>
             {user?.verified && (
               <span

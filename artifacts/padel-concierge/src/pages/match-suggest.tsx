@@ -93,7 +93,7 @@ export default function MatchSuggest() {
             <Lock className="w-8 h-8 text-muted-foreground mb-4" />
             <h3 className="font-serif text-xl mb-2">{t("matchSuggest.verificationRequired")}</h3>
             <p className="text-sm text-muted-foreground mb-6">{t("matchSuggest.verificationDesc")}</p>
-            <button className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent font-medium text-foreground px-4 h-9 text-sm transition-all hover:bg-white/5">
+            <button className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-transparent font-medium text-foreground px-5 h-11 text-sm transition-all hover:bg-white/5">
               {t("matchSuggest.learnMore")}
             </button>
           </div>
@@ -165,12 +165,12 @@ export default function MatchSuggest() {
           <div className="bg-primary/8 border border-primary/15 rounded-xl p-4 flex items-center gap-4">
             <div className="text-2xl">🧩</div>
             <div className="flex-1">
-              <div className="text-sm font-medium mb-0.5">Узнай свой архетип</div>
-              <div className="text-xs text-muted-foreground">Пройди 4-минутный тест для более точного подбора партнёров по стилю игры.</div>
+              <div className="text-sm font-medium mb-0.5">{t("matchSuggest.archetypeCtaTitle")}</div>
+              <div className="text-xs text-muted-foreground">{t("matchSuggest.archetypeCtaDesc")}</div>
             </div>
             <Link href="/quiz">
-              <button className="inline-flex items-center justify-center rounded-xl border border-primary/30 text-primary bg-transparent px-4 h-9 text-sm font-medium transition-all hover:bg-primary/10 shrink-0">
-                Пройти тест
+              <button className="inline-flex items-center justify-center rounded-xl border border-primary/30 text-primary bg-transparent px-5 h-11 text-sm font-medium transition-all hover:bg-primary/10 shrink-0">
+                {t("matchSuggest.archetypeCtaButton")}
               </button>
             </Link>
           </div>
@@ -178,10 +178,10 @@ export default function MatchSuggest() {
 
         {user?.archetype && (
           <div className="flex items-center gap-3">
-            <div className="text-xs text-muted-foreground">Твой архетип:</div>
+            <div className="text-xs text-muted-foreground">{t("matchSuggest.yourArchetype")}</div>
             <ArchetypePill archetype={user.archetype} />
             {user.warmUpPreference && (
-              <span className="text-xs text-orange-400/70">🔥 предпочитает разминку</span>
+              <span className="text-xs text-orange-400/70">🔥 {t("matchSuggest.prefersWarmup")}</span>
             )}
           </div>
         )}

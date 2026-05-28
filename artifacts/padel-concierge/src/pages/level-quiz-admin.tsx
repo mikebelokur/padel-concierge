@@ -92,7 +92,7 @@ export default function LevelQuizAdmin() {
         </div>
         <button
           onClick={() => window.location.reload()}
-          className="h-9 px-4 bg-white/[0.04] border border-white/10 text-[#8a8a8a] text-sm rounded-lg hover:text-white hover:border-white/20 transition-colors"
+          className="h-11 px-4 bg-white/[0.04] border border-white/10 text-[#8a8a8a] text-sm rounded-lg hover:text-white hover:border-white/20 transition-colors"
         >
           {t("levelQuizAdmin.refresh")}
         </button>

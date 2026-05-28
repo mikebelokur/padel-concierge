@@ -13,7 +13,8 @@
     "new": "new",
     "certified": "Certified",
     "viewAll": "View all",
-    "seeAll": "See all"
+    "seeAll": "See all",
+    "brand": "Padel Concierge"
   },
   "notifications": {
     "title": "Notifications",
@@ -218,7 +219,11 @@
     "findPartnerHint": "See who matches your level and schedule",
     "noLevelBannerTitle": "Set your skill level to unlock matchmaking",
     "noLevelBannerDesc": "Without a level, we can't find compatible partners or verify your matches.",
-    "noLevelBannerCta": "Take Assessment"
+    "noLevelBannerCta": "Take Assessment",
+    "levelBeginner": "Beginner",
+    "levelIntermediate": "Intermediate",
+    "levelAdvanced": "Advanced",
+    "levelElite": "Elite"
   },
   "findMatch": {
     "title": "Find a Match",
@@ -328,7 +333,15 @@
     "noPlayers": "No players found",
     "verifySelected": "Verify {{count}} selected",
     "verifying": "Verifying...",
-    "matchesCount": "{{count}} matches"
+    "matchesCount": "{{count}} matches",
+    "emptyActivityTitle": "No activity yet",
+    "emptyActivityHint": "When members play, book, or earn a level, you'll see it here.",
+    "timeAgo": {
+      "justNow": "just now",
+      "mins": "{{count}}m ago",
+      "hours": "{{count}}h ago",
+      "days": "{{count}}d ago"
+    }
   },
   "admin": {
     "title": "Admin Panel",
@@ -672,6 +685,25 @@
     "loading": "Loading rules…",
     "rulesCount": "{{count}} rules"
   },
+  "courtsPage": {
+    "title": "Courts",
+    "subtitle": "Book a premium court in Dubai. All courts include equipment and coaching access.",
+    "loading": "Loading courts...",
+    "emptyTitle": "No courts available",
+    "emptyHint": "Check back soon — new partner clubs are joining each month.",
+    "indoor": "Indoor",
+    "hr": "hr",
+    "bookNow": "Book Now",
+    "myUpcoming": "My Upcoming Court Bookings",
+    "bookDialogTitle": "Book {{name}}",
+    "date": "Date",
+    "timeSlot": "Time Slot",
+    "total": "Total",
+    "booking": "Booking...",
+    "confirmBooking": "Confirm Booking",
+    "toastBooked": "Court booked!",
+    "toastCancelled": "Booking cancelled"
+  },
   "matchSuggest": {
     "title": "Smart Match Suggestions",
     "subtitle": "Curated games based on your level, archetype, and history.",
@@ -686,7 +718,12 @@
     "cardBest": "Best Match",
     "cardBalanced": "Balanced",
     "cardChallenging": "Challenging",
-    "cardEasy": "Easy"
+    "cardEasy": "Easy",
+    "archetypeCtaTitle": "Discover your archetype",
+    "archetypeCtaDesc": "Take the 4-minute quiz for more accurate partner suggestions by play style.",
+    "archetypeCtaButton": "Take quiz",
+    "yourArchetype": "Your archetype:",
+    "prefersWarmup": "prefers warm-up"
   },
   "playerProfile": {
     "back": "← Members",
@@ -744,7 +781,8 @@
     "pastSubmissions": "Past Submissions",
     "analysisId": "Analysis #{{id}}",
     "viewReport": "View Report",
-    "empty": "No analyses submitted yet.",
+    "empty": "No analyses submitted yet",
+    "emptyHint": "Upload a match clip on the left and our coaches will review it.",
     "toastTitle": "Analysis Submitted",
     "toastDesc": "Our coaches will review it shortly.",
     "toastError": "Submission Failed",

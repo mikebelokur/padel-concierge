@@ -66,7 +66,7 @@ export default function PadelNews() {
           {canPost && (
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <button className="inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-4 h-9 text-sm transition-all hover:bg-primary/90">
+                <button className="inline-flex items-center justify-center rounded-xl bg-primary text-black font-semibold px-5 h-11 text-sm transition-all hover:bg-primary/90">
                   {t("news.postButton")}
                 </button>
               </DialogTrigger>

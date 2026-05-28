@@ -13,7 +13,8 @@
     "new": "новых",
     "certified": "Сертифицирован",
     "viewAll": "Все",
-    "seeAll": "Смотреть все"
+    "seeAll": "Смотреть все",
+    "brand": "Padel Concierge"
   },
   "notifications": {
     "title": "Уведомления",
@@ -220,7 +221,11 @@
     "findPartnerHint": "Посмотри, кто подходит по уровню и времени",
     "noLevelBannerTitle": "Укажи свой уровень, чтобы подбор работал",
     "noLevelBannerDesc": "Без уровня мы не сможем найти подходящих партнёров и подтвердить твои матчи.",
-    "noLevelBannerCta": "Пройти оценку"
+    "noLevelBannerCta": "Пройти оценку",
+    "levelBeginner": "Начинающий",
+    "levelIntermediate": "Средний",
+    "levelAdvanced": "Продвинутый",
+    "levelElite": "Элитный"
   },
   "findMatch": {
     "title": "Найти партнёра",
@@ -330,7 +335,15 @@
     "noPlayers": "Игроки не найдены",
     "verifySelected": "Верифицировать {{count}}",
     "verifying": "Верификация...",
-    "matchesCount": "{{count}} матчей"
+    "matchesCount": "{{count}} матчей",
+    "emptyActivityTitle": "Пока тихо",
+    "emptyActivityHint": "Как только участники сыграют, забронируют корт или получат уровень — увидишь здесь.",
+    "timeAgo": {
+      "justNow": "только что",
+      "mins": "{{count}} мин назад",
+      "hours": "{{count}} ч назад",
+      "days": "{{count}} дн назад"
+    }
   },
   "admin": {
     "title": "Панель управления",
@@ -674,6 +687,25 @@
     "loading": "Загрузка правил…",
     "rulesCount": "{{count}} правил"
   },
+  "courtsPage": {
+    "title": "Корты",
+    "subtitle": "Забронируй премиальный корт в Дубае. Инвентарь и доступ к тренерам включены.",
+    "loading": "Загружаем корты...",
+    "emptyTitle": "Корты недоступны",
+    "emptyHint": "Загляни позже — каждый месяц подключаем новые клубы.",
+    "indoor": "Крытый",
+    "hr": "ч",
+    "bookNow": "Забронировать",
+    "myUpcoming": "Мои предстоящие брони кортов",
+    "bookDialogTitle": "Забронировать {{name}}",
+    "date": "Дата",
+    "timeSlot": "Время",
+    "total": "Итого",
+    "booking": "Бронируем...",
+    "confirmBooking": "Подтвердить",
+    "toastBooked": "Корт забронирован!",
+    "toastCancelled": "Бронь отменена"
+  },
   "matchSuggest": {
     "title": "Умный подбор матчей",
     "subtitle": "Игры подобраны по уровню, архетипу и истории.",
@@ -688,7 +720,12 @@
     "cardBest": "Лучший матч",
     "cardBalanced": "Сбалансированный",
     "cardChallenging": "Сложный",
-    "cardEasy": "Лёгкий"
+    "cardEasy": "Лёгкий",
+    "archetypeCtaTitle": "Узнай свой архетип",
+    "archetypeCtaDesc": "Пройди 4-минутный тест для более точного подбора партнёров по стилю игры.",
+    "archetypeCtaButton": "Пройти тест",
+    "yourArchetype": "Твой архетип:",
+    "prefersWarmup": "предпочитает разминку"
   },
   "playerProfile": {
     "back": "← Участники",
@@ -746,7 +783,8 @@
     "pastSubmissions": "Прошлые заявки",
     "analysisId": "Анализ #{{id}}",
     "viewReport": "Посмотреть отчёт",
-    "empty": "Заявок пока нет.",
+    "empty": "Заявок пока нет",
+    "emptyHint": "Загрузи запись матча слева — тренеры разберут её.",
     "toastTitle": "Заявка отправлена",
     "toastDesc": "Тренеры рассмотрят её в ближайшее время.",
     "toastError": "Ошибка отправки",

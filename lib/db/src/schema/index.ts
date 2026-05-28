@@ -30,3 +30,4 @@ export * from "./push_subscriptions";
 export * from "./pf_users";
 export * from "./pf_quiz_results";
 export * from "./feature_flags";
+export * from "./club_slots";

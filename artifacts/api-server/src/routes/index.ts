@@ -27,6 +27,7 @@ import recurringSeriesRouter from "./recurring_series";
 import inviteRouter from "./invite";
 import adminUserProfileRouter from "./admin_user_profile";
 import pushRouter from "./push";
+import clubSlotsRouter from "./club_slots";
 
 const router: IRouter = Router();
 
@@ -62,5 +63,6 @@ router.use(notificationsRouter);
 router.use(internalRouter);
 router.use(recurringSeriesRouter);
 router.use(pushRouter);
+router.use(clubSlotsRouter);
 
 export default router;

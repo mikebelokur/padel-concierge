@@ -48,7 +48,8 @@
     "levelQuizResults": "Level Quiz Results",
     "adminUsers": "Users",
     "clubs": "Clubs",
-    "adminClubs": "Clubs (admin)"
+    "adminClubs": "Clubs (admin)",
+    "adminSlots": "Slots (admin)"
   },
   "clubsList": {
     "title": "Padel Clubs",
@@ -69,7 +70,34 @@
     "location": "Location",
     "openingHours": "Opening hours",
     "availableSlots": "Available slots",
-    "slotsEmpty": "No slots published yet. Check back soon."
+    "slotsEmpty": "No slots published yet. Check back soon.",
+    "court": "Court",
+    "interested": "Interested",
+    "interestedDone": "You're on the list",
+    "interestRegistered": "Misha has been notified"
+  },
+  "adminSlots": {
+    "title": "Manual Slots",
+    "subtitle": "Add free-court availability per club so players can express interest.",
+    "club": "Club",
+    "date": "Date",
+    "addSlot": "Add slot",
+    "startTime": "Start",
+    "endTime": "End",
+    "court": "Court",
+    "priceAed": "Price (AED)",
+    "level": "Level",
+    "notes": "Notes",
+    "existing": "Existing slots",
+    "empty": "No slots for this day.",
+    "cancel": "Cancel",
+    "confirmCancel": "Cancel this slot?",
+    "interested_one": "{{count}} interested",
+    "interested_other": "{{count}} interested",
+    "interested": "{{count}} interested",
+    "timeRequired": "Start and end time are required",
+    "toastAdded": "Slot added",
+    "toastCancelled": "Slot cancelled"
   },
   "clubsAdmin": {
     "title": "Clubs",

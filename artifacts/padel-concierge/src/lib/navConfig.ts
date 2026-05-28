@@ -56,6 +56,7 @@ const ADMIN_DRAWER_EXTRAS: NavEntry[] = [
   { href: "/members", labelKey: "nav.members", icon: "👤" },
   { href: "/courts", labelKey: "nav.courts", icon: "🏟️" },
   { href: "/admin/clubs", labelKey: "nav.adminClubs", icon: "🏢" },
+  { href: "/admin/slots", labelKey: "nav.adminSlots", icon: "🗓️" },
   { href: "/level-quiz/admin", labelKey: "nav.levelQuizResults", icon: "📋" },
   { href: "/rules", labelKey: "nav.padelRules", icon: "📖" },
   { href: "/news", labelKey: "nav.newsAndTips", icon: "📰" },

@@ -1,8 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useRoute } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/api";
+import { translateError } from "@/lib/errorMessages";
 import { objectUrl } from "@/lib/useUpload";
 
 interface Club {
@@ -153,13 +156,129 @@ export default function ClubDetail() {
           </div>
         </section>
 
-        <section className="rounded-[20px] bg-card border border-white/5 p-5">
-          <h2 className="font-serif text-lg mb-2">{t("clubDetail.availableSlots")}</h2>
-          <div className="text-sm text-muted-foreground">
-            {t("clubDetail.slotsEmpty")}
-          </div>
-        </section>
+        <ClubSlotsSection clubId={club.id} />
       </div>
     </AppLayout>
+  );
+}
+
+interface ClubSlot {
+  id: number;
+  clubId: number;
+  date: string;
+  startTime: string;
+  endTime: string;
+  courtNumber: string | null;
+  priceAed: string | null;
+  levelSuitability: string | null;
+  notes: string | null;
+  status: "open" | "taken" | "cancelled";
+  interestedUserIds: number[];
+  interestedCount: number;
+}
+
+function ClubSlotsSection({ clubId }: { clubId: number }) {
+  const { t, language } = useLanguage();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const key = ["club-slots", clubId];
+
+  const { data: slots = [], isLoading } = useQuery({
+    queryKey: key,
+    queryFn: () => apiFetch<ClubSlot[]>(`/clubs/${clubId}/slots`),
+  });
+
+  const interestMutation = useMutation({
+    mutationFn: (slotId: number) =>
+      apiFetch(`/slots/${slotId}/interest`, { method: "POST" }),
+    onSuccess: () => {
+      toast({ title: t("clubDetail.interestRegistered") });
+      qc.invalidateQueries({ queryKey: key });
+    },
+    onError: (e) =>
+      toast({
+        title: t("common.error"),
+        description: translateError(e).message,
+        variant: "destructive",
+      }),
+  });
+
+  const grouped = slots.reduce<Record<string, ClubSlot[]>>((acc, s) => {
+    (acc[s.date] ||= []).push(s);
+    return acc;
+  }, {});
+  const dates = Object.keys(grouped).sort();
+
+  function formatDate(d: string): string {
+    try {
+      const dt = new Date(d + "T00:00:00");
+      const locale = language === "ru" ? "ru-RU" : "en-GB";
+      return dt.toLocaleDateString(locale, { weekday: "short", day: "numeric", month: "short" });
+    } catch {
+      return d;
+    }
+  }
+
+  return (
+    <section className="rounded-[20px] bg-card border border-white/5 p-5">
+      <h2 className="font-serif text-lg mb-3">{t("clubDetail.availableSlots")}</h2>
+      {isLoading ? (
+        <div className="text-sm text-muted-foreground">{t("common.loading")}</div>
+      ) : dates.length === 0 ? (
+        <div className="text-sm text-muted-foreground">{t("clubDetail.slotsEmpty")}</div>
+      ) : (
+        <div className="space-y-4">
+          {dates.map((d) => (
+            <div key={d}>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
+                {formatDate(d)}
+              </div>
+              <ul className="space-y-2">
+                {grouped[d].map((s) => {
+                  const alreadyInterested = !!user && s.interestedUserIds.includes(user.id);
+                  return (
+                    <li
+                      key={s.id}
+                      className="flex items-center justify-between gap-3 rounded-lg bg-black/30 border border-white/5 px-3 py-2.5"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-medium">
+                          {s.startTime}–{s.endTime}
+                          {s.courtNumber && (
+                            <span className="text-muted-foreground">
+                              {" "}· {t("clubDetail.court")} {s.courtNumber}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground flex flex-wrap gap-2 mt-0.5">
+                          {s.priceAed && <span>{s.priceAed} AED</span>}
+                          {s.levelSuitability && <span>· {s.levelSuitability}</span>}
+                          {s.notes && <span>· {s.notes}</span>}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => !alreadyInterested && interestMutation.mutate(s.id)}
+                        disabled={alreadyInterested || interestMutation.isPending}
+                        className={
+                          alreadyInterested
+                            ? "rounded-lg border border-white/10 text-muted-foreground text-xs px-3 py-2"
+                            : "rounded-lg bg-primary text-black font-semibold text-xs px-3 py-2 hover:bg-primary/90 disabled:opacity-60"
+                        }
+                        style={{ minHeight: "36px" }}
+                      >
+                        {alreadyInterested
+                          ? t("clubDetail.interestedDone")
+                          : t("clubDetail.interested")}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }

@@ -48,7 +48,8 @@
     "levelQuizResults": "Результаты тестов",
     "adminUsers": "Пользователи",
     "clubs": "Клубы",
-    "adminClubs": "Клубы (админ)"
+    "adminClubs": "Клубы (админ)",
+    "adminSlots": "Слоты (админ)"
   },
   "clubsList": {
     "title": "Падел-клубы",
@@ -69,7 +70,36 @@
     "location": "Локация",
     "openingHours": "Часы работы",
     "availableSlots": "Доступные слоты",
-    "slotsEmpty": "Слотов пока нет. Загляни чуть позже."
+    "slotsEmpty": "Слотов пока нет. Загляни чуть позже.",
+    "court": "Корт",
+    "interested": "Интересно",
+    "interestedDone": "Вы записались",
+    "interestRegistered": "Миша получил уведомление"
+  },
+  "adminSlots": {
+    "title": "Ручные слоты",
+    "subtitle": "Добавляй свободные корты по клубам — игроки смогут оставить интерес.",
+    "club": "Клуб",
+    "date": "Дата",
+    "addSlot": "Добавить слот",
+    "startTime": "Начало",
+    "endTime": "Конец",
+    "court": "Корт",
+    "priceAed": "Цена (AED)",
+    "level": "Уровень",
+    "notes": "Заметки",
+    "existing": "Существующие слоты",
+    "empty": "Слотов на эту дату нет.",
+    "cancel": "Отменить",
+    "confirmCancel": "Отменить этот слот?",
+    "interested_one": "{{count}} заинтересован",
+    "interested_few": "{{count}} заинтересованы",
+    "interested_many": "{{count}} заинтересованы",
+    "interested_other": "{{count}} заинтересованы",
+    "interested": "{{count}} заинтересованы",
+    "timeRequired": "Нужно указать время начала и конца",
+    "toastAdded": "Слот добавлен",
+    "toastCancelled": "Слот отменён"
   },
   "clubsAdmin": {
     "title": "Клубы",

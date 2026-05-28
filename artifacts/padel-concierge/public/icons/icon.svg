@@ -1,0 +1,108 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1a1612"/>
+      <stop offset="1" stop-color="#0a0a0a"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f0cf7a"/>
+      <stop offset="0.5" stop-color="#d6a83b"/>
+      <stop offset="1" stop-color="#a87e22"/>
+    </linearGradient>
+    <radialGradient id="sheen" cx="0.35" cy="0.25" r="0.7">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.35"/>
+      <stop offset="0.6" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <mask id="racketHoles">
+      <rect width="1024" height="1024" fill="white"/>
+      <g fill="black">
+        <!-- 7 rows of holes inside racket head, hex-ish grid -->
+        <!-- row y from 300 to 620, x roughly 340-684 -->
+        <g>
+          <!-- generate via positions -->
+        </g>
+      </g>
+    </mask>
+  </defs>
+
+  <!-- Rounded square background -->
+  <rect x="0" y="0" width="1024" height="1024" rx="220" ry="220" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1024" height="1024" rx="220" ry="220" fill="url(#sheen)"/>
+  <!-- Thin inner border -->
+  <rect x="24" y="24" width="976" height="976" rx="200" ry="200" fill="none" stroke="#d6a83b" stroke-opacity="0.18" stroke-width="3"/>
+
+  <!-- Padel racket -->
+  <g transform="translate(512 512)">
+    <!-- Handle grip -->
+    <g transform="translate(0 230)">
+      <rect x="-26" y="0" width="52" height="170" rx="20" fill="#1a1a1a" stroke="url(#gold)" stroke-width="6"/>
+      <line x1="-22" y1="22" x2="22" y2="22" stroke="url(#gold)" stroke-width="3" stroke-opacity="0.7"/>
+      <line x1="-22" y1="50" x2="22" y2="50" stroke="url(#gold)" stroke-width="3" stroke-opacity="0.7"/>
+      <line x1="-22" y1="78" x2="22" y2="78" stroke="url(#gold)" stroke-width="3" stroke-opacity="0.7"/>
+      <line x1="-22" y1="106" x2="22" y2="106" stroke="url(#gold)" stroke-width="3" stroke-opacity="0.7"/>
+      <line x1="-22" y1="134" x2="22" y2="134" stroke="url(#gold)" stroke-width="3" stroke-opacity="0.7"/>
+    </g>
+    <!-- Throat (neck connecting handle to head) -->
+    <path d="M -38 230 Q -50 200 -90 170 M 38 230 Q 50 200 90 170" fill="none" stroke="url(#gold)" stroke-width="14" stroke-linecap="round"/>
+
+    <!-- Racket head: classic padel teardrop, slightly flat top -->
+    <path id="head" d="
+      M 0,-280
+      C 130,-280 230,-200 230,-70
+      C 230,80 130,180 0,180
+      C -130,180 -230,80 -230,-70
+      C -230,-200 -130,-280 0,-280 Z"
+      fill="none" stroke="url(#gold)" stroke-width="22" stroke-linejoin="round"/>
+
+    <!-- Perforation pattern (holes), gold dots inside head -->
+    <g fill="url(#gold)">
+      <!-- Row 1 (top) -->
+      <circle cx="-60" cy="-220" r="10"/>
+      <circle cx="0"   cy="-225" r="11"/>
+      <circle cx="60"  cy="-220" r="10"/>
+      <!-- Row 2 -->
+      <circle cx="-120" cy="-170" r="11"/>
+      <circle cx="-60"  cy="-170" r="12"/>
+      <circle cx="0"    cy="-172" r="13"/>
+      <circle cx="60"   cy="-170" r="12"/>
+      <circle cx="120"  cy="-170" r="11"/>
+      <!-- Row 3 -->
+      <circle cx="-160" cy="-115" r="12"/>
+      <circle cx="-100" cy="-115" r="13"/>
+      <circle cx="-40"  cy="-115" r="14"/>
+      <circle cx="40"   cy="-115" r="14"/>
+      <circle cx="100"  cy="-115" r="13"/>
+      <circle cx="160"  cy="-115" r="12"/>
+      <!-- Row 4 (center) -->
+      <circle cx="-170" cy="-55" r="12"/>
+      <circle cx="-110" cy="-55" r="13"/>
+      <circle cx="-50"  cy="-55" r="14"/>
+      <circle cx="50"   cy="-55" r="14"/>
+      <circle cx="110"  cy="-55" r="13"/>
+      <circle cx="170"  cy="-55" r="12"/>
+      <!-- Sweet spot - center ball -->
+      <circle cx="0" cy="-30" r="36" fill="url(#gold)"/>
+      <circle cx="0" cy="-30" r="36" fill="none" stroke="#1a1612" stroke-width="3"/>
+      <!-- Ball curve seam -->
+      <path d="M -30 -42 Q 0 -22 30 -42" fill="none" stroke="#1a1612" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M -30 -18 Q 0 -38 30 -18" fill="none" stroke="#1a1612" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+      <!-- Row 6 -->
+      <circle cx="-160" cy="20" r="12"/>
+      <circle cx="-100" cy="20" r="13"/>
+      <circle cx="100"  cy="20" r="13"/>
+      <circle cx="160"  cy="20" r="12"/>
+      <!-- Row 7 -->
+      <circle cx="-140" cy="75" r="12"/>
+      <circle cx="-80"  cy="75" r="12"/>
+      <circle cx="-20"  cy="75" r="11"/>
+      <circle cx="40"   cy="75" r="11"/>
+      <circle cx="100"  cy="75" r="12"/>
+      <circle cx="160"  cy="75" r="11"/>
+      <!-- Row 8 (bottom curve) -->
+      <circle cx="-100" cy="130" r="11"/>
+      <circle cx="-40"  cy="130" r="11"/>
+      <circle cx="20"   cy="130" r="11"/>
+      <circle cx="80"   cy="130" r="11"/>
+    </g>
+  </g>
+</svg>

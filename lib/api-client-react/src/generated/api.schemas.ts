@@ -501,6 +501,86 @@ export interface TrainingBookingWithPlayer {
   player?: TrainingBookingPlayer | null;
 }
 
+export type ClubTier = (typeof ClubTier)[keyof typeof ClubTier];
+
+export const ClubTier = {
+  premium: "premium",
+  standard: "standard",
+  community: "community",
+} as const;
+
+export interface Club {
+  id: number;
+  name: string;
+  /** @nullable */
+  logoUrl?: string | null;
+  /** @nullable */
+  photoUrl?: string | null;
+  address: string;
+  area: string;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  lat?: number | null;
+  /** @nullable */
+  lng?: number | null;
+  tier: ClubTier;
+  /** @nullable */
+  website?: string | null;
+  openingHours?: unknown | null;
+  /** @nullable */
+  notes?: string | null;
+  active: boolean;
+  createdAt: string;
+}
+
+export type UpsertClubBodyTier =
+  (typeof UpsertClubBodyTier)[keyof typeof UpsertClubBodyTier];
+
+export const UpsertClubBodyTier = {
+  premium: "premium",
+  standard: "standard",
+  community: "community",
+} as const;
+
+export interface UpsertClubBody {
+  name?: string;
+  address?: string;
+  area?: string;
+  /** @nullable */
+  logoUrl?: string | null;
+  /** @nullable */
+  photoUrl?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  lat?: number | null;
+  /** @nullable */
+  lng?: number | null;
+  tier?: UpsertClubBodyTier;
+  /** @nullable */
+  website?: string | null;
+  openingHours?: unknown | null;
+  /** @nullable */
+  notes?: string | null;
+  active?: boolean;
+}
+
+export interface RequestUploadUrlBody {
+  /** @minLength 1 */
+  name: string;
+  /** @minimum 1 */
+  size: number;
+  /** @minLength 1 */
+  contentType: string;
+}
+
+export interface RequestUploadUrlResponse {
+  uploadURL: string;
+  objectPath: string;
+  metadata?: RequestUploadUrlBody;
+}
+
 export interface BookingConflict {
   error: string;
   full?: boolean;
@@ -562,4 +642,8 @@ export type ListGroupTrainingsParams = {
   from?: string;
   to?: string;
   category?: string;
+};
+
+export type ListClubsParams = {
+  includeInactive?: boolean;
 };

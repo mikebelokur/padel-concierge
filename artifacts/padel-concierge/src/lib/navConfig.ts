@@ -42,6 +42,7 @@ const COACH_DRAWER_EXTRAS: NavEntry[] = [
   { href: "/coach", labelKey: "nav.coachHub", icon: "🏆" },
   { href: "/coach/group-trainings", labelKey: "nav.groupTrainings", icon: "📅" },
   { href: "/level-quiz/admin", labelKey: "nav.levelQuizResults", icon: "📋" },
+  { href: "/clubs", labelKey: "nav.clubs", icon: "🏢" },
   { href: "/rules", labelKey: "nav.padelRules", icon: "📖" },
   { href: "/news", labelKey: "nav.newsAndTips", icon: "📰" },
 ];
@@ -54,6 +55,7 @@ const ADMIN_DRAWER_EXTRAS: NavEntry[] = [
   { href: "/registrations", labelKey: "nav.registrations", icon: "🆕", badgeKey: "pending" },
   { href: "/members", labelKey: "nav.members", icon: "👤" },
   { href: "/courts", labelKey: "nav.courts", icon: "🏟️" },
+  { href: "/admin/clubs", labelKey: "nav.adminClubs", icon: "🏢" },
   { href: "/level-quiz/admin", labelKey: "nav.levelQuizResults", icon: "📋" },
   { href: "/rules", labelKey: "nav.padelRules", icon: "📖" },
   { href: "/news", labelKey: "nav.newsAndTips", icon: "📰" },
@@ -77,6 +79,7 @@ export function getNavConfig(mode: Mode): NavConfig {
         tertiary: PLAYER_TERTIARY,
         drawerExtras: [
           { href: "/dashboard", labelKey: "nav.dashboard", icon: "◈" },
+          { href: "/clubs", labelKey: "nav.clubs", icon: "🏢" },
           { href: "/news", labelKey: "nav.newsAndTips", icon: "📰" },
         ],
       };

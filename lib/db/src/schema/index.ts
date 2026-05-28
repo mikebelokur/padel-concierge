@@ -4,6 +4,7 @@ export * from "./bookings";
 export * from "./video_analyses";
 export * from "./activity_logs";
 export * from "./courts";
+export * from "./clubs";
 export * from "./match_requests";
 export * from "./skill_assessments";
 export * from "./password_reset_tokens";

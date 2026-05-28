@@ -28,6 +28,10 @@ tags:
     description: Statistics and dashboards
   - name: group-trainings
     description: Group training sessions and bookings
+  - name: clubs
+    description: Padel clubs directory
+  - name: storage
+    description: Object storage upload and serving endpoints
 
 paths:
   /healthz:
@@ -922,6 +926,122 @@ paths:
                   $ref: "#/components/schemas/TrainingBookingWithPlayer"
         "403":
           description: Forbidden
+
+  # CLUBS
+  /clubs:
+    get:
+      operationId: listClubs
+      tags: [clubs]
+      summary: List clubs
+      parameters:
+        - name: includeInactive
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Club"
+    post:
+      operationId: createClub
+      tags: [clubs]
+      summary: Create a club (admin/coach)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpsertClubBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Club"
+
+  /clubs/{id}:
+    get:
+      operationId: getClub
+      tags: [clubs]
+      summary: Get club by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Club"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateClub
+      tags: [clubs]
+      summary: Update a club (admin/coach)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpsertClubBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Club"
+    delete:
+      operationId: deleteClub
+      tags: [clubs]
+      summary: Delete a club (admin/coach)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+
+  # STORAGE
+  /storage/uploads/request-url:
+    post:
+      tags: [storage]
+      operationId: requestUploadUrl
+      summary: Request a presigned URL for file upload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestUploadUrlBody'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestUploadUrlResponse'
 
 components:
   schemas:
@@ -1831,6 +1951,105 @@ components:
         - status
         - bookedAt
         - createdAt
+
+    Club:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        logoUrl:
+          type: ["string", "null"]
+        photoUrl:
+          type: ["string", "null"]
+        address:
+          type: string
+        area:
+          type: string
+        phone:
+          type: ["string", "null"]
+        lat:
+          type: ["number", "null"]
+        lng:
+          type: ["number", "null"]
+        tier:
+          type: string
+          enum: [premium, standard, community]
+        website:
+          type: ["string", "null"]
+        openingHours:
+          nullable: true
+        notes:
+          type: ["string", "null"]
+        active:
+          type: boolean
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - address
+        - area
+        - tier
+        - active
+        - createdAt
+
+    UpsertClubBody:
+      type: object
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        area:
+          type: string
+        logoUrl:
+          type: ["string", "null"]
+        photoUrl:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        lat:
+          type: ["number", "null"]
+        lng:
+          type: ["number", "null"]
+        tier:
+          type: string
+          enum: [premium, standard, community]
+        website:
+          type: ["string", "null"]
+        openingHours:
+          nullable: true
+        notes:
+          type: ["string", "null"]
+        active:
+          type: boolean
+
+    RequestUploadUrlBody:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        size:
+          type: integer
+          minimum: 1
+        contentType:
+          type: string
+          minLength: 1
+
+    RequestUploadUrlResponse:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL:
+          type: string
+        objectPath:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/RequestUploadUrlBody'
 
     BookingConflict:
       type: object

@@ -1563,3 +1563,143 @@ export const ListGroupTrainingBookingsResponseItem = zod.object({
 export const ListGroupTrainingBookingsResponse = zod.array(
   ListGroupTrainingBookingsResponseItem,
 );
+
+/**
+ * @summary List clubs
+ */
+export const ListClubsQueryParams = zod.object({
+  includeInactive: zod.coerce.boolean().optional(),
+});
+
+export const ListClubsResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  logoUrl: zod.string().nullish(),
+  photoUrl: zod.string().nullish(),
+  address: zod.string(),
+  area: zod.string(),
+  phone: zod.string().nullish(),
+  lat: zod.number().nullish(),
+  lng: zod.number().nullish(),
+  tier: zod.enum(["premium", "standard", "community"]),
+  website: zod.string().nullish(),
+  openingHours: zod.unknown().nullish(),
+  notes: zod.string().nullish(),
+  active: zod.boolean(),
+  createdAt: zod.string(),
+});
+export const ListClubsResponse = zod.array(ListClubsResponseItem);
+
+/**
+ * @summary Create a club (admin/coach)
+ */
+export const CreateClubBody = zod.object({
+  name: zod.string().optional(),
+  address: zod.string().optional(),
+  area: zod.string().optional(),
+  logoUrl: zod.string().nullish(),
+  photoUrl: zod.string().nullish(),
+  phone: zod.string().nullish(),
+  lat: zod.number().nullish(),
+  lng: zod.number().nullish(),
+  tier: zod.enum(["premium", "standard", "community"]).optional(),
+  website: zod.string().nullish(),
+  openingHours: zod.unknown().nullish(),
+  notes: zod.string().nullish(),
+  active: zod.boolean().optional(),
+});
+
+/**
+ * @summary Get club by id
+ */
+export const GetClubParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetClubResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  logoUrl: zod.string().nullish(),
+  photoUrl: zod.string().nullish(),
+  address: zod.string(),
+  area: zod.string(),
+  phone: zod.string().nullish(),
+  lat: zod.number().nullish(),
+  lng: zod.number().nullish(),
+  tier: zod.enum(["premium", "standard", "community"]),
+  website: zod.string().nullish(),
+  openingHours: zod.unknown().nullish(),
+  notes: zod.string().nullish(),
+  active: zod.boolean(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Update a club (admin/coach)
+ */
+export const UpdateClubParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateClubBody = zod.object({
+  name: zod.string().optional(),
+  address: zod.string().optional(),
+  area: zod.string().optional(),
+  logoUrl: zod.string().nullish(),
+  photoUrl: zod.string().nullish(),
+  phone: zod.string().nullish(),
+  lat: zod.number().nullish(),
+  lng: zod.number().nullish(),
+  tier: zod.enum(["premium", "standard", "community"]).optional(),
+  website: zod.string().nullish(),
+  openingHours: zod.unknown().nullish(),
+  notes: zod.string().nullish(),
+  active: zod.boolean().optional(),
+});
+
+export const UpdateClubResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  logoUrl: zod.string().nullish(),
+  photoUrl: zod.string().nullish(),
+  address: zod.string(),
+  area: zod.string(),
+  phone: zod.string().nullish(),
+  lat: zod.number().nullish(),
+  lng: zod.number().nullish(),
+  tier: zod.enum(["premium", "standard", "community"]),
+  website: zod.string().nullish(),
+  openingHours: zod.unknown().nullish(),
+  notes: zod.string().nullish(),
+  active: zod.boolean(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Delete a club (admin/coach)
+ */
+export const DeleteClubParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary Request a presigned URL for file upload
+ */
+
+export const RequestUploadUrlBody = zod.object({
+  name: zod.string().min(1),
+  size: zod.number().min(1),
+  contentType: zod.string().min(1),
+});
+
+export const RequestUploadUrlResponse = zod.object({
+  uploadURL: zod.string(),
+  objectPath: zod.string(),
+  metadata: zod
+    .object({
+      name: zod.string().min(1),
+      size: zod.number().min(1),
+      contentType: zod.string().min(1),
+    })
+    .optional(),
+});

@@ -2,6 +2,7 @@ import app from "./app";
 import { logger } from "./lib/logger";
 import { startReminderJob } from "./lib/reminderJob";
 import { startGroupTrainingScheduler } from "./lib/groupTrainingScheduler";
+import { seedClubsIfEmpty } from "./lib/seedClubs";
 
 const rawPort = process.env["PORT"];
 
@@ -26,4 +27,5 @@ app.listen(port, (err) => {
   logger.info({ port }, "Server listening");
   startReminderJob();
   startGroupTrainingScheduler();
+  void seedClubsIfEmpty();
 });

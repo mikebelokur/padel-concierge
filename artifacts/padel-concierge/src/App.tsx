@@ -36,6 +36,9 @@ const GroupTrainings = lazy(() => import("@/pages/group-trainings"));
 import Admin from "@/pages/admin";
 import AdminUsers from "@/pages/admin-users";
 import Courts from "@/pages/courts";
+import ClubsList from "@/pages/clubs";
+import ClubDetail from "@/pages/club-detail";
+import AdminClubs from "@/pages/admin-clubs";
 import Members from "@/pages/members";
 import MatchRequests from "@/pages/match-requests";
 import Assessment from "@/pages/assessment";
@@ -141,6 +144,9 @@ function Router() {
       <Route path="/bookings">{() => <ProtectedRoute component={Bookings} />}</Route>
 
       <Route path="/courts">{() => <ProtectedRoute component={Courts} />}</Route>
+      <Route path="/clubs/:id">{() => <ProtectedRoute component={ClubDetail} />}</Route>
+      <Route path="/clubs">{() => <ProtectedRoute component={ClubsList} />}</Route>
+      <Route path="/admin/clubs">{() => <ProtectedRoute component={AdminClubs} allowedModes={["admin", "developer"]} />}</Route>
       <Route path="/members">{() => <ProtectedRoute component={Members} />}</Route>
       <Route path="/players/:id">{() => <ProtectedRoute component={PlayerProfilePage} />}</Route>
       <Route path="/match-requests">{() => <ProtectedRoute component={MatchRequests} />}</Route>

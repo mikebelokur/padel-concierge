@@ -25,6 +25,13 @@ export default function Settings() {
   });
   const [reminderOptOut, setReminderOptOut] = useState<boolean>(Boolean((user as any)?.reminderOptOut));
   const [savingOptOut, setSavingOptOut] = useState(false);
+  const [notifyEmailTrainer, setNotifyEmailTrainer] = useState<boolean>(
+    (user as any)?.notifyEmailTrainerRequests ?? true,
+  );
+  const [notifyWhatsappTrainer, setNotifyWhatsappTrainer] = useState<boolean>(
+    (user as any)?.notifyWhatsappTrainerRequests ?? true,
+  );
+  const [savingTrainerPref, setSavingTrainerPref] = useState<null | "email" | "whatsapp">(null);
   const [pushStatus, setPushStatus] = useState<PushStatus | null>(null);
   const [savingPush, setSavingPush] = useState(false);
   const [highlightPush, setHighlightPush] = useState(false);
@@ -97,6 +104,35 @@ export default function Settings() {
       toast({ title: t("settings.updateFailed"), description: translateError(e).message, variant: "destructive" });
     } finally {
       setSavingOptOut(false);
+    }
+  };
+
+  const handleTrainerNotifyChange = async (
+    channel: "email" | "whatsapp",
+    next: boolean,
+  ) => {
+    if (!user) return;
+    const prevEmail = notifyEmailTrainer;
+    const prevWhatsapp = notifyWhatsappTrainer;
+    if (channel === "email") setNotifyEmailTrainer(next);
+    else setNotifyWhatsappTrainer(next);
+    setSavingTrainerPref(channel);
+    try {
+      await apiFetch(`/users/${user.id}`, {
+        method: "PATCH",
+        body: JSON.stringify(
+          channel === "email"
+            ? { notifyEmailTrainerRequests: next }
+            : { notifyWhatsappTrainerRequests: next },
+        ),
+      });
+      toast({ title: t("settings.settingsUpdated") });
+    } catch (e: unknown) {
+      if (channel === "email") setNotifyEmailTrainer(prevEmail);
+      else setNotifyWhatsappTrainer(prevWhatsapp);
+      toast({ title: t("settings.updateFailed"), description: translateError(e).message, variant: "destructive" });
+    } finally {
+      setSavingTrainerPref(null);
     }
   };
 
@@ -276,6 +312,71 @@ export default function Settings() {
             </label>
           </div>
         </div>
+
+        {(() => {
+          const role = (user as any)?.role;
+          const isTrainer = role === "coach" || role === "admin" || role === "owner";
+          if (!isTrainer) return null;
+          const isRu = language === "ru";
+          return (
+            <div className="rounded-[20px] bg-card border border-white/5">
+              <div className="px-6 pt-5 pb-3">
+                <div className="text-base font-medium">
+                  {isRu ? "Уведомления о заявках на матч" : "Match request notifications"}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {isRu
+                    ? "Выберите, как получать уведомления о новых заявках на матч от игроков."
+                    : "Choose how you get notified when players send new match requests."}
+                </div>
+              </div>
+              <div className="px-6 pb-6 space-y-4">
+                <label className="flex items-start justify-between gap-4 cursor-pointer">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-white">
+                      {isRu ? "Присылать письма о новых заявках" : "Email me new match requests"}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={notifyEmailTrainer}
+                    onClick={() => handleTrainerNotifyChange("email", !notifyEmailTrainer)}
+                    disabled={savingTrainerPref === "email"}
+                    className="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50"
+                    style={{ background: notifyEmailTrainer ? "#D4AF37" : "rgba(255,255,255,0.15)" }}
+                  >
+                    <span
+                      className="inline-block h-5 w-5 transform rounded-full bg-white transition-transform"
+                      style={{ transform: notifyEmailTrainer ? "translateX(22px)" : "translateX(2px)" }}
+                    />
+                  </button>
+                </label>
+                <label className="flex items-start justify-between gap-4 cursor-pointer border-t border-white/5 pt-4">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-white">
+                      {isRu ? "Присылать WhatsApp о новых заявках" : "WhatsApp me new match requests"}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={notifyWhatsappTrainer}
+                    onClick={() => handleTrainerNotifyChange("whatsapp", !notifyWhatsappTrainer)}
+                    disabled={savingTrainerPref === "whatsapp"}
+                    className="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50"
+                    style={{ background: notifyWhatsappTrainer ? "#D4AF37" : "rgba(255,255,255,0.15)" }}
+                  >
+                    <span
+                      className="inline-block h-5 w-5 transform rounded-full bg-white transition-transform"
+                      style={{ transform: notifyWhatsappTrainer ? "translateX(22px)" : "translateX(2px)" }}
+                    />
+                  </button>
+                </label>
+              </div>
+            </div>
+          );
+        })()}
 
         <div className="rounded-[20px] bg-card border border-white/5">
           <div className="px-6 pt-5 pb-3">

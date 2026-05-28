@@ -1,9 +1,10 @@
 import { Router, type IRouter } from "express";
 import { db, trainerMatchRequestsTable, matchFeedbackTable, usersTable } from "@workspace/db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, inArray } from "drizzle-orm";
 import { upsertFeedbackAggregate } from "@workspace/db";
 import { fireAndForget } from "../lib/fireAndForget.js";
 import { requireAuth } from "../middleware/auth";
+import { sendPushToUser } from "../lib/push";
 
 const router: IRouter = Router();
 router.use(requireAuth);
@@ -93,6 +94,24 @@ router.post("/trainer-match-requests", async (req, res): Promise<void> => {
     requestedTime,
     notes: notes ?? "",
   }).returning();
+
+  const [requester] = await db
+    .select({ name: usersTable.name })
+    .from(usersTable)
+    .where(eq(usersTable.id, parseInt(String(playerId))));
+  const trainers = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(inArray(usersTable.role, ["coach", "admin", "owner"]));
+  for (const t of trainers) {
+    void sendPushToUser(t.id, {
+      title: "New trainer match request",
+      body: `${requester?.name ?? "A player"} wants a match on ${requestedDate} at ${requestedTime}`,
+      url: "/coach",
+      tag: `trainer-req-${row.id}`,
+    });
+  }
+
   res.status(201).json(row);
 });
 
@@ -107,6 +126,16 @@ router.patch("/trainer-match-requests/:id", async (req, res): Promise<void> => {
     .where(eq(trainerMatchRequestsTable.id, id))
     .returning();
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
+
+  if (status === "assigned") {
+    void sendPushToUser(row.playerId, {
+      title: "Your trainer match is set",
+      body: `Misha assigned partners for your match on ${row.requestedDate} at ${row.requestedTime}`,
+      url: "/match-requests",
+      tag: `trainer-req-${row.id}-assigned`,
+    });
+  }
+
   res.json(row);
 });
 

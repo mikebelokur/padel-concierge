@@ -1,0 +1,132 @@
+{
+  "tabs": {
+    "home": "Главная",
+    "find": "Поиск",
+    "profile": "Профиль"
+  },
+  "common": {
+    "back": "Назад",
+    "cancel": "Отмена",
+    "player": "Игрок",
+    "verified": "Подтверждён",
+    "free": "Бесплатно",
+    "aed": "AED",
+    "level": "Уровень",
+    "open": "Свободно",
+    "goBack": "Назад"
+  },
+  "dashboard": {
+    "greetingMorning": "Доброе утро",
+    "greetingAfternoon": "Добрый день",
+    "greetingEvening": "Добрый вечер",
+    "levelLabel": "УРОВЕНЬ",
+    "findMatch": "Найти матч",
+    "openMatches": "Открытые матчи",
+    "noOpenMatches": "Сейчас открытых матчей нет",
+    "stats": {
+      "matches": "Матчи",
+      "wins": "Победы",
+      "winRate": "% побед"
+    }
+  },
+  "matches": {
+    "title": "Найти матч",
+    "smartSuggestions": "Умный подбор",
+    "smartSub": "Подбор по уровню и архетипу",
+    "loadingSuggestions": "Подбираем лучшие матчи…",
+    "openMatches": "Открытые матчи",
+    "noMatches": "Открытых матчей нет",
+    "noLevelMatches": "Нет матчей уровня {{level}}",
+    "tryDifferent": "Загляните позже или измените фильтры",
+    "filterAll": "Все",
+    "suggestions": {
+      "best": "Лучший",
+      "balanced": "Сбалансированный",
+      "challenging": "Сложный",
+      "easy": "Лёгкий"
+    }
+  },
+  "profile": {
+    "performance": "Статистика",
+    "details": "Детали",
+    "archetypeLabel": "АРХЕТИП",
+    "signOut": "Выйти",
+    "signOutPrompt": "Вы действительно хотите выйти?",
+    "languageTitle": "Язык",
+    "languageUpdateFailedTitle": "Не удалось сохранить",
+    "languageUpdateFailedBody": "Не удалось сохранить выбор языка.",
+    "stats": {
+      "matches": "Матчи",
+      "wins": "Победы",
+      "winRate": "% побед",
+      "reliability": "Надёжность",
+      "reliabilityHigh": "Высокая",
+      "reliabilityGood": "Хорошая"
+    },
+    "rows": {
+      "goal": "Цель",
+      "intensity": "Интенсивность",
+      "location": "Локация",
+      "language": "Язык"
+    },
+    "archetypes": {
+      "pro-ambitious": "Профи-амбиция",
+      "competitive-improver": "Соревновательный",
+      "balanced-competitor": "Сбалансированный",
+      "social-enjoyer": "Социальный",
+      "casual-recreational": "Любитель"
+    }
+  },
+  "matchDetail": {
+    "headerTitle": "Детали матча",
+    "notFound": "Матч не найден",
+    "format": "Формат",
+    "level": "Уровень",
+    "venue": "Площадка",
+    "price": "Цена",
+    "playersCount": "Игроки ({{count}}/4)",
+    "warmupTitle": "Нужна разминка",
+    "warmupBody": "10-минутная разминка для игроков уровня {{level}}+",
+    "courtFee": "Стоимость корта",
+    "youreBooked": "Вы записаны",
+    "matchFull": "Мест нет",
+    "notAvailable": "Недоступно",
+    "bookThisMatch": "Записаться на матч",
+    "formats": {
+      "Classic": "До 2 побед в сетах",
+      "Simplified": "2 сета",
+      "Rotation": "Смена партнёра каждые 15–20 мин"
+    },
+    "status": {
+      "suggested": "Предложен",
+      "open": "Открыт",
+      "confirmed": "Подтверждён",
+      "completed": "Завершён",
+      "cancelled": "Отменён"
+    }
+  },
+  "book": {
+    "headerTitle": "Бронирование",
+    "title": "Подтвердите бронь",
+    "successHeadline": "Готово!",
+    "successSub": "Бронирование подтверждено: {{venue}}",
+    "backToDashboard": "На главную",
+    "findMoreMatches": "Найти ещё матчи",
+    "summary": {
+      "dateTime": "Дата и время",
+      "format": "Формат",
+      "level": "Уровень",
+      "players": "Игроки",
+      "playersValue": "{{count}}/4 подтверждено"
+    },
+    "courtFee": "Стоимость корта",
+    "priceNote": "Оплата на месте · Тестовая карта: 4242 4242 4242 4242",
+    "warmupTitle": "Нужна разминка",
+    "warmupBody": "10-минутная разминка обязательна для матчей уровня {{level}}+",
+    "bookingAs": "Бронь от имени",
+    "confirmButton": "Подтвердить бронь",
+    "cancel": "Отмена",
+    "failedTitle": "Ошибка бронирования",
+    "failedBody": "Не удалось завершить бронирование. Попробуйте ещё раз."
+  }
+}

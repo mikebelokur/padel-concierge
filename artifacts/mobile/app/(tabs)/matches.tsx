@@ -17,22 +17,24 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from "@/i18n";
 import { MatchCard } from "@/components/MatchCard";
 
-const LEVELS = ["All", "A", "B", "C+", "C", "D"];
+const LEVEL_FILTERS = ["All", "A", "B", "C+", "C", "D"] as const;
 
-const SUGGESTION_LABELS: Record<string, { label: string; color: string }> = {
-  best: { label: "Best Match", color: "#D4AF37" },
-  balanced: { label: "Balanced", color: "#22c55e" },
-  challenging: { label: "Challenging", color: "#f97316" },
-  easy: { label: "Easy", color: "#3b82f6" },
+const SUGGESTION_COLORS: Record<string, string> = {
+  best: "#D4AF37",
+  balanced: "#22c55e",
+  challenging: "#f97316",
+  easy: "#3b82f6",
 };
 
 export default function MatchesScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
-  const [selectedLevel, setSelectedLevel] = useState("All");
+  const { t } = useTranslation();
+  const [selectedLevel, setSelectedLevel] = useState<string>("All");
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : 0;
@@ -72,26 +74,25 @@ export default function MatchesScreen() {
       }
     >
       <Text style={[styles.pageTitle, { color: colors.foreground }]}>
-        Find a Match
+        {t("matches.title")}
       </Text>
 
       {suggestionEntries.length > 0 ? (
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-            Smart Suggestions
+            {t("matches.smartSuggestions")}
           </Text>
           <Text style={[styles.sectionSub, { color: colors.mutedForeground }]}>
-            Matched to your level & archetype
+            {t("matches.smartSub")}
           </Text>
           {suggestionEntries.map((key) => {
             const match = suggestions![key]!;
-            const meta = SUGGESTION_LABELS[key]!;
             return (
               <MatchCard
                 key={`${key}-${match.id}`}
                 match={match}
-                tag={meta.label}
-                tagColor={meta.color}
+                tag={t(`matches.suggestions.${key}`)}
+                tagColor={SUGGESTION_COLORS[key]}
               />
             );
           })}
@@ -100,7 +101,7 @@ export default function MatchesScreen() {
         <View style={styles.loadingSmall}>
           <ActivityIndicator size="small" color={colors.primary} />
           <Text style={[styles.loadingText, { color: colors.mutedForeground }]}>
-            Finding your best matches…
+            {t("matches.loadingSuggestions")}
           </Text>
         </View>
       ) : null}
@@ -108,7 +109,7 @@ export default function MatchesScreen() {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-            Open Matches
+            {t("matches.openMatches")}
           </Text>
           <Feather name="filter" size={16} color={colors.mutedForeground} />
         </View>
@@ -119,7 +120,7 @@ export default function MatchesScreen() {
           style={styles.filterScroll}
           contentContainerStyle={styles.filterContent}
         >
-          {LEVELS.map((lvl) => (
+          {LEVEL_FILTERS.map((lvl) => (
             <Pressable
               key={lvl}
               style={({ pressed }) => [
@@ -146,7 +147,7 @@ export default function MatchesScreen() {
                   },
                 ]}
               >
-                {lvl}
+                {lvl === "All" ? t("matches.filterAll") : lvl}
               </Text>
             </Pressable>
           ))}
@@ -169,12 +170,12 @@ export default function MatchesScreen() {
           >
             <Feather name="inbox" size={32} color={colors.mutedForeground} />
             <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
-              No open matches
+              {t("matches.noMatches")}
             </Text>
             <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
               {selectedLevel !== "All"
-                ? `No level ${selectedLevel} matches available`
-                : "Check back soon or change your filters"}
+                ? t("matches.noLevelMatches", { level: selectedLevel })
+                : t("matches.tryDifferent")}
             </Text>
           </View>
         ) : (

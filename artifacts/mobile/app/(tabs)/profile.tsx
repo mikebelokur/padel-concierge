@@ -17,6 +17,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from "@/i18n";
 import { StatCard } from "@/components/StatCard";
 
 type FeatherName = ComponentProps<typeof Feather>["name"];
@@ -33,12 +34,12 @@ const LANGUAGE_LABELS: Record<string, string> = {
   ar: "عربي",
 };
 
-const ARCHETYPE_LABELS: Record<string, { label: string; icon: FeatherName }> = {
-  "pro-ambitious": { label: "Pro Ambitious", icon: "zap" },
-  "competitive-improver": { label: "Competitive Improver", icon: "trending-up" },
-  "balanced-competitor": { label: "Balanced Competitor", icon: "activity" },
-  "social-enjoyer": { label: "Social Enjoyer", icon: "users" },
-  "casual-recreational": { label: "Casual Recreational", icon: "sun" },
+const ARCHETYPE_ICONS: Record<string, FeatherName> = {
+  "pro-ambitious": "zap",
+  "competitive-improver": "trending-up",
+  "balanced-competitor": "activity",
+  "social-enjoyer": "users",
+  "casual-recreational": "sun",
 };
 
 const LEVEL_COLORS: Record<string, string> = {
@@ -53,6 +54,7 @@ export default function ProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { user, logout, updateUser } = useAuth();
+  const { t } = useTranslation();
   const updateUserMutation = useUpdateUser();
   const [languagePickerOpen, setLanguagePickerOpen] = useState(false);
 
@@ -72,7 +74,10 @@ export default function ProfileScreen() {
   const archetypeKey = (user as Record<string, unknown> | null)?.[
     "archetype"
   ] as string | undefined;
-  const archetype = archetypeKey ? ARCHETYPE_LABELS[archetypeKey] : null;
+  const archetypeIcon = archetypeKey ? ARCHETYPE_ICONS[archetypeKey] : null;
+  const archetypeLabel = archetypeKey
+    ? t(`profile.archetypes.${archetypeKey}`)
+    : null;
   const levelColor = LEVEL_COLORS[user?.level ?? "C"] ?? colors.mutedForeground;
 
   const handleLanguageChange = (lang: "en" | "ru" | "ar") => {
@@ -85,7 +90,10 @@ export default function ProfileScreen() {
       {
         onError: () => {
           updateUser(prev);
-          Alert.alert("Update failed", "Could not save your language preference.");
+          Alert.alert(
+            t("profile.languageUpdateFailedTitle"),
+            t("profile.languageUpdateFailedBody"),
+          );
         },
       },
     );
@@ -101,10 +109,10 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = () => {
-    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("profile.signOut"), t("profile.signOutPrompt"), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "Sign Out",
+        text: t("profile.signOut"),
         style: "destructive",
         onPress: async () => {
           await logout();
@@ -121,12 +129,12 @@ export default function ProfileScreen() {
     onPress?: () => void;
     testID?: string;
   }[] = [
-    { icon: "target", label: "Goal", value: user?.goal },
-    { icon: "zap", label: "Intensity", value: user?.intensity },
-    { icon: "map-pin", label: "Location", value: user?.locationName },
+    { icon: "target", label: t("profile.rows.goal"), value: user?.goal },
+    { icon: "zap", label: t("profile.rows.intensity"), value: user?.intensity },
+    { icon: "map-pin", label: t("profile.rows.location"), value: user?.locationName },
     {
       icon: "globe",
-      label: "Language",
+      label: t("profile.rows.language"),
       value: user?.language
         ? LANGUAGE_LABELS[user.language] ?? user.language
         : LANGUAGE_LABELS.en,
@@ -163,7 +171,7 @@ export default function ProfileScreen() {
           </Text>
         </View>
         <Text style={[styles.playerName, { color: colors.foreground }]}>
-          {user?.name ?? "Player"}
+          {user?.name ?? t("common.player")}
         </Text>
         <Text style={[styles.playerEmail, { color: colors.mutedForeground }]}>
           {user?.email ?? ""}
@@ -181,7 +189,7 @@ export default function ProfileScreen() {
             ]}
           >
             <Text style={[styles.levelText, { color: levelColor }]}>
-              Level {user?.level ?? "—"}
+              {t("common.level")} {user?.level ?? "—"}
             </Text>
           </View>
 
@@ -198,14 +206,14 @@ export default function ProfileScreen() {
             >
               <Feather name="check-circle" size={12} color={colors.accent} />
               <Text style={[styles.verifiedText, { color: colors.accent }]}>
-                Verified
+                {t("common.verified")}
               </Text>
             </View>
           ) : null}
         </View>
       </View>
 
-      {archetype ? (
+      {archetypeLabel && archetypeIcon ? (
         <View
           style={[
             styles.archetypeCard,
@@ -216,15 +224,15 @@ export default function ProfileScreen() {
             },
           ]}
         >
-          <Feather name={archetype.icon} size={20} color={colors.primary} />
+          <Feather name={archetypeIcon} size={20} color={colors.primary} />
           <View style={styles.archetypeInfo}>
             <Text
               style={[styles.archetypeLabel, { color: colors.mutedForeground }]}
             >
-              ARCHETYPE
+              {t("profile.archetypeLabel")}
             </Text>
             <Text style={[styles.archetypeValue, { color: colors.primary }]}>
-              {archetype.label}
+              {archetypeLabel}
             </Text>
           </View>
         </View>
@@ -237,26 +245,26 @@ export default function ProfileScreen() {
       ) : (
         <View style={styles.statsSection}>
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-            Performance
+            {t("profile.performance")}
           </Text>
           <View style={styles.statsRow}>
             <StatCard
-              label="Matches"
+              label={t("profile.stats.matches")}
               value={stats?.matchesPlayed ?? user?.matchesPlayed ?? 0}
               accent
               small
             />
-            <StatCard label="Wins" value={user?.wins ?? 0} small />
+            <StatCard label={t("profile.stats.wins")} value={user?.wins ?? 0} small />
           </View>
           <View style={styles.statsRow}>
-            <StatCard label="Win Rate" value={`${winRate}%`} small />
+            <StatCard label={t("profile.stats.winRate")} value={`${winRate}%`} small />
             <StatCard
-              label="Reliability"
+              label={t("profile.stats.reliability")}
               value={
                 user?.verified
-                  ? "High"
+                  ? t("profile.stats.reliabilityHigh")
                   : (user?.matchesPlayed ?? 0) > 0
-                  ? "Good"
+                  ? t("profile.stats.reliabilityGood")
                   : "—"
               }
               small
@@ -267,7 +275,7 @@ export default function ProfileScreen() {
 
       <View style={styles.infoSection}>
         <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-          Details
+          {t("profile.details")}
         </Text>
         {detailItems
           .filter((item) => item.value || item.onPress)
@@ -336,7 +344,7 @@ export default function ProfileScreen() {
       >
         <Feather name="log-out" size={16} color={colors.destructive} />
         <Text style={[styles.logoutText, { color: colors.destructive }]}>
-          Sign Out
+          {t("profile.signOut")}
         </Text>
       </Pressable>
 
@@ -362,7 +370,7 @@ export default function ProfileScreen() {
             onPress={(e) => e.stopPropagation()}
           >
             <Text style={[styles.modalTitle, { color: colors.foreground }]}>
-              Language
+              {t("profile.languageTitle")}
             </Text>
             {LANGUAGE_OPTIONS.map((opt) => {
               const selected = (user?.language ?? "en") === opt.code;
@@ -400,7 +408,7 @@ export default function ProfileScreen() {
               <Text
                 style={[styles.modalCancelText, { color: colors.mutedForeground }]}
               >
-                Cancel
+                {t("common.cancel")}
               </Text>
             </Pressable>
           </Pressable>

@@ -1,0 +1,132 @@
+{
+  "tabs": {
+    "home": "Home",
+    "find": "Find",
+    "profile": "Profile"
+  },
+  "common": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "player": "Player",
+    "verified": "Verified",
+    "free": "Free",
+    "aed": "AED",
+    "level": "Level",
+    "open": "Open",
+    "goBack": "Go Back"
+  },
+  "dashboard": {
+    "greetingMorning": "Good morning",
+    "greetingAfternoon": "Good afternoon",
+    "greetingEvening": "Good evening",
+    "levelLabel": "LEVEL",
+    "findMatch": "Find a Match",
+    "openMatches": "Open Matches",
+    "noOpenMatches": "No open matches right now",
+    "stats": {
+      "matches": "Matches",
+      "wins": "Wins",
+      "winRate": "Win Rate"
+    }
+  },
+  "matches": {
+    "title": "Find a Match",
+    "smartSuggestions": "Smart Suggestions",
+    "smartSub": "Matched to your level & archetype",
+    "loadingSuggestions": "Finding your best matches…",
+    "openMatches": "Open Matches",
+    "noMatches": "No open matches",
+    "noLevelMatches": "No level {{level}} matches available",
+    "tryDifferent": "Check back soon or change your filters",
+    "filterAll": "All",
+    "suggestions": {
+      "best": "Best Match",
+      "balanced": "Balanced",
+      "challenging": "Challenging",
+      "easy": "Easy"
+    }
+  },
+  "profile": {
+    "performance": "Performance",
+    "details": "Details",
+    "archetypeLabel": "ARCHETYPE",
+    "signOut": "Sign Out",
+    "signOutPrompt": "Are you sure you want to sign out?",
+    "languageTitle": "Language",
+    "languageUpdateFailedTitle": "Update failed",
+    "languageUpdateFailedBody": "Could not save your language preference.",
+    "stats": {
+      "matches": "Matches",
+      "wins": "Wins",
+      "winRate": "Win Rate",
+      "reliability": "Reliability",
+      "reliabilityHigh": "High",
+      "reliabilityGood": "Good"
+    },
+    "rows": {
+      "goal": "Goal",
+      "intensity": "Intensity",
+      "location": "Location",
+      "language": "Language"
+    },
+    "archetypes": {
+      "pro-ambitious": "Pro Ambitious",
+      "competitive-improver": "Competitive Improver",
+      "balanced-competitor": "Balanced Competitor",
+      "social-enjoyer": "Social Enjoyer",
+      "casual-recreational": "Casual Recreational"
+    }
+  },
+  "matchDetail": {
+    "headerTitle": "Match Details",
+    "notFound": "Match not found",
+    "format": "Format",
+    "level": "Level",
+    "venue": "Venue",
+    "price": "Price",
+    "playersCount": "Players ({{count}}/4)",
+    "warmupTitle": "Warm-up Protocol Required",
+    "warmupBody": "10-minute structured warm-up for {{level}}+ players",
+    "courtFee": "Court fee",
+    "youreBooked": "You're booked",
+    "matchFull": "Match Full",
+    "notAvailable": "Not Available",
+    "bookThisMatch": "Book This Match",
+    "formats": {
+      "Classic": "Best of 3 sets",
+      "Simplified": "2 sets",
+      "Rotation": "Partner swap every 15–20 min"
+    },
+    "status": {
+      "suggested": "Suggested",
+      "open": "Open",
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    }
+  },
+  "book": {
+    "headerTitle": "Book Match",
+    "title": "Confirm Booking",
+    "successHeadline": "You're in!",
+    "successSub": "Booking confirmed for {{venue}}",
+    "backToDashboard": "Back to Dashboard",
+    "findMoreMatches": "Find More Matches",
+    "summary": {
+      "dateTime": "Date & Time",
+      "format": "Format",
+      "level": "Level",
+      "players": "Players",
+      "playersValue": "{{count}}/4 confirmed"
+    },
+    "courtFee": "Court fee",
+    "priceNote": "Paid at venue · Test card: 4242 4242 4242 4242",
+    "warmupTitle": "Warm-up Required",
+    "warmupBody": "10-minute structured warm-up is mandatory for {{level}}+ matches",
+    "bookingAs": "Booking as",
+    "confirmButton": "Confirm Booking",
+    "cancel": "Cancel",
+    "failedTitle": "Booking failed",
+    "failedBody": "Could not complete booking. Please try again."
+  }
+}

@@ -17,20 +17,22 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from "@/i18n";
 import { MatchCard } from "@/components/MatchCard";
 import { StatCard } from "@/components/StatCard";
 
-function greeting() {
+function greetingKey(): string {
   const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  return "Good evening";
+  if (h < 12) return "dashboard.greetingMorning";
+  if (h < 17) return "dashboard.greetingAfternoon";
+  return "dashboard.greetingEvening";
 }
 
 export default function DashboardScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : 0;
@@ -66,10 +68,10 @@ export default function DashboardScreen() {
       <View style={styles.header}>
         <View>
           <Text style={[styles.greeting, { color: colors.mutedForeground }]}>
-            {greeting()}
+            {t(greetingKey())}
           </Text>
           <Text style={[styles.name, { color: colors.foreground }]}>
-            {user?.name?.split(" ")[0] ?? "Player"}
+            {user?.name?.split(" ")[0] ?? t("common.player")}
           </Text>
         </View>
         <Pressable
@@ -102,7 +104,7 @@ export default function DashboardScreen() {
           ]}
         >
           <Text style={[styles.levelLabel, { color: colors.mutedForeground }]}>
-            LEVEL
+            {t("dashboard.levelLabel")}
           </Text>
           <Text style={[styles.levelValue, { color: colors.primary }]}>
             {user?.level ?? "—"}
@@ -121,7 +123,7 @@ export default function DashboardScreen() {
           >
             <Feather name="check-circle" size={12} color={colors.accent} />
             <Text style={[styles.verifiedText, { color: colors.accent }]}>
-              Verified
+              {t("common.verified")}
             </Text>
           </View>
         ) : null}
@@ -129,12 +131,12 @@ export default function DashboardScreen() {
 
       <View style={styles.statsRow}>
         <StatCard
-          label="Matches"
+          label={t("dashboard.stats.matches")}
           value={stats?.matchesPlayed ?? user?.matchesPlayed ?? 0}
           accent
         />
-        <StatCard label="Wins" value={user?.wins ?? 0} />
-        <StatCard label="Win Rate" value={`${winRate}%`} />
+        <StatCard label={t("dashboard.stats.wins")} value={user?.wins ?? 0} />
+        <StatCard label={t("dashboard.stats.winRate")} value={`${winRate}%`} />
       </View>
 
       <Pressable
@@ -152,13 +154,13 @@ export default function DashboardScreen() {
       >
         <Feather name="search" size={18} color={colors.primaryForeground} />
         <Text style={[styles.findBtnText, { color: colors.primaryForeground }]}>
-          Find a Match
+          {t("dashboard.findMatch")}
         </Text>
         <Feather name="arrow-right" size={18} color={colors.primaryForeground} />
       </Pressable>
 
       <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-        Open Matches
+        {t("dashboard.openMatches")}
       </Text>
 
       {matchesLoading ? (
@@ -178,7 +180,7 @@ export default function DashboardScreen() {
         >
           <Feather name="inbox" size={28} color={colors.mutedForeground} />
           <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-            No open matches right now
+            {t("dashboard.noOpenMatches")}
           </Text>
         </View>
       ) : (

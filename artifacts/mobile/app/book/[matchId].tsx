@@ -1,7 +1,7 @@
 import { useGetMatch, useCreateBooking } from "@workspace/api-client-react";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, Stack } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -16,6 +16,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from "@/i18n";
 import { formatMatchDateTime } from "@/lib/datetime";
 
 type BookingStep = "confirm" | "success";
@@ -25,8 +26,8 @@ export default function BookMatchScreen() {
   const insets = useSafeAreaInsets();
   const { matchId } = useLocalSearchParams<{ matchId: string }>();
   const { user } = useAuth();
+  const { t, language } = useTranslation();
   const [step, setStep] = useState<BookingStep>("confirm");
-  const locale = user?.language ?? "en";
 
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
 
@@ -48,8 +49,8 @@ export default function BookMatchScreen() {
         ).catch(() => {});
         const msg =
           (err as { message?: string }).message ??
-          "Could not complete booking. Please try again.";
-        Alert.alert("Booking failed", msg);
+          t("book.failedBody");
+        Alert.alert(t("book.failedTitle"), msg);
       },
     },
   });
@@ -61,20 +62,26 @@ export default function BookMatchScreen() {
 
   if (matchLoading) {
     return (
-      <View style={[styles.centered, { backgroundColor: colors.background }]}>
-        <ActivityIndicator color={colors.primary} size="large" />
-      </View>
+      <>
+        <Stack.Screen options={{ title: t("book.headerTitle") }} />
+        <View style={[styles.centered, { backgroundColor: colors.background }]}>
+          <ActivityIndicator color={colors.primary} size="large" />
+        </View>
+      </>
     );
   }
 
   if (!match) {
     return (
-      <View style={[styles.centered, { backgroundColor: colors.background }]}>
-        <Feather name="alert-circle" size={32} color={colors.destructive} />
-        <Text style={[styles.errorText, { color: colors.mutedForeground }]}>
-          Match not found
-        </Text>
-      </View>
+      <>
+        <Stack.Screen options={{ title: t("book.headerTitle") }} />
+        <View style={[styles.centered, { backgroundColor: colors.background }]}>
+          <Feather name="alert-circle" size={32} color={colors.destructive} />
+          <Text style={[styles.errorText, { color: colors.mutedForeground }]}>
+            {t("matchDetail.notFound")}
+          </Text>
+        </View>
+      </>
     );
   }
 
@@ -86,6 +93,7 @@ export default function BookMatchScreen() {
           { backgroundColor: colors.background },
         ]}
       >
+        <Stack.Screen options={{ title: t("book.headerTitle") }} />
         <View
           style={[
             styles.successIcon,
@@ -98,13 +106,13 @@ export default function BookMatchScreen() {
           <Feather name="check" size={40} color={colors.primary} />
         </View>
         <Text style={[styles.successTitle, { color: colors.foreground }]}>
-          You're in!
+          {t("book.successHeadline")}
         </Text>
         <Text style={[styles.successSub, { color: colors.mutedForeground }]}>
-          Booking confirmed for {match.clubName}
+          {t("book.successSub", { venue: match.clubName })}
         </Text>
         <Text style={[styles.successDate, { color: colors.mutedForeground }]}>
-          {formatMatchDateTime(match.date, match.time, locale, "long")}
+          {formatMatchDateTime(match.date, match.time, language, "long")}
         </Text>
 
         <View style={styles.successActions}>
@@ -122,7 +130,7 @@ export default function BookMatchScreen() {
             <Text
               style={[styles.primaryBtnText, { color: colors.primaryForeground }]}
             >
-              Back to Dashboard
+              {t("book.backToDashboard")}
             </Text>
           </Pressable>
           <Pressable
@@ -137,7 +145,7 @@ export default function BookMatchScreen() {
             onPress={() => router.replace("/(tabs)/matches")}
           >
             <Text style={[styles.outlineBtnText, { color: colors.foreground }]}>
-              Find More Matches
+              {t("book.findMoreMatches")}
             </Text>
           </Pressable>
         </View>
@@ -147,6 +155,7 @@ export default function BookMatchScreen() {
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
+      <Stack.Screen options={{ title: t("book.headerTitle") }} />
       <ScrollView
         contentContainerStyle={[
           styles.content,
@@ -155,7 +164,7 @@ export default function BookMatchScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Text style={[styles.pageTitle, { color: colors.foreground }]}>
-          Confirm Booking
+          {t("book.title")}
         </Text>
 
         <View
@@ -175,26 +184,26 @@ export default function BookMatchScreen() {
           {[
             {
               icon: "calendar" as const,
-              label: "Date & Time",
-              value: formatMatchDateTime(match.date, match.time, locale, "long"),
+              label: t("book.summary.dateTime"),
+              value: formatMatchDateTime(match.date, match.time, language, "long"),
             },
             {
               icon: "grid" as const,
-              label: "Format",
+              label: t("book.summary.format"),
               value: match.format,
             },
             {
               icon: "bar-chart-2" as const,
-              label: "Level",
+              label: t("book.summary.level"),
               value:
                 match.levelMin && match.levelMax && match.levelMin !== match.levelMax
                   ? `${match.levelMin} – ${match.levelMax}`
-                  : match.levelMin ?? "Open",
+                  : match.levelMin ?? t("common.open"),
             },
             {
               icon: "users" as const,
-              label: "Players",
-              value: `${match.players.length}/4 confirmed`,
+              label: t("book.summary.players"),
+              value: t("book.summary.playersValue", { count: match.players.length }),
             },
           ].map((row) => (
             <View
@@ -235,14 +244,14 @@ export default function BookMatchScreen() {
           ]}
         >
           <Text style={[styles.priceLabel, { color: colors.mutedForeground }]}>
-            Court fee
+            {t("book.courtFee")}
           </Text>
           <Text style={[styles.priceValue, { color: colors.primary }]}>
-            {match.price > 0 ? `${match.price} AED` : "Free"}
+            {match.price > 0 ? `${match.price} ${t("common.aed")}` : t("common.free")}
           </Text>
           {match.price > 0 ? (
             <Text style={[styles.priceSub, { color: colors.mutedForeground }]}>
-              Paid at venue · Test card: 4242 4242 4242 4242
+              {t("book.priceNote")}
             </Text>
           ) : null}
         </View>
@@ -263,13 +272,12 @@ export default function BookMatchScreen() {
             <Feather name="clock" size={16} color={colors.accent} />
             <View style={{ flex: 1, gap: 2 }}>
               <Text style={[styles.warmupTitle, { color: colors.accent }]}>
-                Warm-up Required
+                {t("book.warmupTitle")}
               </Text>
               <Text
                 style={[styles.warmupText, { color: colors.mutedForeground }]}
               >
-                10-minute structured warm-up is mandatory for {match.levelMin}+
-                matches
+                {t("book.warmupBody", { level: match.levelMin })}
               </Text>
             </View>
           </View>
@@ -286,10 +294,10 @@ export default function BookMatchScreen() {
           ]}
         >
           <Text style={[styles.playerLabel, { color: colors.mutedForeground }]}>
-            Booking as
+            {t("book.bookingAs")}
           </Text>
           <Text style={[styles.playerName, { color: colors.foreground }]}>
-            {user?.name ?? "Player"}
+            {user?.name ?? t("common.player")}
           </Text>
           <View style={styles.playerMeta}>
             <View
@@ -302,7 +310,7 @@ export default function BookMatchScreen() {
               ]}
             >
               <Text style={[styles.levelText, { color: colors.primary }]}>
-                Level {user?.level ?? "—"}
+                {t("common.level")} {user?.level ?? "—"}
               </Text>
             </View>
           </View>
@@ -342,7 +350,7 @@ export default function BookMatchScreen() {
                 { color: colors.primaryForeground },
               ]}
             >
-              Confirm Booking
+              {t("book.confirmButton")}
             </Text>
           )}
         </Pressable>
@@ -355,7 +363,7 @@ export default function BookMatchScreen() {
           disabled={isPending}
         >
           <Text style={[styles.cancelText, { color: colors.mutedForeground }]}>
-            Cancel
+            {t("book.cancel")}
           </Text>
         </Pressable>
       </View>

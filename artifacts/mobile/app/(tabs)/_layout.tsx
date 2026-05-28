@@ -9,6 +9,7 @@ import { ActivityIndicator, Platform, StyleSheet, View, useColorScheme } from "r
 
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from "@/i18n";
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { token, isLoading } = useAuth();
@@ -35,20 +36,21 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 }
 
 function NativeTabLayout() {
+  const { t } = useTranslation();
   return (
     <AuthGuard>
       <NativeTabs>
         <NativeTabs.Trigger name="index">
           <Icon sf={{ default: "house", selected: "house.fill" }} />
-          <Label>Home</Label>
+          <Label>{t("tabs.home")}</Label>
         </NativeTabs.Trigger>
         <NativeTabs.Trigger name="matches">
           <Icon sf={{ default: "magnifyingglass.circle", selected: "magnifyingglass.circle.fill" }} />
-          <Label>Find</Label>
+          <Label>{t("tabs.find")}</Label>
         </NativeTabs.Trigger>
         <NativeTabs.Trigger name="profile">
           <Icon sf={{ default: "person.circle", selected: "person.circle.fill" }} />
-          <Label>Profile</Label>
+          <Label>{t("tabs.profile")}</Label>
         </NativeTabs.Trigger>
       </NativeTabs>
     </AuthGuard>
@@ -57,6 +59,7 @@ function NativeTabLayout() {
 
 function ClassicTabLayout() {
   const colors = useColors();
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const isIOS = Platform.OS === "ios";
@@ -97,7 +100,7 @@ function ClassicTabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: "Home",
+            title: t("tabs.home"),
             tabBarIcon: ({ color }) =>
               isIOS ? (
                 <SymbolView name="house" tintColor={color} size={24} />
@@ -109,7 +112,7 @@ function ClassicTabLayout() {
         <Tabs.Screen
           name="matches"
           options={{
-            title: "Find",
+            title: t("tabs.find"),
             tabBarIcon: ({ color }) =>
               isIOS ? (
                 <SymbolView name="magnifyingglass" tintColor={color} size={24} />
@@ -121,7 +124,7 @@ function ClassicTabLayout() {
         <Tabs.Screen
           name="profile"
           options={{
-            title: "Profile",
+            title: t("tabs.profile"),
             tabBarIcon: ({ color }) =>
               isIOS ? (
                 <SymbolView name="person.circle" tintColor={color} size={24} />

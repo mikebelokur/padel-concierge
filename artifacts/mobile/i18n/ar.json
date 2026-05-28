@@ -1,0 +1,132 @@
+{
+  "tabs": {
+    "home": "الرئيسية",
+    "find": "بحث",
+    "profile": "الملف"
+  },
+  "common": {
+    "back": "رجوع",
+    "cancel": "إلغاء",
+    "player": "لاعب",
+    "verified": "موثّق",
+    "free": "مجاني",
+    "aed": "AED",
+    "level": "المستوى",
+    "open": "متاح",
+    "goBack": "رجوع"
+  },
+  "dashboard": {
+    "greetingMorning": "صباح الخير",
+    "greetingAfternoon": "نهارك سعيد",
+    "greetingEvening": "مساء الخير",
+    "levelLabel": "المستوى",
+    "findMatch": "ابحث عن مباراة",
+    "openMatches": "المباريات المتاحة",
+    "noOpenMatches": "لا توجد مباريات متاحة حاليًا",
+    "stats": {
+      "matches": "المباريات",
+      "wins": "الانتصارات",
+      "winRate": "نسبة الفوز"
+    }
+  },
+  "matches": {
+    "title": "ابحث عن مباراة",
+    "smartSuggestions": "اقتراحات ذكية",
+    "smartSub": "تم اختيارها وفق مستواك ونمطك",
+    "loadingSuggestions": "نبحث عن أفضل المباريات…",
+    "openMatches": "المباريات المتاحة",
+    "noMatches": "لا توجد مباريات متاحة",
+    "noLevelMatches": "لا توجد مباريات للمستوى {{level}}",
+    "tryDifferent": "حاول لاحقًا أو غيّر الفلاتر",
+    "filterAll": "الكل",
+    "suggestions": {
+      "best": "الأفضل",
+      "balanced": "متوازن",
+      "challenging": "صعب",
+      "easy": "سهل"
+    }
+  },
+  "profile": {
+    "performance": "الأداء",
+    "details": "التفاصيل",
+    "archetypeLabel": "النمط",
+    "signOut": "تسجيل الخروج",
+    "signOutPrompt": "هل أنت متأكد من تسجيل الخروج؟",
+    "languageTitle": "اللغة",
+    "languageUpdateFailedTitle": "فشل التحديث",
+    "languageUpdateFailedBody": "تعذّر حفظ اللغة المختارة.",
+    "stats": {
+      "matches": "المباريات",
+      "wins": "الانتصارات",
+      "winRate": "نسبة الفوز",
+      "reliability": "الالتزام",
+      "reliabilityHigh": "عالٍ",
+      "reliabilityGood": "جيد"
+    },
+    "rows": {
+      "goal": "الهدف",
+      "intensity": "الكثافة",
+      "location": "الموقع",
+      "language": "اللغة"
+    },
+    "archetypes": {
+      "pro-ambitious": "محترف طموح",
+      "competitive-improver": "تنافسي يتطور",
+      "balanced-competitor": "متوازن",
+      "social-enjoyer": "اجتماعي",
+      "casual-recreational": "هاوٍ"
+    }
+  },
+  "matchDetail": {
+    "headerTitle": "تفاصيل المباراة",
+    "notFound": "المباراة غير موجودة",
+    "format": "النوع",
+    "level": "المستوى",
+    "venue": "الملعب",
+    "price": "السعر",
+    "playersCount": "اللاعبون ({{count}}/4)",
+    "warmupTitle": "الإحماء مطلوب",
+    "warmupBody": "إحماء منظّم لمدة 10 دقائق للاعبي {{level}}+",
+    "courtFee": "رسم الملعب",
+    "youreBooked": "حجزك مؤكّد",
+    "matchFull": "المباراة ممتلئة",
+    "notAvailable": "غير متاحة",
+    "bookThisMatch": "احجز هذه المباراة",
+    "formats": {
+      "Classic": "أفضل من 3 مجموعات",
+      "Simplified": "مجموعتان",
+      "Rotation": "تبديل الشريك كل 15–20 دقيقة"
+    },
+    "status": {
+      "suggested": "مقترحة",
+      "open": "متاحة",
+      "confirmed": "مؤكدة",
+      "completed": "مكتملة",
+      "cancelled": "ملغاة"
+    }
+  },
+  "book": {
+    "headerTitle": "حجز مباراة",
+    "title": "تأكيد الحجز",
+    "successHeadline": "تم!",
+    "successSub": "تم تأكيد الحجز في {{venue}}",
+    "backToDashboard": "إلى الرئيسية",
+    "findMoreMatches": "ابحث عن مباريات أخرى",
+    "summary": {
+      "dateTime": "التاريخ والوقت",
+      "format": "النوع",
+      "level": "المستوى",
+      "players": "اللاعبون",
+      "playersValue": "{{count}}/4 مؤكّد"
+    },
+    "courtFee": "رسم الملعب",
+    "priceNote": "الدفع في الملعب · بطاقة تجريبية: 4242 4242 4242 4242",
+    "warmupTitle": "الإحماء مطلوب",
+    "warmupBody": "الإحماء المنظّم لمدة 10 دقائق إلزامي لمباريات {{level}}+",
+    "bookingAs": "الحجز باسم",
+    "confirmButton": "تأكيد الحجز",
+    "cancel": "إلغاء",
+    "failedTitle": "فشل الحجز",
+    "failedBody": "تعذّر إتمام الحجز. حاول مرة أخرى."
+  }
+}

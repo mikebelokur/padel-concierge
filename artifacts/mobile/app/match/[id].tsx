@@ -2,7 +2,7 @@ import { useGetMatch } from "@workspace/api-client-react";
 import { Feather } from "@expo/vector-icons";
 import type { ComponentProps } from "react";
 import * as Haptics from "expo-haptics";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, Stack } from "expo-router";
 import {
   ActivityIndicator,
   Platform,
@@ -15,16 +15,11 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from "@/i18n";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { formatMatchDateTime } from "@/lib/datetime";
 
 type FeatherName = ComponentProps<typeof Feather>["name"];
-
-const FORMAT_INFO: Record<string, string> = {
-  Classic: "Best of 3 sets",
-  Simplified: "2 sets",
-  Rotation: "Partner swap every 15–20 min",
-};
 
 interface InfoRowProps {
   icon: FeatherName;
@@ -76,15 +71,14 @@ export default function MatchDetailScreen() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
+  const { t, tOrFallback, language } = useTranslation();
 
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
-  const locale = user?.language ?? "en";
-
   const { data: match, isLoading, error } = useGetMatch(Number(id));
 
-  const isAlreadyBooked = match?.players.some((p) => p.userId === user?.id);
+  const isAlreadyBooked = match?.players.some((p) => p.userId === user?.id) ?? false;
   const isFull = match?.players.length !== undefined && match.players.length >= 4;
 
   const handleBook = () => {
@@ -94,52 +88,66 @@ export default function MatchDetailScreen() {
 
   if (isLoading) {
     return (
-      <View
-        style={[
-          styles.centered,
-          { backgroundColor: colors.background, paddingTop: topPad },
-        ]}
-      >
-        <ActivityIndicator color={colors.primary} size="large" />
-      </View>
+      <>
+        <Stack.Screen options={{ title: t("matchDetail.headerTitle") }} />
+        <View
+          style={[
+            styles.centered,
+            { backgroundColor: colors.background, paddingTop: topPad },
+          ]}
+        >
+          <ActivityIndicator color={colors.primary} size="large" />
+        </View>
+      </>
     );
   }
 
   if (error || !match) {
     return (
-      <View
-        style={[
-          styles.centered,
-          { backgroundColor: colors.background, paddingTop: topPad },
-        ]}
-      >
-        <Feather name="alert-circle" size={32} color={colors.destructive} />
-        <Text style={[styles.errorText, { color: colors.mutedForeground }]}>
-          Match not found
-        </Text>
-        <Pressable
+      <>
+        <Stack.Screen options={{ title: t("matchDetail.headerTitle") }} />
+        <View
           style={[
-            styles.retryBtn,
-            { borderColor: colors.border, borderRadius: colors.radius },
+            styles.centered,
+            { backgroundColor: colors.background, paddingTop: topPad },
           ]}
-          onPress={() => router.back()}
         >
-          <Text style={[styles.retryText, { color: colors.foreground }]}>
-            Go Back
+          <Feather name="alert-circle" size={32} color={colors.destructive} />
+          <Text style={[styles.errorText, { color: colors.mutedForeground }]}>
+            {t("matchDetail.notFound")}
           </Text>
-        </Pressable>
-      </View>
+          <Pressable
+            style={[
+              styles.retryBtn,
+              { borderColor: colors.border, borderRadius: colors.radius },
+            ]}
+            onPress={() => router.back()}
+          >
+            <Text style={[styles.retryText, { color: colors.foreground }]}>
+              {t("common.goBack")}
+            </Text>
+          </Pressable>
+        </View>
+      </>
     );
   }
 
-  const formatDesc = FORMAT_INFO[match.format] ?? match.format;
+  const formatDesc = tOrFallback(
+    `matchDetail.formats.${match.format}`,
+    match.format,
+  );
   const levelValue =
     match.levelMin && match.levelMax && match.levelMin !== match.levelMax
       ? `${match.levelMin} – ${match.levelMax}`
-      : match.levelMin ?? "Open";
+      : match.levelMin ?? t("common.open");
+  const statusText = tOrFallback(
+    `matchDetail.status.${match.status}`,
+    match.status,
+  );
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
+      <Stack.Screen options={{ title: t("matchDetail.headerTitle") }} />
       <ScrollView
         contentContainerStyle={[
           styles.content,
@@ -187,7 +195,7 @@ export default function MatchDetailScreen() {
                   },
                 ]}
               >
-                {match.status.charAt(0).toUpperCase() + match.status.slice(1)}
+                {statusText}
               </Text>
             </View>
           </View>
@@ -195,7 +203,7 @@ export default function MatchDetailScreen() {
           <View style={styles.dateRow}>
             <Feather name="calendar" size={14} color={colors.mutedForeground} />
             <Text style={[styles.dateText, { color: colors.mutedForeground }]}>
-              {formatMatchDateTime(match.date, match.time, locale, "long")}
+              {formatMatchDateTime(match.date, match.time, language, "long")}
             </Text>
           </View>
         </View>
@@ -203,23 +211,23 @@ export default function MatchDetailScreen() {
         <View style={styles.section}>
           <InfoRow
             icon="grid"
-            label="Format"
+            label={t("matchDetail.format")}
             value={`${match.format} — ${formatDesc}`}
             colors={colors}
           />
-          <InfoRow icon="bar-chart-2" label="Level" value={levelValue} colors={colors} />
-          <InfoRow icon="map-pin" label="Venue" value={match.clubName} colors={colors} />
+          <InfoRow icon="bar-chart-2" label={t("matchDetail.level")} value={levelValue} colors={colors} />
+          <InfoRow icon="map-pin" label={t("matchDetail.venue")} value={match.clubName} colors={colors} />
           <InfoRow
             icon="tag"
-            label="Price"
-            value={match.price > 0 ? `${match.price} AED` : "Free"}
+            label={t("matchDetail.price")}
+            value={match.price > 0 ? `${match.price} ${t("common.aed")}` : t("common.free")}
             colors={colors}
           />
         </View>
 
         <View style={styles.playersSection}>
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-            Players ({match.players.length}/4)
+            {t("matchDetail.playersCount", { count: match.players.length })}
           </Text>
           <View style={styles.playersGrid}>
             {match.players.map((p) => (
@@ -263,7 +271,7 @@ export default function MatchDetailScreen() {
                 <Text
                   style={[styles.playerName, { color: colors.mutedForeground }]}
                 >
-                  Open
+                  {t("common.open")}
                 </Text>
               </View>
             ))}
@@ -286,10 +294,10 @@ export default function MatchDetailScreen() {
             <Feather name="clock" size={16} color={colors.accent} />
             <View style={{ flex: 1, gap: 2 }}>
               <Text style={[styles.warmupTitle, { color: colors.accent }]}>
-                Warm-up Protocol Required
+                {t("matchDetail.warmupTitle")}
               </Text>
               <Text style={[styles.warmupText, { color: colors.mutedForeground }]}>
-                10-minute structured warm-up for {match.levelMin}+ players
+                {t("matchDetail.warmupBody", { level: match.levelMin })}
               </Text>
             </View>
           </View>
@@ -308,10 +316,10 @@ export default function MatchDetailScreen() {
       >
         <View style={styles.priceRow}>
           <Text style={[styles.priceLabel, { color: colors.mutedForeground }]}>
-            Court fee
+            {t("matchDetail.courtFee")}
           </Text>
           <Text style={[styles.priceValue, { color: colors.primary }]}>
-            {match.price > 0 ? `${match.price} AED` : "Free"}
+            {match.price > 0 ? `${match.price} ${t("common.aed")}` : t("common.free")}
           </Text>
         </View>
 
@@ -328,7 +336,7 @@ export default function MatchDetailScreen() {
           >
             <Feather name="check-circle" size={18} color={colors.accent} />
             <Text style={[styles.bookedText, { color: colors.accent }]}>
-              You're booked
+              {t("matchDetail.youreBooked")}
             </Text>
           </View>
         ) : (
@@ -366,10 +374,10 @@ export default function MatchDetailScreen() {
               ]}
             >
               {isFull
-                ? "Match Full"
+                ? t("matchDetail.matchFull")
                 : match.status !== "open"
-                ? "Not Available"
-                : "Book This Match"}
+                ? t("matchDetail.notAvailable")
+                : t("matchDetail.bookThisMatch")}
             </Text>
           </Pressable>
         )}

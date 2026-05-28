@@ -8,7 +8,7 @@ import {
   View,
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
-import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from "@/i18n";
 import { formatMatchDateTime } from "@/lib/datetime";
 
 interface MatchCardProps {
@@ -25,20 +25,17 @@ const LEVEL_COLORS: Record<string, string> = {
   D: "#3b82f6",
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  open: "Open",
-  confirmed: "Confirmed",
-  completed: "Completed",
-  cancelled: "Cancelled",
-};
-
 export function MatchCard({ match, tag, tagColor }: MatchCardProps) {
   const colors = useColors();
-  const { user } = useAuth();
-  const locale = user?.language ?? "en";
+  const { t, tOrFallback, language } = useTranslation();
 
   const levelColor =
     LEVEL_COLORS[match.levelMin ?? "C"] ?? colors.mutedForeground;
+
+  const statusLabel = tOrFallback(
+    `matchDetail.status.${match.status}`,
+    match.status,
+  );
 
   return (
     <Pressable
@@ -109,7 +106,7 @@ export function MatchCard({ match, tag, tagColor }: MatchCardProps) {
               },
             ]}
           >
-            {STATUS_LABELS[match.status] ?? match.status}
+            {statusLabel}
           </Text>
         </View>
       </View>
@@ -118,7 +115,7 @@ export function MatchCard({ match, tag, tagColor }: MatchCardProps) {
         <View style={styles.detailItem}>
           <Feather name="calendar" size={12} color={colors.mutedForeground} />
           <Text style={[styles.detailText, { color: colors.mutedForeground }]}>
-            {formatMatchDateTime(match.date, match.time, locale)}
+            {formatMatchDateTime(match.date, match.time, language)}
           </Text>
         </View>
         <View style={styles.detailItem}>
@@ -183,7 +180,7 @@ export function MatchCard({ match, tag, tagColor }: MatchCardProps) {
         </View>
 
         <Text style={[styles.price, { color: colors.primary }]}>
-          {match.price > 0 ? `${match.price} AED` : "Free"}
+          {match.price > 0 ? `${match.price} ${t("common.aed")}` : t("common.free")}
         </Text>
       </View>
     </Pressable>

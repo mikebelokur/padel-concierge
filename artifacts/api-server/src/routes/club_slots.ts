@@ -9,7 +9,8 @@ import {
   bookingsTable,
   activityLogsTable,
 } from "@workspace/db";
-import { and, eq, gte, inArray, asc, sql } from "drizzle-orm";
+import { and, eq, gt, gte, inArray, asc, sql } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
 import { requireAuth } from "../middleware/auth";
 import { getTokenFromRequest, verifyToken } from "../lib/auth";
 import { sendPushToUser } from "../lib/push";
@@ -31,6 +32,7 @@ function serializeSlot(s: SlotRow, interestedUserIds: number[] = []) {
     levelSuitability: s.levelSuitability ?? null,
     notes: s.notes ?? null,
     status: s.status,
+    recurringSeriesId: s.recurringSeriesId ?? null,
     createdBy: s.createdBy,
     createdAt: s.createdAt.toISOString(),
     updatedAt: s.updatedAt.toISOString(),
@@ -126,22 +128,77 @@ router.post("/clubs/:id/slots", async (req, res): Promise<void> => {
     res.status(401).json({ error: "Unauthorized" });
     return;
   }
-  const [row] = await db
+
+  // Build the list of dates this request should produce. When repeatWeekly is
+  // true and repeatUntil is a valid ISO date >= the start date, we generate
+  // one slot per matching weekday up to (and including) the end date and link
+  // them with a shared recurring_series_id.
+  const startDate = String(b.date);
+  const repeatWeekly = b.repeatWeekly === true || b.repeatWeekly === "true";
+  const repeatUntilRaw = typeof b.repeatUntil === "string" ? b.repeatUntil : "";
+
+  const dateRe = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRe.test(startDate)) {
+    res.status(400).json({ error: "Invalid date" });
+    return;
+  }
+
+  const dates: string[] = [startDate];
+  let recurringSeriesId: string | null = null;
+  if (repeatWeekly) {
+    if (!dateRe.test(repeatUntilRaw)) {
+      res.status(400).json({ error: "repeatUntil must be YYYY-MM-DD" });
+      return;
+    }
+    if (repeatUntilRaw < startDate) {
+      res.status(400).json({ error: "repeatUntil must be on or after date" });
+      return;
+    }
+    // Cap at ~6 months to avoid runaway inserts.
+    const startMs = Date.parse(startDate + "T00:00:00Z");
+    const endMs = Date.parse(repeatUntilRaw + "T00:00:00Z");
+    const maxMs = startMs + 1000 * 60 * 60 * 24 * 7 * 27;
+    if (endMs > maxMs) {
+      res.status(400).json({ error: "repeatUntil is too far in the future" });
+      return;
+    }
+    dates.length = 0;
+    for (let ms = startMs; ms <= endMs; ms += 1000 * 60 * 60 * 24 * 7) {
+      dates.push(new Date(ms).toISOString().slice(0, 10));
+    }
+    if (dates.length > 1) {
+      recurringSeriesId = randomUUID();
+    }
+  }
+
+  const rows = await db
     .insert(clubSlotsTable)
-    .values({
-      clubId,
-      date: String(b.date),
-      startTime: String(b.startTime),
-      endTime: String(b.endTime),
-      courtNumber: b.courtNumber ? String(b.courtNumber) : null,
-      priceAed: b.priceAed != null && b.priceAed !== "" ? String(b.priceAed) : null,
-      levelSuitability: b.levelSuitability ? String(b.levelSuitability) : null,
-      notes: b.notes ? String(b.notes) : null,
-      status: b.status ?? "open",
-      createdBy,
-    })
+    .values(
+      dates.map((d) => ({
+        clubId,
+        date: d,
+        startTime: String(b.startTime),
+        endTime: String(b.endTime),
+        courtNumber: b.courtNumber ? String(b.courtNumber) : null,
+        priceAed: b.priceAed != null && b.priceAed !== "" ? String(b.priceAed) : null,
+        levelSuitability: b.levelSuitability ? String(b.levelSuitability) : null,
+        notes: b.notes ? String(b.notes) : null,
+        status: b.status ?? "open",
+        recurringSeriesId,
+        createdBy,
+      })),
+    )
     .returning();
-  res.status(201).json(serializeSlot(row, []));
+
+  if (rows.length === 1) {
+    res.status(201).json(serializeSlot(rows[0], []));
+    return;
+  }
+  res.status(201).json({
+    recurringSeriesId,
+    count: rows.length,
+    slots: rows.map((r) => serializeSlot(r, [])),
+  });
 });
 
 // Admin: update a slot
@@ -175,7 +232,8 @@ router.patch("/slots/:slotId", async (req, res): Promise<void> => {
   res.json(serializeSlot(row, interests.get(slotId) ?? []));
 });
 
-// Admin: cancel/delete a slot
+// Admin: cancel/delete a slot. With ?scope=future, also cancels every later
+// open slot in the same recurring series.
 router.delete("/slots/:slotId", async (req, res): Promise<void> => {
   if (!(await isAdmin(req))) {
     res.status(403).json({ error: "Admin only" });
@@ -186,6 +244,8 @@ router.delete("/slots/:slotId", async (req, res): Promise<void> => {
     res.status(400).json({ error: "Invalid slot id" });
     return;
   }
+  const scope = String(req.query.scope ?? "this") === "future" ? "future" : "this";
+
   const [row] = await db
     .update(clubSlotsTable)
     .set({ status: "cancelled", updatedAt: new Date() })
@@ -195,7 +255,24 @@ router.delete("/slots/:slotId", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Slot not found" });
     return;
   }
-  res.json({ ok: true });
+
+  let futureCancelled = 0;
+  if (scope === "future" && row.recurringSeriesId) {
+    const updated = await db
+      .update(clubSlotsTable)
+      .set({ status: "cancelled", updatedAt: new Date() })
+      .where(
+        and(
+          eq(clubSlotsTable.recurringSeriesId, row.recurringSeriesId),
+          gt(clubSlotsTable.date, row.date),
+          eq(clubSlotsTable.status, "open"),
+        ),
+      )
+      .returning({ id: clubSlotsTable.id });
+    futureCancelled = updated.length;
+  }
+
+  res.json({ ok: true, scope, futureCancelled });
 });
 
 // Player: register interest in a slot

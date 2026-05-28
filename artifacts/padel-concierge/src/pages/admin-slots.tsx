@@ -23,6 +23,7 @@ interface Slot {
   levelSuitability: string | null;
   notes: string | null;
   status: "open" | "taken" | "cancelled";
+  recurringSeriesId: string | null;
   interestedCount: number;
   interestedUserIds: number[];
 }
@@ -34,6 +35,8 @@ interface NewSlotForm {
   priceAed: string;
   levelSuitability: string;
   notes: string;
+  repeatWeekly: boolean;
+  repeatUntil: string;
 }
 
 const EMPTY_NEW: NewSlotForm = {
@@ -43,6 +46,8 @@ const EMPTY_NEW: NewSlotForm = {
   priceAed: "",
   levelSuitability: "",
   notes: "",
+  repeatWeekly: false,
+  repeatUntil: "",
 };
 
 function todayISO(): string {
@@ -77,13 +82,25 @@ export default function AdminSlots() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (body: Partial<Slot>) =>
-      apiFetch<Slot>(`/clubs/${clubId}/slots`, {
-        method: "POST",
-        body: JSON.stringify({ ...body, date }),
-      }),
-    onSuccess: () => {
-      toast({ title: t("adminSlots.toastAdded") });
+    mutationFn: (body: Record<string, unknown>) =>
+      apiFetch<Slot | { count: number; slots: Slot[] }>(
+        `/clubs/${clubId}/slots`,
+        {
+          method: "POST",
+          body: JSON.stringify({ ...body, date }),
+        },
+      ),
+    onSuccess: (resp) => {
+      const count =
+        resp && typeof resp === "object" && "count" in resp
+          ? (resp as { count: number }).count
+          : 1;
+      toast({
+        title:
+          count > 1
+            ? t("adminSlots.toastAddedSeries", { count })
+            : t("adminSlots.toastAdded"),
+      });
       setForm(EMPTY_NEW);
       qc.invalidateQueries({ queryKey: slotsKey });
     },
@@ -96,13 +113,42 @@ export default function AdminSlots() {
   });
 
   const cancelMutation = useMutation({
-    mutationFn: (slotId: number) =>
-      apiFetch(`/slots/${slotId}`, { method: "DELETE" }),
-    onSuccess: () => {
-      toast({ title: t("adminSlots.toastCancelled") });
+    mutationFn: ({ slotId, scope }: { slotId: number; scope: "this" | "future" }) =>
+      apiFetch<{ futureCancelled?: number }>(
+        `/slots/${slotId}?scope=${scope}`,
+        { method: "DELETE" },
+      ),
+    onSuccess: (resp, vars) => {
+      const extra = resp?.futureCancelled ?? 0;
+      toast({
+        title:
+          vars.scope === "future" && extra > 0
+            ? t("adminSlots.toastCancelledSeries", { count: extra + 1 })
+            : t("adminSlots.toastCancelled"),
+      });
       qc.invalidateQueries({ queryKey: slotsKey });
     },
   });
+
+  function handleCancel(slot: Slot) {
+    if (slot.recurringSeriesId) {
+      const choice = window.prompt(
+        t("adminSlots.confirmCancelSeriesPrompt"),
+        "1",
+      );
+      if (choice == null) return;
+      const trimmed = choice.trim();
+      if (trimmed === "1") {
+        cancelMutation.mutate({ slotId: slot.id, scope: "this" });
+      } else if (trimmed === "2") {
+        cancelMutation.mutate({ slotId: slot.id, scope: "future" });
+      }
+      return;
+    }
+    if (window.confirm(t("adminSlots.confirmCancel"))) {
+      cancelMutation.mutate({ slotId: slot.id, scope: "this" });
+    }
+  }
 
   const visibleSlots = useMemo(
     () => slots.filter((s) => s.status !== "cancelled"),
@@ -118,6 +164,24 @@ export default function AdminSlots() {
       });
       return;
     }
+    if (form.repeatWeekly) {
+      if (!form.repeatUntil) {
+        toast({
+          title: t("common.error"),
+          description: t("adminSlots.repeatUntilRequired"),
+          variant: "destructive",
+        });
+        return;
+      }
+      if (form.repeatUntil < date) {
+        toast({
+          title: t("common.error"),
+          description: t("adminSlots.repeatUntilTooEarly"),
+          variant: "destructive",
+        });
+        return;
+      }
+    }
     createMutation.mutate({
       startTime: form.startTime,
       endTime: form.endTime,
@@ -125,6 +189,8 @@ export default function AdminSlots() {
       priceAed: form.priceAed || null,
       levelSuitability: form.levelSuitability || null,
       notes: form.notes || null,
+      repeatWeekly: form.repeatWeekly,
+      repeatUntil: form.repeatWeekly ? form.repeatUntil : undefined,
     });
   }
 
@@ -227,6 +293,37 @@ export default function AdminSlots() {
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
             />
           </label>
+          <div className="rounded-lg bg-black/30 border border-white/5 p-3 space-y-2">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.repeatWeekly}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, repeatWeekly: e.target.checked }))
+                }
+              />
+              <span>{t("adminSlots.repeatWeekly")}</span>
+            </label>
+            {form.repeatWeekly && (
+              <label className="block">
+                <span className="text-xs text-muted-foreground">
+                  {t("adminSlots.repeatUntil")}
+                </span>
+                <input
+                  type="date"
+                  min={date}
+                  className="mt-1 w-full bg-black/40 border border-white/10 rounded-lg px-3 h-11 text-sm"
+                  value={form.repeatUntil}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, repeatUntil: e.target.value }))
+                  }
+                />
+                <span className="block mt-1 text-xs text-muted-foreground">
+                  {t("adminSlots.repeatHint")}
+                </span>
+              </label>
+            )}
+          </div>
           <button
             onClick={handleAdd}
             disabled={createMutation.isPending}
@@ -268,13 +365,14 @@ export default function AdminSlots() {
                         🔥 {t("adminSlots.interested", { count: s.interestedCount })}
                       </div>
                     )}
+                    {s.recurringSeriesId && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        ↻ {t("adminSlots.recurringBadge")}
+                      </div>
+                    )}
                   </div>
                   <button
-                    onClick={() => {
-                      if (window.confirm(t("adminSlots.confirmCancel"))) {
-                        cancelMutation.mutate(s.id);
-                      }
-                    }}
+                    onClick={() => handleCancel(s)}
                     className="text-xs text-red-400 hover:text-red-300 px-2 py-1"
                   >
                     {t("adminSlots.cancel")}

@@ -107,7 +107,16 @@
     "interested": "{{count}} заинтересованы",
     "timeRequired": "Нужно указать время начала и конца",
     "toastAdded": "Слот добавлен",
-    "toastCancelled": "Слот отменён"
+    "toastAddedSeries": "Добавлено {{count}} еженедельных слотов",
+    "toastCancelled": "Слот отменён",
+    "toastCancelledSeries": "Отменено слотов: {{count}}",
+    "repeatWeekly": "Повторять еженедельно",
+    "repeatUntil": "Повторять до",
+    "repeatHint": "Создаст по одному слоту в этот день недели до указанной даты.",
+    "repeatUntilRequired": "Укажи дату окончания повтора",
+    "repeatUntilTooEarly": "Дата окончания должна быть не раньше даты начала",
+    "recurringBadge": "Еженедельно",
+    "confirmCancelSeriesPrompt": "Этот слот повторяется еженедельно. Введи 1 — отменить только этот, 2 — этот и все будущие."
   },
   "clubsAdmin": {
     "title": "Клубы",

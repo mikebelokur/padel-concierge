@@ -105,7 +105,16 @@
     "interested": "{{count}} interested",
     "timeRequired": "Start and end time are required",
     "toastAdded": "Slot added",
-    "toastCancelled": "Slot cancelled"
+    "toastAddedSeries": "{{count}} weekly slots added",
+    "toastCancelled": "Slot cancelled",
+    "toastCancelledSeries": "{{count}} slots cancelled",
+    "repeatWeekly": "Repeat weekly",
+    "repeatUntil": "Repeat until",
+    "repeatHint": "Creates one slot per week on this weekday up to the end date.",
+    "repeatUntilRequired": "Pick an end date for the weekly repeat",
+    "repeatUntilTooEarly": "End date must be on or after the start date",
+    "recurringBadge": "Weekly",
+    "confirmCancelSeriesPrompt": "This slot repeats weekly. Type 1 to cancel just this one, or 2 to cancel this and all future ones."
   },
   "clubsAdmin": {
     "title": "Clubs",

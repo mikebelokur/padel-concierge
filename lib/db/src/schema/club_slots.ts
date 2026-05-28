@@ -30,6 +30,7 @@ export const clubSlotsTable = pgTable(
     levelSuitability: text("level_suitability"),
     notes: text("notes"),
     status: text("status").notNull().default("open"),
+    recurringSeriesId: text("recurring_series_id"),
     createdBy: integer("created_by")
       .notNull()
       .references(() => usersTable.id, { onDelete: "restrict" }),

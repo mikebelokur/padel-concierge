@@ -37,12 +37,15 @@ self.addEventListener("push", (event) => {
     data = { title: "Padel Concierge", body: event.data ? event.data.text() : "" };
   }
   const title = data.title || "Padel Concierge";
+  const lang = data.lang === "ru" || data.lang === "ar" ? data.lang : "en";
   const options = {
     body: data.body || "",
     icon: "/icons/icon-192.png",
     badge: "/icons/icon-192.png",
     tag: data.tag,
-    data: { url: data.url || "/" },
+    lang,
+    dir: lang === "ar" ? "rtl" : "ltr",
+    data: { url: data.url || "/", lang },
   };
   event.waitUntil(self.registration.showNotification(title, options));
 });

@@ -1,5 +1,5 @@
 import webpush from "web-push";
-import { db, pushSubscriptionsTable } from "@workspace/db";
+import { db, pushSubscriptionsTable, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { logger } from "./logger";
 
@@ -31,11 +31,31 @@ export function getVapidPublicKey(): string {
   return VAPID_PUBLIC;
 }
 
+export type Lang = "en" | "ru" | "ar";
+
+export interface LocalizedText {
+  en: string;
+  ru: string;
+  ar: string;
+}
+
 export interface PushPayload {
-  title: string;
-  body: string;
+  title: string | LocalizedText;
+  body: string | LocalizedText;
   url?: string;
   tag?: string;
+}
+
+function pickLang(value: string | LocalizedText, lang: Lang): string {
+  if (typeof value === "string") return value;
+  return value[lang] ?? value.en;
+}
+
+function normalizeLang(raw: string | null | undefined): Lang {
+  const v = (raw ?? "en").toLowerCase();
+  if (v === "ru" || v.startsWith("ru")) return "ru";
+  if (v === "ar" || v.startsWith("ar")) return "ar";
+  return "en";
 }
 
 export async function sendPushToUser(
@@ -43,13 +63,27 @@ export async function sendPushToUser(
   payload: PushPayload,
 ): Promise<void> {
   if (!configured) return;
+
+  const [user] = await db
+    .select({ language: usersTable.language })
+    .from(usersTable)
+    .where(eq(usersTable.id, userId));
+  const lang = normalizeLang(user?.language);
+
   const subs = await db
     .select()
     .from(pushSubscriptionsTable)
     .where(eq(pushSubscriptionsTable.userId, userId));
   if (subs.length === 0) return;
 
-  const json = JSON.stringify(payload);
+  const resolved = {
+    title: pickLang(payload.title, lang),
+    body: pickLang(payload.body, lang),
+    url: payload.url,
+    tag: payload.tag,
+    lang,
+  };
+  const json = JSON.stringify(resolved);
   await Promise.all(
     subs.map(async (s) => {
       try {

@@ -120,8 +120,22 @@ router.patch("/bookings/:id", async (req, res): Promise<void> => {
       });
       const [m] = await db.select().from(matchesTable).where(eq(matchesTable.id, booking.matchId));
       void sendPushToUser(booking.userId, {
-        title: "Booking cancelled",
-        body: m ? `Your booking at ${m.clubName} on ${m.date} was cancelled` : "Your booking was cancelled",
+        title: {
+          en: "Booking cancelled",
+          ru: "Бронирование отменено",
+          ar: "تم إلغاء الحجز",
+        },
+        body: m
+          ? {
+              en: `Your booking at ${m.clubName} on ${m.date} was cancelled`,
+              ru: `Ваше бронирование в ${m.clubName} на ${m.date} отменено`,
+              ar: `تم إلغاء حجزك في ${m.clubName} بتاريخ ${m.date}`,
+            }
+          : {
+              en: "Your booking was cancelled",
+              ru: "Ваше бронирование отменено",
+              ar: "تم إلغاء حجزك",
+            },
         url: "/bookings",
         tag: `booking-${booking.id}-cancelled`,
       });
@@ -221,7 +235,11 @@ router.post("/bookings/:id/confirm-payment", async (req, res): Promise<void> => 
       details: `Paid 120 AED for match at ${match.clubName}`,
     });
     void sendPushToUser(booking.userId, {
-      title: "Booking confirmed",
+      title: {
+        en: "Booking confirmed",
+        ru: "Бронирование подтверждено",
+        ar: "تم تأكيد الحجز",
+      },
       body: `${match.clubName} · ${match.date} ${match.time}`,
       url: "/bookings",
       tag: `booking-${booking.id}-confirmed`,

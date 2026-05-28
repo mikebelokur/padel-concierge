@@ -99,9 +99,18 @@ router.post("/match-requests", async (req, res): Promise<void> => {
     },
   ]);
 
+  const dateSuffix = proposedDate ? ` ${proposedDate}` : "";
   void sendPushToUser(to.id, {
-    title: "New match request",
-    body: `${from.name} wants to play${proposedDate ? ` on ${proposedDate}` : ""}`,
+    title: {
+      en: "New match request",
+      ru: "Новая заявка на матч",
+      ar: "طلب مباراة جديد",
+    },
+    body: {
+      en: `${from.name} wants to play${proposedDate ? ` on ${proposedDate}` : ""}`,
+      ru: `${from.name} хочет сыграть${proposedDate ? ` ${proposedDate}` : ""}`,
+      ar: `${from.name} يريد اللعب${dateSuffix}`,
+    },
     url: "/match-requests",
     tag: `match-req-${request.id}`,
   });
@@ -197,16 +206,47 @@ router.patch("/match-requests/:id", async (req, res): Promise<void> => {
 
   if (fromUser && toUser) {
     if (status === "accepted" || status === "declined") {
+      const dateForSuffix = existing.proposedDate ? ` ${existing.proposedDate}` : "";
       void sendPushToUser(fromUser.id, {
-        title: status === "accepted" ? "Match request accepted" : "Match request declined",
-        body: `${toUser.name} ${status} your match request${existing.proposedDate ? ` for ${existing.proposedDate}` : ""}`,
+        title:
+          status === "accepted"
+            ? {
+                en: "Match request accepted",
+                ru: "Заявка на матч принята",
+                ar: "تم قبول طلب المباراة",
+              }
+            : {
+                en: "Match request declined",
+                ru: "Заявка на матч отклонена",
+                ar: "تم رفض طلب المباراة",
+              },
+        body:
+          status === "accepted"
+            ? {
+                en: `${toUser.name} accepted your match request${existing.proposedDate ? ` for ${existing.proposedDate}` : ""}`,
+                ru: `${toUser.name} принял(а) вашу заявку на матч${existing.proposedDate ? ` на ${existing.proposedDate}` : ""}`,
+                ar: `${toUser.name} قبل طلب المباراة${dateForSuffix}`,
+              }
+            : {
+                en: `${toUser.name} declined your match request${existing.proposedDate ? ` for ${existing.proposedDate}` : ""}`,
+                ru: `${toUser.name} отклонил(а) вашу заявку на матч${existing.proposedDate ? ` на ${existing.proposedDate}` : ""}`,
+                ar: `${toUser.name} رفض طلب المباراة${dateForSuffix}`,
+              },
         url: "/match-requests",
         tag: `match-req-${request.id}-${status}`,
       });
     } else if (status === "cancelled") {
       void sendPushToUser(toUser.id, {
-        title: "Match request cancelled",
-        body: `${fromUser.name} cancelled their match request`,
+        title: {
+          en: "Match request cancelled",
+          ru: "Заявка на матч отменена",
+          ar: "تم إلغاء طلب المباراة",
+        },
+        body: {
+          en: `${fromUser.name} cancelled their match request`,
+          ru: `${fromUser.name} отменил(а) заявку на матч`,
+          ar: `${fromUser.name} ألغى طلب المباراة`,
+        },
         url: "/match-requests",
         tag: `match-req-${request.id}-cancelled`,
       });

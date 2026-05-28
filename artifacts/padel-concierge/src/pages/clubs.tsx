@@ -106,7 +106,7 @@ export default function ClubsList() {
                 <a className="rounded-[20px] bg-card border border-white/5 hover:border-white/15 transition overflow-hidden block">
                   <div className="h-36 bg-gradient-to-br from-primary/10 to-accent/5 relative">
                     {c.photoUrl ? (
-                      <img src={objectUrl(c.photoUrl) ?? ""} alt="" className="w-full h-full object-cover" />
+                      <img src={objectUrl(c.photoUrl, "thumb") ?? ""} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-5xl opacity-30">🏢</div>
                     )}
@@ -118,7 +118,7 @@ export default function ClubsList() {
                   </div>
                   <div className="p-4 space-y-2">
                     <div className="flex items-center gap-2">
-                      {c.logoUrl && <img src={objectUrl(c.logoUrl) ?? ""} alt="" className="w-7 h-7 rounded object-contain bg-white/5" />}
+                      {c.logoUrl && <img src={objectUrl(c.logoUrl, "thumb") ?? ""} alt="" loading="lazy" decoding="async" className="w-7 h-7 rounded object-contain bg-white/5" />}
                       <h3 className="font-serif text-lg leading-tight truncate">{c.name}</h3>
                     </div>
                     <div className="text-xs text-muted-foreground">{c.area}</div>

@@ -187,7 +187,7 @@ export default function AdminClubs() {
               <div key={c.id} className="rounded-[20px] bg-card border border-white/5 overflow-hidden">
                 <div className="flex">
                   {c.photoUrl ? (
-                    <img src={objectUrl(c.photoUrl) ?? ""} alt="" className="w-28 h-28 object-cover shrink-0" />
+                    <img src={objectUrl(c.photoUrl, "thumb") ?? ""} alt="" loading="lazy" decoding="async" className="w-28 h-28 object-cover shrink-0" />
                   ) : (
                     <div className="w-28 h-28 bg-gradient-to-br from-primary/10 to-accent/5 flex items-center justify-center shrink-0 text-3xl">🏢</div>
                   )}

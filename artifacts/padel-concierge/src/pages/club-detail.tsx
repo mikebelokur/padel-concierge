@@ -66,7 +66,7 @@ export default function ClubDetail() {
         <div className="rounded-[20px] overflow-hidden bg-card border border-white/5">
           <div className="h-56 bg-gradient-to-br from-primary/10 to-accent/5 relative">
             {club.photoUrl ? (
-              <img src={objectUrl(club.photoUrl) ?? ""} alt={club.name} className="w-full h-full object-cover" />
+              <img src={objectUrl(club.photoUrl, "medium") ?? ""} alt={club.name} decoding="async" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-6xl opacity-30">🏢</div>
             )}
@@ -79,7 +79,7 @@ export default function ClubDetail() {
 
           <div className="p-5 space-y-4">
             <div className="flex items-center gap-3">
-              {club.logoUrl && <img src={objectUrl(club.logoUrl) ?? ""} alt="" className="w-12 h-12 rounded-lg object-contain bg-white/5 border border-white/10" />}
+              {club.logoUrl && <img src={objectUrl(club.logoUrl, "thumb") ?? ""} alt="" decoding="async" className="w-12 h-12 rounded-lg object-contain bg-white/5 border border-white/10" />}
               <div>
                 <h1 className="font-serif text-2xl leading-tight">{club.name}</h1>
                 <div className="text-sm text-muted-foreground">{club.area}</div>

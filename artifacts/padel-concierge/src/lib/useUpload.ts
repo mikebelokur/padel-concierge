@@ -53,12 +53,20 @@ export function useUpload() {
   return { uploadFile, isUploading, error };
 }
 
-/** Convert an object path like "/objects/uploads/uuid" into a fetchable URL via our API. */
-export function objectUrl(objectPath: string | null | undefined): string | null {
+/** Convert an object path like "/objects/uploads/uuid" into a fetchable URL via our API.
+ * Optional `variant` returns a server-resized webp (thumb ≈ 400px, medium ≈ 1000px). */
+export function objectUrl(
+  objectPath: string | null | undefined,
+  variant?: "thumb" | "medium",
+): string | null {
   if (!objectPath) return null;
   if (objectPath.startsWith("http://") || objectPath.startsWith("https://")) return objectPath;
+  const suffix = variant ? `?v=${variant}` : "";
   if (objectPath.startsWith("/objects/")) {
-    return `/api/storage${objectPath}`;
+    return `/api/storage${objectPath}${suffix}`;
+  }
+  if (objectPath.startsWith("/public-objects/")) {
+    return `/api/storage${objectPath}${suffix}`;
   }
   return objectPath;
 }

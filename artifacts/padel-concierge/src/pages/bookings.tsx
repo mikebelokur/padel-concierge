@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/layout/AppLayout";
+import { PushBlockedBanner } from "@/components/PushBlockedBanner";
 import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useListBookings } from "@workspace/api-client-react";
@@ -102,6 +103,8 @@ export default function Bookings() {
             transition: pullY === 0 ? "transform 0.4s cubic-bezier(0.34,1.56,0.64,1)" : "none",
           }}
         >
+          <PushBlockedBanner />
+
           <header className="mb-6">
             <h1 className="font-serif font-bold text-white mb-1" style={{ fontSize: "26px" }}>
               {t("bookings.title")}

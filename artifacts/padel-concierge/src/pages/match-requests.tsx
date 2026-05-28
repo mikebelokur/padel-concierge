@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/api";
 import { recordMatchInteraction } from "@/lib/push";
 import { triggerPushPrompt } from "@/components/PushOptInPrompt";
+import { PushBlockedBanner } from "@/components/PushBlockedBanner";
 import { cn } from "@/lib/utils";
 import { ARCHETYPE_META, archetypeCompatibility, type Archetype } from "@/lib/archetypes";
 import { ReliabilityDot, CompatBadge } from "@/components/ReliabilityBadge";
@@ -485,6 +486,8 @@ export default function MatchRequests() {
   return (
     <AppLayout>
       <div className="max-w-2xl mx-auto px-6 animate-fade-up" style={{ paddingTop: "28px" }}>
+
+        <PushBlockedBanner />
 
         {/* ── HEADER ── */}
         <header className="flex items-start justify-between mb-6">

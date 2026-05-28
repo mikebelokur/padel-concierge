@@ -328,6 +328,11 @@
     "pushStatusUnsupported": "This browser doesn't support push notifications. On iPhone, add this app to your Home Screen first.",
     "pushEnableFailed": "Couldn't enable notifications. Please try again."
   },
+  "pushBlockedBanner": {
+    "title": "Notifications are blocked",
+    "cta": "Tap to open Settings and re-enable push notifications.",
+    "dismiss": "Dismiss"
+  },
   "members": {
     "title": "Members",
     "subtitle": "Activity from our private community of serious padel players.",

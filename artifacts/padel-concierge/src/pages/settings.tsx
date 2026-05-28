@@ -27,6 +27,7 @@ export default function Settings() {
   const [savingOptOut, setSavingOptOut] = useState(false);
   const [pushStatus, setPushStatus] = useState<PushStatus | null>(null);
   const [savingPush, setSavingPush] = useState(false);
+  const [highlightPush, setHighlightPush] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -36,6 +37,17 @@ export default function Settings() {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.location.hash !== "#push-notifications") return;
+    const el = document.getElementById("push-notifications");
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    setHighlightPush(true);
+    const timer = window.setTimeout(() => setHighlightPush(false), 2200);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const handlePushToggle = async (next: boolean) => {
@@ -189,7 +201,15 @@ export default function Settings() {
           );
         })()}
 
-        <div className="rounded-[20px] bg-card border border-white/5">
+        <div
+          id="push-notifications"
+          className="rounded-[20px] bg-card border scroll-mt-24"
+          style={{
+            borderColor: highlightPush ? "rgba(212,175,55,0.4)" : "rgba(255,255,255,0.05)",
+            boxShadow: highlightPush ? "0 0 0 3px rgba(212,175,55,0.15)" : undefined,
+            transition: "border-color 0.3s, box-shadow 0.3s",
+          }}
+        >
           <div className="px-6 pt-5 pb-3">
             <div className="text-base font-medium">{t("settings.pushNotifications")}</div>
           </div>

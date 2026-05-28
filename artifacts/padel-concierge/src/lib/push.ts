@@ -23,6 +23,20 @@ export function pushSupported(): boolean {
   );
 }
 
+export type PushStatus = "unsupported" | "blocked" | "subscribed" | "off";
+
+export async function getPushStatus(): Promise<PushStatus> {
+  if (!pushSupported()) return "unsupported";
+  if (Notification.permission === "denied") return "blocked";
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    return sub ? "subscribed" : "off";
+  } catch {
+    return "off";
+  }
+}
+
 export function getPromptState(): PromptState {
   if (typeof localStorage === "undefined") return "pending";
   return (localStorage.getItem(PROMPT_KEY) as PromptState | null) ?? "pending";

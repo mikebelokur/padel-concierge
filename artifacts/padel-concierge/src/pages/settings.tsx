@@ -5,7 +5,8 @@ import { useUpdateUser } from "@workspace/api-client-react";
 import { apiFetch } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getPushStatus, subscribeToPush, unsubscribeFromPush, type PushStatus } from "@/lib/push";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { ARCHETYPE_META, type Archetype } from "@/lib/archetypes";
@@ -24,6 +25,44 @@ export default function Settings() {
   });
   const [reminderOptOut, setReminderOptOut] = useState<boolean>(Boolean((user as any)?.reminderOptOut));
   const [savingOptOut, setSavingOptOut] = useState(false);
+  const [pushStatus, setPushStatus] = useState<PushStatus | null>(null);
+  const [savingPush, setSavingPush] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    getPushStatus().then(s => {
+      if (!cancelled) setPushStatus(s);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handlePushToggle = async (next: boolean) => {
+    if (savingPush) return;
+    if (pushStatus === "unsupported" || pushStatus === "blocked") return;
+    setSavingPush(true);
+    try {
+      if (next) {
+        const ok = await subscribeToPush();
+        const fresh = await getPushStatus();
+        setPushStatus(fresh);
+        if (!ok && fresh !== "subscribed") {
+          toast({
+            title: t("settings.updateFailed"),
+            description: fresh === "blocked" ? t("settings.pushStatusBlocked") : t("settings.pushEnableFailed"),
+            variant: "destructive",
+          });
+        }
+      } else {
+        await unsubscribeFromPush();
+        const fresh = await getPushStatus();
+        setPushStatus(fresh);
+      }
+    } finally {
+      setSavingPush(false);
+    }
+  };
 
   const handleReminderOptOutChange = async (next: boolean) => {
     if (!user) return;
@@ -149,6 +188,44 @@ export default function Settings() {
             </div>
           );
         })()}
+
+        <div className="rounded-[20px] bg-card border border-white/5">
+          <div className="px-6 pt-5 pb-3">
+            <div className="text-base font-medium">{t("settings.pushNotifications")}</div>
+          </div>
+          <div className="px-6 pb-6">
+            <label className="flex items-start justify-between gap-4 cursor-pointer">
+              <div className="min-w-0">
+                <div className="text-sm font-medium text-white">{t("settings.pushDescription")}</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {pushStatus === null
+                    ? "…"
+                    : pushStatus === "unsupported"
+                    ? t("settings.pushStatusUnsupported")
+                    : pushStatus === "blocked"
+                    ? t("settings.pushStatusBlocked")
+                    : pushStatus === "subscribed"
+                    ? t("settings.pushStatusSubscribed")
+                    : t("settings.pushStatusOff")}
+                </div>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={pushStatus === "subscribed"}
+                onClick={() => handlePushToggle(pushStatus !== "subscribed")}
+                disabled={savingPush || pushStatus === null || pushStatus === "unsupported" || pushStatus === "blocked"}
+                className="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ background: pushStatus === "subscribed" ? "#D4AF37" : "rgba(255,255,255,0.15)" }}
+              >
+                <span
+                  className="inline-block h-5 w-5 transform rounded-full bg-white transition-transform"
+                  style={{ transform: pushStatus === "subscribed" ? "translateX(22px)" : "translateX(2px)" }}
+                />
+              </button>
+            </label>
+          </div>
+        </div>
 
         <div className="rounded-[20px] bg-card border border-white/5">
           <div className="px-6 pt-5 pb-3">

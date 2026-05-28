@@ -262,7 +262,7 @@ export default function Members() {
               </div>
               <div className="px-5 pb-4 space-y-3">
                 {usersLoading ? (
-                  <div className="text-muted-foreground text-sm">Loading...</div>
+                  <div className="text-muted-foreground text-sm">{t("members.loading")}</div>
                 ) : (
                   newMembers.map((u) => (
                     <Link key={u.id} href={`/players/${u.id}`}>
@@ -323,7 +323,7 @@ export default function Members() {
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium truncate">{u.name}</div>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="text-xs text-muted-foreground">{u.matchesPlayed} matches · {u.wins}W</span>
+                          <span className="text-xs text-muted-foreground">{t("members.matchesWins", { matches: u.matchesPlayed, wins: u.wins })}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -351,7 +351,7 @@ export default function Members() {
             {/* Level Distribution */}
             <div className="rounded-[20px] bg-card border border-white/5">
               <div className="px-5 pt-4 pb-3">
-                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Level Distribution</div>
+                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("members.levelDistribution")}</div>
               </div>
               <div className="px-5 pb-4 space-y-2">
                 {["1.0","1.5","2.0","2.5","3.0","3.5","4.0","4.5","5.0"].map((lvl) => {
@@ -379,7 +379,7 @@ export default function Members() {
               <div>
                 <h2 className="text-lg font-medium">{t("members.fullRoster")}</h2>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {filteredRoster.length} of {players.length} players
+                  {t("members.rosterCount", { shown: filteredRoster.length, total: players.length })}
                 </p>
               </div>
             </div>
@@ -388,7 +388,7 @@ export default function Members() {
             {selectedIds.size > 0 && (
               <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl bg-card border border-white/15 shadow-2xl shadow-black/60 backdrop-blur-md">
                 <span className="text-sm font-medium tabular-nums">
-                  {selectedIds.size} selected
+                  {t("members.selectedCount", { count: selectedIds.size })}
                 </span>
                 <button
                   onClick={handleVerify}
@@ -416,7 +416,7 @@ export default function Members() {
                   onClick={() => setSelectedIds(new Set())}
                   className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                 >
-                  Clear
+                  {t("members.clear")}
                 </button>
               </div>
             )}
@@ -471,9 +471,9 @@ export default function Members() {
 
             {/* Roster list */}
             {usersLoading ? (
-              <div className="text-sm text-muted-foreground animate-pulse">Loading roster…</div>
+              <div className="text-sm text-muted-foreground animate-pulse">{t("members.loadingRoster")}</div>
             ) : filteredRoster.length === 0 ? (
-              <div className="text-sm text-muted-foreground italic py-4 text-center">No players match your search.</div>
+              <div className="text-sm text-muted-foreground italic py-4 text-center">{t("members.noMatches")}</div>
             ) : (
               <div className="rounded-xl border border-white/8 overflow-hidden">
                 <div className="hidden sm:grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-4 px-4 py-2 bg-white/3 border-b border-white/5 text-xs text-muted-foreground uppercase tracking-wide items-center">
@@ -482,7 +482,7 @@ export default function Members() {
                   <span className="text-right w-16">{t("members.level")}</span>
                   <span className="text-right w-20">{t("members.reliability")}</span>
                   <span className="text-right w-16">{t("members.matches")}</span>
-                  <span className="text-right w-12">Flags</span>
+                  <span className="text-right w-12">{t("members.flags")}</span>
                 </div>
 
                 <div className="divide-y divide-white/5">
@@ -500,7 +500,7 @@ export default function Members() {
                             >
                               {isAlreadyVerified ? (
                                 <span
-                                  title="Already verified"
+                                  title={t("members.alreadyVerified")}
                                   className="w-4 h-4 rounded flex items-center justify-center bg-accent/20 border border-accent/40 text-accent text-[10px] cursor-default"
                                 >
                                   ✓
@@ -529,7 +529,7 @@ export default function Members() {
                                   {u.verified && <span className="text-accent text-xs">✓</span>}
                                 </div>
                                 <div className="text-xs text-muted-foreground truncate sm:hidden">
-                                  {u.levelQuiz ?? u.level} · {u.matchesPlayed}M
+                                  {t("members.rosterSummary", { level: u.levelQuiz ?? u.level, matches: u.matchesPlayed })}
                                   {profile && <span className={cn("ml-1 tabular-nums", profile.reliabilityScore >= 80 ? "text-emerald-400" : profile.reliabilityScore >= 60 ? "text-amber-400" : "text-red-400")}> {profile.reliabilityScore}</span>}
                                 </div>
                               </div>

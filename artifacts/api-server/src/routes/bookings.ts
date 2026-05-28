@@ -1,11 +1,12 @@
 import { Router, type IRouter } from "express";
-import { db, bookingsTable, matchesTable, usersTable, activityLogsTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { db, bookingsTable, matchesTable, usersTable, activityLogsTable, clubsTable } from "@workspace/db";
+import { eq, and, ilike } from "drizzle-orm";
 import { CreateBookingBody, UpdateBookingBody, ListBookingsQueryParams, ConfirmPaymentBody } from "@workspace/api-zod";
 import { formatMatch } from "./matches";
 import { logger } from "../lib/logger";
 import { requireAuth } from "../middleware/auth";
 import { sendPushToUser } from "../lib/push";
+import { buildIcs, sendIcs } from "../lib/ics";
 
 const router: IRouter = Router();
 router.use(requireAuth);
@@ -251,6 +252,56 @@ router.post("/bookings/:id/confirm-payment", async (req, res): Promise<void> => 
   }
 
   res.json(await formatBooking(booking));
+});
+
+router.get("/bookings/:id/ics", async (req, res): Promise<void> => {
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const authUserId: number = (req as any).auth.userId;
+  const authRole: string = (req as any).auth.role;
+
+  const [booking] = await db.select().from(bookingsTable).where(eq(bookingsTable.id, id));
+  if (!booking) { res.status(404).json({ error: "Booking not found" }); return; }
+
+  const isStaff = ["coach", "admin", "owner"].includes(authRole);
+  if (booking.userId !== authUserId && !isStaff) {
+    res.status(403).json({ error: "Not your booking" });
+    return;
+  }
+  if (booking.cancelledAt) { res.status(409).json({ error: "Booking cancelled" }); return; }
+  if (booking.paymentStatus !== "completed") {
+    res.status(409).json({ error: "Booking not confirmed" });
+    return;
+  }
+
+  const [match] = await db.select().from(matchesTable).where(eq(matchesTable.id, booking.matchId));
+  if (!match || !match.date || !match.time) {
+    res.status(400).json({ error: "Match has no scheduled time" });
+    return;
+  }
+  const start = new Date(`${match.date}T${match.time}:00+04:00`);
+  if (Number.isNaN(start.getTime())) { res.status(400).json({ error: "Invalid date/time" }); return; }
+  const end = new Date(start.getTime() + 90 * 60 * 1000);
+
+  let location = match.clubName;
+  if (match.clubName) {
+    const [club] = await db
+      .select({ name: clubsTable.name, address: clubsTable.address })
+      .from(clubsTable)
+      .where(ilike(clubsTable.name, match.clubName))
+      .limit(1);
+    if (club) location = `${club.name}, ${club.address}`;
+  }
+
+  const ics = buildIcs({
+    uid: `booking-${booking.id}@padelconcierge`,
+    start,
+    end,
+    summary: `Padel match @ ${match.clubName}`,
+    location: location ?? undefined,
+    description: `Format: ${match.format}\nBooking #${booking.id}`,
+  });
+  sendIcs(res, `padel-booking-${booking.id}.ics`, ics);
 });
 
 export default router;

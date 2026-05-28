@@ -17,6 +17,9 @@ import {
 import { requireAuth } from "../middleware/auth";
 import { sendNotificationEmail } from "../lib/mail";
 import { fireAndForget } from "../lib/fireAndForget";
+import { buildIcs, sendIcs } from "../lib/ics";
+import { clubsTable } from "@workspace/db";
+import { ilike } from "drizzle-orm";
 
 const router: IRouter = Router();
 router.use(requireAuth);
@@ -787,6 +790,71 @@ router.get("/group-trainings/:id/bookings", async (req, res): Promise<void> => {
       };
     }),
   );
+});
+
+router.get("/group-trainings/:id/ics", async (req, res): Promise<void> => {
+  const id = parseId(req.params.id);
+  if (!id) { res.status(400).json({ error: "Invalid id (uuid expected)" }); return; }
+  const authUserId: number = (req as any).auth.userId;
+  const authRole: string = (req as any).auth.role;
+
+  const [t] = await db
+    .select()
+    .from(groupTrainingsTable)
+    .where(eq(groupTrainingsTable.id, id));
+  if (!t) { res.status(404).json({ error: "Not found" }); return; }
+
+  if (t.status === "cancelled") { res.status(409).json({ error: "Training cancelled" }); return; }
+
+  const isStaff = isCoachRole(authRole);
+  if (!isStaff) {
+    const [activeBooking] = await db
+      .select({ id: trainingBookingsTable.id })
+      .from(trainingBookingsTable)
+      .where(
+        and(
+          eq(trainingBookingsTable.trainingId, id),
+          eq(trainingBookingsTable.userId, authUserId),
+          ne(trainingBookingsTable.status, "cancelled"),
+        ),
+      );
+    if (!activeBooking) {
+      res.status(403).json({ error: "Booking required" });
+      return;
+    }
+  }
+
+  const start = t.dateTime;
+  const end = new Date(start.getTime() + (t.durationMinutes ?? 90) * 60 * 1000);
+
+  let location = t.courtAddress ? `${t.courtName}, ${t.courtAddress}` : t.courtName;
+  if (t.courtName) {
+    const [club] = await db
+      .select({ name: clubsTable.name, address: clubsTable.address })
+      .from(clubsTable)
+      .where(ilike(clubsTable.name, t.courtName))
+      .limit(1);
+    if (club) location = `${club.name}, ${club.address}`;
+  }
+
+  const [coach] = await db
+    .select({ name: usersTable.name })
+    .from(usersTable)
+    .where(eq(usersTable.id, t.coachId));
+
+  const descParts: string[] = [`Category: ${t.category}`];
+  if (coach?.name) descParts.push(`Coach: ${coach.name}`);
+  if (t.descriptionEn) descParts.push(t.descriptionEn);
+
+  const ics = buildIcs({
+    uid: `group-training-${t.id}@padelconcierge`,
+    start,
+    end,
+    summary: `Padel — Group Training ${t.category}`,
+    location,
+    description: descParts.join("\n"),
+  });
+  sendIcs(res, `padel-training-${t.id}.ics`, ics);
 });
 
 export default router;

@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatDubaiDate, formatDubaiTime } from "@/lib/datetime";
+import { AddToCalendarButton } from "@/components/AddToCalendarButton";
 
 const PHASE_DURATIONS = [180, 180, 120, 120];
 
@@ -277,6 +278,12 @@ export default function MatchDetail() {
             ? t("matchDetail.matchFull")
             : t("matchDetail.confirmBooking")}
         </button>
+
+        {match.status !== "cancelled" && (
+          <div className="mt-4">
+            <AddToCalendarButton kind="match" id={matchId} />
+          </div>
+        )}
 
         {/* ── SECONDARY ACTIONS ── */}
         <div

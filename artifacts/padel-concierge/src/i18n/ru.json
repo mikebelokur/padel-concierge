@@ -21,6 +21,11 @@
     "empty": "Пока нет уведомлений",
     "markAllRead": "Прочитать все"
   },
+  "calendar": {
+    "addToCalendar": "Добавить в календарь",
+    "preparing": "Готовим…",
+    "downloadFailed": "Не удалось скачать файл календаря"
+  },
   "nav": {
     "coachHub": "Тренерский центр",
     "myClients": "Мои клиенты",

@@ -21,6 +21,11 @@
     "empty": "No notifications yet",
     "markAllRead": "Mark all read"
   },
+  "calendar": {
+    "addToCalendar": "Add to calendar",
+    "preparing": "Preparing…",
+    "downloadFailed": "Could not download calendar file"
+  },
   "nav": {
     "coachHub": "Coach Hub",
     "myClients": "My Clients",

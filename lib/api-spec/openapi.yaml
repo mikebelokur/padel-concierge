@@ -368,6 +368,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/Match"
 
+  /matches/{id}/ics:
+    get:
+      operationId: downloadMatchIcs
+      tags: [matches]
+      summary: Download match as .ics
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            text/calendar:
+              schema:
+                type: string
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+        "409":
+          description: Match cancelled
+
   # BOOKINGS
   /bookings:
     get:
@@ -451,6 +476,31 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Booking"
+
+  /bookings/{id}/ics:
+    get:
+      operationId: downloadBookingIcs
+      tags: [bookings]
+      summary: Download confirmed booking as .ics
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            text/calendar:
+              schema:
+                type: string
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+        "409":
+          description: Booking not confirmed or cancelled
 
   /bookings/{id}/payment:
     post:
@@ -852,6 +902,32 @@ paths:
                 $ref: "#/components/schemas/GroupTraining"
         "403":
           description: Forbidden
+
+  /group-trainings/{id}/ics:
+    get:
+      operationId: downloadGroupTrainingIcs
+      tags: [group-trainings]
+      summary: Download group training as .ics
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            text/calendar:
+              schema:
+                type: string
+        "403":
+          description: Forbidden (booking required)
+        "404":
+          description: Not found
+        "409":
+          description: Training cancelled
 
   /group-trainings/{id}/book:
     post:

@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatDubaiDate, formatDubaiTime } from "@/lib/datetime";
+import { AddToCalendarButton } from "@/components/AddToCalendarButton";
 
 const PAYMENT_STATUS_STYLES: Record<string, { bg: string; border: string; color: string }> = {
   completed: { bg: "rgba(34,197,94,0.12)",   border: "rgba(34,197,94,0.3)",   color: "#4ade80" },
@@ -182,14 +183,8 @@ export default function BookingDetail() {
           </div>
         )}
 
-        {isPaid && (
-          <button
-            className="w-full rounded-[20px] font-semibold transition-all hover:scale-[1.01] active:scale-[0.98]"
-            style={{ minHeight: "52px", fontSize: "15px", background: "hsl(220 20% 10%)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.85)" }}
-            onClick={() => {}}
-          >
-            {t("bookingDetail.addToCalendar")}
-          </button>
+        {isPaid && !booking.cancelledAt && (
+          <AddToCalendarButton kind="booking" id={bookingId} />
         )}
 
         {/* ── PAYMENT FORM ── */}

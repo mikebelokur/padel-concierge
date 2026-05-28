@@ -5,6 +5,9 @@ import { CreateMatchBody, ListMatchesQueryParams, GetMatchSuggestionsQueryParams
 import { upsertMatchLog, upsertProfileMatchRecord, appendMatchTimeline, recordNoShow, recordAttendance } from "@workspace/db";
 import { fireAndForget } from "../lib/fireAndForget.js";
 import { requireAuth } from "../middleware/auth";
+import { buildIcs, sendIcs } from "../lib/ics";
+import { clubsTable } from "@workspace/db";
+import { ilike } from "drizzle-orm";
 
 const router: IRouter = Router();
 router.use(requireAuth);
@@ -273,6 +276,57 @@ router.patch("/matches/:id", async (req, res): Promise<void> => {
   }
 
   res.json(formatMatch(match));
+});
+
+router.get("/matches/:id/ics", async (req, res): Promise<void> => {
+  const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const authUserId: number = (req as any).auth.userId;
+  const authRole: string = (req as any).auth.role;
+
+  const [match] = await db.select().from(matchesTable).where(eq(matchesTable.id, id));
+  if (!match) { res.status(404).json({ error: "Match not found" }); return; }
+
+  const players = formatPlayers(match.players) as Array<{ userId: number; name?: string }>;
+  const isParticipant = players.some(p => p.userId === authUserId);
+  const isStaff = ["coach", "admin", "owner"].includes(authRole);
+  if (!isParticipant && !isStaff) { res.status(403).json({ error: "Not a participant" }); return; }
+
+  if (match.status === "cancelled") { res.status(409).json({ error: "Match cancelled" }); return; }
+
+  if (!match.date || !match.time) { res.status(400).json({ error: "Match has no scheduled time" }); return; }
+  // Treat stored date/time as Asia/Dubai wall-clock.
+  const start = new Date(`${match.date}T${match.time}:00+04:00`);
+  if (Number.isNaN(start.getTime())) { res.status(400).json({ error: "Invalid date/time" }); return; }
+  const end = new Date(start.getTime() + 90 * 60 * 1000);
+
+  let location = match.clubName;
+  if (match.clubName) {
+    const [club] = await db
+      .select({ name: clubsTable.name, address: clubsTable.address })
+      .from(clubsTable)
+      .where(ilike(clubsTable.name, match.clubName))
+      .limit(1);
+    if (club) location = `${club.name}, ${club.address}`;
+  }
+
+  const descParts: string[] = [`Format: ${match.format}`];
+  if (match.levelMin || match.levelMax) {
+    descParts.push(`Level: ${match.levelMin ?? "?"}–${match.levelMax ?? "?"}`);
+  }
+  if (players.length) {
+    descParts.push(`Players: ${players.map(p => p.name ?? `#${p.userId}`).join(", ")}`);
+  }
+
+  const ics = buildIcs({
+    uid: `match-${match.id}@padelconcierge`,
+    start,
+    end,
+    summary: `Padel match @ ${match.clubName}`,
+    location: location ?? undefined,
+    description: descParts.join("\n"),
+  });
+  sendIcs(res, `padel-match-${match.id}.ics`, ics);
 });
 
 export { formatMatch };

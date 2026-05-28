@@ -692,6 +692,13 @@ export const UpdateMatchResponse = zod.object({
 });
 
 /**
+ * @summary Download match as .ics
+ */
+export const DownloadMatchIcsParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
  * @summary List bookings
  */
 export const ListBookingsQueryParams = zod.object({
@@ -828,6 +835,13 @@ export const UpdateBookingResponse = zod.object({
     balanceScore: zod.number().nullish(),
     createdAt: zod.string(),
   }),
+});
+
+/**
+ * @summary Download confirmed booking as .ics
+ */
+export const DownloadBookingIcsParams = zod.object({
+  id: zod.coerce.number(),
 });
 
 /**
@@ -1513,6 +1527,13 @@ export const CancelGroupTrainingResponse = zod.object({
   bookedCount: zod.number(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
+});
+
+/**
+ * @summary Download group training as .ics
+ */
+export const DownloadGroupTrainingIcsParams = zod.object({
+  id: zod.coerce.string().uuid(),
 });
 
 /**

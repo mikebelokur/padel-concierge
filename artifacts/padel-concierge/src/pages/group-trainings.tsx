@@ -15,6 +15,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { formatDubaiDateTime, formatDubaiTime, formatDubaiTimeRange } from "@/lib/datetime";
+import { AddToCalendarButton } from "@/components/AddToCalendarButton";
 import {
   useListGroupTrainings,
   useListMyTrainingBookings,
@@ -501,6 +502,23 @@ function TrainingCard({
         >
           {ctaLabel}
         </button>
+      )}
+
+      {isBooked && !isPast && training.status !== "cancelled" && (
+        <div className="mt-2">
+          <AddToCalendarButton
+            kind="group-training"
+            id={training.id}
+            className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl font-medium transition-all active:scale-[0.98] disabled:opacity-50"
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              color: "rgba(255,255,255,0.85)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              height: 40,
+              fontSize: "13px",
+            }}
+          />
+        </div>
       )}
     </div>
   );

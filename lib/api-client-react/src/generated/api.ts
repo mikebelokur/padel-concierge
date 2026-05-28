@@ -1408,6 +1408,93 @@ export const useUpdateMatch = <
 };
 
 /**
+ * @summary Download match as .ics
+ */
+export const getDownloadMatchIcsUrl = (id: number) => {
+  return `/api/matches/${id}/ics`;
+};
+
+export const downloadMatchIcs = async (
+  id: number,
+  options?: RequestInit,
+): Promise<string> => {
+  return customFetch<string>(getDownloadMatchIcsUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getDownloadMatchIcsQueryKey = (id: number) => {
+  return [`/api/matches/${id}/ics`] as const;
+};
+
+export const getDownloadMatchIcsQueryOptions = <
+  TData = Awaited<ReturnType<typeof downloadMatchIcs>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof downloadMatchIcs>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getDownloadMatchIcsQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof downloadMatchIcs>>
+  > = ({ signal }) => downloadMatchIcs(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof downloadMatchIcs>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type DownloadMatchIcsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof downloadMatchIcs>>
+>;
+export type DownloadMatchIcsQueryError = ErrorType<void>;
+
+/**
+ * @summary Download match as .ics
+ */
+
+export function useDownloadMatchIcs<
+  TData = Awaited<ReturnType<typeof downloadMatchIcs>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof downloadMatchIcs>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getDownloadMatchIcsQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
  * @summary List bookings
  */
 export const getListBookingsUrl = (params?: ListBookingsParams) => {
@@ -1760,6 +1847,93 @@ export const useUpdateBooking = <
 > => {
   return useMutation(getUpdateBookingMutationOptions(options));
 };
+
+/**
+ * @summary Download confirmed booking as .ics
+ */
+export const getDownloadBookingIcsUrl = (id: number) => {
+  return `/api/bookings/${id}/ics`;
+};
+
+export const downloadBookingIcs = async (
+  id: number,
+  options?: RequestInit,
+): Promise<string> => {
+  return customFetch<string>(getDownloadBookingIcsUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getDownloadBookingIcsQueryKey = (id: number) => {
+  return [`/api/bookings/${id}/ics`] as const;
+};
+
+export const getDownloadBookingIcsQueryOptions = <
+  TData = Awaited<ReturnType<typeof downloadBookingIcs>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof downloadBookingIcs>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getDownloadBookingIcsQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof downloadBookingIcs>>
+  > = ({ signal }) => downloadBookingIcs(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof downloadBookingIcs>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type DownloadBookingIcsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof downloadBookingIcs>>
+>;
+export type DownloadBookingIcsQueryError = ErrorType<void>;
+
+/**
+ * @summary Download confirmed booking as .ics
+ */
+
+export function useDownloadBookingIcs<
+  TData = Awaited<ReturnType<typeof downloadBookingIcs>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof downloadBookingIcs>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getDownloadBookingIcsQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Create Stripe payment intent for booking
@@ -3396,6 +3570,95 @@ export const useCancelGroupTraining = <
 > => {
   return useMutation(getCancelGroupTrainingMutationOptions(options));
 };
+
+/**
+ * @summary Download group training as .ics
+ */
+export const getDownloadGroupTrainingIcsUrl = (id: string) => {
+  return `/api/group-trainings/${id}/ics`;
+};
+
+export const downloadGroupTrainingIcs = async (
+  id: string,
+  options?: RequestInit,
+): Promise<string> => {
+  return customFetch<string>(getDownloadGroupTrainingIcsUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getDownloadGroupTrainingIcsQueryKey = (id: string) => {
+  return [`/api/group-trainings/${id}/ics`] as const;
+};
+
+export const getDownloadGroupTrainingIcsQueryOptions = <
+  TData = Awaited<ReturnType<typeof downloadGroupTrainingIcs>>,
+  TError = ErrorType<void>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof downloadGroupTrainingIcs>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getDownloadGroupTrainingIcsQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof downloadGroupTrainingIcs>>
+  > = ({ signal }) =>
+    downloadGroupTrainingIcs(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof downloadGroupTrainingIcs>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type DownloadGroupTrainingIcsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof downloadGroupTrainingIcs>>
+>;
+export type DownloadGroupTrainingIcsQueryError = ErrorType<void>;
+
+/**
+ * @summary Download group training as .ics
+ */
+
+export function useDownloadGroupTrainingIcs<
+  TData = Awaited<ReturnType<typeof downloadGroupTrainingIcs>>,
+  TError = ErrorType<void>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof downloadGroupTrainingIcs>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getDownloadGroupTrainingIcsQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Book a spot in a group training

@@ -220,29 +220,44 @@ export function Drawer() {
               <Link key={item.href} href={item.href}>
                 <div
                   data-testid={`tab-${item.href.replace(/\W+/g, "-")}`}
-                  className="flex flex-col items-center justify-center transition-all cursor-pointer"
+                  className="flex flex-col items-center justify-center transition-all cursor-pointer relative"
                   style={{
                     flex: 1,
-                    minHeight: "56px",
-                    padding: "10px 0 8px",
-                    minWidth: 0,
+                    minHeight: "64px",
+                    padding: "10px 0 10px",
+                    minWidth: "44px",
                   }}
                 >
+                  {active && (
+                    <span
+                      aria-hidden
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        width: "32px",
+                        height: "3px",
+                        borderRadius: "0 0 3px 3px",
+                        background: "#D4AF37",
+                      }}
+                    />
+                  )}
                   <div className="relative">
-                    <span style={{ fontSize: 22, lineHeight: 1, opacity: active ? 1 : 0.55 }}>
+                    <span style={{ fontSize: 24, lineHeight: 1, opacity: active ? 1 : 0.55 }}>
                       {item.icon}
                     </span>
                     {badge !== null && (
                       <span
                         className="absolute flex items-center justify-center font-bold"
                         style={{
-                          top: "-3px",
-                          right: "-8px",
-                          minWidth: "16px",
-                          height: "16px",
-                          padding: "0 4px",
-                          borderRadius: "8px",
-                          fontSize: "9px",
+                          top: "-4px",
+                          right: "-9px",
+                          minWidth: "18px",
+                          height: "18px",
+                          padding: "0 5px",
+                          borderRadius: "9px",
+                          fontSize: "10px",
                           background: "#D4AF37",
                           color: "#000",
                           lineHeight: 1,
@@ -253,11 +268,13 @@ export function Drawer() {
                     )}
                   </div>
                   <span
-                    className="mt-1 font-medium leading-none truncate px-1"
+                    className="mt-1.5 leading-none truncate px-1"
                     style={{
-                      fontSize: "10px",
-                      color: active ? "#D4AF37" : "rgba(255,255,255,0.4)",
+                      fontSize: "12px",
+                      fontWeight: active ? 600 : 500,
+                      color: active ? "#D4AF37" : "rgba(255,255,255,0.55)",
                       maxWidth: "100%",
+                      letterSpacing: "0.01em",
                     }}
                   >
                     {t(item.labelKey)}

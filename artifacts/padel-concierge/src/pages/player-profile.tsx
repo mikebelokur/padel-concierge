@@ -5,6 +5,7 @@ import { apiFetch } from "@/lib/api";
 import { ARCHETYPE_META, type Archetype } from "@/lib/archetypes";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { formatDubaiMonthYear } from "@/lib/datetime";
 import {
   reliabilityColor,
   reliabilityBarColor,
@@ -82,7 +83,7 @@ const FORMAT_COLORS: Record<string, string> = {
 export default function PlayerProfilePage() {
   const params = useParams<{ id: string }>();
   const id = parseInt(params.id ?? "", 10);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const { data: player, isLoading: playerLoading } = useQuery({
     queryKey: ["user", id],
@@ -420,7 +421,7 @@ export default function PlayerProfilePage() {
               <div>
                 <span className="text-muted-foreground">{t("playerProfile.memberSince")}</span>
                 <div className="font-medium mt-0.5">
-                  {new Date(player.createdAt).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}
+                  {formatDubaiMonthYear(player.createdAt, language)}
                 </div>
               </div>
             </div>

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { formatDubaiShortDate } from "@/lib/datetime";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -22,7 +23,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 export default function PadelNews() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ title: "", content: "", category: "coaching_tip" });
@@ -133,7 +134,7 @@ export default function PadelNews() {
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border ${color}`}>{label}</span>
                       <span className="text-xs text-muted-foreground flex-shrink-0">
-                        {new Date(item.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                        {formatDubaiShortDate(item.createdAt, language)}
                       </span>
                     </div>
                     <h3 className="font-serif text-lg mb-2">{item.title}</h3>

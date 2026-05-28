@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, Redirect } from "wouter";
 import { useLogin } from "@workspace/api-client-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,12 +16,17 @@ export default function Login() {
 
   if (isLoading) return null;
   if (user) {
+    const devNext = !import.meta.env.PROD
+      ? new URLSearchParams(window.location.search).get("next")
+      : null;
     const dest =
-      user.role === "owner" || user.role === "admin"
-        ? "/admin"
-        : user.role === "coach"
-          ? "/coach"
-          : "/dashboard";
+      devNext && devNext.startsWith("/")
+        ? devNext
+        : user.role === "owner" || user.role === "admin"
+          ? "/admin"
+          : user.role === "coach"
+            ? "/coach"
+            : "/dashboard";
     return <Redirect to={dest} />;
   }
 
@@ -29,6 +34,13 @@ export default function Login() {
     mutation: {
       onSuccess: (data) => {
         authLogin(data.token, data.user);
+        const nextParam = !import.meta.env.PROD
+          ? new URLSearchParams(window.location.search).get("next")
+          : null;
+        if (nextParam && nextParam.startsWith("/")) {
+          setLocation(nextParam);
+          return;
+        }
         if (data.user.role === "owner" || data.user.role === "admin") setLocation("/admin");
         else if (data.user.role === "coach") setLocation("/coach");
         else if (!data.user.archetype) setLocation("/assessment?reason=incomplete");
@@ -49,6 +61,23 @@ export default function Login() {
     e.preventDefault();
     loginMutation.mutate({ data: { email, password } });
   };
+
+  const autoTriedRef = useRef(false);
+  useEffect(() => {
+    if (autoTriedRef.current || user || isLoading) return;
+    if (import.meta.env.PROD) return;
+    const params = new URLSearchParams(window.location.search);
+    const auto = params.get("auto");
+    if (!auto) return;
+    autoTriedRef.current = true;
+    const presets: Record<string, { email: string; password: string }> = {
+      player: { email: "player@padelconcierge.com", password: "player123" },
+      coach: { email: "coach@padelconcierge.com", password: "coach123" },
+      admin: { email: "admin@padelconcierge.com", password: "admin123" },
+    };
+    const creds = presets[auto];
+    if (creds) loginMutation.mutate({ data: creds });
+  }, [user, isLoading, loginMutation]);
 
   return (
     <div

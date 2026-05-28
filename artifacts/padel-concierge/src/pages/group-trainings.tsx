@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { formatDubaiDateTime, formatDubaiTime, formatDubaiTimeRange } from "@/lib/datetime";
 import {
   useListGroupTrainings,
   useListMyTrainingBookings,
@@ -44,43 +45,26 @@ type CoachLite = {
 };
 
 function formatDateTime(iso: string, language: string): string {
-  const d = new Date(iso);
-  return d.toLocaleString(language === "ru" ? "ru-RU" : "en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatDubaiDateTime(iso, language);
 }
 
 function formatDateRange(iso: string, durationMinutes: number, language: string): string {
-  const start = new Date(iso);
-  const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
-  const locale = language === "ru" ? "ru-RU" : "en-GB";
-  const dayPart = start.toLocaleDateString(locale, {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  });
-  const timeFmt: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit", hour12: false };
-  const startTime = start.toLocaleTimeString(locale, timeFmt);
-  const endTime = end.toLocaleTimeString(locale, timeFmt);
-  return `${dayPart} · ${startTime} – ${endTime}`;
+  return formatDubaiTimeRange(iso, durationMinutes, language);
 }
 
 function formatWeekday(iso: string, language: string): string {
-  return new Date(iso).toLocaleDateString(language === "ru" ? "ru-RU" : "en-GB", {
-    weekday: "long",
-  });
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d
+    .toLocaleDateString(language === "ru" ? "ru-RU" : "en-GB", {
+      weekday: "long",
+      timeZone: "Asia/Dubai",
+    })
+    .replace(/\.$/, "");
 }
 
 function formatStartTime(iso: string, language: string): string {
-  return new Date(iso).toLocaleTimeString(language === "ru" ? "ru-RU" : "en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
+  return formatDubaiTime(iso, language);
 }
 
 function mapsUrl(name: string, addr: string | null): string {

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { LEVEL_ORDER, type Level } from "@/lib/level-quiz";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { formatDubaiShortDate } from "@/lib/datetime";
 
 const LOCALE_MAP: Record<string, string> = {
   en: "en-GB",
@@ -24,13 +25,12 @@ export default function LevelQuizProfile() {
 
   if (!result) return null;
 
-  const locale = LOCALE_MAP[language] ?? "en-GB";
   const realLevel = (result.real_level ?? "D-") as Level;
   const levelIdx = LEVEL_ORDER.indexOf(realLevel);
-  const dateOpts: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", year: "numeric" };
-  const completedDate = result.completed_at
-    ? new Date(result.completed_at as string).toLocaleDateString(locale, dateOpts)
-    : new Date().toLocaleDateString(locale, dateOpts);
+  const completedDate = formatDubaiShortDate(
+    (result.completed_at as string | undefined) ?? new Date(),
+    language,
+  );
 
   const q1 = answers?.q1 != null ? t(`levelQuiz.q1Options.${answers.q1 as number}`) : null;
   const q2 = answers?.q2 != null ? t(`levelQuiz.q2Options.${answers.q2 as number}`) : null;

@@ -5,6 +5,7 @@ import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
+import { formatDubaiDateTime } from "@/lib/datetime";
 
 interface NotificationItem {
   id: string;
@@ -123,10 +124,7 @@ export function NotificationBell() {
                           {body}
                         </div>
                         <div className="text-[10px] text-muted-foreground/60 mt-1">
-                          {new Date(n.createdAt).toLocaleString(
-                            language === "ru" ? "ru-RU" : "en-US",
-                            { dateStyle: "short", timeStyle: "short" },
-                          )}
+                          {formatDubaiDateTime(n.createdAt, language)}
                         </div>
                       </div>
                     </div>

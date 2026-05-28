@@ -1240,6 +1240,10 @@ components:
           type: string
         reminderOptOut:
           type: boolean
+        notifyEmailTrainerRequests:
+          type: boolean
+        notifyWhatsappTrainerRequests:
+          type: boolean
 
     UpdateAvailabilityBody:
       type: object

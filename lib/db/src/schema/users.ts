@@ -68,6 +68,8 @@ export const usersTable = pgTable("users", {
   modeCoach: boolean("mode_coach").notNull().default(false),
   modeAdmin: boolean("mode_admin").notNull().default(false),
   modeDeveloper: boolean("mode_developer").notNull().default(false),
+  notifyEmailTrainerRequests: boolean("notify_email_trainer_requests").notNull().default(true),
+  notifyWhatsappTrainerRequests: boolean("notify_whatsapp_trainer_requests").notNull().default(true),
 }, t => [
   check("users_user_type_check", sql`${t.userType} IN ('real_user', 'seed_test', 'beta_tester')`),
   check("users_source_check", sql`${t.source} IN ('self_signup', 'coach_added')`),

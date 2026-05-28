@@ -105,6 +105,8 @@ export interface UpdateUserBody {
   avatar?: string | null;
   language?: string;
   reminderOptOut?: boolean;
+  notifyEmailTrainerRequests?: boolean;
+  notifyWhatsappTrainerRequests?: boolean;
 }
 
 export interface UpdateAvailabilityBody {

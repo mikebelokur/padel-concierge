@@ -351,6 +351,64 @@ export async function sendInviteEmail(
   return inviteDevFallback(to, inviteUrl);
 }
 
+// ---------------------------------------------------------------------------
+// Trainer match request notification email
+// ---------------------------------------------------------------------------
+
+export interface TrainerMatchRequestEmailParams {
+  requesterName: string;
+  format: string;
+  venue: string;
+  requestedDate: string;
+  requestedTime: string;
+  notes?: string | null;
+}
+
+function buildTrainerMatchRequestHtml(p: TrainerMatchRequestEmailParams): string {
+  const url = `${APP_URL}/coach`;
+  const notesBlock = p.notes
+    ? `<p style="margin:0 0 8px;font-size:14px;color:#8a9ab8;line-height:1.6;"><strong style="color:#e8eaf0;">Notes:</strong> ${escapeHtml(p.notes)}</p>`
+    : "";
+  return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background:#080c14;font-family:'Segoe UI',Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#080c14;padding:40px 16px;"><tr><td align="center">
+<table width="520" cellpadding="0" cellspacing="0" style="background:#0f1520;border-radius:16px;border:1px solid #1e2a40;overflow:hidden;max-width:520px;width:100%;">
+<tr><td style="padding:32px 40px 24px;border-bottom:1px solid #1e2a40;">
+<span style="font-family:Georgia,serif;font-size:22px;color:#2d7dff;letter-spacing:0.02em;">🎾 Padel Concierge</span>
+</td></tr>
+<tr><td style="padding:32px 40px 0;">
+<h2 style="margin:0 0 12px;font-size:20px;color:#e8eaf0;font-weight:600;">New trainer match request</h2>
+<p style="margin:0 0 8px;font-size:15px;color:#8a9ab8;line-height:1.6;"><strong style="color:#e8eaf0;">${escapeHtml(p.requesterName)}</strong> wants a match.</p>
+<p style="margin:0 0 8px;font-size:14px;color:#8a9ab8;line-height:1.6;"><strong style="color:#e8eaf0;">When:</strong> ${escapeHtml(p.requestedDate)} at ${escapeHtml(p.requestedTime)}</p>
+<p style="margin:0 0 8px;font-size:14px;color:#8a9ab8;line-height:1.6;"><strong style="color:#e8eaf0;">Format:</strong> ${escapeHtml(p.format)} · <strong style="color:#e8eaf0;">Venue:</strong> ${escapeHtml(p.venue)}</p>
+${notesBlock}
+<table cellpadding="0" cellspacing="0" style="margin:24px 0;"><tr><td style="border-radius:10px;background:#2d7dff;">
+<a href="${url}" style="display:inline-block;padding:14px 32px;color:#fff;font-size:15px;font-weight:600;text-decoration:none;border-radius:10px;">Open coach dashboard →</a>
+</td></tr></table>
+<p style="margin:0 0 24px;font-size:12px;color:#3a4a63;line-height:1.5;">You're receiving this because you're a trainer on Padel Concierge. To stop these emails, turn off "Trainer match request emails" in your profile settings.</p>
+</td></tr>
+</table></td></tr></table></body></html>`;
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+export async function sendTrainerMatchRequestEmail(
+  to: string,
+  params: TrainerMatchRequestEmailParams,
+): Promise<{ sent: boolean }> {
+  const subject = `New trainer match request — ${params.requesterName} · ${params.requestedDate} ${params.requestedTime}`;
+  const html = buildTrainerMatchRequestHtml(params);
+  return sendNotificationEmail(to, subject, html);
+}
+
 function inviteDevFallback(to: string, inviteUrl: string): { sent: false; devUrl: string } {
   logger.warn({ to }, "Invite email skipped — RESEND_API_KEY not configured");
   console.log("\n========================================");

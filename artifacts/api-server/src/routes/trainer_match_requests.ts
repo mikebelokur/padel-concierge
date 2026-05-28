@@ -5,6 +5,9 @@ import { upsertFeedbackAggregate } from "@workspace/db";
 import { fireAndForget } from "../lib/fireAndForget.js";
 import { requireAuth } from "../middleware/auth";
 import { sendPushToUser } from "../lib/push";
+import { sendTrainerMatchRequestEmail } from "../lib/mail";
+import { sendWhatsappMessage } from "../lib/whatsapp";
+import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
 router.use(requireAuth);
@@ -99,17 +102,55 @@ router.post("/trainer-match-requests", async (req, res): Promise<void> => {
     .select({ name: usersTable.name })
     .from(usersTable)
     .where(eq(usersTable.id, parseInt(String(playerId))));
+  const requesterName = requester?.name ?? "A player";
   const trainers = await db
-    .select({ id: usersTable.id })
+    .select({
+      id: usersTable.id,
+      email: usersTable.email,
+      phone: usersTable.phone,
+      notifyEmail: usersTable.notifyEmailTrainerRequests,
+      notifyWhatsapp: usersTable.notifyWhatsappTrainerRequests,
+    })
     .from(usersTable)
     .where(inArray(usersTable.role, ["coach", "admin", "owner"]));
+
+  const emailParams = {
+    requesterName,
+    format: row.format,
+    venue: row.venue,
+    requestedDate: row.requestedDate,
+    requestedTime: row.requestedTime,
+    notes: row.notes,
+  };
+  const waBody =
+    `🎾 Padel Concierge — new trainer match request\n` +
+    `${requesterName} wants a match on ${requestedDate} at ${requestedTime}.\n` +
+    `Format: ${row.format} · Venue: ${row.venue}` +
+    (row.notes ? `\nNotes: ${row.notes}` : "");
+
   for (const t of trainers) {
     void sendPushToUser(t.id, {
       title: "New trainer match request",
-      body: `${requester?.name ?? "A player"} wants a match on ${requestedDate} at ${requestedTime}`,
+      body: `${requesterName} wants a match on ${requestedDate} at ${requestedTime}`,
       url: "/coach",
       tag: `trainer-req-${row.id}`,
     });
+    if (t.notifyEmail && t.email) {
+      fireAndForget(
+        sendTrainerMatchRequestEmail(t.email, emailParams),
+        { route: "POST /trainer-match-requests", channel: "email", trainerId: t.id, requestId: row.id },
+      );
+    } else if (!t.notifyEmail) {
+      logger.debug({ trainerId: t.id }, "Trainer opted out of email — skipping");
+    }
+    if (t.notifyWhatsapp && t.phone) {
+      fireAndForget(
+        sendWhatsappMessage(t.phone, waBody),
+        { route: "POST /trainer-match-requests", channel: "whatsapp", trainerId: t.id, requestId: row.id },
+      );
+    } else if (!t.notifyWhatsapp) {
+      logger.debug({ trainerId: t.id }, "Trainer opted out of WhatsApp — skipping");
+    }
   }
 
   res.status(201).json(row);

@@ -1,0 +1,55 @@
+Three related features. Do in order. Build in background.
+
+TASK A — Clubs directory
+
+Create clubs table:
+- id, name, logo_url, photo_url, address, area (Dubai district),
+  phone (E.164), lat, lng, tier (premium/standard/community),
+  website, opening_hours (JSON), notes, active boolean
+
+Admin UI /admin/clubs (admin mode, mobile-friendly):
+- Add/edit club: name, logo upload, photo upload, address, area,
+  phone, map pin (lat/lng), tier, hours
+- List all clubs
+
+Seed these premium clubs (Misha fills exact details later, leave
+placeholder fields):
+- Padel Edition
+- Padel 700
+- Padel 360
+- Padel One
+- Pause Padel
+Mark tier='premium'. Leave a path to bulk-add community courts as
+tier='community' later.
+
+Player-facing /clubs page:
+- Browse by area, filter by tier
+- Card: logo, photo, name, area, tap for detail
+- Detail: full info, map, phone (tap-to-call), hours,
+  "доступные слоты" section (filled in Task B)
+
+TASK B — Manual slot entry (NO auto-matching)
+
+Admin UI /admin/slots (admin mode, mobile-first):
+- Pick club → pick date → add free slots (start/end, court number,
+  price, level suitability)
+- Slots appear on club detail page as "доступные слоты"
+- Players can tap "интересно" on a slot → sends Misha a notification
+  "Игрок X заинтересован", Misha coordinates manually
+
+CRITICAL: do NOT build automatic matchmaking. With ~12 users Misha
+curates pairings by hand. Platform surfaces data; Misha decides.
+Auto-matching explicitly out of scope.
+
+TASK C — "Add to calendar" button (.ics)
+
+When a player has a confirmed session (group training, 1:1, or match):
+- Show "Добавить в календарь" button
+- Generates a standard .ics file (works on Apple Calendar, Google
+  Calendar, Outlook — one tap, universal)
+- .ics includes: title, date/time in Dubai timezone, location
+  (pull club name + address from clubs table), duration
+- Do NOT build Google OAuth direct-sync yet — .ics covers all
+  platforms simply. OAuth is a later premium feature.
+
+Russian UI, mobile-first throughout. Report what shipped and blockers.

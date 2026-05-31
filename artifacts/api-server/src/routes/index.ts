@@ -28,6 +28,7 @@ import inviteRouter from "./invite";
 import adminUserProfileRouter from "./admin_user_profile";
 import pushRouter from "./push";
 import clubSlotsRouter from "./club_slots";
+import playMatchesRouter from "./play_matches";
 
 const router: IRouter = Router();
 
@@ -42,6 +43,7 @@ router.use(padelFutureRouter);
 router.use(statsRouter);
 router.use(usersRouter);
 router.use(matchesRouter);
+router.use(playMatchesRouter);
 router.use(bookingsRouter);
 router.use(videoAnalysesRouter);
 router.use(coachRouter);

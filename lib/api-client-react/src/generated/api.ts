@@ -26,6 +26,7 @@ import type {
   CreateBookingBody,
   CreateGroupTrainingBody,
   CreateMatchBody,
+  CreatePlayMatchBody,
   CreateVideoAnalysisBody,
   DashboardStats,
   FavouriteBody,
@@ -33,6 +34,7 @@ import type {
   GetMatchSuggestionsParams,
   GroupTraining,
   HealthStatus,
+  InvitePlayMatchBody,
   ListAdminUsersParams,
   ListBookingsParams,
   ListClubsParams,
@@ -44,10 +46,16 @@ import type {
   MatchSuggestions,
   PatchAdminUserTypeBody,
   PaymentIntentResponse,
+  PlayMatchInvite,
+  PlayMatchJoinRequest,
+  PlayMatchRoom,
+  PlayMatchSummary,
   PlayerStats,
   RegisterBody,
   RequestUploadUrlBody,
   RequestUploadUrlResponse,
+  RespondInviteBody,
+  RespondJoinRequestBody,
   TrainingBooking,
   TrainingBookingWithPlayer,
   TrainingBookingWithTraining,
@@ -4432,4 +4440,853 @@ export const useRequestUploadUrl = <
   TContext
 > => {
   return useMutation(getRequestUploadUrlMutationOptions(options));
+};
+
+/**
+ * @summary Create a new match (unranked / competitive / personal)
+ */
+export const getCreatePlayMatchUrl = () => {
+  return `/api/play-matches`;
+};
+
+export const createPlayMatch = async (
+  createPlayMatchBody: CreatePlayMatchBody,
+  options?: RequestInit,
+): Promise<PlayMatchRoom> => {
+  return customFetch<PlayMatchRoom>(getCreatePlayMatchUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createPlayMatchBody),
+  });
+};
+
+export const getCreatePlayMatchMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createPlayMatch>>,
+    TError,
+    { data: BodyType<CreatePlayMatchBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createPlayMatch>>,
+  TError,
+  { data: BodyType<CreatePlayMatchBody> },
+  TContext
+> => {
+  const mutationKey = ["createPlayMatch"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createPlayMatch>>,
+    { data: BodyType<CreatePlayMatchBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createPlayMatch(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreatePlayMatchMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createPlayMatch>>
+>;
+export type CreatePlayMatchMutationBody = BodyType<CreatePlayMatchBody>;
+export type CreatePlayMatchMutationError = ErrorType<void>;
+
+/**
+ * @summary Create a new match (unranked / competitive / personal)
+ */
+export const useCreatePlayMatch = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createPlayMatch>>,
+    TError,
+    { data: BodyType<CreatePlayMatchBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createPlayMatch>>,
+  TError,
+  { data: BodyType<CreatePlayMatchBody> },
+  TContext
+> => {
+  return useMutation(getCreatePlayMatchMutationOptions(options));
+};
+
+/**
+ * @summary Browse open matches the current user can request to join
+ */
+export const getListOpenPlayMatchesUrl = () => {
+  return `/api/play-matches/open`;
+};
+
+export const listOpenPlayMatches = async (
+  options?: RequestInit,
+): Promise<PlayMatchSummary[]> => {
+  return customFetch<PlayMatchSummary[]>(getListOpenPlayMatchesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListOpenPlayMatchesQueryKey = () => {
+  return [`/api/play-matches/open`] as const;
+};
+
+export const getListOpenPlayMatchesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listOpenPlayMatches>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listOpenPlayMatches>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListOpenPlayMatchesQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listOpenPlayMatches>>
+  > = ({ signal }) => listOpenPlayMatches({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listOpenPlayMatches>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListOpenPlayMatchesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listOpenPlayMatches>>
+>;
+export type ListOpenPlayMatchesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Browse open matches the current user can request to join
+ */
+
+export function useListOpenPlayMatches<
+  TData = Awaited<ReturnType<typeof listOpenPlayMatches>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listOpenPlayMatches>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListOpenPlayMatchesQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List the current user's pending match invitations
+ */
+export const getListMyPlayMatchInvitesUrl = () => {
+  return `/api/play-matches/invites`;
+};
+
+export const listMyPlayMatchInvites = async (
+  options?: RequestInit,
+): Promise<PlayMatchInvite[]> => {
+  return customFetch<PlayMatchInvite[]>(getListMyPlayMatchInvitesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListMyPlayMatchInvitesQueryKey = () => {
+  return [`/api/play-matches/invites`] as const;
+};
+
+export const getListMyPlayMatchInvitesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMyPlayMatchInvites>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listMyPlayMatchInvites>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListMyPlayMatchInvitesQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listMyPlayMatchInvites>>
+  > = ({ signal }) => listMyPlayMatchInvites({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMyPlayMatchInvites>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListMyPlayMatchInvitesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMyPlayMatchInvites>>
+>;
+export type ListMyPlayMatchInvitesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List the current user's pending match invitations
+ */
+
+export function useListMyPlayMatchInvites<
+  TData = Awaited<ReturnType<typeof listMyPlayMatchInvites>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listMyPlayMatchInvites>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListMyPlayMatchInvitesQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Preview a match by its shareable invite token
+ */
+export const getGetPlayMatchByTokenUrl = (token: string) => {
+  return `/api/play-matches/by-token/${token}`;
+};
+
+export const getPlayMatchByToken = async (
+  token: string,
+  options?: RequestInit,
+): Promise<PlayMatchSummary> => {
+  return customFetch<PlayMatchSummary>(getGetPlayMatchByTokenUrl(token), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetPlayMatchByTokenQueryKey = (token: string) => {
+  return [`/api/play-matches/by-token/${token}`] as const;
+};
+
+export const getGetPlayMatchByTokenQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPlayMatchByToken>>,
+  TError = ErrorType<void>,
+>(
+  token: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getPlayMatchByToken>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetPlayMatchByTokenQueryKey(token);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getPlayMatchByToken>>
+  > = ({ signal }) => getPlayMatchByToken(token, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!token,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPlayMatchByToken>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetPlayMatchByTokenQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPlayMatchByToken>>
+>;
+export type GetPlayMatchByTokenQueryError = ErrorType<void>;
+
+/**
+ * @summary Preview a match by its shareable invite token
+ */
+
+export function useGetPlayMatchByToken<
+  TData = Awaited<ReturnType<typeof getPlayMatchByToken>>,
+  TError = ErrorType<void>,
+>(
+  token: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getPlayMatchByToken>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetPlayMatchByTokenQueryOptions(token, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Join a match using a shareable invite token
+ */
+export const getJoinPlayMatchByTokenUrl = (token: string) => {
+  return `/api/play-matches/join/${token}`;
+};
+
+export const joinPlayMatchByToken = async (
+  token: string,
+  options?: RequestInit,
+): Promise<PlayMatchRoom> => {
+  return customFetch<PlayMatchRoom>(getJoinPlayMatchByTokenUrl(token), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getJoinPlayMatchByTokenMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof joinPlayMatchByToken>>,
+    TError,
+    { token: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof joinPlayMatchByToken>>,
+  TError,
+  { token: string },
+  TContext
+> => {
+  const mutationKey = ["joinPlayMatchByToken"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof joinPlayMatchByToken>>,
+    { token: string }
+  > = (props) => {
+    const { token } = props ?? {};
+
+    return joinPlayMatchByToken(token, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type JoinPlayMatchByTokenMutationResult = NonNullable<
+  Awaited<ReturnType<typeof joinPlayMatchByToken>>
+>;
+
+export type JoinPlayMatchByTokenMutationError = ErrorType<void>;
+
+/**
+ * @summary Join a match using a shareable invite token
+ */
+export const useJoinPlayMatchByToken = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof joinPlayMatchByToken>>,
+    TError,
+    { token: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof joinPlayMatchByToken>>,
+  TError,
+  { token: string },
+  TContext
+> => {
+  return useMutation(getJoinPlayMatchByTokenMutationOptions(options));
+};
+
+/**
+ * @summary Get the match room (roster, goal, requests)
+ */
+export const getGetPlayMatchRoomUrl = (id: number) => {
+  return `/api/play-matches/${id}`;
+};
+
+export const getPlayMatchRoom = async (
+  id: number,
+  options?: RequestInit,
+): Promise<PlayMatchRoom> => {
+  return customFetch<PlayMatchRoom>(getGetPlayMatchRoomUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetPlayMatchRoomQueryKey = (id: number) => {
+  return [`/api/play-matches/${id}`] as const;
+};
+
+export const getGetPlayMatchRoomQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPlayMatchRoom>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getPlayMatchRoom>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetPlayMatchRoomQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getPlayMatchRoom>>
+  > = ({ signal }) => getPlayMatchRoom(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPlayMatchRoom>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetPlayMatchRoomQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPlayMatchRoom>>
+>;
+export type GetPlayMatchRoomQueryError = ErrorType<void>;
+
+/**
+ * @summary Get the match room (roster, goal, requests)
+ */
+
+export function useGetPlayMatchRoom<
+  TData = Awaited<ReturnType<typeof getPlayMatchRoom>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getPlayMatchRoom>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetPlayMatchRoomQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Invite friends (by user id) to a match
+ */
+export const getInvitePlayMatchFriendsUrl = (id: number) => {
+  return `/api/play-matches/${id}/invite`;
+};
+
+export const invitePlayMatchFriends = async (
+  id: number,
+  invitePlayMatchBody: InvitePlayMatchBody,
+  options?: RequestInit,
+): Promise<PlayMatchRoom> => {
+  return customFetch<PlayMatchRoom>(getInvitePlayMatchFriendsUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(invitePlayMatchBody),
+  });
+};
+
+export const getInvitePlayMatchFriendsMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof invitePlayMatchFriends>>,
+    TError,
+    { id: number; data: BodyType<InvitePlayMatchBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof invitePlayMatchFriends>>,
+  TError,
+  { id: number; data: BodyType<InvitePlayMatchBody> },
+  TContext
+> => {
+  const mutationKey = ["invitePlayMatchFriends"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof invitePlayMatchFriends>>,
+    { id: number; data: BodyType<InvitePlayMatchBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return invitePlayMatchFriends(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type InvitePlayMatchFriendsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof invitePlayMatchFriends>>
+>;
+export type InvitePlayMatchFriendsMutationBody = BodyType<InvitePlayMatchBody>;
+export type InvitePlayMatchFriendsMutationError = ErrorType<void>;
+
+/**
+ * @summary Invite friends (by user id) to a match
+ */
+export const useInvitePlayMatchFriends = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof invitePlayMatchFriends>>,
+    TError,
+    { id: number; data: BodyType<InvitePlayMatchBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof invitePlayMatchFriends>>,
+  TError,
+  { id: number; data: BodyType<InvitePlayMatchBody> },
+  TContext
+> => {
+  return useMutation(getInvitePlayMatchFriendsMutationOptions(options));
+};
+
+/**
+ * @summary Accept or decline a match invitation
+ */
+export const getRespondPlayMatchInviteUrl = (id: number) => {
+  return `/api/play-matches/${id}/invite/respond`;
+};
+
+export const respondPlayMatchInvite = async (
+  id: number,
+  respondInviteBody: RespondInviteBody,
+  options?: RequestInit,
+): Promise<PlayMatchRoom> => {
+  return customFetch<PlayMatchRoom>(getRespondPlayMatchInviteUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(respondInviteBody),
+  });
+};
+
+export const getRespondPlayMatchInviteMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof respondPlayMatchInvite>>,
+    TError,
+    { id: number; data: BodyType<RespondInviteBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof respondPlayMatchInvite>>,
+  TError,
+  { id: number; data: BodyType<RespondInviteBody> },
+  TContext
+> => {
+  const mutationKey = ["respondPlayMatchInvite"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof respondPlayMatchInvite>>,
+    { id: number; data: BodyType<RespondInviteBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return respondPlayMatchInvite(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RespondPlayMatchInviteMutationResult = NonNullable<
+  Awaited<ReturnType<typeof respondPlayMatchInvite>>
+>;
+export type RespondPlayMatchInviteMutationBody = BodyType<RespondInviteBody>;
+export type RespondPlayMatchInviteMutationError = ErrorType<void>;
+
+/**
+ * @summary Accept or decline a match invitation
+ */
+export const useRespondPlayMatchInvite = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof respondPlayMatchInvite>>,
+    TError,
+    { id: number; data: BodyType<RespondInviteBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof respondPlayMatchInvite>>,
+  TError,
+  { id: number; data: BodyType<RespondInviteBody> },
+  TContext
+> => {
+  return useMutation(getRespondPlayMatchInviteMutationOptions(options));
+};
+
+/**
+ * @summary Request to join an open match
+ */
+export const getRequestJoinPlayMatchUrl = (id: number) => {
+  return `/api/play-matches/${id}/request`;
+};
+
+export const requestJoinPlayMatch = async (
+  id: number,
+  options?: RequestInit,
+): Promise<PlayMatchJoinRequest> => {
+  return customFetch<PlayMatchJoinRequest>(getRequestJoinPlayMatchUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getRequestJoinPlayMatchMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof requestJoinPlayMatch>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof requestJoinPlayMatch>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["requestJoinPlayMatch"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof requestJoinPlayMatch>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return requestJoinPlayMatch(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RequestJoinPlayMatchMutationResult = NonNullable<
+  Awaited<ReturnType<typeof requestJoinPlayMatch>>
+>;
+
+export type RequestJoinPlayMatchMutationError = ErrorType<void>;
+
+/**
+ * @summary Request to join an open match
+ */
+export const useRequestJoinPlayMatch = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof requestJoinPlayMatch>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof requestJoinPlayMatch>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getRequestJoinPlayMatchMutationOptions(options));
+};
+
+/**
+ * @summary Approve or decline a join request (leader only)
+ */
+export const getRespondPlayMatchJoinRequestUrl = (
+  id: number,
+  requestId: number,
+) => {
+  return `/api/play-matches/${id}/requests/${requestId}/respond`;
+};
+
+export const respondPlayMatchJoinRequest = async (
+  id: number,
+  requestId: number,
+  respondJoinRequestBody: RespondJoinRequestBody,
+  options?: RequestInit,
+): Promise<PlayMatchRoom> => {
+  return customFetch<PlayMatchRoom>(
+    getRespondPlayMatchJoinRequestUrl(id, requestId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(respondJoinRequestBody),
+    },
+  );
+};
+
+export const getRespondPlayMatchJoinRequestMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof respondPlayMatchJoinRequest>>,
+    TError,
+    { id: number; requestId: number; data: BodyType<RespondJoinRequestBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof respondPlayMatchJoinRequest>>,
+  TError,
+  { id: number; requestId: number; data: BodyType<RespondJoinRequestBody> },
+  TContext
+> => {
+  const mutationKey = ["respondPlayMatchJoinRequest"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof respondPlayMatchJoinRequest>>,
+    { id: number; requestId: number; data: BodyType<RespondJoinRequestBody> }
+  > = (props) => {
+    const { id, requestId, data } = props ?? {};
+
+    return respondPlayMatchJoinRequest(id, requestId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RespondPlayMatchJoinRequestMutationResult = NonNullable<
+  Awaited<ReturnType<typeof respondPlayMatchJoinRequest>>
+>;
+export type RespondPlayMatchJoinRequestMutationBody =
+  BodyType<RespondJoinRequestBody>;
+export type RespondPlayMatchJoinRequestMutationError = ErrorType<void>;
+
+/**
+ * @summary Approve or decline a join request (leader only)
+ */
+export const useRespondPlayMatchJoinRequest = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof respondPlayMatchJoinRequest>>,
+    TError,
+    { id: number; requestId: number; data: BodyType<RespondJoinRequestBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof respondPlayMatchJoinRequest>>,
+  TError,
+  { id: number; requestId: number; data: BodyType<RespondJoinRequestBody> },
+  TContext
+> => {
+  return useMutation(getRespondPlayMatchJoinRequestMutationOptions(options));
 };

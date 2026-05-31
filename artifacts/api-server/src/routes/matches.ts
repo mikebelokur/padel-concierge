@@ -47,6 +47,10 @@ router.get("/matches", async (req, res): Promise<void> => {
   const params = ListMatchesQueryParams.safeParse(req.query);
   let matches = await db.select().from(matchesTable).orderBy(matchesTable.date);
 
+  // Exclude matches created via the Play / Create-Match flow — those are
+  // roster-building matches managed under their own match-room UI.
+  matches = matches.filter(m => !m.matchKind);
+
   if (params.success) {
     if (params.data.status) {
       matches = matches.filter(m => m.status === params.data.status);

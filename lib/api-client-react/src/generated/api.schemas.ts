@@ -169,6 +169,160 @@ export interface MatchSuggestions {
   easy?: Match;
 }
 
+export type CreatePlayMatchBodyKind =
+  (typeof CreatePlayMatchBodyKind)[keyof typeof CreatePlayMatchBodyKind];
+
+export const CreatePlayMatchBodyKind = {
+  unranked: "unranked",
+  competitive: "competitive",
+  personal: "personal",
+} as const;
+
+export type CreatePlayMatchBodyVisibility =
+  (typeof CreatePlayMatchBodyVisibility)[keyof typeof CreatePlayMatchBodyVisibility];
+
+export const CreatePlayMatchBodyVisibility = {
+  private: "private",
+  open: "open",
+} as const;
+
+/**
+ * Required for personal matches; one of the fixed goal options.
+ * @nullable
+ */
+export type CreatePlayMatchBodyGoal =
+  | (typeof CreatePlayMatchBodyGoal)[keyof typeof CreatePlayMatchBodyGoal]
+  | null;
+
+export const CreatePlayMatchBodyGoal = {
+  competitive: "competitive",
+  social: "social",
+  learning: "learning",
+  energy: "energy",
+} as const;
+
+export interface CreatePlayMatchBody {
+  kind: CreatePlayMatchBodyKind;
+  date: string;
+  time: string;
+  clubName: string;
+  slotMinutes: number;
+  visibility?: CreatePlayMatchBodyVisibility;
+  /**
+   * Required for personal matches; one of the fixed goal options.
+   * @nullable
+   */
+  goal?: CreatePlayMatchBodyGoal;
+  /** @nullable */
+  styleNote?: string | null;
+}
+
+export interface PlayMatchParticipant {
+  userId: number;
+  name: string;
+  /** @nullable */
+  level?: string | null;
+  /** @nullable */
+  avatar?: string | null;
+  role: string;
+}
+
+export interface PlayMatchJoinRequest {
+  id: number;
+  matchId: number;
+  userId: number;
+  name: string;
+  /** @nullable */
+  level?: string | null;
+  /** @nullable */
+  avatar?: string | null;
+  type: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface PlayMatchSummary {
+  id: number;
+  date: string;
+  time: string;
+  clubName: string;
+  format: string;
+  /** @nullable */
+  kind?: string | null;
+  visibility: string;
+  /** @nullable */
+  goal?: string | null;
+  /** @nullable */
+  styleNote?: string | null;
+  /** @nullable */
+  slotMinutes?: number | null;
+  status: string;
+  /** @nullable */
+  levelMin?: string | null;
+  /** @nullable */
+  levelMax?: string | null;
+  maxPlayers: number;
+  participantCount: number;
+  spotsLeft: number;
+  /** @nullable */
+  leaderName?: string | null;
+  createdAt: string;
+}
+
+export interface PlayMatchRoom {
+  id: number;
+  date: string;
+  time: string;
+  clubName: string;
+  format: string;
+  /** @nullable */
+  kind?: string | null;
+  visibility: string;
+  /** @nullable */
+  goal?: string | null;
+  /** @nullable */
+  styleNote?: string | null;
+  /** @nullable */
+  slotMinutes?: number | null;
+  status: string;
+  /** @nullable */
+  levelMin?: string | null;
+  /** @nullable */
+  levelMax?: string | null;
+  maxPlayers: number;
+  participantCount: number;
+  spotsLeft: number;
+  /** @nullable */
+  inviteToken?: string | null;
+  /** @nullable */
+  leaderName?: string | null;
+  /** @nullable */
+  myRole?: string | null;
+  participants: PlayMatchParticipant[];
+  joinRequests: PlayMatchJoinRequest[];
+  createdAt: string;
+}
+
+export interface PlayMatchInvite {
+  id: number;
+  matchId: number;
+  status: string;
+  createdAt: string;
+  match: PlayMatchSummary;
+}
+
+export interface InvitePlayMatchBody {
+  userIds: number[];
+}
+
+export interface RespondInviteBody {
+  accept: boolean;
+}
+
+export interface RespondJoinRequestBody {
+  approve: boolean;
+}
+
 export interface Booking {
   id: number;
   userId: number;

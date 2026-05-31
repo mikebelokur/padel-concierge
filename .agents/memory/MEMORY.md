@@ -1,1 +1,3 @@
 - [Typecheck in isolation vs root](typecheck-isolation.md) — api-server alone can fail with a drizzle "separate declarations of private property" error; trust root `pnpm run typecheck` (builds libs first) instead.
+- [Open play-match approval boundary](play-match-open-approval.md) — open matches admit only via request→approval; never leak inviteToken in non-participant payloads and gate join/:token by visibility.
+- [API router mount order vs role guards](router-mount-order-guards.md) — a player route can 403 just from being mounted after a router with a root-level requireMode guard; mount player routes early.

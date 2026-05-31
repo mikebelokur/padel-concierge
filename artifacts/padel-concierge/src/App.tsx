@@ -16,6 +16,10 @@ import { DevToolbar } from "@/components/DevToolbar";
 import Home from "@/pages/home";
 import TrainingHub from "@/pages/training-hub";
 import PlayHub from "@/pages/play-hub";
+import PlayCreate from "@/pages/play-create";
+import PlayMatch from "@/pages/play-match";
+import PlayOpen from "@/pages/play-open";
+import PlayJoin from "@/pages/play-join";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import ForgotPassword from "@/pages/forgot-password";
@@ -132,9 +136,13 @@ function Router() {
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/invite/:token" component={Invite} />
+      <Route path="/join/:token" component={PlayJoin} />
 
       <Route path="/dashboard">{() => <ProtectedRoute component={Dashboard} />}</Route>
       <Route path="/training">{() => <ProtectedRoute component={TrainingHub} />}</Route>
+      <Route path="/play/create/:kind">{() => <ProtectedRoute component={PlayCreate} />}</Route>
+      <Route path="/play/match/:id">{() => <ProtectedRoute component={PlayMatch} />}</Route>
+      <Route path="/play/open">{() => <ProtectedRoute component={PlayOpen} />}</Route>
       <Route path="/play">{() => <ProtectedRoute component={PlayHub} />}</Route>
       <Route path="/find-match">{() => <ProtectedRoute component={FindMatch} />}</Route>
 

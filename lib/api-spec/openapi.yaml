@@ -1119,6 +1119,234 @@ paths:
               schema:
                 $ref: '#/components/schemas/RequestUploadUrlResponse'
 
+  # PLAY / CREATE MATCH
+  /play-matches:
+    post:
+      operationId: createPlayMatch
+      tags: [play-matches]
+      summary: Create a new match (unranked / competitive / personal)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePlayMatchBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayMatchRoom"
+        "400":
+          description: Invalid request
+
+  /play-matches/open:
+    get:
+      operationId: listOpenPlayMatches
+      tags: [play-matches]
+      summary: Browse open matches the current user can request to join
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlayMatchSummary"
+
+  /play-matches/invites:
+    get:
+      operationId: listMyPlayMatchInvites
+      tags: [play-matches]
+      summary: List the current user's pending match invitations
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlayMatchInvite"
+
+  /play-matches/by-token/{token}:
+    get:
+      operationId: getPlayMatchByToken
+      tags: [play-matches]
+      summary: Preview a match by its shareable invite token
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayMatchSummary"
+        "404":
+          description: Not found
+
+  /play-matches/join/{token}:
+    post:
+      operationId: joinPlayMatchByToken
+      tags: [play-matches]
+      summary: Join a match using a shareable invite token
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayMatchRoom"
+        "403":
+          description: Level not suitable
+        "404":
+          description: Not found
+        "409":
+          description: Match is full
+
+  /play-matches/{id}:
+    get:
+      operationId: getPlayMatchRoom
+      tags: [play-matches]
+      summary: Get the match room (roster, goal, requests)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayMatchRoom"
+        "404":
+          description: Not found
+
+  /play-matches/{id}/invite:
+    post:
+      operationId: invitePlayMatchFriends
+      tags: [play-matches]
+      summary: Invite friends (by user id) to a match
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvitePlayMatchBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayMatchRoom"
+        "403":
+          description: Only the leader can invite
+
+  /play-matches/{id}/invite/respond:
+    post:
+      operationId: respondPlayMatchInvite
+      tags: [play-matches]
+      summary: Accept or decline a match invitation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RespondInviteBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayMatchRoom"
+        "409":
+          description: Match is full
+
+  /play-matches/{id}/request:
+    post:
+      operationId: requestJoinPlayMatch
+      tags: [play-matches]
+      summary: Request to join an open match
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayMatchJoinRequest"
+        "403":
+          description: Level not suitable
+        "409":
+          description: Already requested or match full
+
+  /play-matches/{id}/requests/{requestId}/respond:
+    post:
+      operationId: respondPlayMatchJoinRequest
+      tags: [play-matches]
+      summary: Approve or decline a join request (leader only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RespondJoinRequestBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayMatchRoom"
+        "403":
+          description: Only the leader can respond
+
 components:
   schemas:
     HealthStatus:
@@ -1451,6 +1679,248 @@ components:
         easy:
           $ref: "#/components/schemas/Match"
       required: []
+
+    CreatePlayMatchBody:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [unranked, competitive, personal]
+        date:
+          type: string
+        time:
+          type: string
+        clubName:
+          type: string
+        slotMinutes:
+          type: integer
+        visibility:
+          type: string
+          enum: [private, open]
+        goal:
+          description: Required for personal matches; one of the fixed goal options.
+          type: ["string", "null"]
+          enum: [competitive, social, learning, energy, null]
+        styleNote:
+          type: ["string", "null"]
+      required:
+        - kind
+        - date
+        - time
+        - clubName
+        - slotMinutes
+
+    PlayMatchParticipant:
+      type: object
+      properties:
+        userId:
+          type: integer
+        name:
+          type: string
+        level:
+          type: ["string", "null"]
+        avatar:
+          type: ["string", "null"]
+        role:
+          type: string
+      required:
+        - userId
+        - name
+        - role
+
+    PlayMatchJoinRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        matchId:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        level:
+          type: ["string", "null"]
+        avatar:
+          type: ["string", "null"]
+        type:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - matchId
+        - userId
+        - name
+        - type
+        - status
+        - createdAt
+
+    PlayMatchSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+        time:
+          type: string
+        clubName:
+          type: string
+        format:
+          type: string
+        kind:
+          type: ["string", "null"]
+        visibility:
+          type: string
+        goal:
+          type: ["string", "null"]
+        styleNote:
+          type: ["string", "null"]
+        slotMinutes:
+          type: ["integer", "null"]
+        status:
+          type: string
+        levelMin:
+          type: ["string", "null"]
+        levelMax:
+          type: ["string", "null"]
+        maxPlayers:
+          type: integer
+        participantCount:
+          type: integer
+        spotsLeft:
+          type: integer
+        leaderName:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - date
+        - time
+        - clubName
+        - format
+        - visibility
+        - status
+        - maxPlayers
+        - participantCount
+        - spotsLeft
+        - createdAt
+
+    PlayMatchRoom:
+      type: object
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+        time:
+          type: string
+        clubName:
+          type: string
+        format:
+          type: string
+        kind:
+          type: ["string", "null"]
+        visibility:
+          type: string
+        goal:
+          type: ["string", "null"]
+        styleNote:
+          type: ["string", "null"]
+        slotMinutes:
+          type: ["integer", "null"]
+        status:
+          type: string
+        levelMin:
+          type: ["string", "null"]
+        levelMax:
+          type: ["string", "null"]
+        maxPlayers:
+          type: integer
+        participantCount:
+          type: integer
+        spotsLeft:
+          type: integer
+        inviteToken:
+          type: ["string", "null"]
+        leaderName:
+          type: ["string", "null"]
+        myRole:
+          type: ["string", "null"]
+        participants:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlayMatchParticipant"
+        joinRequests:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlayMatchJoinRequest"
+        createdAt:
+          type: string
+      required:
+        - id
+        - date
+        - time
+        - clubName
+        - format
+        - visibility
+        - status
+        - maxPlayers
+        - participantCount
+        - spotsLeft
+        - participants
+        - joinRequests
+        - createdAt
+
+    PlayMatchInvite:
+      type: object
+      properties:
+        id:
+          type: integer
+        matchId:
+          type: integer
+        status:
+          type: string
+        createdAt:
+          type: string
+        match:
+          $ref: "#/components/schemas/PlayMatchSummary"
+      required:
+        - id
+        - matchId
+        - status
+        - createdAt
+        - match
+
+    InvitePlayMatchBody:
+      type: object
+      properties:
+        userIds:
+          type: array
+          items:
+            type: integer
+      required:
+        - userIds
+
+    RespondInviteBody:
+      type: object
+      properties:
+        accept:
+          type: boolean
+      required:
+        - accept
+
+    RespondJoinRequestBody:
+      type: object
+      properties:
+        approve:
+          type: boolean
+      required:
+        - approve
 
     Booking:
       type: object

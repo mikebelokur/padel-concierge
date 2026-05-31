@@ -6,6 +6,8 @@ export * from "./activity_logs";
 export * from "./courts";
 export * from "./clubs";
 export * from "./match_requests";
+export * from "./match_participants";
+export * from "./match_join_requests";
 export * from "./skill_assessments";
 export * from "./password_reset_tokens";
 export * from "./coaching_clients";

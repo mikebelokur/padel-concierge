@@ -5,6 +5,7 @@ import {
   matchesTable,
   matchParticipantsTable,
   matchJoinRequestsTable,
+  notificationsTable,
   usersTable,
   activityLogsTable,
   upsertMatchLog,
@@ -14,6 +15,7 @@ import { eq, and, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../middleware/auth";
 import { fireAndForget } from "../lib/fireAndForget.js";
+import { sendPushToUser, type LocalizedText } from "../lib/push";
 
 const router: IRouter = Router();
 router.use(requireAuth);
@@ -237,6 +239,46 @@ async function countsForMatches(matchIds: number[]): Promise<Map<number, number>
     .where(inArray(matchParticipantsTable.matchId, matchIds));
   for (const r of rows) map.set(r.matchId, (map.get(r.matchId) ?? 0) + 1);
   return map;
+}
+
+// ── Notifications ─────────────────────────────────────────────────────────────
+// Fire-and-forget: persist an in-app bell notification and send a web push so
+// invitees / leaders / requesters learn about roster changes in real time.
+function notifyPlayMatch(opts: {
+  userId: number;
+  kind: string;
+  titleEn: string;
+  titleRu: string;
+  bodyEn: string;
+  bodyRu: string;
+  link: string;
+  pushTitle: LocalizedText;
+  pushBody: LocalizedText;
+  tag: string;
+}): void {
+  fireAndForget(
+    db
+      .insert(notificationsTable)
+      .values({
+        userId: opts.userId,
+        kind: opts.kind,
+        titleEn: opts.titleEn,
+        titleRu: opts.titleRu,
+        bodyEn: opts.bodyEn,
+        bodyRu: opts.bodyRu,
+        link: opts.link,
+      }),
+    { route: "play-matches notify", userId: opts.userId, kind: opts.kind },
+  );
+  fireAndForget(
+    sendPushToUser(opts.userId, {
+      title: opts.pushTitle,
+      body: opts.pushBody,
+      url: opts.link,
+      tag: opts.tag,
+    }),
+    { route: "play-matches push", userId: opts.userId, kind: opts.kind },
+  );
 }
 
 // ── POST /play-matches ───────────────────────────────────────────────────────
@@ -523,6 +565,26 @@ router.post("/play-matches/:id/invite", async (req, res): Promise<void> => {
   for (const target of parsed.data.userIds) {
     if (partSet.has(target) || pendingSet.has(target)) continue;
     await db.insert(matchJoinRequestsTable).values({ matchId: id, userId: target, type: "invite", status: "pending" });
+    notifyPlayMatch({
+      userId: target,
+      kind: "play_match_invited",
+      titleEn: "Match invitation",
+      titleRu: "Приглашение на матч",
+      bodyEn: `You've been invited to play at ${match.clubName} on ${match.date}.`,
+      bodyRu: `Вас пригласили сыграть в ${match.clubName} ${match.date}.`,
+      link: "/play",
+      pushTitle: {
+        en: "Match invitation",
+        ru: "Приглашение на матч",
+        ar: "دعوة لمباراة",
+      },
+      pushBody: {
+        en: `You've been invited to play at ${match.clubName} on ${match.date}.`,
+        ru: `Вас пригласили сыграть в ${match.clubName} ${match.date}.`,
+        ar: `تمت دعوتك للعب في ${match.clubName} في ${match.date}.`,
+      },
+      tag: `play-match-invite-${id}`,
+    });
   }
   res.json(await buildRoom(id, userId));
 });
@@ -597,6 +659,31 @@ router.post("/play-matches/:id/request", async (req, res): Promise<void> => {
     .insert(matchJoinRequestsTable)
     .values({ matchId: id, userId, type: "request", status: "pending" })
     .returning();
+
+  if (match.creatorId != null) {
+    const requesterName = me?.name ?? "A player";
+    notifyPlayMatch({
+      userId: match.creatorId,
+      kind: "play_match_request",
+      titleEn: "New join request",
+      titleRu: "Новая заявка на матч",
+      bodyEn: `${requesterName} wants to join your match at ${match.clubName} on ${match.date}.`,
+      bodyRu: `${requesterName} хочет присоединиться к вашему матчу в ${match.clubName} ${match.date}.`,
+      link: `/play/match/${id}`,
+      pushTitle: {
+        en: "New join request",
+        ru: "Новая заявка на матч",
+        ar: "طلب انضمام جديد",
+      },
+      pushBody: {
+        en: `${requesterName} wants to join your match at ${match.clubName}.`,
+        ru: `${requesterName} хочет присоединиться к вашему матчу в ${match.clubName}.`,
+        ar: `${requesterName} يريد الانضمام إلى مباراتك في ${match.clubName}.`,
+      },
+      tag: `play-match-request-${id}`,
+    });
+  }
+
   res.status(201).json({
     id: created.id,
     matchId: created.matchId,
@@ -630,6 +717,26 @@ router.post("/play-matches/:id/requests/:requestId/respond", async (req, res): P
 
   if (!parsed.data.approve) {
     await db.update(matchJoinRequestsTable).set({ status: "declined", updatedAt: new Date() }).where(eq(matchJoinRequestsTable.id, requestId));
+    notifyPlayMatch({
+      userId: joinReq.userId,
+      kind: "play_match_request_declined",
+      titleEn: "Request declined",
+      titleRu: "Заявка отклонена",
+      bodyEn: `Your request to join the match at ${match.clubName} on ${match.date} was declined.`,
+      bodyRu: `Ваша заявка на матч в ${match.clubName} ${match.date} была отклонена.`,
+      link: "/play/open",
+      pushTitle: {
+        en: "Request declined",
+        ru: "Заявка отклонена",
+        ar: "تم رفض الطلب",
+      },
+      pushBody: {
+        en: `Your request to join the match at ${match.clubName} was declined.`,
+        ru: `Ваша заявка на матч в ${match.clubName} была отклонена.`,
+        ar: `تم رفض طلبك للانضمام إلى المباراة في ${match.clubName}.`,
+      },
+      tag: `play-match-respond-${id}`,
+    });
     res.json(await buildRoom(id, userId));
     return;
   }
@@ -647,6 +754,26 @@ router.post("/play-matches/:id/requests/:requestId/respond", async (req, res): P
   await db.update(matchJoinRequestsTable).set({ status: "approved", updatedAt: new Date() }).where(eq(matchJoinRequestsTable.id, requestId));
   await mirrorRoster(id);
   fireAndForget(upsertProfileMatchRecord(joinReq.userId, id), { route: "POST /play-matches/:id/requests/:requestId/respond", userId: joinReq.userId });
+  notifyPlayMatch({
+    userId: joinReq.userId,
+    kind: "play_match_request_approved",
+    titleEn: "Request approved",
+    titleRu: "Заявка одобрена",
+    bodyEn: `You're in! Your request to join the match at ${match.clubName} on ${match.date} was approved.`,
+    bodyRu: `Вы в игре! Ваша заявка на матч в ${match.clubName} ${match.date} одобрена.`,
+    link: `/play/match/${id}`,
+    pushTitle: {
+      en: "Request approved",
+      ru: "Заявка одобрена",
+      ar: "تمت الموافقة على الطلب",
+    },
+    pushBody: {
+      en: `You're in! Your request to join the match at ${match.clubName} was approved.`,
+      ru: `Вы в игре! Ваша заявка на матч в ${match.clubName} одобрена.`,
+      ar: `أنت مشترك! تمت الموافقة على طلبك للانضمام إلى المباراة في ${match.clubName}.`,
+    },
+    tag: `play-match-respond-${id}`,
+  });
   res.json(await buildRoom(id, userId));
 });
 

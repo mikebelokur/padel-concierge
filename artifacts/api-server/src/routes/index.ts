@@ -44,27 +44,35 @@ router.use(statsRouter);
 router.use(usersRouter);
 router.use(matchesRouter);
 router.use(playMatchesRouter);
+router.use(notificationsRouter);
+router.use(pushRouter);
 router.use(bookingsRouter);
 router.use(videoAnalysesRouter);
-router.use(coachRouter);
 router.use(courtsRouter);
 router.use(clubsRouter);
 router.use(storageRouter);
 router.use(matchRequestsRouter);
 router.use(assessmentsRouter);
 router.use(adminRouter);
-router.use(adminUserProfileRouter);
-router.use(coachingRouter);
 router.use(padelRulesRouter);
 router.use(padelNewsRouter);
 router.use(matchmakingRouter);
 router.use(registrationsRouter);
 router.use(trainerMatchRequestsRouter);
 router.use(groupTrainingsRouter);
-router.use(notificationsRouter);
 router.use(internalRouter);
 router.use(recurringSeriesRouter);
-router.use(pushRouter);
 router.use(clubSlotsRouter);
+
+// ─── Mode-guarded routers (mount LAST) ───────────────────────────────────────
+// coachRouter, adminUserProfileRouter, and coachingRouter each apply a
+// root-level `requireMode(...)` guard via `router.use(...)`. In Express, that
+// guard runs for EVERY request flowing through the sub-router, so any
+// player-facing router mounted AFTER one of these would be 403'd before its own
+// handlers are reached. Keep all three at the end so their guards never leak
+// onto the player/public routers above.
+router.use(coachRouter);
+router.use(adminUserProfileRouter);
+router.use(coachingRouter);
 
 export default router;

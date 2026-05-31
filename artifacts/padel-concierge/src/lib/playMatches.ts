@@ -126,6 +126,14 @@ export function respondPlayMatchJoinRequest(id: number, requestId: number, appro
   });
 }
 
+export function cancelPlayMatch(id: number) {
+  return apiFetch<PlayMatchRoom>(`/play-matches/${id}/cancel`, { method: "POST" });
+}
+
+export function removePlayMatchParticipant(id: number, userId: number) {
+  return apiFetch<PlayMatchRoom>(`/play-matches/${id}/participants/${userId}`, { method: "DELETE" });
+}
+
 export const KIND_META: Record<MatchKind, { icon: string; accent: string }> = {
   unranked: { icon: "🎾", accent: "#7dd3fc" },
   competitive: { icon: "🏆", accent: "#D4AF37" },

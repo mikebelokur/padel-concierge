@@ -1347,6 +1347,59 @@ paths:
         "403":
           description: Only the leader can respond
 
+  /play-matches/{id}/cancel:
+    post:
+      operationId: cancelPlayMatch
+      tags: [play-matches]
+      summary: Cancel a forming match (leader only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayMatchRoom"
+        "403":
+          description: Only the leader can cancel
+        "409":
+          description: Match can no longer be cancelled
+
+  /play-matches/{id}/participants/{userId}:
+    delete:
+      operationId: removePlayMatchParticipant
+      tags: [play-matches]
+      summary: Remove a non-leader participant from the roster (leader only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayMatchRoom"
+        "400":
+          description: The leader cannot be removed
+        "403":
+          description: Only the leader can remove players
+        "404":
+          description: Participant not found
+
 components:
   schemas:
     HealthStatus:

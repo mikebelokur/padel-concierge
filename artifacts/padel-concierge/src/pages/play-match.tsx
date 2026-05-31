@@ -10,6 +10,8 @@ import {
   getPlayMatchRoom,
   invitePlayMatchFriends,
   respondPlayMatchJoinRequest,
+  cancelPlayMatch,
+  removePlayMatchParticipant,
   KIND_META,
   type PlayMatchRoom,
 } from "@/lib/playMatches";
@@ -41,6 +43,9 @@ export default function PlayMatch() {
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<
+    { type: "cancel" } | { type: "remove"; userId: number; name: string } | null
+  >(null);
 
   async function load() {
     try {
@@ -119,6 +124,25 @@ export default function PlayMatch() {
     }
   }
 
+  async function runConfirm() {
+    if (!confirmAction || busy) return;
+    setBusy(true);
+    try {
+      if (confirmAction.type === "cancel") {
+        setRoom(await cancelPlayMatch(matchId));
+        toast({ title: t("playFlow.matchCancelled") });
+      } else {
+        setRoom(await removePlayMatchParticipant(matchId, confirmAction.userId));
+        toast({ title: t("playFlow.removed") });
+      }
+      setConfirmAction(null);
+    } catch (e) {
+      toast({ title: t("playFlow.error"), description: translateError(e).message, variant: "destructive" });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function copyLink() {
     try {
       await navigator.clipboard.writeText(inviteLink);
@@ -153,6 +177,8 @@ export default function PlayMatch() {
 
   const kind = room.kind ?? "unranked";
   const slots = Array.from({ length: room.maxPlayers });
+  const isCancelled = room.status === "cancelled";
+  const isForming = room.status === "forming";
 
   return (
     <AppLayout>
@@ -183,6 +209,16 @@ export default function PlayMatch() {
             <span className="rounded-full bg-white/8 px-3 py-1">{t(`playFlow.visibility_${room.visibility}`)}</span>
           </div>
         </header>
+
+        {/* Cancelled banner */}
+        {isCancelled && (
+          <div
+            data-testid="banner-cancelled"
+            className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 mb-5 text-sm text-red-300"
+          >
+            {t("playFlow.matchCancelledBanner")}
+          </div>
+        )}
 
         {/* Personal goal / vibe */}
         {kind === "personal" && (room.goal || room.styleNote) && (
@@ -245,6 +281,17 @@ export default function PlayMatch() {
                       {t("playFlow.leader")}
                     </span>
                   )}
+                  {isLeader && isForming && p.role !== "leader" && (
+                    <button
+                      data-testid={`remove-${p.userId}`}
+                      onClick={() => setConfirmAction({ type: "remove", userId: p.userId, name: p.name })}
+                      disabled={busy}
+                      aria-label={t("playFlow.remove")}
+                      className="text-xs rounded-lg border border-white/15 text-white/60 hover:text-red-300 hover:border-red-400/40 px-2.5 py-1 disabled:opacity-50"
+                    >
+                      {t("playFlow.remove")}
+                    </button>
+                  )}
                 </div>
               );
             })}
@@ -291,25 +338,88 @@ export default function PlayMatch() {
         )}
 
         {/* Leader: invite controls */}
-        {isLeader && room.spotsLeft > 0 && (
+        {isLeader && isForming && (
           <section className="space-y-3">
+            {room.spotsLeft > 0 && (
+              <>
+                <button
+                  data-testid="button-invite-friends"
+                  onClick={openInvitePicker}
+                  className="w-full rounded-xl bg-primary text-black font-semibold h-13 py-3.5 text-sm"
+                >
+                  {t("playFlow.inviteFriends")}
+                </button>
+                <button
+                  data-testid="button-copy-link"
+                  onClick={copyLink}
+                  className="w-full rounded-xl border border-white/15 text-white font-medium py-3.5 text-sm"
+                >
+                  {copied ? t("playFlow.linkCopied") : t("playFlow.copyLink")}
+                </button>
+              </>
+            )}
             <button
-              data-testid="button-invite-friends"
-              onClick={openInvitePicker}
-              className="w-full rounded-xl bg-primary text-black font-semibold h-13 py-3.5 text-sm"
+              data-testid="button-cancel-match"
+              onClick={() => setConfirmAction({ type: "cancel" })}
+              className="w-full rounded-xl border border-red-500/30 text-red-300 hover:bg-red-500/10 font-medium py-3.5 text-sm"
             >
-              {t("playFlow.inviteFriends")}
-            </button>
-            <button
-              data-testid="button-copy-link"
-              onClick={copyLink}
-              className="w-full rounded-xl border border-white/15 text-white font-medium py-3.5 text-sm"
-            >
-              {copied ? t("playFlow.linkCopied") : t("playFlow.copyLink")}
+              {t("playFlow.cancelMatch")}
             </button>
           </section>
         )}
       </div>
+
+      {/* Confirm dialog (cancel match / remove player) */}
+      {confirmAction && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+          style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)" }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !busy) setConfirmAction(null);
+          }}
+        >
+          <div
+            data-testid="confirm-dialog"
+            className="w-full max-w-md rounded-t-[28px] sm:rounded-[28px] p-6"
+            style={{
+              background: "hsl(220 20% 10%)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              paddingBottom: "max(24px, env(safe-area-inset-bottom))",
+            }}
+          >
+            <div className="w-10 h-1 rounded-full mx-auto mb-5 sm:hidden" style={{ background: "rgba(255,255,255,0.2)" }} />
+            <h2 className="font-serif font-bold text-white mb-2 text-xl">
+              {confirmAction.type === "cancel" ? t("playFlow.cancelMatchTitle") : t("playFlow.removePlayerTitle")}
+            </h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              {confirmAction.type === "cancel"
+                ? t("playFlow.cancelMatchDesc")
+                : t("playFlow.removePlayerDesc").replace("{{name}}", confirmAction.name)}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmAction(null)}
+                disabled={busy}
+                className="flex-1 rounded-xl border border-white/12 text-white/70 font-medium h-12 disabled:opacity-50"
+              >
+                {confirmAction.type === "cancel" ? t("playFlow.keepMatch") : t("playFlow.cancel")}
+              </button>
+              <button
+                data-testid="confirm-action"
+                onClick={runConfirm}
+                disabled={busy}
+                className="flex-1 rounded-xl bg-red-500 text-white font-semibold h-12 disabled:opacity-50"
+              >
+                {busy
+                  ? "…"
+                  : confirmAction.type === "cancel"
+                    ? t("playFlow.confirmCancel")
+                    : t("playFlow.confirmRemove")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Invite picker dialog */}
       {showInvite && (

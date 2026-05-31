@@ -2195,3 +2195,108 @@ export const RespondPlayMatchJoinRequestResponse = zod.object({
   ),
   createdAt: zod.string(),
 });
+
+/**
+ * @summary Cancel a forming match (leader only)
+ */
+export const CancelPlayMatchParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const CancelPlayMatchResponse = zod.object({
+  id: zod.number(),
+  date: zod.string(),
+  time: zod.string(),
+  clubName: zod.string(),
+  format: zod.string(),
+  kind: zod.string().nullish(),
+  visibility: zod.string(),
+  goal: zod.string().nullish(),
+  styleNote: zod.string().nullish(),
+  slotMinutes: zod.number().nullish(),
+  status: zod.string(),
+  levelMin: zod.string().nullish(),
+  levelMax: zod.string().nullish(),
+  maxPlayers: zod.number(),
+  participantCount: zod.number(),
+  spotsLeft: zod.number(),
+  inviteToken: zod.string().nullish(),
+  leaderName: zod.string().nullish(),
+  myRole: zod.string().nullish(),
+  participants: zod.array(
+    zod.object({
+      userId: zod.number(),
+      name: zod.string(),
+      level: zod.string().nullish(),
+      avatar: zod.string().nullish(),
+      role: zod.string(),
+    }),
+  ),
+  joinRequests: zod.array(
+    zod.object({
+      id: zod.number(),
+      matchId: zod.number(),
+      userId: zod.number(),
+      name: zod.string(),
+      level: zod.string().nullish(),
+      avatar: zod.string().nullish(),
+      type: zod.string(),
+      status: zod.string(),
+      createdAt: zod.string(),
+    }),
+  ),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Remove a non-leader participant from the roster (leader only)
+ */
+export const RemovePlayMatchParticipantParams = zod.object({
+  id: zod.coerce.number(),
+  userId: zod.coerce.number(),
+});
+
+export const RemovePlayMatchParticipantResponse = zod.object({
+  id: zod.number(),
+  date: zod.string(),
+  time: zod.string(),
+  clubName: zod.string(),
+  format: zod.string(),
+  kind: zod.string().nullish(),
+  visibility: zod.string(),
+  goal: zod.string().nullish(),
+  styleNote: zod.string().nullish(),
+  slotMinutes: zod.number().nullish(),
+  status: zod.string(),
+  levelMin: zod.string().nullish(),
+  levelMax: zod.string().nullish(),
+  maxPlayers: zod.number(),
+  participantCount: zod.number(),
+  spotsLeft: zod.number(),
+  inviteToken: zod.string().nullish(),
+  leaderName: zod.string().nullish(),
+  myRole: zod.string().nullish(),
+  participants: zod.array(
+    zod.object({
+      userId: zod.number(),
+      name: zod.string(),
+      level: zod.string().nullish(),
+      avatar: zod.string().nullish(),
+      role: zod.string(),
+    }),
+  ),
+  joinRequests: zod.array(
+    zod.object({
+      id: zod.number(),
+      matchId: zod.number(),
+      userId: zod.number(),
+      name: zod.string(),
+      level: zod.string().nullish(),
+      avatar: zod.string().nullish(),
+      type: zod.string(),
+      status: zod.string(),
+      createdAt: zod.string(),
+    }),
+  ),
+  createdAt: zod.string(),
+});

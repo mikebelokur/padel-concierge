@@ -471,6 +471,11 @@ router.post("/play-matches/join/:token", async (req, res): Promise<void> => {
     return;
   }
 
+  if (match.status !== FORMING_STATUS) {
+    res.status(409).json({ error: "Match is no longer accepting players", code: "MATCH_CLOSED" });
+    return;
+  }
+
   const counts = await countsForMatches([match.id]);
   if ((counts.get(match.id) ?? 0) >= match.maxPlayers) {
     res.status(409).json({ error: "Match is full", code: "MATCH_FULL" });
@@ -490,9 +495,14 @@ router.post("/play-matches/join/:token", async (req, res): Promise<void> => {
     .select()
     .from(matchJoinRequestsTable)
     .where(and(eq(matchJoinRequestsTable.matchId, match.id), eq(matchJoinRequestsTable.userId, userId)));
-  const hasInvite = priorRequests.some((r) => r.type === "invite");
+  const hasInvite = priorRequests.some(
+    (r) => r.type === "invite" && (r.status === "pending" || r.status === "approved"),
+  );
   const isApproved = priorRequests.some((r) => r.status === "approved");
-  const mayJoinDirectly = match.visibility === "private" || hasInvite || isApproved;
+  // A declined row means the user was removed (or turned down an invite); they
+  // must not slide back in directly — funnel them into the request/approve flow.
+  const wasBlocked = priorRequests.some((r) => r.status === "declined");
+  const mayJoinDirectly = (match.visibility === "private" || hasInvite || isApproved) && !wasBlocked;
 
   if (!mayJoinDirectly) {
     const pendingReq = priorRequests.find((r) => r.type === "request" && r.status === "pending");
@@ -537,7 +547,13 @@ router.get("/play-matches/:id", async (req, res): Promise<void> => {
     const [link] = await db
       .select({ id: matchJoinRequestsTable.id })
       .from(matchJoinRequestsTable)
-      .where(and(eq(matchJoinRequestsTable.matchId, id), eq(matchJoinRequestsTable.userId, userId)));
+      .where(
+        and(
+          eq(matchJoinRequestsTable.matchId, id),
+          eq(matchJoinRequestsTable.userId, userId),
+          inArray(matchJoinRequestsTable.status, ["pending", "approved"]),
+        ),
+      );
     if (!link) { res.status(403).json({ error: "Forbidden" }); return; }
   }
   res.json(room);
@@ -553,6 +569,7 @@ router.post("/play-matches/:id/invite", async (req, res): Promise<void> => {
   const [match] = await db.select().from(matchesTable).where(eq(matchesTable.id, id));
   if (!match) { res.status(404).json({ error: "Match not found" }); return; }
   if (match.creatorId !== userId) { res.status(403).json({ error: "Only the leader can invite" }); return; }
+  if (match.status !== FORMING_STATUS) { res.status(409).json({ error: "Match is no longer forming", code: "MATCH_CLOSED" }); return; }
 
   const parts = await loadParticipants(id);
   const partSet = new Set(parts.map((p) => p.userId));
@@ -617,6 +634,7 @@ router.post("/play-matches/:id/invite/respond", async (req, res): Promise<void> 
 
   const [match] = await db.select().from(matchesTable).where(eq(matchesTable.id, id));
   if (!match) { res.status(404).json({ error: "Match not found" }); return; }
+  if (match.status !== FORMING_STATUS) { res.status(409).json({ error: "Match is no longer forming", code: "MATCH_CLOSED" }); return; }
   const counts = await countsForMatches([id]);
   if ((counts.get(id) ?? 0) >= match.maxPlayers) {
     res.status(409).json({ error: "Match is full", code: "MATCH_FULL" });
@@ -636,6 +654,7 @@ router.post("/play-matches/:id/request", async (req, res): Promise<void> => {
   const [match] = await db.select().from(matchesTable).where(eq(matchesTable.id, id));
   if (!match) { res.status(404).json({ error: "Match not found" }); return; }
   if (match.visibility !== "open") { res.status(403).json({ error: "Match is not open" }); return; }
+  if (match.status !== FORMING_STATUS) { res.status(409).json({ error: "Match is no longer accepting players", code: "MATCH_CLOSED" }); return; }
 
   const existingPart = await db
     .select()
@@ -741,6 +760,7 @@ router.post("/play-matches/:id/requests/:requestId/respond", async (req, res): P
     return;
   }
 
+  if (match.status !== FORMING_STATUS) { res.status(409).json({ error: "Match is no longer forming", code: "MATCH_CLOSED" }); return; }
   const counts = await countsForMatches([id]);
   if ((counts.get(id) ?? 0) >= match.maxPlayers) { res.status(409).json({ error: "Match is full", code: "MATCH_FULL" }); return; }
 
@@ -774,6 +794,133 @@ router.post("/play-matches/:id/requests/:requestId/respond", async (req, res): P
     },
     tag: `play-match-respond-${id}`,
   });
+  res.json(await buildRoom(id, userId));
+});
+
+// ── POST /play-matches/:id/cancel ────────────────────────────────────────────
+// The leader cancels a forming match. Status → cancelled (drops out of the open
+// browse list), every other participant is notified, and any pending
+// invites/requests are declined so they stop lingering.
+router.post("/play-matches/:id/cancel", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const userId = authUserId(req);
+
+  const [match] = await db.select().from(matchesTable).where(eq(matchesTable.id, id));
+  if (!match) { res.status(404).json({ error: "Match not found" }); return; }
+  if (match.creatorId !== userId) { res.status(403).json({ error: "Only the leader can cancel" }); return; }
+  if (match.status !== FORMING_STATUS) {
+    res.status(409).json({ error: "Match can no longer be cancelled", code: "NOT_CANCELLABLE" });
+    return;
+  }
+
+  await db.update(matchesTable).set({ status: "cancelled" }).where(eq(matchesTable.id, id));
+  // Decline any still-pending invites/requests so they disappear from inboxes.
+  await db
+    .update(matchJoinRequestsTable)
+    .set({ status: "declined", updatedAt: new Date() })
+    .where(and(eq(matchJoinRequestsTable.matchId, id), eq(matchJoinRequestsTable.status, "pending")));
+
+  const parts = await loadParticipants(id);
+  for (const p of parts) {
+    if (p.userId === userId) continue;
+    notifyPlayMatch({
+      userId: p.userId,
+      kind: "play_match_cancelled",
+      titleEn: "Match cancelled",
+      titleRu: "Матч отменён",
+      bodyEn: `The match at ${match.clubName} on ${match.date} was cancelled by the organizer.`,
+      bodyRu: `Матч в ${match.clubName} ${match.date} был отменён организатором.`,
+      link: "/play",
+      pushTitle: {
+        en: "Match cancelled",
+        ru: "Матч отменён",
+        ar: "أُلغيت المباراة",
+      },
+      pushBody: {
+        en: `The match at ${match.clubName} on ${match.date} was cancelled.`,
+        ru: `Матч в ${match.clubName} ${match.date} был отменён.`,
+        ar: `أُلغيت المباراة في ${match.clubName} بتاريخ ${match.date}.`,
+      },
+      tag: `play-match-cancelled-${id}`,
+    });
+  }
+
+  res.json(await buildRoom(id, userId));
+});
+
+// ── DELETE /play-matches/:id/participants/:userId ────────────────────────────
+// The leader removes a non-leader participant, freeing their spot. The removed
+// player is notified, and any of their join requests/invites for this match are
+// declined so they can't silently slide back in via an old approval/link.
+router.delete("/play-matches/:id/participants/:userId", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const targetId = Number(req.params.userId);
+  if (!Number.isFinite(id) || !Number.isFinite(targetId)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const userId = authUserId(req);
+
+  const [match] = await db.select().from(matchesTable).where(eq(matchesTable.id, id));
+  if (!match) { res.status(404).json({ error: "Match not found" }); return; }
+  if (match.creatorId !== userId) { res.status(403).json({ error: "Only the leader can remove players" }); return; }
+  if (targetId === userId) { res.status(400).json({ error: "The leader cannot be removed", code: "CANNOT_REMOVE_LEADER" }); return; }
+
+  const [participant] = await db
+    .select()
+    .from(matchParticipantsTable)
+    .where(and(eq(matchParticipantsTable.matchId, id), eq(matchParticipantsTable.userId, targetId)));
+  if (!participant) { res.status(404).json({ error: "Participant not found" }); return; }
+  if (participant.role === "leader") { res.status(400).json({ error: "The leader cannot be removed", code: "CANNOT_REMOVE_LEADER" }); return; }
+
+  await db
+    .delete(matchParticipantsTable)
+    .where(and(eq(matchParticipantsTable.matchId, id), eq(matchParticipantsTable.userId, targetId)));
+  // Decline any of their lingering invites/requests for this match so the freed
+  // spot can't be reclaimed through an old approval or invite link.
+  await db
+    .update(matchJoinRequestsTable)
+    .set({ status: "declined", updatedAt: new Date() })
+    .where(
+      and(
+        eq(matchJoinRequestsTable.matchId, id),
+        eq(matchJoinRequestsTable.userId, targetId),
+        inArray(matchJoinRequestsTable.status, ["pending", "approved"]),
+      ),
+    );
+  // If they joined directly via a private link they may have no request row at
+  // all. Record a declined marker so the join path knows they were removed and
+  // can't slide straight back in — re-entry must go through leader approval.
+  const remaining = await db
+    .select({ id: matchJoinRequestsTable.id })
+    .from(matchJoinRequestsTable)
+    .where(and(eq(matchJoinRequestsTable.matchId, id), eq(matchJoinRequestsTable.userId, targetId)));
+  if (remaining.length === 0) {
+    await db
+      .insert(matchJoinRequestsTable)
+      .values({ matchId: id, userId: targetId, type: "request", status: "declined" });
+  }
+  await mirrorRoster(id);
+
+  notifyPlayMatch({
+    userId: targetId,
+    kind: "play_match_removed",
+    titleEn: "Removed from match",
+    titleRu: "Удалены из матча",
+    bodyEn: `You were removed from the match at ${match.clubName} on ${match.date}.`,
+    bodyRu: `Вас удалили из матча в ${match.clubName} ${match.date}.`,
+    link: "/play",
+    pushTitle: {
+      en: "Removed from match",
+      ru: "Удалены из матча",
+      ar: "تمت إزالتك من المباراة",
+    },
+    pushBody: {
+      en: `You were removed from the match at ${match.clubName} on ${match.date}.`,
+      ru: `Вас удалили из матча в ${match.clubName} ${match.date}.`,
+      ar: `تمت إزالتك من المباراة في ${match.clubName} بتاريخ ${match.date}.`,
+    },
+    tag: `play-match-removed-${id}`,
+  });
+
   res.json(await buildRoom(id, userId));
 });
 

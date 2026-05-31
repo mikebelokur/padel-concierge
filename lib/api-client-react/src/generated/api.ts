@@ -5290,3 +5290,178 @@ export const useRespondPlayMatchJoinRequest = <
 > => {
   return useMutation(getRespondPlayMatchJoinRequestMutationOptions(options));
 };
+
+/**
+ * @summary Cancel a forming match (leader only)
+ */
+export const getCancelPlayMatchUrl = (id: number) => {
+  return `/api/play-matches/${id}/cancel`;
+};
+
+export const cancelPlayMatch = async (
+  id: number,
+  options?: RequestInit,
+): Promise<PlayMatchRoom> => {
+  return customFetch<PlayMatchRoom>(getCancelPlayMatchUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getCancelPlayMatchMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cancelPlayMatch>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof cancelPlayMatch>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["cancelPlayMatch"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof cancelPlayMatch>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return cancelPlayMatch(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CancelPlayMatchMutationResult = NonNullable<
+  Awaited<ReturnType<typeof cancelPlayMatch>>
+>;
+
+export type CancelPlayMatchMutationError = ErrorType<void>;
+
+/**
+ * @summary Cancel a forming match (leader only)
+ */
+export const useCancelPlayMatch = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cancelPlayMatch>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof cancelPlayMatch>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getCancelPlayMatchMutationOptions(options));
+};
+
+/**
+ * @summary Remove a non-leader participant from the roster (leader only)
+ */
+export const getRemovePlayMatchParticipantUrl = (
+  id: number,
+  userId: number,
+) => {
+  return `/api/play-matches/${id}/participants/${userId}`;
+};
+
+export const removePlayMatchParticipant = async (
+  id: number,
+  userId: number,
+  options?: RequestInit,
+): Promise<PlayMatchRoom> => {
+  return customFetch<PlayMatchRoom>(
+    getRemovePlayMatchParticipantUrl(id, userId),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getRemovePlayMatchParticipantMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof removePlayMatchParticipant>>,
+    TError,
+    { id: number; userId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof removePlayMatchParticipant>>,
+  TError,
+  { id: number; userId: number },
+  TContext
+> => {
+  const mutationKey = ["removePlayMatchParticipant"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof removePlayMatchParticipant>>,
+    { id: number; userId: number }
+  > = (props) => {
+    const { id, userId } = props ?? {};
+
+    return removePlayMatchParticipant(id, userId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RemovePlayMatchParticipantMutationResult = NonNullable<
+  Awaited<ReturnType<typeof removePlayMatchParticipant>>
+>;
+
+export type RemovePlayMatchParticipantMutationError = ErrorType<void>;
+
+/**
+ * @summary Remove a non-leader participant from the roster (leader only)
+ */
+export const useRemovePlayMatchParticipant = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof removePlayMatchParticipant>>,
+    TError,
+    { id: number; userId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof removePlayMatchParticipant>>,
+  TError,
+  { id: number; userId: number },
+  TContext
+> => {
+  return useMutation(getRemovePlayMatchParticipantMutationOptions(options));
+};

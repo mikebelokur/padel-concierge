@@ -250,7 +250,19 @@
     "joined": "You're in!",
     "joinedDesc": "You've joined the match.",
     "matchFull": "Match is full",
-    "error": "Something went wrong"
+    "error": "Something went wrong",
+    "remove": "Remove",
+    "removePlayerTitle": "Remove player?",
+    "removePlayerDesc": "{{name}} will be removed from the roster and their spot will open up.",
+    "removed": "Player removed",
+    "cancelMatch": "Cancel match",
+    "cancelMatchTitle": "Cancel this match?",
+    "cancelMatchDesc": "Everyone who joined will be notified and the match will be closed. This can't be undone.",
+    "matchCancelled": "Match cancelled",
+    "matchCancelledBanner": "This match has been cancelled.",
+    "keepMatch": "Keep match",
+    "confirmCancel": "Yes, cancel",
+    "confirmRemove": "Yes, remove"
   },
   "home": {
     "tagline": "The private members club for serious padel players. Precise matchmaking, certified skill levels, and premium play analytics.",

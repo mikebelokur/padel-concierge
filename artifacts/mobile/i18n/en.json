@@ -136,6 +136,10 @@
     "createTitle": "Create a match",
     "browseTitle": "Browse & manage",
     "invitationsTitle": "Your invitations",
+    "myMatchesTitle": "Your matches",
+    "myMatchesEmpty": "You have no active matches yet. Create one or join an open game.",
+    "roleLeader": "Organizer",
+    "roleJoined": "Joined",
     "openMatches": "Open matches",
     "openMatchesDesc": "Browse public matches looking for players.",
     "kind": {

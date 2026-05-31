@@ -1171,6 +1171,21 @@ paths:
                 items:
                   $ref: "#/components/schemas/PlayMatchInvite"
 
+  /play-matches/mine:
+    get:
+      operationId: listMyPlayMatches
+      tags: [play-matches]
+      summary: List the current user's active/upcoming matches (created or joined)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlayMatchMine"
+
   /play-matches/by-token/{token}:
     get:
       operationId: getPlayMatchByToken
@@ -1948,6 +1963,60 @@ components:
         - status
         - createdAt
         - match
+
+    PlayMatchMine:
+      type: object
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+        time:
+          type: string
+        clubName:
+          type: string
+        format:
+          type: string
+        kind:
+          type: ["string", "null"]
+        visibility:
+          type: string
+        goal:
+          type: ["string", "null"]
+        styleNote:
+          type: ["string", "null"]
+        slotMinutes:
+          type: ["integer", "null"]
+        status:
+          type: string
+        levelMin:
+          type: ["string", "null"]
+        levelMax:
+          type: ["string", "null"]
+        maxPlayers:
+          type: integer
+        participantCount:
+          type: integer
+        spotsLeft:
+          type: integer
+        leaderName:
+          type: ["string", "null"]
+        myRole:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - date
+        - time
+        - clubName
+        - format
+        - visibility
+        - status
+        - maxPlayers
+        - participantCount
+        - spotsLeft
+        - createdAt
 
     InvitePlayMatchBody:
       type: object

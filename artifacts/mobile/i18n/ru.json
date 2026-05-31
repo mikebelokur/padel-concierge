@@ -136,6 +136,10 @@
     "createTitle": "Создать матч",
     "browseTitle": "Просмотр и управление",
     "invitationsTitle": "Ваши приглашения",
+    "myMatchesTitle": "Ваши матчи",
+    "myMatchesEmpty": "У вас пока нет активных матчей. Создайте свой или присоединитесь к открытой игре.",
+    "roleLeader": "Организатор",
+    "roleJoined": "Участник",
     "openMatches": "Открытые матчи",
     "openMatchesDesc": "Публичные матчи, которые ищут игроков.",
     "kind": {

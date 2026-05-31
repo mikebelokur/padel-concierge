@@ -48,6 +48,7 @@ import type {
   PaymentIntentResponse,
   PlayMatchInvite,
   PlayMatchJoinRequest,
+  PlayMatchMine,
   PlayMatchRoom,
   PlayMatchSummary,
   PlayerStats,
@@ -4671,6 +4672,81 @@ export function useListMyPlayMatchInvites<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getListMyPlayMatchInvitesQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List the current user's active/upcoming matches (created or joined)
+ */
+export const getListMyPlayMatchesUrl = () => {
+  return `/api/play-matches/mine`;
+};
+
+export const listMyPlayMatches = async (
+  options?: RequestInit,
+): Promise<PlayMatchMine[]> => {
+  return customFetch<PlayMatchMine[]>(getListMyPlayMatchesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListMyPlayMatchesQueryKey = () => {
+  return [`/api/play-matches/mine`] as const;
+};
+
+export const getListMyPlayMatchesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMyPlayMatches>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listMyPlayMatches>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListMyPlayMatchesQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listMyPlayMatches>>
+  > = ({ signal }) => listMyPlayMatches({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMyPlayMatches>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListMyPlayMatchesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMyPlayMatches>>
+>;
+export type ListMyPlayMatchesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List the current user's active/upcoming matches (created or joined)
+ */
+
+export function useListMyPlayMatches<
+  TData = Awaited<ReturnType<typeof listMyPlayMatches>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listMyPlayMatches>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListMyPlayMatchesQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

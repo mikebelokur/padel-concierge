@@ -311,6 +311,36 @@ export interface PlayMatchInvite {
   match: PlayMatchSummary;
 }
 
+export interface PlayMatchMine {
+  id: number;
+  date: string;
+  time: string;
+  clubName: string;
+  format: string;
+  /** @nullable */
+  kind?: string | null;
+  visibility: string;
+  /** @nullable */
+  goal?: string | null;
+  /** @nullable */
+  styleNote?: string | null;
+  /** @nullable */
+  slotMinutes?: number | null;
+  status: string;
+  /** @nullable */
+  levelMin?: string | null;
+  /** @nullable */
+  levelMax?: string | null;
+  maxPlayers: number;
+  participantCount: number;
+  spotsLeft: number;
+  /** @nullable */
+  leaderName?: string | null;
+  /** @nullable */
+  myRole?: string | null;
+  createdAt: string;
+}
+
 export interface InvitePlayMatchBody {
   userIds: number[];
 }

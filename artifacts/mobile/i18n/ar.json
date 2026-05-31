@@ -136,6 +136,10 @@
     "createTitle": "إنشاء مباراة",
     "browseTitle": "التصفح والإدارة",
     "invitationsTitle": "دعواتك",
+    "myMatchesTitle": "مبارياتك",
+    "myMatchesEmpty": "ليس لديك مباريات نشطة بعد. أنشئ مباراة أو انضم إلى لعبة مفتوحة.",
+    "roleLeader": "المنظم",
+    "roleJoined": "مشارك",
     "openMatches": "المباريات المفتوحة",
     "openMatchesDesc": "تصفح المباريات العامة التي تبحث عن لاعبين.",
     "kind": {

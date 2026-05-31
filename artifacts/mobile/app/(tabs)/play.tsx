@@ -1,8 +1,9 @@
 import {
   useListMyPlayMatchInvites,
+  useListMyPlayMatches,
   useRespondPlayMatchInvite,
 } from "@workspace/api-client-react";
-import type { PlayMatchInvite } from "@workspace/api-client-react";
+import type { PlayMatchInvite, PlayMatchMine } from "@workspace/api-client-react";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
@@ -45,6 +46,11 @@ export default function PlayHubScreen() {
     isLoading,
     refetch,
   } = useListMyPlayMatchInvites();
+  const {
+    data: myMatches,
+    isLoading: myMatchesLoading,
+    refetch: refetchMine,
+  } = useListMyPlayMatches();
   const respond = useRespondPlayMatchInvite();
 
   async function handleRespond(inv: PlayMatchInvite, accept: boolean) {
@@ -53,13 +59,18 @@ export default function PlayHubScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     try {
       await respond.mutateAsync({ id: inv.matchId, data: { accept } });
-      await refetch();
+      await Promise.all([refetch(), refetchMine()]);
       if (accept) router.push(`/play/match/${inv.matchId}`);
     } catch {
       /* non-fatal */
     } finally {
       setBusyId(null);
     }
+  }
+
+  function openMatch(id: number) {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    router.push(`/play/match/${id}`);
   }
 
   return (
@@ -72,8 +83,11 @@ export default function PlayHubScreen() {
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
-          refreshing={isLoading}
-          onRefresh={refetch}
+          refreshing={isLoading || myMatchesLoading}
+          onRefresh={() => {
+            refetch();
+            refetchMine();
+          }}
           tintColor={colors.primary}
         />
       }
@@ -166,6 +180,57 @@ export default function PlayHubScreen() {
           })}
         </View>
       ) : null}
+
+      <View style={styles.section}>
+        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
+          {t("playFlow.myMatchesTitle")}
+        </Text>
+        {myMatches && myMatches.length > 0 ? (
+          myMatches.map((m: PlayMatchMine) => {
+            const kind = (m.kind ?? "unranked") as MatchKind;
+            return (
+              <Pressable
+                key={m.id}
+                testID={`my-match-${m.id}`}
+                style={({ pressed }) => [
+                  styles.myMatchCard,
+                  {
+                    backgroundColor: colors.card,
+                    borderColor: pressed ? `${colors.primary}66` : colors.border,
+                    borderRadius: colors.radius,
+                    opacity: pressed ? 0.92 : 1,
+                  },
+                ]}
+                onPress={() => openMatch(m.id)}
+              >
+                <Text style={styles.myMatchIcon}>{KIND_META[kind].icon}</Text>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text
+                    style={[styles.kindTitle, { color: colors.foreground }]}
+                    numberOfLines={1}
+                  >
+                    {m.clubName} · {t(`playFlow.kind.${kind}.title`)}
+                  </Text>
+                  <Text
+                    style={[styles.kindDesc, { color: colors.mutedForeground }]}
+                    numberOfLines={1}
+                  >
+                    {m.date} {m.time} · {m.participantCount}/{m.maxPlayers} ·{" "}
+                    {m.myRole === "leader"
+                      ? t("playFlow.roleLeader")
+                      : t("playFlow.roleJoined")}
+                  </Text>
+                </View>
+                <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
+              </Pressable>
+            );
+          })
+        ) : (
+          <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+            {t("playFlow.myMatchesEmpty")}
+          </Text>
+        )}
+      </View>
 
       <View style={styles.section}>
         <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
@@ -325,4 +390,16 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   browseIcon: { fontSize: 24 },
+  myMatchCard: {
+    borderWidth: 1,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+  },
+  myMatchIcon: { fontSize: 24 },
+  emptyText: {
+    fontSize: 13,
+    lineHeight: 19,
+  },
 });

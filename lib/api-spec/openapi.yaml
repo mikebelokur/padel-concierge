@@ -1186,6 +1186,21 @@ paths:
                 items:
                   $ref: "#/components/schemas/PlayMatchMine"
 
+  /play-matches/history:
+    get:
+      operationId: listMyPlayMatchHistory
+      tags: [play-matches]
+      summary: List the current user's finished matches (completed or cancelled)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlayMatchMine"
+
   /play-matches/by-token/{token}:
     get:
       operationId: getPlayMatchByToken

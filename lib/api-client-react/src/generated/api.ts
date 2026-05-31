@@ -4756,6 +4756,82 @@ export function useListMyPlayMatches<
 }
 
 /**
+ * @summary List the current user's finished matches (completed or cancelled)
+ */
+export const getListMyPlayMatchHistoryUrl = () => {
+  return `/api/play-matches/history`;
+};
+
+export const listMyPlayMatchHistory = async (
+  options?: RequestInit,
+): Promise<PlayMatchMine[]> => {
+  return customFetch<PlayMatchMine[]>(getListMyPlayMatchHistoryUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListMyPlayMatchHistoryQueryKey = () => {
+  return [`/api/play-matches/history`] as const;
+};
+
+export const getListMyPlayMatchHistoryQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMyPlayMatchHistory>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listMyPlayMatchHistory>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListMyPlayMatchHistoryQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listMyPlayMatchHistory>>
+  > = ({ signal }) => listMyPlayMatchHistory({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMyPlayMatchHistory>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListMyPlayMatchHistoryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMyPlayMatchHistory>>
+>;
+export type ListMyPlayMatchHistoryQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List the current user's finished matches (completed or cancelled)
+ */
+
+export function useListMyPlayMatchHistory<
+  TData = Awaited<ReturnType<typeof listMyPlayMatchHistory>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listMyPlayMatchHistory>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListMyPlayMatchHistoryQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
  * @summary Preview a match by its shareable invite token
  */
 export const getGetPlayMatchByTokenUrl = (token: string) => {

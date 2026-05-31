@@ -1917,6 +1917,34 @@ export const ListMyPlayMatchesResponse = zod.array(
 );
 
 /**
+ * @summary List the current user's finished matches (completed or cancelled)
+ */
+export const ListMyPlayMatchHistoryResponseItem = zod.object({
+  id: zod.number(),
+  date: zod.string(),
+  time: zod.string(),
+  clubName: zod.string(),
+  format: zod.string(),
+  kind: zod.string().nullish(),
+  visibility: zod.string(),
+  goal: zod.string().nullish(),
+  styleNote: zod.string().nullish(),
+  slotMinutes: zod.number().nullish(),
+  status: zod.string(),
+  levelMin: zod.string().nullish(),
+  levelMax: zod.string().nullish(),
+  maxPlayers: zod.number(),
+  participantCount: zod.number(),
+  spotsLeft: zod.number(),
+  leaderName: zod.string().nullish(),
+  myRole: zod.string().nullish(),
+  createdAt: zod.string(),
+});
+export const ListMyPlayMatchHistoryResponse = zod.array(
+  ListMyPlayMatchHistoryResponseItem,
+);
+
+/**
  * @summary Preview a match by its shareable invite token
  */
 export const GetPlayMatchByTokenParams = zod.object({

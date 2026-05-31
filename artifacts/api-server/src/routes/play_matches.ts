@@ -484,6 +484,44 @@ router.get("/play-matches/mine", async (req, res): Promise<void> => {
   res.json(result);
 });
 
+// ── GET /play-matches/history ────────────────────────────────────────────────
+// The current user's finished play matches (completed or cancelled), most
+// recent first. Mirrors /play-matches/mine but for the inverse status set so
+// players can revisit games they've already played.
+router.get("/play-matches/history", async (req, res): Promise<void> => {
+  const userId = authUserId(req);
+
+  const myParts = await db
+    .select({ matchId: matchParticipantsTable.matchId, role: matchParticipantsTable.role })
+    .from(matchParticipantsTable)
+    .where(eq(matchParticipantsTable.userId, userId));
+  const roleByMatch = new Map(myParts.map((p) => [p.matchId, p.role]));
+  const ids = myParts.map((p) => p.matchId);
+  if (ids.length === 0) { res.json([]); return; }
+
+  const matches = await db.select().from(matchesTable).where(inArray(matchesTable.id, ids));
+  const finished = matches.filter(
+    (m) => m.matchKind != null && (m.status === "cancelled" || m.status === "completed"),
+  );
+
+  const finishedIds = finished.map((m) => m.id);
+  const counts = await countsForMatches(finishedIds);
+  const leaderIds = finished.map((m) => m.creatorId).filter((x): x is number => x != null);
+  const leaders = leaderIds.length
+    ? await db.select({ id: usersTable.id, name: usersTable.name }).from(usersTable).where(inArray(usersTable.id, leaderIds))
+    : [];
+  const leaderMap = new Map(leaders.map((l) => [l.id, l.name]));
+
+  const result = finished
+    .map((m) => ({
+      ...buildSummary(m, counts.get(m.id) ?? 0, m.creatorId != null ? leaderMap.get(m.creatorId) ?? null : null),
+      myRole: roleByMatch.get(m.id) ?? null,
+    }))
+    .sort((a, b) => `${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`));
+
+  res.json(result);
+});
+
 // ── GET /play-matches/by-token/:token ────────────────────────────────────────
 router.get("/play-matches/by-token/:token", async (req, res): Promise<void> => {
   const token = String(req.params.token);

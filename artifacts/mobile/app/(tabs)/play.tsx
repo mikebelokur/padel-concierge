@@ -1,4 +1,5 @@
 import {
+  useListMyPlayMatchHistory,
   useListMyPlayMatchInvites,
   useListMyPlayMatches,
   useRespondPlayMatchInvite,
@@ -51,6 +52,11 @@ export default function PlayHubScreen() {
     isLoading: myMatchesLoading,
     refetch: refetchMine,
   } = useListMyPlayMatches();
+  const {
+    data: history,
+    isLoading: historyLoading,
+    refetch: refetchHistory,
+  } = useListMyPlayMatchHistory();
   const respond = useRespondPlayMatchInvite();
 
   async function handleRespond(inv: PlayMatchInvite, accept: boolean) {
@@ -59,7 +65,7 @@ export default function PlayHubScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     try {
       await respond.mutateAsync({ id: inv.matchId, data: { accept } });
-      await Promise.all([refetch(), refetchMine()]);
+      await Promise.all([refetch(), refetchMine(), refetchHistory()]);
       if (accept) router.push(`/play/match/${inv.matchId}`);
     } catch {
       /* non-fatal */
@@ -83,10 +89,11 @@ export default function PlayHubScreen() {
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
-          refreshing={isLoading || myMatchesLoading}
+          refreshing={isLoading || myMatchesLoading || historyLoading}
           onRefresh={() => {
             refetch();
             refetchMine();
+            refetchHistory();
           }}
           tintColor={colors.primary}
         />
@@ -228,6 +235,58 @@ export default function PlayHubScreen() {
         ) : (
           <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
             {t("playFlow.myMatchesEmpty")}
+          </Text>
+        )}
+      </View>
+
+      <View style={styles.section}>
+        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
+          {t("playFlow.historyTitle")}
+        </Text>
+        {history && history.length > 0 ? (
+          history.map((m: PlayMatchMine) => {
+            const kind = (m.kind ?? "unranked") as MatchKind;
+            const statusLabel =
+              m.status === "cancelled"
+                ? t("playFlow.statusCancelled")
+                : t("playFlow.statusCompleted");
+            return (
+              <Pressable
+                key={m.id}
+                testID={`history-match-${m.id}`}
+                style={({ pressed }) => [
+                  styles.myMatchCard,
+                  {
+                    backgroundColor: colors.card,
+                    borderColor: pressed ? `${colors.primary}66` : colors.border,
+                    borderRadius: colors.radius,
+                    opacity: pressed ? 0.92 : 0.85,
+                  },
+                ]}
+                onPress={() => openMatch(m.id)}
+              >
+                <Text style={styles.myMatchIcon}>{KIND_META[kind].icon}</Text>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text
+                    style={[styles.kindTitle, { color: colors.foreground }]}
+                    numberOfLines={1}
+                  >
+                    {m.clubName} · {t(`playFlow.kind.${kind}.title`)}
+                  </Text>
+                  <Text
+                    style={[styles.kindDesc, { color: colors.mutedForeground }]}
+                    numberOfLines={1}
+                  >
+                    {m.date} {m.time} · {statusLabel}
+                  </Text>
+                </View>
+                <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
+              </Pressable>
+            );
+          })
+        ) : (
+          <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+            {t("playFlow.historyEmpty")}
           </Text>
         )}
       </View>

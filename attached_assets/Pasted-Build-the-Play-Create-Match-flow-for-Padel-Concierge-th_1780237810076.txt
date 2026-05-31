@@ -1,0 +1,30 @@
+Build the "Play" / Create Match flow for Padel Concierge — the core matchmaking. Show me a plan first (Plan mode), then build. Test on mobile after.
+
+CONTEXT: Padel is 2v2 (4 players). The product matches people by shared goal/vibe, not just level ("same wave, same goals"). Users already completed an onboarding quiz storing their archetype/profile.
+
+TOP LEVEL — when the user taps "Play", the FIRST thing they see is three match types (like a game mode select screen):
+
+TYPE 1 — Unranked match.
+Tagline: "Join a game with players of your level." Casual, matched by level, no rating consequences.
+
+TYPE 2 — Competitive match.
+For ranked play. Ratings are future/beta: the format works now and collects match statistics, but rating numbers are NOT shown yet — we'll add them later once enough data is gathered. For now it functions and quietly logs stats.
+
+TYPE 3 — Personal (custom) match.
+The creator builds a match precisely to their own request — style, vibe, mood, mindset. This request is visible publicly so other players who want the same thing can join — but they must play by the rules the creator (match leader/admin) set. The match goal lives HERE as a setting:
+  - Goal options: 1) Competitive/win  2) Fun + social  3) Learning/tactical  4) Release energy
+  - Plus the creator can describe the desired style/vibe in their own words.
+
+COMMON TO ALL MATCH TYPES — when creating, the creator sets:
+- Date and time.
+- Time slot of at least 2.5 hours.
+- Location.
+- Format fixed at 2v2 (4 players) — don't ask, just set.
+
+VISIBILITY (creator chooses): Private (only invited can join) OR Open (visible to suitable players who can request to join; creator approves).
+
+INVITING (both methods): from an in-app friends list (added/liked players) AND via a shareable link for any messenger.
+
+SHOW WHO JOINED: creator and participants see the current player list (e.g. 2/4) and the agreed goal/rules, so everyone knows what they signed up for.
+
+Do NOT build yet: calendar month/week views, archives/history, family mode, time-flexibility logic, platform auto-matchmaking, Face ID. Those come later. Show the plan, then build. Test on mobile.

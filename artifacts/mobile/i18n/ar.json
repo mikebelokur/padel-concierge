@@ -2,7 +2,8 @@
   "tabs": {
     "home": "الرئيسية",
     "find": "بحث",
-    "profile": "الملف"
+    "profile": "الملف",
+    "play": "اللعب"
   },
   "common": {
     "back": "رجوع",
@@ -128,5 +129,84 @@
     "cancel": "إلغاء",
     "failedTitle": "فشل الحجز",
     "failedBody": "تعذّر إتمام الحجز. حاول مرة أخرى."
+  },
+  "playFlow": {
+    "hubTitle": "اللعب",
+    "hubSubtitle": "ابدأ مباراة، ادعُ لاعبين، أو انضم إلى لعبة مفتوحة.",
+    "createTitle": "إنشاء مباراة",
+    "browseTitle": "التصفح والإدارة",
+    "invitationsTitle": "دعواتك",
+    "openMatches": "المباريات المفتوحة",
+    "openMatchesDesc": "تصفح المباريات العامة التي تبحث عن لاعبين.",
+    "kind": {
+      "unranked": {
+        "title": "مباراة ودية",
+        "desc": "للمتعة فقط — بدون إحصائيات أو ضغط."
+      },
+      "competitive": {
+        "title": "مباراة تنافسية",
+        "desc": "العب للفوز. تُسجَّل النتائج خلف الكواليس."
+      },
+      "personal": {
+        "title": "مباراة شخصية",
+        "desc": "حدّد هدفًا وأسلوب لعب للجلسة."
+      }
+    },
+    "back": "رجوع",
+    "formatFixed": "النظام: 2 ضد 2 — 4 لاعبين، ينقسم الملعب إلى فريقين.",
+    "date": "التاريخ",
+    "time": "الوقت",
+    "timePlaceholder": "مثال 19:30",
+    "club": "النادي",
+    "clubPlaceholder": "أدخل اسم النادي",
+    "slot": "فترة الملعب",
+    "slotHint": "الحد الأدنى 2.5 ساعة لكل حجز ملعب.",
+    "hourShort": "س",
+    "minShort": "د",
+    "visibility": "الظهور",
+    "visibility_private": "خاص",
+    "visibility_private_desc": "بالدعوة فقط — عبر رابط أو أصدقاء.",
+    "visibility_open": "مفتوح",
+    "visibility_open_desc": "يمكن لأي شخص طلب الانضمام.",
+    "goal": "الهدف",
+    "goalRequired": "يرجى اختيار هدف",
+    "goalOptions": {
+      "competitive": "تنافسي / للفوز",
+      "social": "مرح + اجتماعي",
+      "learning": "تعلم / تكتيكي",
+      "energy": "تفريغ الطاقة"
+    },
+    "style": "أسلوب اللعب / الأجواء",
+    "stylePlaceholder": "مثال تبادلات هادئة، التركيز على الثبات",
+    "createButton": "إنشاء المباراة",
+    "creating": "جارٍ الإنشاء…",
+    "created": "تم إنشاء المباراة",
+    "createdDesc": "الآن ادعُ لاعبين لإكمال القائمة.",
+    "invalidKind": "نوع مباراة غير معروف.",
+    "roster": "القائمة",
+    "openSlot": "مكان شاغر",
+    "leader": "المنظّم",
+    "requestsQueue": "طلبات الانضمام",
+    "approve": "قبول",
+    "reject": "رفض",
+    "inviteFriends": "دعوة الأصدقاء",
+    "copyLink": "نسخ رابط الدعوة",
+    "linkCopied": "تم نسخ الرابط!",
+    "copyFailed": "تعذّر نسخ الرابط",
+    "invitesSent": "تم إرسال الدعوات",
+    "noFriends": "لا يوجد لاعبون متاحون للدعوة.",
+    "send": "إرسال",
+    "cancel": "إلغاء",
+    "loading": "جارٍ التحميل…",
+    "notFound": "المباراة غير موجودة.",
+    "accept": "قبول",
+    "decline": "رفض",
+    "requestJoin": "طلب الانضمام",
+    "requested": "تم الطلب",
+    "requestSent": "تم إرسال الطلب",
+    "requestSentDesc": "سيراجع المنظّم طلبك.",
+    "noOpenMatches": "لا توجد مباريات مفتوحة حاليًا. تحقق لاحقًا.",
+    "matchFull": "المباراة ممتلئة",
+    "error": "حدث خطأ ما"
   }
 }

@@ -1,3 +1,5 @@
 - [Typecheck in isolation vs root](typecheck-isolation.md) — api-server alone can fail with a drizzle "separate declarations of private property" error; trust root `pnpm run typecheck` (builds libs first) instead.
 - [Open play-match approval boundary](play-match-open-approval.md) — open matches admit only via request→approval; never leak inviteToken in non-participant payloads and gate join/:token by visibility.
 - [API router mount order vs role guards](router-mount-order-guards.md) — a player route can 403 just from being mounted after a router with a root-level requireMode guard; mount player routes early.
+- [HMR "fewer hooks" false positive](hmr-fewer-hooks-false-positive.md) — a one-off "Rendered fewer hooks" runtime error from a Vite web workflow right after startup is usually a Fast Refresh artifact; verify before "fixing".
+- [Mobile new screens — typecheck & route types](mobile-new-screens-typecheck.md) — new Expo screens using fresh hooks/routes fail typecheck until you rebuild composite libs and restart the expo workflow.

@@ -48,6 +48,10 @@ function NativeTabLayout() {
           <Icon sf={{ default: "magnifyingglass.circle", selected: "magnifyingglass.circle.fill" }} />
           <Label>{t("tabs.find")}</Label>
         </NativeTabs.Trigger>
+        <NativeTabs.Trigger name="play">
+          <Icon sf={{ default: "figure.tennis", selected: "figure.tennis" }} />
+          <Label>{t("tabs.play")}</Label>
+        </NativeTabs.Trigger>
         <NativeTabs.Trigger name="profile">
           <Icon sf={{ default: "person.circle", selected: "person.circle.fill" }} />
           <Label>{t("tabs.profile")}</Label>
@@ -118,6 +122,18 @@ function ClassicTabLayout() {
                 <SymbolView name="magnifyingglass" tintColor={color} size={24} />
               ) : (
                 <Feather name="search" size={22} color={color} />
+              ),
+          }}
+        />
+        <Tabs.Screen
+          name="play"
+          options={{
+            title: t("tabs.play"),
+            tabBarIcon: ({ color }) =>
+              isIOS ? (
+                <SymbolView name="figure.tennis" tintColor={color} size={24} />
+              ) : (
+                <Feather name="play" size={22} color={color} />
               ),
           }}
         />

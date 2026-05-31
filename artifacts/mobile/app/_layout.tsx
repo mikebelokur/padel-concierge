@@ -55,6 +55,9 @@ function RootLayoutNav() {
         name="book/[matchId]"
         options={{ title: "Book Match" }}
       />
+      <Stack.Screen name="play/create/[kind]" />
+      <Stack.Screen name="play/match/[id]" />
+      <Stack.Screen name="play/open" />
     </Stack>
   );
 }

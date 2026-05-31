@@ -27,8 +27,9 @@ type MatchGoal = "competitive" | "social" | "learning" | "energy";
 
 const VALID_KINDS: MatchKind[] = ["unranked", "competitive", "personal"];
 const PERSONAL_GOALS: MatchGoal[] = ["competitive", "social", "learning", "energy"];
-const MIN_SLOT = 150;
-const SLOT_OPTIONS = [150, 180, 210, 240];
+const MIN_SLOT = 60;
+const DEFAULT_SLOT = 90;
+const SLOT_OPTIONS = [60, 90, 120];
 
 const KIND_ICON: Record<MatchKind, string> = {
   unranked: "🎾",
@@ -57,7 +58,7 @@ export default function PlayCreateScreen() {
   const [date, setDate] = useState(toDateInput(new Date()));
   const [time, setTime] = useState("");
   const [clubName, setClubName] = useState("");
-  const [slotMinutes, setSlotMinutes] = useState(MIN_SLOT);
+  const [slotMinutes, setSlotMinutes] = useState(DEFAULT_SLOT);
   const [visibility, setVisibility] = useState<MatchVisibility>("private");
   const [goal, setGoal] = useState<MatchGoal | null>(null);
   const [styleNote, setStyleNote] = useState("");
@@ -252,6 +253,9 @@ export default function PlayCreateScreen() {
                     {Math.floor(m / 60)}
                     {t("playFlow.hourShort")}
                     {m % 60 ? ` ${m % 60}${t("playFlow.minShort")}` : ""}
+                    {m === DEFAULT_SLOT
+                      ? `  ★ ${t("playFlow.slotRecommended")}`
+                      : ""}
                   </Text>
                 </Pressable>
               );

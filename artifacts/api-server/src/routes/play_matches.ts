@@ -28,7 +28,8 @@ function levelIdx(l: string | null | undefined): number {
 }
 const LEVEL_GAP = 2;
 
-const MIN_SLOT_MINUTES = 150;
+const MIN_SLOT_MINUTES = 60;
+const MAX_SLOT_MINUTES = 120;
 const MATCH_FORMAT = "2v2";
 const MAX_PLAYERS = 4;
 const FORMING_STATUS = "forming";
@@ -291,6 +292,10 @@ router.post("/play-matches", async (req, res): Promise<void> => {
   const data = parsed.data;
   if (data.slotMinutes < MIN_SLOT_MINUTES) {
     res.status(400).json({ error: `Slot must be at least ${MIN_SLOT_MINUTES} minutes`, code: "SLOT_TOO_SHORT" });
+    return;
+  }
+  if (data.slotMinutes > MAX_SLOT_MINUTES) {
+    res.status(400).json({ error: `Slot must be at most ${MAX_SLOT_MINUTES} minutes`, code: "SLOT_TOO_LONG" });
     return;
   }
   const userId = authUserId(req);

@@ -6,6 +6,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { translateError, type Lang } from "@/lib/errorMessages";
+import { triggerInstallPrompt } from "@/components/PWAInstallPrompt";
 
 const LEVELS = [
   { value: 0, label: "1.0", desc: "Complete Beginner" },
@@ -127,6 +128,7 @@ export default function Register() {
         setInlineError(null);
         toast({ title: t("register.welcomeToast"), description: t("register.welcomeToastDesc") });
         authLogin(data.token, data.user);
+        triggerInstallPrompt();
       },
       onError: (err: unknown) => {
         const translated = translateError(err, lang);

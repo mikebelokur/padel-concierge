@@ -1,48 +1,43 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { usePwaInstall } from "@/lib/pwaInstall";
 
 const VISIT_KEY = "pwa_visit_count";
 const DISMISS_KEY = "pwa_banner_dismissed";
 
-function isMobile() {
-  if (typeof navigator === "undefined") return false;
-  return /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
-}
-
-function isIOS() {
-  if (typeof navigator === "undefined") return false;
-  return /iphone|ipad|ipod/i.test(navigator.userAgent);
-}
-
-function isStandalone() {
-  if (typeof window === "undefined") return false;
-  return (
-    window.matchMedia?.("(display-mode: standalone)").matches ||
-    // @ts-expect-error iOS-specific
-    window.navigator.standalone === true
-  );
-}
-
 export function PWAInstallBanner() {
   const { i18n } = useTranslation();
   const lang = i18n.language === "ru" ? "ru" : "en";
-  const [visible, setVisible] = useState(false);
+  const { isInstallable, isInstalled, isIOS, isMobile, promptInstall } = usePwaInstall();
+  const [gatePassed, setGatePassed] = useState(false);
 
   useEffect(() => {
-    if (!isMobile() || isStandalone()) return undefined;
+    if (!isMobile || isInstalled) return undefined;
     if (localStorage.getItem(DISMISS_KEY)) return undefined;
     const visits = parseInt(localStorage.getItem(VISIT_KEY) ?? "0", 10) + 1;
     localStorage.setItem(VISIT_KEY, String(visits));
     if (visits >= 2) {
-      const t = setTimeout(() => setVisible(true), 1500);
+      const t = setTimeout(() => setGatePassed(true), 1500);
       return () => clearTimeout(t);
     }
     return undefined;
-  }, []);
+  }, [isMobile, isInstalled]);
 
-  if (!visible) return null;
+  // Suppress once installed, before the gate, or when there's nothing actionable
+  // to offer (non-iOS browser that never fired beforeinstallprompt).
+  if (isInstalled || !gatePassed) return null;
+  if (!isInstallable && !isIOS) return null;
 
-  const ios = isIOS();
+  const dismiss = () => {
+    localStorage.setItem(DISMISS_KEY, "1");
+    setGatePassed(false);
+  };
+
+  const handleInstall = async () => {
+    const outcome = await promptInstall();
+    if (outcome === "accepted") dismiss();
+  };
+
   return (
     <div
       className="fixed bottom-4 left-4 right-4 z-[100] rounded-2xl p-4 shadow-2xl"
@@ -58,21 +53,29 @@ export function PWAInstallBanner() {
           <div className="text-sm font-medium text-white">
             {lang === "ru" ? "Добавь на главный экран — будет как приложение" : "Add to Home Screen — works like an app"}
           </div>
-          <div className="text-xs text-muted-foreground mt-1">
-            {ios
-              ? lang === "ru"
-                ? "Safari → поделиться → «На экран Домой»"
-                : "Safari → Share → Add to Home Screen"
-              : lang === "ru"
-              ? "Chrome → меню (⋮) → «Установить приложение»"
-              : "Chrome → menu (⋮) → Install app"}
-          </div>
+          {!isInstallable && (
+            <div className="text-xs text-muted-foreground mt-1">
+              {isIOS
+                ? lang === "ru"
+                  ? "Safari → «Поделиться» → «На экран „Домой“»"
+                  : "Safari → Share → Add to Home Screen"
+                : lang === "ru"
+                ? "Chrome → меню (⋮) → «Установить приложение»"
+                : "Chrome → menu (⋮) → Install app"}
+            </div>
+          )}
+          {isInstallable && (
+            <button
+              onClick={handleInstall}
+              className="mt-2 rounded-full px-4 py-2 text-sm font-semibold"
+              style={{ background: "#D4AF37", color: "#000" }}
+            >
+              {lang === "ru" ? "Установить приложение" : "Install app"}
+            </button>
+          )}
         </div>
         <button
-          onClick={() => {
-            localStorage.setItem(DISMISS_KEY, "1");
-            setVisible(false);
-          }}
+          onClick={dismiss}
           className="text-muted-foreground hover:text-white text-lg leading-none flex-shrink-0"
           aria-label="dismiss"
         >

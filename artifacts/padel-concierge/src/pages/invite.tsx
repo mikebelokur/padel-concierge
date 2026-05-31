@@ -3,6 +3,7 @@ import { useLocation, useRoute } from "wouter";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { triggerInstallPrompt } from "@/components/PWAInstallPrompt";
 
 interface InviteInfo {
   name: string;
@@ -52,6 +53,7 @@ export default function Invite() {
         body: JSON.stringify({ password }),
       });
       login(result.token, result.user);
+      triggerInstallPrompt();
       navigate("/dashboard");
     } catch (e: any) {
       setError(e?.message ?? (ru ? "Не удалось активировать" : "Failed to activate"));

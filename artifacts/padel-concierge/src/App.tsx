@@ -62,6 +62,7 @@ import FindMatch from "@/pages/find-match";
 import Invite from "@/pages/invite";
 import AdminClientProfile from "@/pages/admin-client-profile";
 import { PWAInstallBanner } from "@/components/PWAInstallBanner";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { PushOptInPrompt } from "@/components/PushOptInPrompt";
 
 setAuthTokenGetter(() => localStorage.getItem("token"));
@@ -207,6 +208,7 @@ function App() {
                 <Router />
                 <DevToolbar />
                 <PWAInstallBanner />
+                <PWAInstallPrompt />
                 <PushOptInPrompt />
               </DrawerProvider>
             </WouterRouter>

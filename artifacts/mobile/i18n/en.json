@@ -208,6 +208,13 @@
     "requestSentDesc": "The organizer will review your request.",
     "noOpenMatches": "No open matches right now. Check back later.",
     "matchFull": "Match is full",
-    "error": "Something went wrong"
+    "error": "Something went wrong",
+    "youreInvited": "You're invited!",
+    "joining": "Joining match…",
+    "joinMatch": "Join match",
+    "joinedDesc": "You're in the match.",
+    "matchClosed": "This match is no longer accepting players.",
+    "signInToJoin": "Sign in to join this match",
+    "signIn": "Sign in"
   }
 }

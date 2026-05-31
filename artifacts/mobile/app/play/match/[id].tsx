@@ -7,6 +7,7 @@ import {
 import { Feather } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import * as Haptics from "expo-haptics";
+import * as Linking from "expo-linking";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
 import {
@@ -135,7 +136,8 @@ export default function PlayMatchRoomScreen() {
   async function copyLink() {
     if (!room?.inviteToken) return;
     try {
-      await Clipboard.setStringAsync(room.inviteToken);
+      const link = Linking.createURL(`/play/join/${room.inviteToken}`);
+      await Clipboard.setStringAsync(link);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {

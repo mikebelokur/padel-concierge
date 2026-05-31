@@ -198,7 +198,10 @@ router.get("/auth/me", async (req, res): Promise<void> => {
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, payload.userId));
   if (!user) { res.status(404).json({ error: "User not found" }); return; }
 
-  res.json(formatUser(user));
+  // Sliding session: re-issue a fresh token on every authenticated /me so an
+  // active user's 30-day window keeps rolling forward and never expires while in use.
+  const refreshedToken = generateToken(user.id, user.role);
+  res.json({ ...formatUser(user), token: refreshedToken });
 });
 
 router.post("/auth/forgot-password", async (req, res): Promise<void> => {

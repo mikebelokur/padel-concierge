@@ -410,12 +410,30 @@ router.delete("/users/:id/favourites", async (req, res): Promise<void> => {
 
 router.post("/users/:id/archetype", async (req, res): Promise<void> => {
   const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id, 10);
-  const { archetype, warmUpPreference } = req.body;
+  if (!id || isNaN(id)) { res.status(400).json({ error: "Invalid user id" }); return; }
+
+  // A player may only set their own archetype/level; privileged roles may set anyone's.
+  const auth = (req as any).auth as { userId: number; role: string };
+  const isPrivileged = ["coach", "admin", "owner"].includes(auth.role);
+  if (!isPrivileged && auth.userId !== id) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+
+  const { archetype, warmUpPreference, level } = req.body;
   if (!archetype) { res.status(400).json({ error: "archetype required" }); return; }
+
+  // Only persist level when it is a recognised level value.
+  const hasValidLevel = typeof level === "string" && LEVEL_ORDER.includes(level);
+  if (level !== undefined && level !== null && !hasValidLevel) {
+    res.status(400).json({ error: "Invalid level" });
+    return;
+  }
 
   const [user] = await db.update(usersTable).set({
     archetype,
     warmUpPreference: warmUpPreference ?? false,
+    ...(hasValidLevel ? { level } : {}),
   }).where(eq(usersTable.id, id)).returning();
 
   if (!user) { res.status(404).json({ error: "User not found" }); return; }

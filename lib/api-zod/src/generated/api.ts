@@ -46,6 +46,12 @@ export const LoginResponse = zod.object({
     name: zod.string(),
     email: zod.string(),
     phone: zod.string(),
+    token: zod
+      .string()
+      .optional()
+      .describe(
+        "Re-issued sliding-session token, present only on the \/auth\/me response.",
+      ),
     level: zod.string(),
     goal: zod.string(),
     intensity: zod.string(),
@@ -88,6 +94,12 @@ export const GetMeResponse = zod.object({
   name: zod.string(),
   email: zod.string(),
   phone: zod.string(),
+  token: zod
+    .string()
+    .optional()
+    .describe(
+      "Re-issued sliding-session token, present only on the \/auth\/me response.",
+    ),
   level: zod.string(),
   goal: zod.string(),
   intensity: zod.string(),
@@ -129,6 +141,12 @@ export const ListUsersResponseItem = zod.object({
   name: zod.string(),
   email: zod.string(),
   phone: zod.string(),
+  token: zod
+    .string()
+    .optional()
+    .describe(
+      "Re-issued sliding-session token, present only on the \/auth\/me response.",
+    ),
   level: zod.string(),
   goal: zod.string(),
   intensity: zod.string(),
@@ -175,6 +193,12 @@ export const GetUserResponse = zod.object({
   name: zod.string(),
   email: zod.string(),
   phone: zod.string(),
+  token: zod
+    .string()
+    .optional()
+    .describe(
+      "Re-issued sliding-session token, present only on the \/auth\/me response.",
+    ),
   level: zod.string(),
   goal: zod.string(),
   intensity: zod.string(),
@@ -236,6 +260,12 @@ export const UpdateUserResponse = zod.object({
   name: zod.string(),
   email: zod.string(),
   phone: zod.string(),
+  token: zod
+    .string()
+    .optional()
+    .describe(
+      "Re-issued sliding-session token, present only on the \/auth\/me response.",
+    ),
   level: zod.string(),
   goal: zod.string(),
   intensity: zod.string(),
@@ -290,6 +320,12 @@ export const UpdateAvailabilityResponse = zod.object({
   name: zod.string(),
   email: zod.string(),
   phone: zod.string(),
+  token: zod
+    .string()
+    .optional()
+    .describe(
+      "Re-issued sliding-session token, present only on the \/auth\/me response.",
+    ),
   level: zod.string(),
   goal: zod.string(),
   intensity: zod.string(),
@@ -339,6 +375,12 @@ export const AddFavouriteResponse = zod.object({
   name: zod.string(),
   email: zod.string(),
   phone: zod.string(),
+  token: zod
+    .string()
+    .optional()
+    .describe(
+      "Re-issued sliding-session token, present only on the \/auth\/me response.",
+    ),
   level: zod.string(),
   goal: zod.string(),
   intensity: zod.string(),
@@ -388,6 +430,12 @@ export const RemoveFavouriteResponse = zod.object({
   name: zod.string(),
   email: zod.string(),
   phone: zod.string(),
+  token: zod
+    .string()
+    .optional()
+    .describe(
+      "Re-issued sliding-session token, present only on the \/auth\/me response.",
+    ),
   level: zod.string(),
   goal: zod.string(),
   intensity: zod.string(),
@@ -433,6 +481,12 @@ export const VerifyUserResponse = zod.object({
   name: zod.string(),
   email: zod.string(),
   phone: zod.string(),
+  token: zod
+    .string()
+    .optional()
+    .describe(
+      "Re-issued sliding-session token, present only on the \/auth\/me response.",
+    ),
   level: zod.string(),
   goal: zod.string(),
   intensity: zod.string(),
@@ -1154,6 +1208,12 @@ export const ListAdminUsersResponseItem = zod.object({
   name: zod.string(),
   email: zod.string(),
   phone: zod.string(),
+  token: zod
+    .string()
+    .optional()
+    .describe(
+      "Re-issued sliding-session token, present only on the \/auth\/me response.",
+    ),
   level: zod.string(),
   goal: zod.string(),
   intensity: zod.string(),
@@ -1204,6 +1264,12 @@ export const PatchAdminUserTypeResponse = zod.object({
   name: zod.string(),
   email: zod.string(),
   phone: zod.string(),
+  token: zod
+    .string()
+    .optional()
+    .describe(
+      "Re-issued sliding-session token, present only on the \/auth\/me response.",
+    ),
   level: zod.string(),
   goal: zod.string(),
   intensity: zod.string(),
@@ -1245,6 +1311,12 @@ export const ListCoachPlayersResponseItem = zod.object({
   name: zod.string(),
   email: zod.string(),
   phone: zod.string(),
+  token: zod
+    .string()
+    .optional()
+    .describe(
+      "Re-issued sliding-session token, present only on the \/auth\/me response.",
+    ),
   level: zod.string(),
   goal: zod.string(),
   intensity: zod.string(),

@@ -8,8 +8,10 @@ export function verifyPassword(password: string, hash: string): boolean {
   return hashPassword(password) === hash;
 }
 
+export const TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
 export function generateToken(userId: number, role: string): string {
-  const payload = JSON.stringify({ userId, role, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 });
+  const payload = JSON.stringify({ userId, role, exp: Date.now() + TOKEN_TTL_MS });
   return Buffer.from(payload).toString("base64url");
 }
 

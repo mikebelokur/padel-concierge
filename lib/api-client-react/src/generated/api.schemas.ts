@@ -48,6 +48,8 @@ export interface User {
   name: string;
   email: string;
   phone: string;
+  /** Re-issued sliding-session token, present only on the /auth/me response. */
+  token?: string;
   level: string;
   goal: string;
   intensity: string;

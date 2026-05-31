@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
+import { getGetMeQueryKey } from "@workspace/api-client-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -131,6 +133,7 @@ export default function Quiz() {
   const [, navigate] = useLocation();
   const { user } = useAuth();
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
   const [phase, setPhase] = useState<Phase>("intro");
   const [aIndex, setAIndex] = useState(0);
   const [lIndex, setLIndex] = useState(0);
@@ -140,6 +143,8 @@ export default function Quiz() {
   const [showHint, setShowHint] = useState(false);
   const [lastAnswer, setLastAnswer] = useState<boolean | null>(null);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   const [visible, setVisible] = useState(true);
   const [feedback, setFeedback] = useState<FeedbackState>(null);
   const [yesFlash, setYesFlash] = useState(false);
@@ -155,16 +160,43 @@ export default function Quiz() {
     phase === "result" ? RESULT_BG :
     BG[currentStep] ?? BG[0];
 
-  useEffect(() => {
-    if (phase === "result" && user?.id && !saved) {
-      const archetype = calcArchetype(archetypeAnswers);
-      const warmUpPreference = getWarmUpPreference(archetypeAnswers);
-      apiFetch(`/users/${user.id}/archetype`, {
+  const saveResults = useCallback(async () => {
+    if (!user?.id) return;
+    const archetype = calcArchetype(archetypeAnswers);
+    const warmUpPreference = getWarmUpPreference(archetypeAnswers);
+    const levelScore = LEVEL_QUESTIONS.filter(q => levelAnswers[q.id] === q.correctAnswer).length;
+    const level = downgrade(calcRawLevel(levelScore));
+    setSaving(true);
+    setSaveError(false);
+    try {
+      await apiFetch(`/users/${user.id}/archetype`, {
         method: "POST",
-        body: JSON.stringify({ archetype, warmUpPreference }),
-      }).then(() => setSaved(true)).catch(() => {});
+        body: JSON.stringify({ archetype, warmUpPreference, level }),
+      });
+      // Refetch /me so user.archetype + user.level are fresh before the user
+      // navigates away — prevents onboarding gates from re-triggering.
+      await queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
+      setSaved(true);
+    } catch {
+      setSaveError(true);
+    } finally {
+      setSaving(false);
     }
-  }, [phase]);
+  }, [user?.id, archetypeAnswers, levelAnswers, queryClient]);
+
+  // Persist once when the result screen is reached and the user is available.
+  // Guards prevent re-firing while saving, after success, or after a failure
+  // (a failure is recovered explicitly via retrySave, which clears saveError).
+  useEffect(() => {
+    if (phase === "result" && user?.id && !saved && !saving && !saveError) {
+      void saveResults();
+    }
+  }, [phase, user?.id, saved, saving, saveError, saveResults]);
+
+  function retrySave() {
+    // Clearing the error re-satisfies the effect guard, which re-runs saveResults.
+    setSaveError(false);
+  }
 
   const fadeTransition = useCallback((fn: () => void) => {
     setVisible(false);
@@ -491,9 +523,25 @@ export default function Quiz() {
           )}
 
           {/* Save status */}
+          {saving && user && (
+            <div className="text-center text-xs text-white/50 bg-white/5 border border-white/10 rounded-xl p-3">
+              Сохраняем результат…
+            </div>
+          )}
           {saved && user && (
             <div className="text-center text-xs text-green-400/70 bg-green-500/5 border border-green-500/15 rounded-xl p-3">
               {t("quiz.result.saved")}
+            </div>
+          )}
+          {saveError && user && (
+            <div className="text-center text-xs text-red-300 bg-red-500/8 border border-red-500/25 rounded-xl p-3 space-y-2">
+              <div>Не удалось сохранить результат. Проверьте соединение.</div>
+              <button
+                onClick={retrySave}
+                className="px-4 py-1.5 rounded-lg border border-red-400/40 text-red-200 hover:bg-red-500/10 transition-colors"
+              >
+                Повторить
+              </button>
             </div>
           )}
           {!user && (
@@ -502,17 +550,20 @@ export default function Quiz() {
             </div>
           )}
 
-          {/* CTAs */}
+          {/* CTAs — for logged-in users, navigation is blocked until the result
+              is persisted so downstream level/archetype gates never re-trigger. */}
           <div className="space-y-3 pt-2">
             <button
               onClick={() => navigate("/match-requests")}
-              className="w-full py-4 rounded-2xl bg-amber-400 text-black font-bold text-base shadow-[0_0_30px_rgba(251,191,36,0.4)] hover:bg-amber-300 active:scale-[0.98] transition-all"
+              disabled={!!user && !saved}
+              className="w-full py-4 rounded-2xl bg-amber-400 text-black font-bold text-base shadow-[0_0_30px_rgba(251,191,36,0.4)] hover:bg-amber-300 active:scale-[0.98] transition-all disabled:opacity-40 disabled:pointer-events-none"
             >
               {t("quiz.result.findPartner")}
             </button>
             <button
               onClick={() => navigate("/dashboard")}
-              className="w-full py-3 rounded-2xl border border-white/15 bg-white/5 text-white/70 font-medium text-sm hover:bg-white/10 active:scale-[0.98] transition-all"
+              disabled={!!user && !saved}
+              className="w-full py-3 rounded-2xl border border-white/15 bg-white/5 text-white/70 font-medium text-sm hover:bg-white/10 active:scale-[0.98] transition-all disabled:opacity-40 disabled:pointer-events-none"
             >
               {t("quiz.result.toDashboard")}
             </button>

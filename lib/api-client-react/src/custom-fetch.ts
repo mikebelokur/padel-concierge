@@ -58,6 +58,13 @@ export function setAuthTokenGetter(getter: AuthTokenGetter | null): void {
   _authTokenGetter = getter;
 }
 
+// The auth endpoint is the single source of truth for session validity. A 401
+// from it (and only it) should trigger the session-expired handler.
+function isAuthEndpoint(url: string): boolean {
+  const path = url.split("?")[0].replace(/\/+$/, "");
+  return path.endsWith("/auth/me");
+}
+
 function isRequest(input: RequestInfo | URL): input is Request {
   return typeof Request !== "undefined" && input instanceof Request;
 }
@@ -377,7 +384,16 @@ export async function customFetch<T = unknown>(
   const response = await fetch(input, { ...init, method, headers });
 
   if (!response.ok) {
-    if (response.status === 401 && _sessionExpiredHandler && !_sessionExpiredFiring) {
+    // Only a 401 from the auth endpoint itself (the source of truth for session
+    // validity) means the session has genuinely expired. A 401/403 from any
+    // other feature endpoint must surface to that feature as a normal error and
+    // never log the whole app out.
+    if (
+      response.status === 401 &&
+      _sessionExpiredHandler &&
+      !_sessionExpiredFiring &&
+      isAuthEndpoint(requestInfo.url)
+    ) {
       _sessionExpiredFiring = true;
       _sessionExpiredHandler();
     }

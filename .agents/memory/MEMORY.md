@@ -1,0 +1,1 @@
+- [Typecheck in isolation vs root](typecheck-isolation.md) — api-server alone can fail with a drizzle "separate declarations of private property" error; trust root `pnpm run typecheck` (builds libs first) instead.

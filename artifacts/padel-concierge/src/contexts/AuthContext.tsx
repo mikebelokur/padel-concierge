@@ -20,24 +20,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
   const [user, setUser] = useState<User | null>(null);
 
-  const { data: me, isLoading: meLoading, error } = useGetMe({
+  const { data: me, error } = useGetMe({
     query: {
       queryKey: getGetMeQueryKey(),
       enabled: !!token,
-      retry: false,
+      // Never give up the session over a transient failure. A genuine auth
+      // failure (401/403) is terminal and must not be retried; anything else
+      // (network blip, timeout, 5xx after backgrounding) is retried so a valid
+      // session survives.
+      retry: (failureCount: number, err: unknown) => {
+        const status = (err as { status?: number })?.status;
+        if (status === 401 || status === 403) return false;
+        return failureCount < 3;
+      },
+      retryDelay: (attempt: number) => Math.min(1000 * 2 ** attempt, 8000),
     }
   });
+
+  // Only a genuine auth failure on /me means the session is invalid.
+  const isAuthError =
+    !!error &&
+    ((error as { status?: number }).status === 401 ||
+      (error as { status?: number }).status === 403);
 
   useEffect(() => {
     if (me) {
       setUser(me);
+      // Sliding session: persist the re-issued token returned by /auth/me so the
+      // 30-day window keeps rolling forward while the user is active.
+      const refreshed = (me as { token?: string }).token;
+      if (refreshed && refreshed !== token) {
+        localStorage.setItem('token', refreshed);
+        setToken(refreshed);
+      }
     }
-    if (error) {
+  }, [me]);
+
+  useEffect(() => {
+    if (isAuthError) {
       setToken(null);
       setUser(null);
       localStorage.removeItem('token');
     }
-  }, [me, error]);
+    // Transient errors are intentionally ignored here: the token is retained and
+    // react-query keeps retrying (and refetches on focus/reconnect).
+  }, [isAuthError]);
 
   const logout = () => {
     setToken(null);
@@ -65,10 +92,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Stay in loading state while a token exists but the user hasn't been
-  // populated yet (covers the render-cycle gap between useGetMe resolving and
-  // the useEffect that syncs `me` → `user` running, as well as cached responses
-  // that return meLoading=false on the very first render).
-  const authLoading = !!token && (meLoading || (!user && !error));
+  // populated yet. This also covers transient /me failures: as long as the
+  // error is NOT a genuine auth error, we keep "loading" (rather than dropping
+  // to the login page) so a still-valid session survives network blips while
+  // react-query retries/refetches in the background.
+  const authLoading = !!token && !user && !isAuthError;
 
   return (
     <AuthContext.Provider value={{ user, token, isLoading: authLoading, login, logout }}>

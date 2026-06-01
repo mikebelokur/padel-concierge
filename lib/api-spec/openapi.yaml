@@ -1400,6 +1400,37 @@ paths:
         "409":
           description: Match can no longer be cancelled
 
+  /play-matches/{id}/complete:
+    post:
+      operationId: completePlayMatch
+      tags: [play-matches]
+      summary: Record the result and mark a match completed (leader only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompletePlayMatchBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayMatchRoom"
+        "400":
+          description: Invalid request body
+        "403":
+          description: Only the leader can record the result
+        "409":
+          description: Match can no longer be completed
+
   /play-matches/{id}/participants/{userId}:
     delete:
       operationId: removePlayMatchParticipant
@@ -2098,6 +2129,29 @@ components:
           type: boolean
       required:
         - approve
+
+    CompletePlayMatchSetScore:
+      type: object
+      properties:
+        teamA:
+          type: integer
+        teamB:
+          type: integer
+      required:
+        - teamA
+        - teamB
+
+    CompletePlayMatchBody:
+      type: object
+      properties:
+        setScores:
+          type: array
+          items:
+            $ref: "#/components/schemas/CompletePlayMatchSetScore"
+        overallNote:
+          type: ["string", "null"]
+      required:
+        - setScores
 
     Booking:
       type: object

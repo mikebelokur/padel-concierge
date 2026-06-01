@@ -22,6 +22,7 @@ import type {
   Booking,
   BookingConflict,
   Club,
+  CompletePlayMatchBody,
   ConfirmPaymentBody,
   CreateBookingBody,
   CreateGroupTrainingBody,
@@ -5525,6 +5526,93 @@ export const useCancelPlayMatch = <
   TContext
 > => {
   return useMutation(getCancelPlayMatchMutationOptions(options));
+};
+
+/**
+ * @summary Record the result and mark a match completed (leader only)
+ */
+export const getCompletePlayMatchUrl = (id: number) => {
+  return `/api/play-matches/${id}/complete`;
+};
+
+export const completePlayMatch = async (
+  id: number,
+  completePlayMatchBody: CompletePlayMatchBody,
+  options?: RequestInit,
+): Promise<PlayMatchRoom> => {
+  return customFetch<PlayMatchRoom>(getCompletePlayMatchUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(completePlayMatchBody),
+  });
+};
+
+export const getCompletePlayMatchMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof completePlayMatch>>,
+    TError,
+    { id: number; data: BodyType<CompletePlayMatchBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof completePlayMatch>>,
+  TError,
+  { id: number; data: BodyType<CompletePlayMatchBody> },
+  TContext
+> => {
+  const mutationKey = ["completePlayMatch"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof completePlayMatch>>,
+    { id: number; data: BodyType<CompletePlayMatchBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return completePlayMatch(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CompletePlayMatchMutationResult = NonNullable<
+  Awaited<ReturnType<typeof completePlayMatch>>
+>;
+export type CompletePlayMatchMutationBody = BodyType<CompletePlayMatchBody>;
+export type CompletePlayMatchMutationError = ErrorType<void>;
+
+/**
+ * @summary Record the result and mark a match completed (leader only)
+ */
+export const useCompletePlayMatch = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof completePlayMatch>>,
+    TError,
+    { id: number; data: BodyType<CompletePlayMatchBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof completePlayMatch>>,
+  TError,
+  { id: number; data: BodyType<CompletePlayMatchBody> },
+  TContext
+> => {
+  return useMutation(getCompletePlayMatchMutationOptions(options));
 };
 
 /**

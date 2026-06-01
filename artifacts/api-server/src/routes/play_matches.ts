@@ -60,6 +60,18 @@ const CreateSchema = z
 const InviteSchema = z.object({ userIds: z.array(z.number().int()).min(1) });
 const RespondInviteSchema = z.object({ accept: z.boolean() });
 const RespondRequestSchema = z.object({ approve: z.boolean() });
+const CompleteSchema = z.object({
+  setScores: z
+    .array(
+      z.object({
+        teamA: z.number().int().min(0).max(99),
+        teamB: z.number().int().min(0).max(99),
+      }),
+    )
+    .min(1)
+    .max(5),
+  overallNote: z.string().max(1000).nullish(),
+});
 
 // ── Roster mirroring ─────────────────────────────────────────────────────────
 type DbUser = typeof usersTable.$inferSelect;
@@ -952,6 +964,62 @@ router.post("/play-matches/:id/cancel", async (req, res): Promise<void> => {
       tag: `play-match-cancelled-${id}`,
     });
   }
+
+  res.json(await buildRoom(id, userId));
+});
+
+// ── POST /play-matches/:id/complete ──────────────────────────────────────────
+// The leader records the played result: per-set scores (team A vs team B) plus
+// an optional overall note. Status → completed so the match drops out of the
+// active lists and surfaces in Past matches with a result card. Non-leaders are
+// rejected (read-only). Cancelled matches can no longer be completed.
+router.post("/play-matches/:id/complete", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const userId = authUserId(req);
+
+  const parsed = CompleteSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request body", details: parsed.error.issues });
+    return;
+  }
+
+  const [match] = await db.select().from(matchesTable).where(eq(matchesTable.id, id));
+  if (!match) { res.status(404).json({ error: "Match not found" }); return; }
+  if (match.creatorId !== userId) { res.status(403).json({ error: "Only the leader can record the result" }); return; }
+  if (match.status === "cancelled") {
+    res.status(409).json({ error: "Match can no longer be completed", code: "NOT_COMPLETABLE" });
+    return;
+  }
+
+  const setScoresJson = JSON.stringify(
+    parsed.data.setScores.map((s, i) => ({ setNumber: i + 1, teamA: s.teamA, teamB: s.teamB })),
+  );
+  const overallNote = parsed.data.overallNote?.trim() ?? "";
+
+  await db
+    .update(matchesTable)
+    .set({ status: "completed", setScores: setScoresJson, overallNote })
+    .where(eq(matchesTable.id, id));
+
+  // Mirror the result into the behavioral match log so stats reflect the score.
+  const parts = await loadParticipants(id);
+  fireAndForget(
+    upsertMatchLog({
+      matchId: id,
+      date: match.date,
+      participants: parts.map((p) => ({
+        userId: p.userId,
+        name: p.name,
+        levelAtPlay: p.level ?? "",
+        archetype: null,
+      })),
+      setScores: setScoresJson,
+      conflictOccurred: false,
+      overallNote,
+    }),
+    { route: "POST /play-matches/:id/complete", matchId: id },
+  );
 
   res.json(await buildRoom(id, userId));
 });

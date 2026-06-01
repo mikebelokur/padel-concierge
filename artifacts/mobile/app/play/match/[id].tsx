@@ -1,4 +1,5 @@
 import {
+  useCompletePlayMatch,
   useGetPlayMatchRoom,
   useInvitePlayMatchFriends,
   useListUsers,
@@ -12,12 +13,14 @@ import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -53,6 +56,11 @@ export default function PlayMatchRoomScreen() {
   const [copied, setCopied] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [showResult, setShowResult] = useState(false);
+  const [sets, setSets] = useState<Array<{ teamA: string; teamB: string }>>([
+    { teamA: "", teamB: "" },
+  ]);
+  const [resultNote, setResultNote] = useState("");
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
@@ -67,6 +75,7 @@ export default function PlayMatchRoomScreen() {
   });
   const respondRequest = useRespondPlayMatchJoinRequest();
   const inviteFriends = useInvitePlayMatchFriends();
+  const completeMatch = useCompletePlayMatch();
   const { data: allUsers } = useListUsers({
     query: { enabled: showInvite } as never,
   });
@@ -127,6 +136,76 @@ export default function PlayMatchRoomScreen() {
         requestId,
         data: { approve },
       });
+      await refetch();
+    } catch {
+      /* non-fatal */
+    }
+  }
+
+  function openResult() {
+    if (result && result.setScores.length > 0) {
+      setSets(
+        result.setScores.map((s) => ({
+          teamA: String(s.teamA),
+          teamB: String(s.teamB),
+        })),
+      );
+    } else {
+      setSets([{ teamA: "", teamB: "" }]);
+    }
+    setResultNote(result?.overallNote ?? "");
+    setShowResult(true);
+  }
+
+  function closeResult() {
+    if (completeMatch.isPending) return;
+    setShowResult(false);
+  }
+
+  function updateSet(index: number, side: "teamA" | "teamB", value: string) {
+    const digits = value.replace(/[^0-9]/g, "").slice(0, 2);
+    setSets((prev) =>
+      prev.map((s, i) => (i === index ? { ...s, [side]: digits } : s)),
+    );
+  }
+
+  function addSet() {
+    setSets((prev) => (prev.length >= 5 ? prev : [...prev, { teamA: "", teamB: "" }]));
+  }
+
+  function removeSet(index: number) {
+    setSets((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)));
+  }
+
+  const validSets = sets
+    .map((s) => ({ teamA: Number(s.teamA), teamB: Number(s.teamB) }))
+    .filter(
+      (s) =>
+        s.teamA.toString().length > 0 &&
+        Number.isFinite(s.teamA) &&
+        Number.isFinite(s.teamB) &&
+        (s.teamA > 0 || s.teamB > 0),
+    );
+  const canSaveResult =
+    sets.every((s) => s.teamA !== "" && s.teamB !== "") &&
+    validSets.length === sets.length &&
+    !completeMatch.isPending;
+
+  async function saveResult() {
+    if (!canSaveResult) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    try {
+      await completeMatch.mutateAsync({
+        id: matchId,
+        data: {
+          setScores: sets.map((s) => ({
+            teamA: Number(s.teamA),
+            teamB: Number(s.teamB),
+          })),
+          overallNote: resultNote.trim() ? resultNote.trim() : null,
+        },
+      });
+      setShowResult(false);
       await refetch();
     } catch {
       /* non-fatal */
@@ -344,6 +423,41 @@ export default function PlayMatchRoomScreen() {
               </View>
             ) : null}
           </View>
+        ) : null}
+
+        {isLeader && !isCancelled ? (
+          <Pressable
+            testID="button-record-result"
+            style={({ pressed }) => [
+              result ? styles.copyBtn : styles.inviteBtn,
+              result
+                ? {
+                    borderColor: colors.border,
+                    borderRadius: colors.radius,
+                    opacity: pressed ? 0.8 : 1,
+                  }
+                : {
+                    backgroundColor: colors.primary,
+                    borderRadius: colors.radius,
+                    opacity: pressed ? 0.85 : 1,
+                  },
+            ]}
+            onPress={openResult}
+          >
+            <Feather
+              name="edit-3"
+              size={16}
+              color={result ? colors.foreground : colors.primaryForeground}
+            />
+            <Text
+              style={[
+                result ? styles.copyText : styles.inviteText,
+                { color: result ? colors.foreground : colors.primaryForeground },
+              ]}
+            >
+              {result ? t("playFlow.editResult") : t("playFlow.recordResult")}
+            </Text>
+          </Pressable>
         ) : null}
 
         <View style={styles.section}>
@@ -699,6 +813,181 @@ export default function PlayMatchRoomScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      <Modal
+        visible={showResult}
+        transparent
+        animationType="slide"
+        onRequestClose={closeResult}
+      >
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <Pressable style={styles.modalOverlay} onPress={closeResult}>
+            <Pressable
+              style={[
+                styles.modalSheet,
+                {
+                  backgroundColor: colors.card,
+                  paddingBottom: bottomPad + 20,
+                },
+              ]}
+              onPress={(e) => e.stopPropagation()}
+            >
+              <View style={styles.modalHandle} />
+              <Text style={[styles.modalTitle, { color: colors.foreground }]}>
+                {t("playFlow.recordResultTitle")}
+              </Text>
+              <Text style={[styles.infoValue, { color: colors.mutedForeground }]}>
+                {t("playFlow.recordResultDesc")}
+              </Text>
+              <ScrollView
+                style={{ maxHeight: 360 }}
+                contentContainerStyle={{ gap: 12, paddingVertical: 4 }}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+              >
+                <View style={styles.setHeaderRow}>
+                  <View style={{ flex: 1 }} />
+                  <Text style={[styles.setTeamLabel, { color: colors.mutedForeground }]}>
+                    {t("playFlow.teamAShort")}
+                  </Text>
+                  <Text style={[styles.setTeamLabel, { color: colors.mutedForeground }]}>
+                    {t("playFlow.teamBShort")}
+                  </Text>
+                  <View style={styles.setRemoveSpacer} />
+                </View>
+                {sets.map((s, i) => (
+                  <View key={`set-${i}`} style={styles.setRow}>
+                    <Text style={[styles.setLabel, { color: colors.foreground }]}>
+                      {t("playFlow.setLabel", { n: i + 1 })}
+                    </Text>
+                    <TextInput
+                      testID={`set-${i}-teamA`}
+                      style={[
+                        styles.scoreInput,
+                        {
+                          color: colors.foreground,
+                          borderColor: colors.border,
+                          borderRadius: colors.radius,
+                          backgroundColor: colors.background,
+                        },
+                      ]}
+                      value={s.teamA}
+                      onChangeText={(v) => updateSet(i, "teamA", v)}
+                      keyboardType="number-pad"
+                      maxLength={2}
+                      placeholder="0"
+                      placeholderTextColor={colors.mutedForeground}
+                    />
+                    <TextInput
+                      testID={`set-${i}-teamB`}
+                      style={[
+                        styles.scoreInput,
+                        {
+                          color: colors.foreground,
+                          borderColor: colors.border,
+                          borderRadius: colors.radius,
+                          backgroundColor: colors.background,
+                        },
+                      ]}
+                      value={s.teamB}
+                      onChangeText={(v) => updateSet(i, "teamB", v)}
+                      keyboardType="number-pad"
+                      maxLength={2}
+                      placeholder="0"
+                      placeholderTextColor={colors.mutedForeground}
+                    />
+                    <Pressable
+                      testID={`set-${i}-remove`}
+                      style={styles.setRemoveBtn}
+                      onPress={() => removeSet(i)}
+                      disabled={sets.length <= 1}
+                    >
+                      <Feather
+                        name="x"
+                        size={18}
+                        color={sets.length <= 1 ? colors.border : colors.mutedForeground}
+                      />
+                    </Pressable>
+                  </View>
+                ))}
+                {sets.length < 5 ? (
+                  <Pressable
+                    testID="button-add-set"
+                    style={[
+                      styles.addSetBtn,
+                      { borderColor: colors.border, borderRadius: colors.radius },
+                    ]}
+                    onPress={addSet}
+                  >
+                    <Feather name="plus" size={16} color={colors.primary} />
+                    <Text style={[styles.addSetText, { color: colors.primary }]}>
+                      {t("playFlow.addSet")}
+                    </Text>
+                  </Pressable>
+                ) : null}
+                <TextInput
+                  testID="result-note"
+                  style={[
+                    styles.noteInput,
+                    {
+                      color: colors.foreground,
+                      borderColor: colors.border,
+                      borderRadius: colors.radius,
+                      backgroundColor: colors.background,
+                    },
+                  ]}
+                  value={resultNote}
+                  onChangeText={setResultNote}
+                  placeholder={t("playFlow.matchNotePlaceholder")}
+                  placeholderTextColor={colors.mutedForeground}
+                  multiline
+                  maxLength={1000}
+                />
+              </ScrollView>
+              <View style={styles.modalActions}>
+                <Pressable
+                  style={[
+                    styles.modalBtnOutline,
+                    { borderColor: colors.border, borderRadius: colors.radius },
+                  ]}
+                  onPress={closeResult}
+                  disabled={completeMatch.isPending}
+                >
+                  <Text
+                    style={[styles.smallBtnText, { color: colors.mutedForeground }]}
+                  >
+                    {t("playFlow.cancel")}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  testID="button-save-result"
+                  style={({ pressed }) => [
+                    styles.modalBtnPrimary,
+                    {
+                      backgroundColor: colors.primary,
+                      borderRadius: colors.radius,
+                      opacity: !canSaveResult ? 0.5 : pressed ? 0.85 : 1,
+                    },
+                  ]}
+                  onPress={saveResult}
+                  disabled={!canSaveResult}
+                >
+                  <Text
+                    style={[styles.smallBtnText, { color: colors.primaryForeground }]}
+                  >
+                    {completeMatch.isPending
+                      ? t("playFlow.savingResult")
+                      : t("playFlow.saveResult")}
+                  </Text>
+                </Pressable>
+              </View>
+            </Pressable>
+          </Pressable>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
@@ -926,6 +1215,65 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+  },
+  setHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  setTeamLabel: {
+    width: 56,
+    textAlign: "center",
+    fontSize: 11,
+    fontWeight: "700" as const,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  setRemoveSpacer: { width: 28 },
+  setRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  setLabel: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "600" as const,
+  },
+  scoreInput: {
+    width: 56,
+    height: 48,
+    borderWidth: 1,
+    textAlign: "center",
+    fontSize: 18,
+    fontWeight: "700" as const,
+  },
+  setRemoveBtn: {
+    width: 28,
+    height: 28,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addSetBtn: {
+    height: 44,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  addSetText: {
+    fontSize: 14,
+    fontWeight: "600" as const,
+  },
+  noteInput: {
+    minHeight: 72,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    textAlignVertical: "top" as const,
   },
   modalActions: {
     flexDirection: "row",

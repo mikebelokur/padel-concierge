@@ -229,6 +229,19 @@
     "joinedDesc": "You're in the match.",
     "matchClosed": "This match is no longer accepting players.",
     "signInToJoin": "Sign in to join this match",
-    "signIn": "Sign in"
+    "signIn": "Sign in",
+    "recordResult": "Record result",
+    "recordResultTitle": "Record the result",
+    "recordResultDesc": "Enter the score for each set played.",
+    "setLabel": "Set {{n}}",
+    "teamAShort": "Team A",
+    "teamBShort": "Team B",
+    "addSet": "Add set",
+    "removeSet": "Remove",
+    "matchNotePlaceholder": "Optional note about the match",
+    "saveResult": "Save result",
+    "savingResult": "Saving…",
+    "resultSaved": "Result saved",
+    "editResult": "Edit result"
   }
 }

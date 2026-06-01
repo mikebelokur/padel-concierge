@@ -370,6 +370,17 @@ export interface RespondJoinRequestBody {
   approve: boolean;
 }
 
+export interface CompletePlayMatchSetScore {
+  teamA: number;
+  teamB: number;
+}
+
+export interface CompletePlayMatchBody {
+  setScores: CompletePlayMatchSetScore[];
+  /** @nullable */
+  overallNote?: string | null;
+}
+
 export interface Booking {
   id: number;
   userId: number;

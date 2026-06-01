@@ -129,10 +129,26 @@ test.describe("Mobile Play hub — past matches history", () => {
       await expect(cancelledCard).toBeVisible({ timeout: 45_000 });
       await expect(completedCard).toBeVisible();
 
-      // 5. The completed card shows its set scores (language-independent digits).
-      await expect(completedCard.getByText(/6-4/)).toBeVisible();
+      // 5. The completed card shows the full formatted set scores. The score is
+      //    rendered as "teamA-teamB" joined by " · ", so both sets must appear
+      //    (language-independent digits).
+      await expect(completedCard.getByText(/6-4\s*·\s*6-3/)).toBeVisible();
 
-      // 6. Tapping a past-match card navigates into its detail screen.
+      // 6. The completed card shows the winning-side label. The server derives
+      //    winningSide from the set scores: teamA took both sets (6-4, 6-3) so
+      //    side "A" wins, rendering resultWinnerA. The player account renders in
+      //    Russian, but match any locale's label for robustness.
+      await expect(
+        completedCard.getByText(/Победила команда A|Team A won|فاز الفريق A/),
+      ).toBeVisible();
+
+      // 7. The cancelled card shows the "not played" line instead of a score
+      //    (the other history branch), so the two branches stay distinct.
+      await expect(
+        cancelledCard.getByText(/Не сыгран|Not played|لم تُلعب/),
+      ).toBeVisible();
+
+      // 8. Tapping a past-match card navigates into its detail screen.
       await completedCard.click();
       await page.waitForURL(`**/play/match/${completedId}`, { timeout: 20_000 });
       expect(page.url()).toContain(`/play/match/${completedId}`);

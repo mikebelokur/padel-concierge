@@ -152,6 +152,28 @@ test.describe("Mobile Play hub — past matches history", () => {
       await completedCard.click();
       await page.waitForURL(`**/play/match/${completedId}`, { timeout: 20_000 });
       expect(page.url()).toContain(`/play/match/${completedId}`);
+
+      // 9. The detail screen renders the result card with the full set-by-set
+      //    scores, the winning side, and the overall note. The result card is
+      //    keyed by testID="match-result"; scope all assertions to it so a stray
+      //    match elsewhere on the screen can't satisfy them.
+      const resultCard = page.getByTestId("match-result");
+      await expect(resultCard).toBeVisible({ timeout: 30_000 });
+
+      // 10. Both seeded sets render as "teamA-teamB" joined by " · " (digits are
+      //     language-independent).
+      await expect(resultCard.getByText(/6-4\s*·\s*6-3/)).toBeVisible();
+
+      // 11. The winning-side label: team A took both sets (6-4, 6-3), so the
+      //     server derives winningSide "A" and the screen shows resultWinnerA.
+      //     Player renders in Russian, but match any locale's label.
+      await expect(
+        resultCard.getByText(/Победила команда A|Team A won|فاز الفريق A/),
+      ).toBeVisible();
+
+      // 12. The overall note seeded on the match ("E2E completed match") renders
+      //     verbatim in the result card (locale-independent literal).
+      await expect(resultCard.getByText("E2E completed match")).toBeVisible();
     } finally {
       await context.close();
     }

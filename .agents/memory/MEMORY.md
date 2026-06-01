@@ -3,3 +3,4 @@
 - [API router mount order vs role guards](router-mount-order-guards.md) — a player route can 403 just from being mounted after a router with a root-level requireMode guard; mount player routes early.
 - [HMR "fewer hooks" false positive](hmr-fewer-hooks-false-positive.md) — a one-off "Rendered fewer hooks" runtime error from a Vite web workflow right after startup is usually a Fast Refresh artifact; verify before "fixing".
 - [Mobile new screens — typecheck & route types](mobile-new-screens-typecheck.md) — new Expo screens using fresh hooks/routes fail typecheck until you rebuild composite libs and restart the expo workflow.
+- [Expo web e2e testing — host + Metro cache](expo-web-e2e-testing.md) — Playwright must use the expo dev domain (not proxy /mobile/); clear /tmp/metro-cache on stale screens; set executablePath from REPLIT_PLAYWRIGHT_CHROMIUM_EXECUTABLE.

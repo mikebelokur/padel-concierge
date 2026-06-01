@@ -16,7 +16,14 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        // On Replit/NixOS the bundled chrome-headless-shell can't resolve system
+        // libs from bash; use the environment-provided Chromium when available.
+        ...(process.env.REPLIT_PLAYWRIGHT_CHROMIUM_EXECUTABLE
+          ? { launchOptions: { executablePath: process.env.REPLIT_PLAYWRIGHT_CHROMIUM_EXECUTABLE } }
+          : {}),
+      },
     },
   ],
 });

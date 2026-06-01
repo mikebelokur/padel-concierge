@@ -1841,6 +1841,34 @@ components:
         - status
         - createdAt
 
+    PlayMatchSetScore:
+      type: object
+      properties:
+        setNumber:
+          type: integer
+        teamA:
+          type: integer
+        teamB:
+          type: integer
+      required:
+        - setNumber
+        - teamA
+        - teamB
+
+    PlayMatchResult:
+      type: object
+      properties:
+        setScores:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlayMatchSetScore"
+        winningSide:
+          type: ["string", "null"]
+        overallNote:
+          type: ["string", "null"]
+      required:
+        - setScores
+
     PlayMatchSummary:
       type: object
       properties:
@@ -1878,6 +1906,10 @@ components:
           type: integer
         leaderName:
           type: ["string", "null"]
+        result:
+          oneOf:
+            - $ref: "#/components/schemas/PlayMatchResult"
+            - type: "null"
         createdAt:
           type: string
       required:
@@ -1934,6 +1966,10 @@ components:
           type: ["string", "null"]
         myRole:
           type: ["string", "null"]
+        result:
+          oneOf:
+            - $ref: "#/components/schemas/PlayMatchResult"
+            - type: "null"
         participants:
           type: array
           items:
@@ -2018,6 +2054,10 @@ components:
           type: ["string", "null"]
         myRole:
           type: ["string", "null"]
+        result:
+          oneOf:
+            - $ref: "#/components/schemas/PlayMatchResult"
+            - type: "null"
         createdAt:
           type: string
       required:

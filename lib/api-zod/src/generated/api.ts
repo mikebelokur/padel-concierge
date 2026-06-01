@@ -1849,6 +1849,22 @@ export const ListOpenPlayMatchesResponseItem = zod.object({
   participantCount: zod.number(),
   spotsLeft: zod.number(),
   leaderName: zod.string().nullish(),
+  result: zod
+    .union([
+      zod.object({
+        setScores: zod.array(
+          zod.object({
+            setNumber: zod.number(),
+            teamA: zod.number(),
+            teamB: zod.number(),
+          }),
+        ),
+        winningSide: zod.string().nullish(),
+        overallNote: zod.string().nullish(),
+      }),
+      zod.null(),
+    ])
+    .optional(),
   createdAt: zod.string(),
 });
 export const ListOpenPlayMatchesResponse = zod.array(
@@ -1881,6 +1897,22 @@ export const ListMyPlayMatchInvitesResponseItem = zod.object({
     participantCount: zod.number(),
     spotsLeft: zod.number(),
     leaderName: zod.string().nullish(),
+    result: zod
+      .union([
+        zod.object({
+          setScores: zod.array(
+            zod.object({
+              setNumber: zod.number(),
+              teamA: zod.number(),
+              teamB: zod.number(),
+            }),
+          ),
+          winningSide: zod.string().nullish(),
+          overallNote: zod.string().nullish(),
+        }),
+        zod.null(),
+      ])
+      .optional(),
     createdAt: zod.string(),
   }),
 });
@@ -1910,6 +1942,22 @@ export const ListMyPlayMatchesResponseItem = zod.object({
   spotsLeft: zod.number(),
   leaderName: zod.string().nullish(),
   myRole: zod.string().nullish(),
+  result: zod
+    .union([
+      zod.object({
+        setScores: zod.array(
+          zod.object({
+            setNumber: zod.number(),
+            teamA: zod.number(),
+            teamB: zod.number(),
+          }),
+        ),
+        winningSide: zod.string().nullish(),
+        overallNote: zod.string().nullish(),
+      }),
+      zod.null(),
+    ])
+    .optional(),
   createdAt: zod.string(),
 });
 export const ListMyPlayMatchesResponse = zod.array(
@@ -1938,6 +1986,22 @@ export const ListMyPlayMatchHistoryResponseItem = zod.object({
   spotsLeft: zod.number(),
   leaderName: zod.string().nullish(),
   myRole: zod.string().nullish(),
+  result: zod
+    .union([
+      zod.object({
+        setScores: zod.array(
+          zod.object({
+            setNumber: zod.number(),
+            teamA: zod.number(),
+            teamB: zod.number(),
+          }),
+        ),
+        winningSide: zod.string().nullish(),
+        overallNote: zod.string().nullish(),
+      }),
+      zod.null(),
+    ])
+    .optional(),
   createdAt: zod.string(),
 });
 export const ListMyPlayMatchHistoryResponse = zod.array(
@@ -1969,6 +2033,22 @@ export const GetPlayMatchByTokenResponse = zod.object({
   participantCount: zod.number(),
   spotsLeft: zod.number(),
   leaderName: zod.string().nullish(),
+  result: zod
+    .union([
+      zod.object({
+        setScores: zod.array(
+          zod.object({
+            setNumber: zod.number(),
+            teamA: zod.number(),
+            teamB: zod.number(),
+          }),
+        ),
+        winningSide: zod.string().nullish(),
+        overallNote: zod.string().nullish(),
+      }),
+      zod.null(),
+    ])
+    .optional(),
   createdAt: zod.string(),
 });
 
@@ -1999,6 +2079,22 @@ export const JoinPlayMatchByTokenResponse = zod.object({
   inviteToken: zod.string().nullish(),
   leaderName: zod.string().nullish(),
   myRole: zod.string().nullish(),
+  result: zod
+    .union([
+      zod.object({
+        setScores: zod.array(
+          zod.object({
+            setNumber: zod.number(),
+            teamA: zod.number(),
+            teamB: zod.number(),
+          }),
+        ),
+        winningSide: zod.string().nullish(),
+        overallNote: zod.string().nullish(),
+      }),
+      zod.null(),
+    ])
+    .optional(),
   participants: zod.array(
     zod.object({
       userId: zod.number(),
@@ -2051,6 +2147,22 @@ export const GetPlayMatchRoomResponse = zod.object({
   inviteToken: zod.string().nullish(),
   leaderName: zod.string().nullish(),
   myRole: zod.string().nullish(),
+  result: zod
+    .union([
+      zod.object({
+        setScores: zod.array(
+          zod.object({
+            setNumber: zod.number(),
+            teamA: zod.number(),
+            teamB: zod.number(),
+          }),
+        ),
+        winningSide: zod.string().nullish(),
+        overallNote: zod.string().nullish(),
+      }),
+      zod.null(),
+    ])
+    .optional(),
   participants: zod.array(
     zod.object({
       userId: zod.number(),
@@ -2107,6 +2219,22 @@ export const InvitePlayMatchFriendsResponse = zod.object({
   inviteToken: zod.string().nullish(),
   leaderName: zod.string().nullish(),
   myRole: zod.string().nullish(),
+  result: zod
+    .union([
+      zod.object({
+        setScores: zod.array(
+          zod.object({
+            setNumber: zod.number(),
+            teamA: zod.number(),
+            teamB: zod.number(),
+          }),
+        ),
+        winningSide: zod.string().nullish(),
+        overallNote: zod.string().nullish(),
+      }),
+      zod.null(),
+    ])
+    .optional(),
   participants: zod.array(
     zod.object({
       userId: zod.number(),
@@ -2163,6 +2291,22 @@ export const RespondPlayMatchInviteResponse = zod.object({
   inviteToken: zod.string().nullish(),
   leaderName: zod.string().nullish(),
   myRole: zod.string().nullish(),
+  result: zod
+    .union([
+      zod.object({
+        setScores: zod.array(
+          zod.object({
+            setNumber: zod.number(),
+            teamA: zod.number(),
+            teamB: zod.number(),
+          }),
+        ),
+        winningSide: zod.string().nullish(),
+        overallNote: zod.string().nullish(),
+      }),
+      zod.null(),
+    ])
+    .optional(),
   participants: zod.array(
     zod.object({
       userId: zod.number(),
@@ -2227,6 +2371,22 @@ export const RespondPlayMatchJoinRequestResponse = zod.object({
   inviteToken: zod.string().nullish(),
   leaderName: zod.string().nullish(),
   myRole: zod.string().nullish(),
+  result: zod
+    .union([
+      zod.object({
+        setScores: zod.array(
+          zod.object({
+            setNumber: zod.number(),
+            teamA: zod.number(),
+            teamB: zod.number(),
+          }),
+        ),
+        winningSide: zod.string().nullish(),
+        overallNote: zod.string().nullish(),
+      }),
+      zod.null(),
+    ])
+    .optional(),
   participants: zod.array(
     zod.object({
       userId: zod.number(),
@@ -2279,6 +2439,22 @@ export const CancelPlayMatchResponse = zod.object({
   inviteToken: zod.string().nullish(),
   leaderName: zod.string().nullish(),
   myRole: zod.string().nullish(),
+  result: zod
+    .union([
+      zod.object({
+        setScores: zod.array(
+          zod.object({
+            setNumber: zod.number(),
+            teamA: zod.number(),
+            teamB: zod.number(),
+          }),
+        ),
+        winningSide: zod.string().nullish(),
+        overallNote: zod.string().nullish(),
+      }),
+      zod.null(),
+    ])
+    .optional(),
   participants: zod.array(
     zod.object({
       userId: zod.number(),
@@ -2332,6 +2508,22 @@ export const RemovePlayMatchParticipantResponse = zod.object({
   inviteToken: zod.string().nullish(),
   leaderName: zod.string().nullish(),
   myRole: zod.string().nullish(),
+  result: zod
+    .union([
+      zod.object({
+        setScores: zod.array(
+          zod.object({
+            setNumber: zod.number(),
+            teamA: zod.number(),
+            teamB: zod.number(),
+          }),
+        ),
+        winningSide: zod.string().nullish(),
+        overallNote: zod.string().nullish(),
+      }),
+      zod.null(),
+    ])
+    .optional(),
   participants: zod.array(
     zod.object({
       userId: zod.number(),

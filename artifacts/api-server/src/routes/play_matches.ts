@@ -10,6 +10,7 @@ import {
   activityLogsTable,
   upsertMatchLog,
   upsertProfileMatchRecord,
+  parseSetScores,
 } from "@workspace/db";
 import { eq, and, inArray } from "drizzle-orm";
 import { z } from "zod";
@@ -106,6 +107,29 @@ async function mirrorRoster(matchId: number): Promise<void> {
     .where(eq(matchesTable.id, matchId));
 }
 
+// ── Result builder ───────────────────────────────────────────────────────────
+// Surface a read-only result summary for completed matches: parsed set scores,
+// the winning side (most sets won), and any overall note the match recorded.
+// Returns null for matches that aren't completed so cards/rooms can hide it.
+function buildResult(match: typeof matchesTable.$inferSelect) {
+  if (match.status !== "completed") return null;
+  const setScores = parseSetScores(match.setScores ?? "");
+  let aSets = 0;
+  let bSets = 0;
+  for (const s of setScores) {
+    if (s.teamA > s.teamB) aSets += 1;
+    else if (s.teamB > s.teamA) bSets += 1;
+  }
+  const winningSide =
+    setScores.length === 0 || aSets === bSets ? null : aSets > bSets ? "A" : "B";
+  const note = match.overallNote?.trim();
+  return {
+    setScores,
+    winningSide,
+    overallNote: note ? note : null,
+  };
+}
+
 // ── Response shape builders ──────────────────────────────────────────────────
 async function buildRoom(matchId: number, viewerId: number) {
   const [match] = await db.select().from(matchesTable).where(eq(matchesTable.id, matchId));
@@ -184,6 +208,7 @@ async function buildRoom(matchId: number, viewerId: number) {
     inviteToken: myPart ? match.inviteToken ?? null : null,
     leaderName: leader?.name ?? null,
     myRole: myPart?.role ?? null,
+    result: buildResult(match),
     participants: parts.map((p) => ({
       userId: p.userId,
       name: p.name,
@@ -219,6 +244,7 @@ function buildSummary(
     participantCount,
     spotsLeft: Math.max(0, match.maxPlayers - participantCount),
     leaderName,
+    result: buildResult(match),
     createdAt: match.createdAt.toISOString(),
   };
 }

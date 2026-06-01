@@ -193,6 +193,18 @@ export default function PlayMatchRoomScreen() {
 
   const kind = (room.kind ?? "unranked") as MatchKind;
   const isLeader = room.myRole === "leader";
+  const isCancelled = room.status === "cancelled";
+  const result = room.result;
+  const scoreText =
+    result && result.setScores.length > 0
+      ? result.setScores.map((s) => `${s.teamA}-${s.teamB}`).join(" · ")
+      : null;
+  const winnerLabel =
+    result && result.winningSide === "A"
+      ? t("playFlow.resultWinnerA")
+      : result && result.winningSide === "B"
+        ? t("playFlow.resultWinnerB")
+        : t("playFlow.resultDraw");
   const slots = Array.from({ length: room.maxPlayers });
   const slotLabel =
     room.slotMinutes != null
@@ -273,6 +285,61 @@ export default function PlayMatchRoomScreen() {
                 </Text>
                 <Text style={[styles.infoValue, { color: colors.mutedForeground }]}>
                   {room.styleNote}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+
+        {isCancelled ? (
+          <View
+            testID="match-cancelled-banner"
+            style={[
+              styles.resultCard,
+              {
+                backgroundColor: colors.card,
+                borderColor: `${colors.destructive}55`,
+                borderRadius: colors.radius,
+              },
+            ]}
+          >
+            <Text style={[styles.resultLabel, { color: colors.mutedForeground }]}>
+              {t("playFlow.statusCancelled")}
+            </Text>
+            <Text style={[styles.resultNotPlayed, { color: colors.mutedForeground }]}>
+              {t("playFlow.notPlayed")}
+            </Text>
+          </View>
+        ) : result ? (
+          <View
+            testID="match-result"
+            style={[
+              styles.resultCard,
+              {
+                backgroundColor: colors.card,
+                borderColor: `${colors.primary}44`,
+                borderRadius: colors.radius,
+              },
+            ]}
+          >
+            <Text style={[styles.resultLabel, { color: colors.mutedForeground }]}>
+              {t("playFlow.resultTitle")}
+            </Text>
+            {scoreText ? (
+              <Text style={[styles.resultScore, { color: colors.foreground }]}>
+                {scoreText}
+              </Text>
+            ) : null}
+            <Text style={[styles.resultWinner, { color: colors.primary }]}>
+              {winnerLabel}
+            </Text>
+            {result.overallNote ? (
+              <View style={{ gap: 3 }}>
+                <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>
+                  {t("playFlow.matchNote")}
+                </Text>
+                <Text style={[styles.infoValue, { color: colors.foreground }]}>
+                  {result.overallNote}
                 </Text>
               </View>
             ) : null}
@@ -688,6 +755,30 @@ const styles = StyleSheet.create({
   },
   infoValue: {
     fontSize: 14,
+  },
+  resultCard: {
+    borderWidth: 1,
+    padding: 16,
+    gap: 8,
+  },
+  resultLabel: {
+    fontSize: 10,
+    fontWeight: "700" as const,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+  },
+  resultScore: {
+    fontSize: 22,
+    fontWeight: "700" as const,
+    letterSpacing: 0.5,
+  },
+  resultWinner: {
+    fontSize: 14,
+    fontWeight: "600" as const,
+  },
+  resultNotPlayed: {
+    fontSize: 14,
+    fontStyle: "italic" as const,
   },
   section: { gap: 12 },
   sectionHeader: {

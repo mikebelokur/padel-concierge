@@ -90,7 +90,7 @@ function now(): Date {
   return new Date();
 }
 
-function parseSetScores(raw: string): SetScore[] {
+export function parseSetScores(raw: string): SetScore[] {
   if (!raw) return [];
   try {
     const parsed: unknown = JSON.parse(raw);

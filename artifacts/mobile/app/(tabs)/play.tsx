@@ -33,6 +33,12 @@ const KIND_META: Record<MatchKind, { icon: string; accent: string }> = {
   personal: { icon: "🎯", accent: "#c4b5fd" },
 };
 
+function formatSetScores(
+  setScores: { setNumber: number; teamA: number; teamB: number }[],
+): string {
+  return setScores.map((s) => `${s.teamA}-${s.teamB}`).join(" · ");
+}
+
 export default function PlayHubScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -246,10 +252,21 @@ export default function PlayHubScreen() {
         {history && history.length > 0 ? (
           history.map((m: PlayMatchMine) => {
             const kind = (m.kind ?? "unranked") as MatchKind;
-            const statusLabel =
-              m.status === "cancelled"
-                ? t("playFlow.statusCancelled")
-                : t("playFlow.statusCompleted");
+            const isCancelled = m.status === "cancelled";
+            const statusLabel = isCancelled
+              ? t("playFlow.statusCancelled")
+              : t("playFlow.statusCompleted");
+            const result = m.result;
+            const scoreText =
+              result && result.setScores.length > 0
+                ? formatSetScores(result.setScores)
+                : null;
+            const winnerLabel =
+              result && result.winningSide === "A"
+                ? t("playFlow.resultWinnerA")
+                : result && result.winningSide === "B"
+                  ? t("playFlow.resultWinnerB")
+                  : null;
             return (
               <Pressable
                 key={m.id}
@@ -279,6 +296,22 @@ export default function PlayHubScreen() {
                   >
                     {m.date} {m.time} · {statusLabel}
                   </Text>
+                  {isCancelled ? (
+                    <Text
+                      style={[styles.historyNotPlayed, { color: colors.mutedForeground }]}
+                      numberOfLines={1}
+                    >
+                      {t("playFlow.notPlayed")}
+                    </Text>
+                  ) : scoreText ? (
+                    <Text
+                      style={[styles.historyScore, { color: colors.foreground }]}
+                      numberOfLines={1}
+                    >
+                      {scoreText}
+                      {winnerLabel ? ` · ${winnerLabel}` : ""}
+                    </Text>
+                  ) : null}
                 </View>
                 <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
               </Pressable>
@@ -457,6 +490,16 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   myMatchIcon: { fontSize: 24 },
+  historyScore: {
+    fontSize: 13,
+    fontWeight: "700" as const,
+    marginTop: 4,
+  },
+  historyNotPlayed: {
+    fontSize: 12,
+    fontStyle: "italic" as const,
+    marginTop: 4,
+  },
   emptyText: {
     fontSize: 13,
     lineHeight: 19,

@@ -241,6 +241,20 @@ export interface PlayMatchJoinRequest {
   createdAt: string;
 }
 
+export interface PlayMatchSetScore {
+  setNumber: number;
+  teamA: number;
+  teamB: number;
+}
+
+export interface PlayMatchResult {
+  setScores: PlayMatchSetScore[];
+  /** @nullable */
+  winningSide?: string | null;
+  /** @nullable */
+  overallNote?: string | null;
+}
+
 export interface PlayMatchSummary {
   id: number;
   date: string;
@@ -266,6 +280,7 @@ export interface PlayMatchSummary {
   spotsLeft: number;
   /** @nullable */
   leaderName?: string | null;
+  result?: PlayMatchResult | null;
   createdAt: string;
 }
 
@@ -298,6 +313,7 @@ export interface PlayMatchRoom {
   leaderName?: string | null;
   /** @nullable */
   myRole?: string | null;
+  result?: PlayMatchResult | null;
   participants: PlayMatchParticipant[];
   joinRequests: PlayMatchJoinRequest[];
   createdAt: string;
@@ -338,6 +354,7 @@ export interface PlayMatchMine {
   leaderName?: string | null;
   /** @nullable */
   myRole?: string | null;
+  result?: PlayMatchResult | null;
   createdAt: string;
 }
 

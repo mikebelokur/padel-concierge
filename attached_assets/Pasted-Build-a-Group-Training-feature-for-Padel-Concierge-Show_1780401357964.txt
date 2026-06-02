@@ -1,0 +1,27 @@
+Build a "Group Training" feature for Padel Concierge. Show me a PLAN first (Plan mode), then build. Test on mobile after.
+
+ARCHITECTURE — IMPORTANT: Do NOT create a new parallel module. REUSE the existing `matches` table and its join-request / participant / invite logic. Add a discriminator so a training is just a special kind of event:
+- Add `event_type` enum to matches: 'match' (existing default) | 'training' (new).
+- Add fields used only by trainings: `coach_id` (FK to users), `max_players` (int, default 4, allow 4–8), `recurrence` (nullable: 'none' | 'weekly'), `recurrence_days` (array of weekdays, e.g. ['TUE','THU']), `level_required` (enum: 'D-' | 'D' | 'D+' ...).
+- Existing match fields (date, time, slot, location, visibility, participants, join-requests) are reused as-is.
+
+WHO CAN CREATE A TRAINING: only users with role 'coach' or 'admin'. A normal player cannot create a training, only join one.
+
+USER-FACING (keep it a SEPARATE, distinct screen — do not mix with Create Match):
+- New tab/section "Тренировки" (Group Trainings), separate from "Играть" (Play/Create Match).
+- Player sees a list of upcoming group trainings filtered to THEIR level (a D player sees D and D- trainings; respect existing category-permission rule: players can drop down a level freely, cannot go up without invite/verification).
+- Each training card shows: coach name, day/time, location, level, and a live counter of registered players (e.g. "3/4 записано").
+- Player taps "Записаться" to register; can also unregister. Show their registration status clearly.
+- When full, show "Заполнено" and disable registration (allow a waitlist only if trivial; otherwise skip waitlist for now).
+
+COACH-FACING:
+- A coach can create a recurring weekly training (e.g. every TUE and THU) with level, time, location, max players.
+- Coach sees the roster (who registered) for each session.
+
+LEVEL VERIFICATION RULE (reuse existing player-identity layers): a player's category (D/D+) is trainer-verified. Only the coach/admin can change a player's category — never automatic. Do not auto-promote players based on activity.
+
+SEED DATA: create 4 weekly group trainings for testing — 2 on Tuesday and 2 on Thursday, levels D and D-, max 4 players each, assigned to the current admin user as coach. Use ONLY real_user segment players for any pre-filled registrations; never mix seed_test/beta_tester users into real trainings.
+
+DO NOT BUILD YET (explicitly out of scope): WhatsApp/Telegram auto-posting, push notifications, payment, calendar month views, waitlist logic beyond trivial, auto-matchmaking. Those come later.
+
+After building, verify on mobile: as a coach create a Tue/Thu D-level training → as a D player see it in "Тренировки" → register → see counter go 0/4 → 1/4 → unregister.

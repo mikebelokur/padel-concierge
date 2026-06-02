@@ -3,7 +3,8 @@
     "home": "Home",
     "find": "Find",
     "play": "Play",
-    "profile": "Profile"
+    "profile": "Profile",
+    "trainings": "Trainings"
   },
   "common": {
     "back": "Back",
@@ -243,5 +244,106 @@
     "savingResult": "Saving…",
     "resultSaved": "Result saved",
     "editResult": "Edit result"
+  },
+  "trainings": {
+    "title": "Group Trainings",
+    "subtitle": "Coach-led sessions at your level",
+    "manage": "Manage",
+    "tabs": {
+      "available": "Available",
+      "myBookings": "My Bookings",
+      "history": "History"
+    },
+    "coach": "Coach",
+    "spotsLeft": "{{count}} spots left",
+    "lastSpot": "Last spot",
+    "full": "Full",
+    "book": "Book",
+    "booking": "Booking…",
+    "booked": "Booked",
+    "cancelBooking": "Cancel booking",
+    "cancelling": "Cancelling…",
+    "locked": "Level {{category}}",
+    "lockedHint": "Available for level {{category}} and above",
+    "price": "{{price}} AED",
+    "duration": "{{minutes}} min",
+    "window": {
+      "opensIn": "Registration opens in {{value}}",
+      "closesIn": "Closes in {{value}}",
+      "closed": "Registration closed",
+      "past": "Finished"
+    },
+    "unit": {
+      "d": "{{count}}d",
+      "h": "{{count}}h",
+      "m": "{{count}}m"
+    },
+    "empty": {
+      "available": "No upcoming trainings right now.",
+      "myBookings": "You have no upcoming trainings.",
+      "history": "No past trainings yet."
+    },
+    "confirmBookTitle": "Confirm booking",
+    "confirmBookBody": "Book this {{category}} training for {{price}} AED?",
+    "confirmBook": "Book",
+    "bookSuccess": "You're booked!",
+    "confirmCancelTitle": "Cancel booking",
+    "confirmCancelBody": "Cancel your spot in this training?",
+    "confirmCancelYes": "Cancel booking",
+    "keep": "Keep",
+    "cancelSuccess": "Booking cancelled",
+    "status": {
+      "booked": "Booked",
+      "attended": "Attended",
+      "no_show": "No-show",
+      "cancelled": "Cancelled"
+    },
+    "errors": {
+      "levelRequired": "Complete your level assessment before booking.",
+      "levelTooHigh": "This training is above your level.",
+      "scheduled": "Registration isn't open yet.",
+      "closed": "Registration is closed.",
+      "alreadyBooked": "You're already booked.",
+      "full": "This training is full.",
+      "generic": "Could not complete booking. Please try again."
+    }
+  },
+  "trainingsCoach": {
+    "title": "Manage Trainings",
+    "subtitle": "Create and track your sessions",
+    "newButton": "New",
+    "empty": "No trainings yet. Create your first session.",
+    "roster": "Roster",
+    "noBookings": "No bookings yet.",
+    "created": "Training created",
+    "createError": "Could not create training. Please try again.",
+    "spots": "{{booked}}/{{max}} booked",
+    "backToList": "Back to trainings",
+    "form": {
+      "title": "New Training",
+      "date": "Date",
+      "dateHint": "YYYY-MM-DD",
+      "time": "Time",
+      "timeHint": "HH:MM (Dubai time)",
+      "duration": "Duration (min)",
+      "category": "Level",
+      "court": "Court",
+      "courtAddress": "Court address (optional)",
+      "maxParticipants": "Max participants",
+      "maxParticipantsHint": "Between 4 and 8 players",
+      "price": "Price (AED)",
+      "descEn": "Description (EN)",
+      "descRu": "Description (RU)",
+      "save": "Create training",
+      "saving": "Creating…"
+    },
+    "statusPill": {
+      "open": "Open",
+      "full": "Full",
+      "closed": "Closed",
+      "scheduled": "Scheduled",
+      "cancelled": "Cancelled",
+      "completed": "Completed"
+    }
   }
 }

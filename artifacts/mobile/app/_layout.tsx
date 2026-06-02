@@ -59,6 +59,9 @@ function RootLayoutNav() {
       <Stack.Screen name="play/match/[id]" />
       <Stack.Screen name="play/join/[token]" />
       <Stack.Screen name="play/open" />
+      <Stack.Screen name="trainings/coach" />
+      <Stack.Screen name="trainings/new" />
+      <Stack.Screen name="trainings/[id]" />
     </Stack>
   );
 }

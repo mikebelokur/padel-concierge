@@ -52,6 +52,10 @@ function NativeTabLayout() {
           <Icon sf={{ default: "figure.tennis", selected: "figure.tennis" }} />
           <Label>{t("tabs.play")}</Label>
         </NativeTabs.Trigger>
+        <NativeTabs.Trigger name="trainings">
+          <Icon sf={{ default: "figure.run", selected: "figure.run" }} />
+          <Label>{t("tabs.trainings")}</Label>
+        </NativeTabs.Trigger>
         <NativeTabs.Trigger name="profile">
           <Icon sf={{ default: "person.circle", selected: "person.circle.fill" }} />
           <Label>{t("tabs.profile")}</Label>
@@ -134,6 +138,18 @@ function ClassicTabLayout() {
                 <SymbolView name="figure.tennis" tintColor={color} size={24} />
               ) : (
                 <Feather name="play" size={22} color={color} />
+              ),
+          }}
+        />
+        <Tabs.Screen
+          name="trainings"
+          options={{
+            title: t("tabs.trainings"),
+            tabBarIcon: ({ color }) =>
+              isIOS ? (
+                <SymbolView name="figure.run" tintColor={color} size={24} />
+              ) : (
+                <Feather name="calendar" size={22} color={color} />
               ),
           }}
         />

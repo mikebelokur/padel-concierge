@@ -3,7 +3,8 @@
     "home": "Главная",
     "find": "Поиск",
     "profile": "Профиль",
-    "play": "Игра"
+    "play": "Игра",
+    "trainings": "Тренировки"
   },
   "common": {
     "back": "Назад",
@@ -243,5 +244,106 @@
     "savingResult": "Сохранение…",
     "resultSaved": "Результат сохранён",
     "editResult": "Изменить результат"
+  },
+  "trainings": {
+    "title": "Тренировки",
+    "subtitle": "Групповые занятия с тренером по вашему уровню",
+    "manage": "Управление",
+    "tabs": {
+      "available": "Доступные",
+      "myBookings": "Мои записи",
+      "history": "История"
+    },
+    "coach": "Тренер",
+    "spotsLeft": "Осталось мест: {{count}}",
+    "lastSpot": "Последнее место",
+    "full": "Мест нет",
+    "book": "Записаться",
+    "booking": "Запись…",
+    "booked": "Вы записаны",
+    "cancelBooking": "Отменить запись",
+    "cancelling": "Отмена…",
+    "locked": "Уровень {{category}}",
+    "lockedHint": "Доступно для уровня {{category}} и выше",
+    "price": "{{price}} AED",
+    "duration": "{{minutes}} мин",
+    "window": {
+      "opensIn": "Запись откроется через {{value}}",
+      "closesIn": "Закроется через {{value}}",
+      "closed": "Запись закрыта",
+      "past": "Завершено"
+    },
+    "unit": {
+      "d": "{{count}} дн",
+      "h": "{{count}} ч",
+      "m": "{{count}} мин"
+    },
+    "empty": {
+      "available": "Сейчас нет предстоящих тренировок.",
+      "myBookings": "У вас нет предстоящих тренировок.",
+      "history": "Прошедших тренировок пока нет."
+    },
+    "confirmBookTitle": "Подтвердите запись",
+    "confirmBookBody": "Записаться на тренировку {{category}} за {{price}} AED?",
+    "confirmBook": "Записаться",
+    "bookSuccess": "Вы записаны!",
+    "confirmCancelTitle": "Отмена записи",
+    "confirmCancelBody": "Отменить вашу запись на тренировку?",
+    "confirmCancelYes": "Отменить запись",
+    "keep": "Оставить",
+    "cancelSuccess": "Запись отменена",
+    "status": {
+      "booked": "Записан",
+      "attended": "Посетил",
+      "no_show": "Не пришёл",
+      "cancelled": "Отменена"
+    },
+    "errors": {
+      "levelRequired": "Сначала пройдите оценку уровня.",
+      "levelTooHigh": "Эта тренировка выше вашего уровня.",
+      "scheduled": "Запись ещё не открыта.",
+      "closed": "Запись закрыта.",
+      "alreadyBooked": "Вы уже записаны.",
+      "full": "На этой тренировке нет мест.",
+      "generic": "Не удалось записаться. Попробуйте снова."
+    }
+  },
+  "trainingsCoach": {
+    "title": "Управление тренировками",
+    "subtitle": "Создавайте и отслеживайте занятия",
+    "newButton": "Создать",
+    "empty": "Тренировок пока нет. Создайте первое занятие.",
+    "roster": "Участники",
+    "noBookings": "Записей пока нет.",
+    "created": "Тренировка создана",
+    "createError": "Не удалось создать тренировку. Попробуйте снова.",
+    "spots": "{{booked}}/{{max}} записано",
+    "backToList": "К тренировкам",
+    "form": {
+      "title": "Новая тренировка",
+      "date": "Дата",
+      "dateHint": "ГГГГ-ММ-ДД",
+      "time": "Время",
+      "timeHint": "ЧЧ:ММ (время Дубая)",
+      "duration": "Длительность (мин)",
+      "category": "Уровень",
+      "court": "Корт",
+      "courtAddress": "Адрес корта (необязательно)",
+      "maxParticipants": "Макс. участников",
+      "maxParticipantsHint": "От 4 до 8 игроков",
+      "price": "Цена (AED)",
+      "descEn": "Описание (EN)",
+      "descRu": "Описание (RU)",
+      "save": "Создать тренировку",
+      "saving": "Создание…"
+    },
+    "statusPill": {
+      "open": "Открыта",
+      "full": "Заполнена",
+      "closed": "Закрыта",
+      "scheduled": "Запланирована",
+      "cancelled": "Отменена",
+      "completed": "Завершена"
+    }
   }
 }

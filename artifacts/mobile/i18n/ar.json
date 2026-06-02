@@ -3,7 +3,8 @@
     "home": "الرئيسية",
     "find": "بحث",
     "profile": "الملف",
-    "play": "اللعب"
+    "play": "اللعب",
+    "trainings": "التدريبات"
   },
   "common": {
     "back": "رجوع",
@@ -243,5 +244,106 @@
     "savingResult": "جارٍ الحفظ…",
     "resultSaved": "تم حفظ النتيجة",
     "editResult": "تعديل النتيجة"
+  },
+  "trainings": {
+    "title": "التدريبات الجماعية",
+    "subtitle": "جلسات بإشراف المدرب على مستواك",
+    "manage": "إدارة",
+    "tabs": {
+      "available": "المتاحة",
+      "myBookings": "حجوزاتي",
+      "history": "السجل"
+    },
+    "coach": "المدرب",
+    "spotsLeft": "بقيت {{count}} أماكن",
+    "lastSpot": "آخر مكان",
+    "full": "مكتمل",
+    "book": "احجز",
+    "booking": "جارٍ الحجز…",
+    "booked": "تم الحجز",
+    "cancelBooking": "إلغاء الحجز",
+    "cancelling": "جارٍ الإلغاء…",
+    "locked": "المستوى {{category}}",
+    "lockedHint": "متاح للمستوى {{category}} وأعلى",
+    "price": "{{price}} درهم",
+    "duration": "{{minutes}} دقيقة",
+    "window": {
+      "opensIn": "يفتح التسجيل خلال {{value}}",
+      "closesIn": "يغلق خلال {{value}}",
+      "closed": "التسجيل مغلق",
+      "past": "انتهت"
+    },
+    "unit": {
+      "d": "{{count}} ي",
+      "h": "{{count}} س",
+      "m": "{{count}} د"
+    },
+    "empty": {
+      "available": "لا توجد تدريبات قادمة حالياً.",
+      "myBookings": "ليس لديك تدريبات قادمة.",
+      "history": "لا توجد تدريبات سابقة بعد."
+    },
+    "confirmBookTitle": "تأكيد الحجز",
+    "confirmBookBody": "حجز تدريب {{category}} مقابل {{price}} درهم؟",
+    "confirmBook": "احجز",
+    "bookSuccess": "تم حجزك!",
+    "confirmCancelTitle": "إلغاء الحجز",
+    "confirmCancelBody": "إلغاء مكانك في هذا التدريب؟",
+    "confirmCancelYes": "إلغاء الحجز",
+    "keep": "إبقاء",
+    "cancelSuccess": "تم إلغاء الحجز",
+    "status": {
+      "booked": "محجوز",
+      "attended": "حضر",
+      "no_show": "لم يحضر",
+      "cancelled": "ملغى"
+    },
+    "errors": {
+      "levelRequired": "أكمل تقييم مستواك قبل الحجز.",
+      "levelTooHigh": "هذا التدريب أعلى من مستواك.",
+      "scheduled": "التسجيل لم يفتح بعد.",
+      "closed": "التسجيل مغلق.",
+      "alreadyBooked": "أنت محجوز بالفعل.",
+      "full": "هذا التدريب مكتمل.",
+      "generic": "تعذّر إتمام الحجز. حاول مرة أخرى."
+    }
+  },
+  "trainingsCoach": {
+    "title": "إدارة التدريبات",
+    "subtitle": "أنشئ وتتبّع جلساتك",
+    "newButton": "جديد",
+    "empty": "لا توجد تدريبات بعد. أنشئ جلستك الأولى.",
+    "roster": "المشاركون",
+    "noBookings": "لا توجد حجوزات بعد.",
+    "created": "تم إنشاء التدريب",
+    "createError": "تعذّر إنشاء التدريب. حاول مرة أخرى.",
+    "spots": "{{booked}}/{{max}} محجوز",
+    "backToList": "إلى التدريبات",
+    "form": {
+      "title": "تدريب جديد",
+      "date": "التاريخ",
+      "dateHint": "سنة-شهر-يوم",
+      "time": "الوقت",
+      "timeHint": "سس:دد (توقيت دبي)",
+      "duration": "المدة (دقيقة)",
+      "category": "المستوى",
+      "court": "الملعب",
+      "courtAddress": "عنوان الملعب (اختياري)",
+      "maxParticipants": "أقصى عدد",
+      "maxParticipantsHint": "من 4 إلى 8 لاعبين",
+      "price": "السعر (درهم)",
+      "descEn": "الوصف (EN)",
+      "descRu": "الوصف (RU)",
+      "save": "إنشاء التدريب",
+      "saving": "جارٍ الإنشاء…"
+    },
+    "statusPill": {
+      "open": "مفتوح",
+      "full": "مكتمل",
+      "closed": "مغلق",
+      "scheduled": "مجدول",
+      "cancelled": "ملغى",
+      "completed": "منتهي"
+    }
   }
 }

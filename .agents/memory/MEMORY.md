@@ -4,3 +4,5 @@
 - [HMR "fewer hooks" false positive](hmr-fewer-hooks-false-positive.md) — a one-off "Rendered fewer hooks" runtime error from a Vite web workflow right after startup is usually a Fast Refresh artifact; verify before "fixing".
 - [Mobile new screens — typecheck & route types](mobile-new-screens-typecheck.md) — new Expo screens using fresh hooks/routes fail typecheck until you rebuild composite libs and restart the expo workflow.
 - [Expo web e2e testing — host + Metro cache](expo-web-e2e-testing.md) — Playwright must use the expo dev domain (not proxy /mobile/); clear /tmp/metro-cache on stale screens; set executablePath from REPLIT_PLAYWRIGHT_CHROMIUM_EXECUTABLE.
+- [Expo hard-load auth redirect](expo-hardload-auth-redirect.md) — role-guarded screens must gate on auth `isLoading` before redirecting, or they bounce to fallback on hard reload / deep link.
+- [Recurring-training seed roll-forward](recurring-seed-roll-forward.md) — idempotent series-keyed seeds must advance stale past-dated rows in the UPDATE branch or seeded data never shows.

@@ -36,6 +36,8 @@ test.describe("Mobile Play hub — past matches history", () => {
   let playerId: number;
   let completedId: number;
   let cancelledId: number;
+  let teamBWinId: number;
+  let drawId: number;
 
   test.beforeAll(async ({ baseURL }) => {
     if (!EXPO_BASE) return;
@@ -48,9 +50,11 @@ test.describe("Mobile Play hub — past matches history", () => {
     playerId = ((await login.json()) as { user: { id: number } }).user.id;
     await api.dispose();
 
-    // Seed two finished play matches the player belongs to so the history view has
-    // deterministic data for both branches: a completed match (set scores shown)
-    // and a cancelled match ("not played"). Cleaned up in afterAll.
+    // Seed finished play matches the player belongs to so the history view has
+    // deterministic data for every branch: a completed match where team A wins
+    // (set scores + resultWinnerA), a cancelled match ("not played"), a completed
+    // match where team B wins (resultWinnerB), and a completed match with equal
+    // sets won (resultDraw). Cleaned up in afterAll.
     const db = await pg();
     try {
       const completed = await db.query(
@@ -80,10 +84,49 @@ test.describe("Mobile Play hub — past matches history", () => {
       );
       cancelledId = cancelled.rows[0].id as number;
 
+      // Team B takes both sets (4-6, 3-6) → server derives winningSide "B".
+      const teamBWin = await db.query(
+        `INSERT INTO matches
+           (date, time, club_name, format, status, match_kind, visibility, max_players, creator_id, set_scores, overall_note)
+         VALUES ($1, $2, $3, 'Classic', 'completed', 'competitive', 'private', 4, $4, $5, 'E2E team B win')
+         RETURNING id`,
+        [
+          "2026-05-03",
+          "20:00",
+          "E2E History Club",
+          playerId,
+          JSON.stringify([
+            { setNumber: 1, teamA: 4, teamB: 6 },
+            { setNumber: 2, teamA: 3, teamB: 6 },
+          ]),
+        ],
+      );
+      teamBWinId = teamBWin.rows[0].id as number;
+
+      // Each side takes one set (6-4, 4-6) → equal sets won → winningSide null
+      // → screen renders resultDraw.
+      const draw = await db.query(
+        `INSERT INTO matches
+           (date, time, club_name, format, status, match_kind, visibility, max_players, creator_id, set_scores, overall_note)
+         VALUES ($1, $2, $3, 'Classic', 'completed', 'competitive', 'private', 4, $4, $5, 'E2E drawn match')
+         RETURNING id`,
+        [
+          "2026-05-04",
+          "21:00",
+          "E2E History Club",
+          playerId,
+          JSON.stringify([
+            { setNumber: 1, teamA: 6, teamB: 4 },
+            { setNumber: 2, teamA: 4, teamB: 6 },
+          ]),
+        ],
+      );
+      drawId = draw.rows[0].id as number;
+
       await db.query(
         `INSERT INTO match_participants (match_id, user_id, role)
-         VALUES ($1, $3, 'leader'), ($2, $3, 'leader')`,
-        [completedId, cancelledId, playerId],
+         VALUES ($1, $5, 'leader'), ($2, $5, 'leader'), ($3, $5, 'leader'), ($4, $5, 'leader')`,
+        [completedId, cancelledId, teamBWinId, drawId, playerId],
       );
     } finally {
       await db.end();
@@ -92,7 +135,9 @@ test.describe("Mobile Play hub — past matches history", () => {
 
   test.afterAll(async () => {
     if (!EXPO_BASE) return;
-    const ids = [completedId, cancelledId].filter((x): x is number => typeof x === "number");
+    const ids = [completedId, cancelledId, teamBWinId, drawId].filter(
+      (x): x is number => typeof x === "number",
+    );
     if (ids.length === 0) return;
     const db = await pg();
     try {
@@ -174,6 +219,92 @@ test.describe("Mobile Play hub — past matches history", () => {
       // 12. The overall note seeded on the match ("E2E completed match") renders
       //     verbatim in the result card (locale-independent literal).
       await expect(resultCard.getByText("E2E completed match")).toBeVisible();
+    } finally {
+      await context.close();
+    }
+  });
+
+  test("detail screen shows the team B win label when team B takes more sets", async ({
+    browser,
+  }) => {
+    test.skip(!EXPO_BASE, "REPLIT_EXPO_DEV_DOMAIN not set; Expo web host unavailable");
+
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    try {
+      // Log in, then go straight to the team-B-win match detail screen.
+      await openAppRoot(page);
+      await page.getByTestId("email-input").fill(PLAYER_EMAIL);
+      await page.getByTestId("password-input").fill(PLAYER_PASSWORD);
+      await page.getByTestId("login-button").click();
+      await expect(page.getByTestId("login-button")).toBeHidden({ timeout: 30_000 });
+
+      await page.goto(`${EXPO_BASE}/play/match/${teamBWinId}`, {
+        waitUntil: "domcontentloaded",
+      });
+
+      const resultCard = page.getByTestId("match-result");
+      await expect(resultCard).toBeVisible({ timeout: 30_000 });
+
+      // Set scores render team-A-first regardless of winner (4-6, 3-6).
+      await expect(resultCard.getByText(/4-6\s*·\s*3-6/)).toBeVisible();
+
+      // Team B took both sets, so the server derives winningSide "B" and the
+      // screen shows resultWinnerB (match any locale's label for robustness).
+      await expect(
+        resultCard.getByText(/Победила команда B|Team B won|فاز الفريق B/),
+      ).toBeVisible();
+
+      // The A and draw labels must NOT appear — guards against an A/B flip.
+      await expect(
+        resultCard.getByText(/Победила команда A|Team A won|فاز الفريق A/),
+      ).toHaveCount(0);
+      await expect(
+        resultCard.getByText(/Без явного победителя|No clear winner|لا يوجد فائز واضح/),
+      ).toHaveCount(0);
+    } finally {
+      await context.close();
+    }
+  });
+
+  test("detail screen shows the draw label when both sides win equal sets", async ({
+    browser,
+  }) => {
+    test.skip(!EXPO_BASE, "REPLIT_EXPO_DEV_DOMAIN not set; Expo web host unavailable");
+
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    try {
+      // Log in, then go straight to the drawn-match detail screen.
+      await openAppRoot(page);
+      await page.getByTestId("email-input").fill(PLAYER_EMAIL);
+      await page.getByTestId("password-input").fill(PLAYER_PASSWORD);
+      await page.getByTestId("login-button").click();
+      await expect(page.getByTestId("login-button")).toBeHidden({ timeout: 30_000 });
+
+      await page.goto(`${EXPO_BASE}/play/match/${drawId}`, {
+        waitUntil: "domcontentloaded",
+      });
+
+      const resultCard = page.getByTestId("match-result");
+      await expect(resultCard).toBeVisible({ timeout: 30_000 });
+
+      // Set scores render team-A-first (6-4, 4-6).
+      await expect(resultCard.getByText(/6-4\s*·\s*4-6/)).toBeVisible();
+
+      // Each side won one set, so winningSide is null and the screen falls back
+      // to resultDraw (match any locale's label for robustness).
+      await expect(
+        resultCard.getByText(/Без явного победителя|No clear winner|لا يوجد فائز واضح/),
+      ).toBeVisible();
+
+      // Neither team-win label may appear for a draw.
+      await expect(
+        resultCard.getByText(/Победила команда A|Team A won|فاز الفريق A/),
+      ).toHaveCount(0);
+      await expect(
+        resultCard.getByText(/Победила команда B|Team B won|فاز الفريق B/),
+      ).toHaveCount(0);
     } finally {
       await context.close();
     }

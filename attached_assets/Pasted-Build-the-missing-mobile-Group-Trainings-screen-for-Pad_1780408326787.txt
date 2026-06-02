@@ -1,0 +1,18 @@
+Build the missing mobile "Тренировки" (Group Trainings) screen for Padel Concierge. The web feature and full backend (group_trainings + training_bookings tables, register/unregister, roster, level filtering, capacity lock) already exist and work — do NOT change them, do NOT re-architect. Only build the mobile screen consuming the existing API. Plan mode first, then build, test on mobile.
+
+SCREEN — new tab "Тренировки", separate from "Играть":
+- List of upcoming group trainings, filtered to the player's level (player sees their own level and below — respect existing category rule).
+- Each card shows: coach name, day + time, location, level, and a LIVE registered counter ("3/4 записано").
+- Status badge: "Открыто" (open) or "Заполнено" (full). When full, registration button disabled.
+- "Записаться" button to register; "Отписаться" to unregister.
+- UNREGISTER IS FREE — no penalty, no confirmation friction beyond a simple confirm. On unregister: slot frees immediately, counter decrements (4/4 → 3/4), status flips "Заполнено" → "Открыто".
+- Show the current roster (who registered) so it's transparent, like the WhatsApp group but clearer.
+- Player's own registration status must be obvious (e.g. button shows "Вы записаны ✓").
+
+CAPACITY: for now all trainings are 4 players (2v2, one court). Backend already supports variable capacity — just default new trainings to 4. Do NOT build 6/8-player multi-court formats or two-coach logic yet (later).
+
+DESIGN: match the existing iOS-style mobile design already used in the app — 17pt+ fonts, 44pt touch targets, 56pt inputs, dark theme, gold accents. Mobile-first.
+
+SEED FIX: reassign the 4 existing weekly trainings to my current admin user as coach (not a separate "Mike" coach). Keep exactly 2 Tuesday + 2 Thursday, levels D and D-, 4 players each. Any pre-filled registrations use ONLY real_user segment players — never seed_test/beta_tester.
+
+After building, verify on mobile: open "Тренировки" as a D player → see Tue/Thu D and D- trainings → register → counter goes 3/4 → 4/4 "Заполнено" → unregister → back to 3/4 "Открыто".

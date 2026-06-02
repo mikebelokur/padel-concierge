@@ -1003,6 +1003,32 @@ paths:
         "403":
           description: Forbidden
 
+  /group-trainings/{id}/roster:
+    get:
+      operationId: getGroupTrainingRoster
+      tags: [group-trainings]
+      summary: Masked player roster for a training (player-facing)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TrainingRosterEntry"
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
   # CLUBS
   /clubs:
     get:
@@ -2739,6 +2765,20 @@ components:
         - status
         - bookedAt
         - createdAt
+
+    TrainingRosterEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        level:
+          type: ["string", "null"]
+      required:
+        - id
+        - name
 
     Club:
       type: object

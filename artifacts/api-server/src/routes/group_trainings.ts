@@ -93,6 +93,19 @@ function serializeTraining(
   };
 }
 
+// Mask a player name to "First L." for the player-facing roster, never
+// exposing the full surname. Falls back to just the first name when there is
+// no surname.
+function maskRosterName(name: string | null | undefined): string {
+  const trimmed = (name ?? "").trim();
+  if (!trimmed) return "—";
+  const parts = trimmed.split(/\s+/);
+  const first = parts[0];
+  const last = parts.length > 1 ? parts[parts.length - 1] : "";
+  const initial = last ? last[0]?.toUpperCase() : "";
+  return initial ? `${first} ${initial}.` : first;
+}
+
 function serializeBooking(b: typeof trainingBookingsTable.$inferSelect) {
   return {
     id: b.id,
@@ -787,6 +800,96 @@ router.get("/group-trainings/:id/bookings", async (req, res): Promise<void> => {
               avatar: p.avatar ?? null,
             }
           : null,
+      };
+    }),
+  );
+});
+
+// ─── PLAYER ROSTER (masked, read-only) ────────────────────────────────────────
+// Returns the active roster for a training as "First L." + level only, never
+// exposing the full surname, phone, or email. Authorized for any logged-in
+// player allowed to view the training (same visibility rule as the detail
+// endpoint); coaches/admins are always allowed.
+router.get("/group-trainings/:id/roster", async (req, res): Promise<void> => {
+  const role: string = (req as any).auth.role;
+  const authUserId: number = (req as any).auth.userId;
+  const id = parseId(req.params.id);
+  if (!id) {
+    res.status(400).json({ error: "Invalid id (uuid expected)" });
+    return;
+  }
+
+  const [t] = await db
+    .select()
+    .from(groupTrainingsTable)
+    .where(eq(groupTrainingsTable.id, id));
+  if (!t) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+
+  if (!isCoachRole(role)) {
+    const [me] = await db
+      .select({ level: usersTable.level })
+      .from(usersTable)
+      .where(eq(usersTable.id, authUserId));
+    const myIdx = playerEligibilityIndex(me?.level);
+    const tIdx = CATEGORY_INDEX[t.category] ?? 99;
+
+    const [activeBooking] = await db
+      .select({ id: trainingBookingsTable.id })
+      .from(trainingBookingsTable)
+      .where(
+        and(
+          eq(trainingBookingsTable.trainingId, id),
+          eq(trainingBookingsTable.userId, authUserId),
+          ne(trainingBookingsTable.status, "cancelled"),
+        ),
+      );
+
+    if (!activeBooking) {
+      if (t.status !== "open" && t.status !== "full") {
+        res.status(404).json({ error: "Not found" });
+        return;
+      }
+      if (myIdx < 0 || tIdx > myIdx) {
+        res.status(403).json({ error: "Training category above your level" });
+        return;
+      }
+    }
+  }
+
+  const rows = await db
+    .select()
+    .from(trainingBookingsTable)
+    .where(
+      and(
+        eq(trainingBookingsTable.trainingId, id),
+        ne(trainingBookingsTable.status, "cancelled"),
+      ),
+    )
+    .orderBy(trainingBookingsTable.bookedAt);
+
+  const userIds = [...new Set(rows.map((r) => r.userId))];
+  const players = userIds.length
+    ? await db
+        .select({
+          id: usersTable.id,
+          name: usersTable.name,
+          level: usersTable.level,
+        })
+        .from(usersTable)
+        .where(inArray(usersTable.id, userIds))
+    : [];
+  const playerMap = new Map(players.map((p) => [p.id, p]));
+
+  res.json(
+    rows.map((r) => {
+      const p = playerMap.get(r.userId);
+      return {
+        id: r.id,
+        name: maskRosterName(p?.name),
+        level: p?.level ?? null,
       };
     }),
   );

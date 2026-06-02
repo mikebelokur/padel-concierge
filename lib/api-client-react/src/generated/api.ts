@@ -61,6 +61,7 @@ import type {
   TrainingBooking,
   TrainingBookingWithPlayer,
   TrainingBookingWithTraining,
+  TrainingRosterEntry,
   UpdateAvailabilityBody,
   UpdateBookingBody,
   UpdateGroupTrainingBody,
@@ -3922,6 +3923,94 @@ export function useListGroupTrainingBookings<
   },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getListGroupTrainingBookingsQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Masked player roster for a training (player-facing)
+ */
+export const getGetGroupTrainingRosterUrl = (id: string) => {
+  return `/api/group-trainings/${id}/roster`;
+};
+
+export const getGroupTrainingRoster = async (
+  id: string,
+  options?: RequestInit,
+): Promise<TrainingRosterEntry[]> => {
+  return customFetch<TrainingRosterEntry[]>(getGetGroupTrainingRosterUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetGroupTrainingRosterQueryKey = (id: string) => {
+  return [`/api/group-trainings/${id}/roster`] as const;
+};
+
+export const getGetGroupTrainingRosterQueryOptions = <
+  TData = Awaited<ReturnType<typeof getGroupTrainingRoster>>,
+  TError = ErrorType<void>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getGroupTrainingRoster>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetGroupTrainingRosterQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getGroupTrainingRoster>>
+  > = ({ signal }) => getGroupTrainingRoster(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getGroupTrainingRoster>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetGroupTrainingRosterQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getGroupTrainingRoster>>
+>;
+export type GetGroupTrainingRosterQueryError = ErrorType<void>;
+
+/**
+ * @summary Masked player roster for a training (player-facing)
+ */
+
+export function useGetGroupTrainingRoster<
+  TData = Awaited<ReturnType<typeof getGroupTrainingRoster>>,
+  TError = ErrorType<void>,
+>(
+  id: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getGroupTrainingRoster>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetGroupTrainingRosterQueryOptions(id, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

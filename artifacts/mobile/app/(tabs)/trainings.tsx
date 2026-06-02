@@ -3,6 +3,8 @@ import {
   useListMyTrainingBookings,
   useBookGroupTraining,
   useCancelMyTrainingBooking,
+  useGetGroupTrainingRoster,
+  getGetGroupTrainingRosterQueryKey,
   getUser,
 } from "@workspace/api-client-react";
 import type {
@@ -10,7 +12,7 @@ import type {
   TrainingBookingWithTraining,
   User,
 } from "@workspace/api-client-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
@@ -57,6 +59,77 @@ function CategoryBadge({ cat }: { cat: string }) {
       ]}
     >
       <Text style={[styles.catBadgeText, { color }]}>{cat}</Text>
+    </View>
+  );
+}
+
+function StatusBadge({ full }: { full: boolean }) {
+  const { t } = useTranslation();
+  const color = full ? GOLD : "#4ade80";
+  return (
+    <View
+      style={[
+        styles.statusBadge,
+        { borderColor: `${color}55`, backgroundColor: `${color}1f` },
+      ]}
+    >
+      <Text style={[styles.statusBadgeText, { color }]}>
+        {full ? t("trainings.full") : t("trainings.openBadge")}
+      </Text>
+    </View>
+  );
+}
+
+function RosterList({
+  trainingId,
+  enabled,
+}: {
+  trainingId: string;
+  enabled: boolean;
+}) {
+  const colors = useColors();
+  const { t } = useTranslation();
+  const { data: roster, isLoading } = useGetGroupTrainingRoster(trainingId, {
+    query: {
+      enabled,
+      queryKey: getGetGroupTrainingRosterQueryKey(trainingId),
+    },
+  });
+
+  if (!enabled) return null;
+
+  return (
+    <View style={styles.rosterBox}>
+      <Text style={[styles.rosterLabel, { color: colors.mutedForeground }]}>
+        {t("trainings.roster")}
+      </Text>
+      {isLoading && !roster ? (
+        <ActivityIndicator color={colors.primary} size="small" />
+      ) : (roster ?? []).length > 0 ? (
+        <View style={styles.rosterRows}>
+          {(roster ?? []).map((r) => (
+            <View
+              key={r.id}
+              testID={`roster-entry-${r.id}`}
+              style={[styles.rosterChip, { borderColor: colors.border }]}
+            >
+              <Text style={[styles.rosterName, { color: colors.foreground }]}>
+                {r.name}
+                {r.level ? (
+                  <Text style={{ color: colors.mutedForeground }}>
+                    {" · "}
+                    {r.level}
+                  </Text>
+                ) : null}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ) : (
+        <Text style={[styles.rosterEmpty, { color: colors.mutedForeground }]}>
+          {t("trainings.rosterEmpty")}
+        </Text>
+      )}
     </View>
   );
 }
@@ -134,9 +207,16 @@ export default function TrainingsScreen() {
   const coachNameFor = (coachId: number): string =>
     coachMap.get(coachId)?.name ?? `#${coachId}`;
 
+  const queryClient = useQueryClient();
   const refreshAll = () => {
     refetchTrainings();
     refetchBookings();
+    queryClient.invalidateQueries({
+      predicate: (q) => {
+        const key = q.queryKey[0];
+        return typeof key === "string" && key.endsWith("/roster");
+      },
+    });
   };
 
   const bookingByTrainingId = useMemo(() => {
@@ -268,6 +348,16 @@ export default function TrainingsScreen() {
     const locked = isLevelLocked(training, user?.level ?? null, myStatus);
     const isFull =
       training.bookedCount >= training.maxParticipants && !isBooked;
+    const trainingFull = training.bookedCount >= training.maxParticipants;
+    const showStatusBadge =
+      !isPast &&
+      (training.status === "open" || training.status === "full");
+    const rosterEnabled =
+      !locked &&
+      !isPast &&
+      (isBooked ||
+        training.status === "open" ||
+        training.status === "full");
     const win = registrationWindow(training);
     const notOpenYet = win.kind === "scheduled";
     const regClosed = win.kind === "closed";
@@ -388,7 +478,10 @@ export default function TrainingsScreen() {
         ]}
       >
         <View style={styles.cardHeader}>
-          <CategoryBadge cat={training.category} />
+          <View style={styles.headerBadges}>
+            <CategoryBadge cat={training.category} />
+            {showStatusBadge ? <StatusBadge full={trainingFull} /> : null}
+          </View>
           <View style={styles.priceWrap}>
             <Text style={[styles.priceValue, { color: colors.foreground }]}>
               {price}
@@ -472,6 +565,8 @@ export default function TrainingsScreen() {
             max={training.maxParticipants}
           />
         </View>
+
+        <RosterList trainingId={training.id} enabled={rosterEnabled} />
 
         <View style={{ marginTop: 4 }}>{footer}</View>
       </View>
@@ -657,6 +752,50 @@ const styles = StyleSheet.create({
   catBadgeText: {
     fontSize: 13,
     fontWeight: "700" as const,
+  },
+  headerBadges: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  statusBadge: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+  },
+  statusBadgeText: {
+    fontSize: 11,
+    fontWeight: "700" as const,
+  },
+  rosterBox: {
+    gap: 6,
+    marginTop: 4,
+  },
+  rosterLabel: {
+    fontSize: 11,
+    fontWeight: "700" as const,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  rosterRows: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  rosterChip: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  rosterName: {
+    fontSize: 12,
+    fontWeight: "600" as const,
+  },
+  rosterEmpty: {
+    fontSize: 12,
+    fontStyle: "italic",
   },
   priceWrap: {
     flexDirection: "row",

@@ -728,6 +728,13 @@ export interface TrainingBookingWithPlayer {
   player?: TrainingBookingPlayer | null;
 }
 
+export interface TrainingRosterEntry {
+  id: string;
+  name: string;
+  /** @nullable */
+  level?: string | null;
+}
+
 export type ClubTier = (typeof ClubTier)[keyof typeof ClubTier];
 
 export const ClubTier = {

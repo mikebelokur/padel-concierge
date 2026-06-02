@@ -1666,6 +1666,22 @@ export const ListGroupTrainingBookingsResponse = zod.array(
 );
 
 /**
+ * @summary Masked player roster for a training (player-facing)
+ */
+export const GetGroupTrainingRosterParams = zod.object({
+  id: zod.coerce.string().uuid(),
+});
+
+export const GetGroupTrainingRosterResponseItem = zod.object({
+  id: zod.string().uuid(),
+  name: zod.string(),
+  level: zod.string().nullish(),
+});
+export const GetGroupTrainingRosterResponse = zod.array(
+  GetGroupTrainingRosterResponseItem,
+);
+
+/**
  * @summary List clubs
  */
 export const ListClubsQueryParams = zod.object({

@@ -14,22 +14,6 @@ export default function Login() {
   const { toast } = useToast();
   const { t } = useLanguage();
 
-  if (isLoading) return null;
-  if (user) {
-    const devNext = !import.meta.env.PROD
-      ? new URLSearchParams(window.location.search).get("next")
-      : null;
-    const dest =
-      devNext && devNext.startsWith("/")
-        ? devNext
-        : user.role === "owner" || user.role === "admin"
-          ? "/admin"
-          : user.role === "coach"
-            ? "/coach"
-            : "/dashboard";
-    return <Redirect to={dest} />;
-  }
-
   const loginMutation = useLogin({
     mutation: {
       onSuccess: (data) => {
@@ -78,6 +62,26 @@ export default function Login() {
     const creds = presets[auto];
     if (creds) loginMutation.mutate({ data: creds });
   }, [user, isLoading, loginMutation]);
+
+  // Conditional returns must come AFTER all hooks so the hook order stays
+  // stable across renders — otherwise, when `user` flips truthy while this
+  // component is still mounted, React renders fewer hooks and throws
+  // "Rendered fewer hooks than expected", crashing the page back to login.
+  if (isLoading) return null;
+  if (user) {
+    const devNext = !import.meta.env.PROD
+      ? new URLSearchParams(window.location.search).get("next")
+      : null;
+    const dest =
+      devNext && devNext.startsWith("/")
+        ? devNext
+        : user.role === "owner" || user.role === "admin"
+          ? "/admin"
+          : user.role === "coach"
+            ? "/coach"
+            : "/dashboard";
+    return <Redirect to={dest} />;
+  }
 
   return (
     <div

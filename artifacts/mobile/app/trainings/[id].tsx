@@ -1,10 +1,12 @@
 import {
   useListGroupTrainings,
   useListGroupTrainingBookings,
+  useUpdateTrainingBookingStatus,
   getListGroupTrainingsQueryKey,
   getListGroupTrainingBookingsQueryKey,
 } from "@workspace/api-client-react";
 import type { TrainingBookingWithPlayer } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as Linking from "expo-linking";
@@ -41,6 +43,8 @@ export default function TrainingRosterScreen() {
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
 
   const coach = isCoachUser(user);
+  const queryClient = useQueryClient();
+  const updateStatus = useUpdateTrainingBookingStatus();
 
   const { data: trainings } = useListGroupTrainings(undefined, {
     query: {
@@ -80,36 +84,93 @@ export default function TrainingRosterScreen() {
     ? (CATEGORY_COLORS[training.category] ?? GOLD)
     : GOLD;
 
-  function openContact(b: TrainingBookingWithPlayer) {
+  function markStatus(
+    b: TrainingBookingWithPlayer,
+    status: "attended" | "no_show" | "booked",
+  ) {
+    if (!id) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    updateStatus.mutate(
+      { id, bookingId: b.id, data: { status } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({
+            queryKey: getListGroupTrainingBookingsQueryKey(id),
+          });
+        },
+        onError: () => {
+          Alert.alert(
+            b.player?.name ?? "—",
+            t("trainingsCoach.attendance.error"),
+          );
+        },
+      },
+    );
+  }
+
+  function openActions(b: TrainingBookingWithPlayer) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     const name = b.player?.name ?? "—";
     const phone = b.player?.phone?.trim() ?? "";
-    if (!phone) {
-      Alert.alert(name, t("trainingsCoach.contact.noPhone"));
-      return;
-    }
     const digits = phone.replace(/[^\d]/g, "");
-    Alert.alert(name, phone, [
-      {
-        text: t("trainingsCoach.contact.call"),
-        onPress: () => {
-          Linking.openURL(`tel:${phone}`).catch(() => {});
+
+    const buttons: Parameters<typeof Alert.alert>[2] = [];
+    if (phone) {
+      buttons.push(
+        {
+          text: t("trainingsCoach.contact.call"),
+          onPress: () => {
+            Linking.openURL(`tel:${phone}`).catch(() => {});
+          },
         },
-      },
-      {
-        text: t("trainingsCoach.contact.whatsapp"),
-        onPress: () => {
-          Linking.openURL(`https://wa.me/${digits}`).catch(() => {});
+        {
+          text: t("trainingsCoach.contact.whatsapp"),
+          onPress: () => {
+            Linking.openURL(`https://wa.me/${digits}`).catch(() => {});
+          },
         },
-      },
-      {
-        text: t("trainingsCoach.contact.message"),
-        onPress: () => {
-          Linking.openURL(`sms:${phone}`).catch(() => {});
+        {
+          text: t("trainingsCoach.contact.message"),
+          onPress: () => {
+            Linking.openURL(`sms:${phone}`).catch(() => {});
+          },
         },
-      },
-      { text: t("trainingsCoach.contact.cancel"), style: "cancel" },
-    ]);
+      );
+    }
+
+    if (b.status === "attended") {
+      buttons.push({
+        text: t("trainingsCoach.attendance.markNoShow"),
+        onPress: () => markStatus(b, "no_show"),
+      });
+      buttons.push({
+        text: t("trainingsCoach.attendance.clear"),
+        onPress: () => markStatus(b, "booked"),
+      });
+    } else if (b.status === "no_show") {
+      buttons.push({
+        text: t("trainingsCoach.attendance.markAttended"),
+        onPress: () => markStatus(b, "attended"),
+      });
+      buttons.push({
+        text: t("trainingsCoach.attendance.clear"),
+        onPress: () => markStatus(b, "booked"),
+      });
+    } else {
+      buttons.push({
+        text: t("trainingsCoach.attendance.markAttended"),
+        onPress: () => markStatus(b, "attended"),
+      });
+      buttons.push({
+        text: t("trainingsCoach.attendance.markNoShow"),
+        onPress: () => markStatus(b, "no_show"),
+        style: "destructive",
+      });
+    }
+
+    buttons.push({ text: t("trainingsCoach.contact.cancel"), style: "cancel" });
+
+    Alert.alert(name, phone || t("trainingsCoach.contact.noPhone"), buttons);
   }
 
   return (
@@ -182,36 +243,47 @@ export default function TrainingRosterScreen() {
         </View>
       ) : activeBookings.length > 0 ? (
         <View style={styles.rosterRows}>
-          {activeBookings.map((b: TrainingBookingWithPlayer) => (
-            <Pressable
-              key={b.id}
-              testID={`roster-${b.id}`}
-              onPress={() => openContact(b)}
-              style={({ pressed }) => [
-                styles.rosterChip,
-                {
-                  borderColor: colors.border,
-                  backgroundColor: pressed ? colors.muted : "transparent",
-                },
-              ]}
-            >
-              <Text style={[styles.rosterName, { color: colors.foreground }]}>
-                {b.player?.name ?? "—"}
-                {b.player?.level ? (
-                  <Text style={{ color: colors.mutedForeground }}>
-                    {" · "}
-                    {b.player.level}
-                  </Text>
-                ) : null}
-              </Text>
-              <Feather
-                name="phone"
-                size={11}
-                color={colors.mutedForeground}
-                style={styles.rosterIcon}
-              />
-            </Pressable>
-          ))}
+          {activeBookings.map((b: TrainingBookingWithPlayer) => {
+            const attended = b.status === "attended";
+            const noShow = b.status === "no_show";
+            const statusColor = attended
+              ? "#22c55e"
+              : noShow
+                ? "#ef4444"
+                : colors.mutedForeground;
+            return (
+              <Pressable
+                key={b.id}
+                testID={`roster-${b.id}`}
+                onPress={() => openActions(b)}
+                style={({ pressed }) => [
+                  styles.rosterChip,
+                  {
+                    borderColor: attended || noShow ? statusColor : colors.border,
+                    backgroundColor: pressed ? colors.muted : "transparent",
+                  },
+                ]}
+              >
+                <Text style={[styles.rosterName, { color: colors.foreground }]}>
+                  {b.player?.name ?? "—"}
+                  {b.player?.level ? (
+                    <Text style={{ color: colors.mutedForeground }}>
+                      {" · "}
+                      {b.player.level}
+                    </Text>
+                  ) : null}
+                </Text>
+                <Feather
+                  name={
+                    attended ? "check" : noShow ? "x" : "phone"
+                  }
+                  size={11}
+                  color={statusColor}
+                  style={styles.rosterIcon}
+                />
+              </Pressable>
+            );
+          })}
         </View>
       ) : (
         <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>

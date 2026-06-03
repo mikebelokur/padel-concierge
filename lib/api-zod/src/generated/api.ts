@@ -1666,6 +1666,41 @@ export const ListGroupTrainingBookingsResponse = zod.array(
 );
 
 /**
+ * @summary Mark a roster player as attended or no-show (coach/admin)
+ */
+export const UpdateTrainingBookingStatusParams = zod.object({
+  id: zod.coerce.string().uuid(),
+  bookingId: zod.coerce.string().uuid(),
+});
+
+export const UpdateTrainingBookingStatusBody = zod.object({
+  status: zod.enum(["booked", "attended", "no_show"]),
+});
+
+export const UpdateTrainingBookingStatusResponse = zod.object({
+  id: zod.string().uuid(),
+  trainingId: zod.string().uuid(),
+  userId: zod.number(),
+  status: zod.string(),
+  bookedAt: zod.string(),
+  cancelledAt: zod.string().nullish(),
+  createdAt: zod.string(),
+  player: zod
+    .union([
+      zod.object({
+        id: zod.number(),
+        name: zod.string(),
+        email: zod.string(),
+        phone: zod.string(),
+        level: zod.string(),
+        avatar: zod.string().nullish(),
+      }),
+      zod.null(),
+    ])
+    .optional(),
+});
+
+/**
  * @summary Masked player roster for a training (player-facing)
  */
 export const GetGroupTrainingRosterParams = zod.object({

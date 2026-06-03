@@ -673,6 +673,19 @@ export interface UpdateGroupTrainingBody {
   status?: UpdateGroupTrainingBodyStatus;
 }
 
+export type UpdateTrainingBookingStatusBodyStatus =
+  (typeof UpdateTrainingBookingStatusBodyStatus)[keyof typeof UpdateTrainingBookingStatusBodyStatus];
+
+export const UpdateTrainingBookingStatusBodyStatus = {
+  booked: "booked",
+  attended: "attended",
+  no_show: "no_show",
+} as const;
+
+export interface UpdateTrainingBookingStatusBody {
+  status: UpdateTrainingBookingStatusBodyStatus;
+}
+
 export type TrainingBookingStatus =
   (typeof TrainingBookingStatus)[keyof typeof TrainingBookingStatus];
 

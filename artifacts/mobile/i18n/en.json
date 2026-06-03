@@ -329,6 +329,12 @@
       "cancel": "Cancel",
       "noPhone": "No phone number on file for this player."
     },
+    "attendance": {
+      "markAttended": "Mark attended",
+      "markNoShow": "Mark no-show",
+      "clear": "Reset to booked",
+      "error": "Could not update attendance. Please try again."
+    },
     "form": {
       "title": "New Training",
       "date": "Date",

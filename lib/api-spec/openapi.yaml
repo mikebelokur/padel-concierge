@@ -1003,6 +1003,44 @@ paths:
         "403":
           description: Forbidden
 
+  /group-trainings/{id}/bookings/{bookingId}:
+    patch:
+      operationId: updateTrainingBookingStatus
+      tags: [group-trainings]
+      summary: Mark a roster player as attended or no-show (coach/admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTrainingBookingStatusBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrainingBookingWithPlayer"
+        "400":
+          description: Invalid id or body
+        "403":
+          description: Forbidden
+        "404":
+          description: Training or booking not found
+
   /group-trainings/{id}/roster:
     get:
       operationId: getGroupTrainingRoster
@@ -2654,6 +2692,15 @@ components:
         status:
           type: string
           enum: [open, full, cancelled, completed]
+
+    UpdateTrainingBookingStatusBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [booked, attended, no_show]
+      required:
+        - status
 
     TrainingBooking:
       type: object

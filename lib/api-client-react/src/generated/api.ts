@@ -66,6 +66,7 @@ import type {
   UpdateBookingBody,
   UpdateGroupTrainingBody,
   UpdateMatchBody,
+  UpdateTrainingBookingStatusBody,
   UpdateUserBody,
   UpdateVideoAnalysisBody,
   UpsertClubBody,
@@ -3930,6 +3931,121 @@ export function useListGroupTrainingBookings<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Mark a roster player as attended or no-show (coach/admin)
+ */
+export const getUpdateTrainingBookingStatusUrl = (
+  id: string,
+  bookingId: string,
+) => {
+  return `/api/group-trainings/${id}/bookings/${bookingId}`;
+};
+
+export const updateTrainingBookingStatus = async (
+  id: string,
+  bookingId: string,
+  updateTrainingBookingStatusBody: UpdateTrainingBookingStatusBody,
+  options?: RequestInit,
+): Promise<TrainingBookingWithPlayer> => {
+  return customFetch<TrainingBookingWithPlayer>(
+    getUpdateTrainingBookingStatusUrl(id, bookingId),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(updateTrainingBookingStatusBody),
+    },
+  );
+};
+
+export const getUpdateTrainingBookingStatusMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateTrainingBookingStatus>>,
+    TError,
+    {
+      id: string;
+      bookingId: string;
+      data: BodyType<UpdateTrainingBookingStatusBody>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateTrainingBookingStatus>>,
+  TError,
+  {
+    id: string;
+    bookingId: string;
+    data: BodyType<UpdateTrainingBookingStatusBody>;
+  },
+  TContext
+> => {
+  const mutationKey = ["updateTrainingBookingStatus"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateTrainingBookingStatus>>,
+    {
+      id: string;
+      bookingId: string;
+      data: BodyType<UpdateTrainingBookingStatusBody>;
+    }
+  > = (props) => {
+    const { id, bookingId, data } = props ?? {};
+
+    return updateTrainingBookingStatus(id, bookingId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateTrainingBookingStatusMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateTrainingBookingStatus>>
+>;
+export type UpdateTrainingBookingStatusMutationBody =
+  BodyType<UpdateTrainingBookingStatusBody>;
+export type UpdateTrainingBookingStatusMutationError = ErrorType<void>;
+
+/**
+ * @summary Mark a roster player as attended or no-show (coach/admin)
+ */
+export const useUpdateTrainingBookingStatus = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateTrainingBookingStatus>>,
+    TError,
+    {
+      id: string;
+      bookingId: string;
+      data: BodyType<UpdateTrainingBookingStatusBody>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateTrainingBookingStatus>>,
+  TError,
+  {
+    id: string;
+    bookingId: string;
+    data: BodyType<UpdateTrainingBookingStatusBody>;
+  },
+  TContext
+> => {
+  return useMutation(getUpdateTrainingBookingStatusMutationOptions(options));
+};
 
 /**
  * @summary Masked player roster for a training (player-facing)

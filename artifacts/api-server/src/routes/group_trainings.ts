@@ -805,6 +805,105 @@ router.get("/group-trainings/:id/bookings", async (req, res): Promise<void> => {
   );
 });
 
+// ─── UPDATE BOOKING STATUS (attended / no-show) ───────────────────────────────
+const UpdateBookingStatusSchema = z.object({
+  status: z.enum(["booked", "attended", "no_show"]),
+});
+
+router.patch(
+  "/group-trainings/:id/bookings/:bookingId",
+  async (req, res): Promise<void> => {
+    const role: string = (req as any).auth.role;
+    const authUserId: number = (req as any).auth.userId;
+    if (!isCoachRole(role)) {
+      res.status(403).json({ error: "Coach or admin only" });
+      return;
+    }
+    const id = parseId(req.params.id);
+    const bookingId = parseId(req.params.bookingId);
+    if (!id || !bookingId) {
+      res.status(400).json({ error: "Invalid id (uuid expected)" });
+      return;
+    }
+
+    const parsed = UpdateBookingStatusSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res
+        .status(400)
+        .json({ error: "Invalid body", details: parsed.error.issues });
+      return;
+    }
+
+    const [training] = await db
+      .select()
+      .from(groupTrainingsTable)
+      .where(eq(groupTrainingsTable.id, id));
+    if (!training) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    if (!canManageTraining(role, authUserId, training)) {
+      res.status(403).json({ error: "Not your training" });
+      return;
+    }
+
+    const [existing] = await db
+      .select()
+      .from(trainingBookingsTable)
+      .where(
+        and(
+          eq(trainingBookingsTable.id, bookingId),
+          eq(trainingBookingsTable.trainingId, id),
+        ),
+      );
+    if (!existing) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+    if (existing.status === "cancelled") {
+      res.status(400).json({ error: "Cannot update a cancelled booking" });
+      return;
+    }
+
+    const [row] = await db
+      .update(trainingBookingsTable)
+      .set({ status: parsed.data.status })
+      .where(eq(trainingBookingsTable.id, bookingId))
+      .returning();
+
+    const [player] = await db
+      .select({
+        id: usersTable.id,
+        name: usersTable.name,
+        email: usersTable.email,
+        phone: usersTable.phone,
+        level: usersTable.level,
+        avatar: usersTable.avatar,
+      })
+      .from(usersTable)
+      .where(eq(usersTable.id, row.userId));
+
+    req.log?.info(
+      { trainingId: id, bookingId, status: parsed.data.status },
+      "training_booking_status_updated",
+    );
+
+    res.json({
+      ...serializeBooking(row),
+      player: player
+        ? {
+            id: player.id,
+            name: player.name,
+            email: player.email,
+            phone: player.phone,
+            level: player.level,
+            avatar: player.avatar ?? null,
+          }
+        : null,
+    });
+  },
+);
+
 // ─── PLAYER ROSTER (masked, read-only) ────────────────────────────────────────
 // Returns the active roster for a training as "First L." + level only, never
 // exposing the full surname, phone, or email. Authorized for any logged-in

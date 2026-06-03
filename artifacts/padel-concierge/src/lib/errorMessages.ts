@@ -70,7 +70,14 @@ function classifyError(err: unknown): ErrorCode {
   if (raw.includes("email already") || raw.includes("already registered") || raw.includes("уже зарегистрирован")) {
     return "emailExists";
   }
-  if (raw.includes("invalid email") || raw.includes("email format") || raw.includes("некорректн") && raw.includes("email")) {
+  // Note: the credentials error "invalid email or password" also contains the
+  // substring "invalid email" — exclude it here so it falls through to the
+  // invalidCredentials branch below and isn't mislabeled as an email typo.
+  if (
+    (raw.includes("invalid email") && !raw.includes("password")) ||
+    raw.includes("email format") ||
+    (raw.includes("некорректн") && raw.includes("email"))
+  ) {
     return "invalidEmail";
   }
   if (raw.includes("password") && (raw.includes("short") || raw.includes("least") || raw.includes("минимум"))) {

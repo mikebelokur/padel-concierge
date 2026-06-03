@@ -43,7 +43,9 @@ export default function Login() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    loginMutation.mutate({ data: { email, password } });
+    // Normalize so the email matches regardless of casing or stray spaces
+    // (autofill / mobile keyboards often capitalize or pad the value).
+    loginMutation.mutate({ data: { email: email.trim().toLowerCase(), password } });
   };
 
   const autoTriedRef = useRef(false);
@@ -122,7 +124,12 @@ export default function Login() {
               </label>
               <input
                 id="email"
-                type="text"
+                type="email"
+                inputMode="email"
+                autoComplete="username"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 placeholder="player@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

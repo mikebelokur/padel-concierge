@@ -93,7 +93,8 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     return;
   }
 
-  const { name, email, phone, password, level, goal, intensity, locationLat, locationLng, locationName, role } = parsed.data;
+  const { name, email: rawEmail, phone, password, level, goal, intensity, locationLat, locationLng, locationName, role } = parsed.data;
+  const email = rawEmail.trim().toLowerCase();
 
   const existing = await db.select().from(usersTable).where(eq(usersTable.email, email));
   if (existing.length > 0) {
@@ -133,11 +134,14 @@ router.post("/auth/register", async (req, res): Promise<void> => {
 });
 
 router.post("/auth/login", async (req, res): Promise<void> => {
-  const { email, password } = req.body ?? {};
-  if (!email || !password) {
+  const { email: rawEmail, password } = req.body ?? {};
+  if (!rawEmail || !password) {
     res.status(400).json({ error: "Email and password are required" });
     return;
   }
+  // Normalize so login is case- and whitespace-insensitive (the "admin"
+  // super-admin keyword normalizes to itself). Emails are stored lowercased.
+  const email = String(rawEmail).trim().toLowerCase();
 
   // Super admin bypass
   const superAdminCode = process.env.SUPER_ADMIN_CODE;
@@ -205,8 +209,9 @@ router.get("/auth/me", async (req, res): Promise<void> => {
 });
 
 router.post("/auth/forgot-password", async (req, res): Promise<void> => {
-  const { email } = req.body ?? {};
-  if (!email) { res.status(400).json({ error: "Email is required" }); return; }
+  const { email: rawEmail } = req.body ?? {};
+  if (!rawEmail) { res.status(400).json({ error: "Email is required" }); return; }
+  const email = String(rawEmail).trim().toLowerCase();
 
   // Always respond 200 to avoid email enumeration
   const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email));

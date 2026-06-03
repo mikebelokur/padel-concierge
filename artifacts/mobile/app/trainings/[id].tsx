@@ -6,10 +6,14 @@ import {
 } from "@workspace/api-client-react";
 import type { TrainingBookingWithPlayer } from "@workspace/api-client-react";
 import { Feather } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import * as Linking from "expo-linking";
 import { Redirect, Stack, useLocalSearchParams } from "expo-router";
 import {
   ActivityIndicator,
+  Alert,
   Platform,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -75,6 +79,38 @@ export default function TrainingRosterScreen() {
   const catColor = training
     ? (CATEGORY_COLORS[training.category] ?? GOLD)
     : GOLD;
+
+  function openContact(b: TrainingBookingWithPlayer) {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    const name = b.player?.name ?? "—";
+    const phone = b.player?.phone?.trim() ?? "";
+    if (!phone) {
+      Alert.alert(name, t("trainingsCoach.contact.noPhone"));
+      return;
+    }
+    const digits = phone.replace(/[^\d]/g, "");
+    Alert.alert(name, phone, [
+      {
+        text: t("trainingsCoach.contact.call"),
+        onPress: () => {
+          Linking.openURL(`tel:${phone}`).catch(() => {});
+        },
+      },
+      {
+        text: t("trainingsCoach.contact.whatsapp"),
+        onPress: () => {
+          Linking.openURL(`https://wa.me/${digits}`).catch(() => {});
+        },
+      },
+      {
+        text: t("trainingsCoach.contact.message"),
+        onPress: () => {
+          Linking.openURL(`sms:${phone}`).catch(() => {});
+        },
+      },
+      { text: t("trainingsCoach.contact.cancel"), style: "cancel" },
+    ]);
+  }
 
   return (
     <ScrollView
@@ -147,10 +183,17 @@ export default function TrainingRosterScreen() {
       ) : activeBookings.length > 0 ? (
         <View style={styles.rosterRows}>
           {activeBookings.map((b: TrainingBookingWithPlayer) => (
-            <View
+            <Pressable
               key={b.id}
               testID={`roster-${b.id}`}
-              style={[styles.rosterChip, { borderColor: colors.border }]}
+              onPress={() => openContact(b)}
+              style={({ pressed }) => [
+                styles.rosterChip,
+                {
+                  borderColor: colors.border,
+                  backgroundColor: pressed ? colors.muted : "transparent",
+                },
+              ]}
             >
               <Text style={[styles.rosterName, { color: colors.foreground }]}>
                 {b.player?.name ?? "—"}
@@ -161,7 +204,13 @@ export default function TrainingRosterScreen() {
                   </Text>
                 ) : null}
               </Text>
-            </View>
+              <Feather
+                name="phone"
+                size={11}
+                color={colors.mutedForeground}
+                style={styles.rosterIcon}
+              />
+            </Pressable>
           ))}
         </View>
       ) : (
@@ -222,6 +271,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   rosterChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     borderWidth: 1,
     borderRadius: 999,
     paddingHorizontal: 12,
@@ -230,6 +282,9 @@ const styles = StyleSheet.create({
   rosterName: {
     fontSize: 13,
     fontWeight: "600" as const,
+  },
+  rosterIcon: {
+    marginTop: 1,
   },
   loadingBox: {
     paddingVertical: 48,

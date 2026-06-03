@@ -322,6 +322,13 @@
     "createError": "Could not create training. Please try again.",
     "spots": "{{booked}}/{{max}} booked",
     "backToList": "Back to trainings",
+    "contact": {
+      "call": "Call",
+      "whatsapp": "WhatsApp",
+      "message": "Message",
+      "cancel": "Cancel",
+      "noPhone": "No phone number on file for this player."
+    },
     "form": {
       "title": "New Training",
       "date": "Date",

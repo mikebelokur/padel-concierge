@@ -145,55 +145,22 @@ export default function TrainingRosterScreen() {
           <ActivityIndicator color={colors.primary} />
         </View>
       ) : activeBookings.length > 0 ? (
-        <View style={styles.list}>
+        <View style={styles.rosterRows}>
           {activeBookings.map((b: TrainingBookingWithPlayer) => (
             <View
               key={b.id}
               testID={`roster-${b.id}`}
-              style={[
-                styles.playerRow,
-                {
-                  backgroundColor: colors.card,
-                  borderColor: colors.border,
-                  borderRadius: colors.radius,
-                },
-              ]}
+              style={[styles.rosterChip, { borderColor: colors.border }]}
             >
-              <View
-                style={[styles.avatar, { backgroundColor: `${GOLD}26` }]}
-              >
-                <Text style={[styles.avatarText, { color: GOLD }]}>
-                  {b.player?.name?.[0]?.toUpperCase() ?? "?"}
-                </Text>
-              </View>
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text
-                  style={[styles.playerName, { color: colors.foreground }]}
-                  numberOfLines={1}
-                >
-                  {b.player?.name ?? "—"}
-                </Text>
-                {b.player?.phone ? (
-                  <Text
-                    style={[
-                      styles.playerMeta,
-                      { color: colors.mutedForeground },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {b.player.phone}
-                  </Text>
-                ) : null}
-              </View>
-              {b.player?.level ? (
-                <View
-                  style={[styles.levelPill, { backgroundColor: `${GOLD}1f` }]}
-                >
-                  <Text style={[styles.levelText, { color: GOLD }]}>
+              <Text style={[styles.rosterName, { color: colors.foreground }]}>
+                {b.player?.name ?? "—"}
+                {b.player?.level ? (
+                  <Text style={{ color: colors.mutedForeground }}>
+                    {" · "}
                     {b.player.level}
                   </Text>
-                </View>
-              ) : null}
+                ) : null}
+              </Text>
             </View>
           ))}
         </View>
@@ -249,41 +216,20 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textTransform: "uppercase",
   },
-  list: { gap: 10 },
-  playerRow: {
+  rosterRows: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  rosterChip: {
     borderWidth: 1,
-    padding: 12,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: {
-    fontSize: 18,
-    fontWeight: "700" as const,
-  },
-  playerName: {
-    fontSize: 16,
-    fontWeight: "600" as const,
-  },
-  playerMeta: {
-    fontSize: 13,
-    marginTop: 2,
-  },
-  levelPill: {
     borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
-  levelText: {
+  rosterName: {
     fontSize: 13,
-    fontWeight: "700" as const,
+    fontWeight: "600" as const,
   },
   loadingBox: {
     paddingVertical: 48,

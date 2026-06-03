@@ -2,7 +2,11 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { PushBlockedBanner } from "@/components/PushBlockedBanner";
 import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
-import { useListBookings } from "@workspace/api-client-react";
+import {
+  useListBookings,
+  useListMyTrainingBookings,
+  type TrainingBookingWithTraining,
+} from "@workspace/api-client-react";
 import { Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -12,6 +16,17 @@ function formatMatchDateTime(date: string | undefined, time: string | undefined,
   if (!date || !time) return [date, time].filter(Boolean).join(" · ");
   const iso = `${date}T${time}:00+04:00`;
   return `${formatDubaiDate(iso, locale)} · ${formatDubaiTime(iso, locale)}`;
+}
+
+function formatTrainingDateTime(iso: string, locale: string): string {
+  return `${formatDubaiDate(iso, locale)} · ${formatDubaiTime(iso, locale)}`;
+}
+
+function matchTimestamp(date: string | undefined, time: string | undefined): number {
+  if (!date) return Number.MAX_SAFE_INTEGER;
+  const iso = time ? `${date}T${time}:00+04:00` : date;
+  const ts = new Date(iso).getTime();
+  return Number.isNaN(ts) ? Number.MAX_SAFE_INTEGER : ts;
 }
 
 const PAYMENT_STATUS_STYLES: Record<string, { bg: string; border: string; color: string }> = {
@@ -85,10 +100,58 @@ export default function Bookings() {
   const { user } = useAuth();
   const { t, language } = useLanguage();
   const { data: bookings, isLoading, refetch } = useListBookings({ userId: user?.id });
-  const { pullY, isRefreshing } = usePullToRefresh(refetch);
+  const { data: trainingBookingsRaw, isLoading: loadingTrainings, refetch: refetchTrainings } =
+    useListMyTrainingBookings();
+  const refetchAll = async () => {
+    await Promise.all([refetch(), refetchTrainings()]);
+  };
+  const { pullY, isRefreshing } = usePullToRefresh(refetchAll);
 
-  const upcoming = (bookings ?? []).filter(b => isUpcoming(b.match?.date));
+  const trainingBookings = (trainingBookingsRaw ?? []) as TrainingBookingWithTraining[];
+  const now = Date.now();
+
+  // Upcoming group-training registrations (active bookings only), soonest-first.
+  const upcomingTrainings = trainingBookings
+    .filter(
+      b =>
+        b.status === "booked" &&
+        b.training &&
+        b.training.status !== "cancelled" &&
+        new Date(b.training.dateTime).getTime() >= now,
+    )
+    .sort(
+      (a, b) =>
+        new Date(a.training.dateTime).getTime() - new Date(b.training.dateTime).getTime(),
+    );
+
+  const upcomingMatches = (bookings ?? []).filter(b => isUpcoming(b.match?.date));
   const past = (bookings ?? []).filter(b => !isUpcoming(b.match?.date));
+
+  // Merge match + training bookings into a single chronological upcoming list.
+  type UpcomingItem =
+    | { kind: "match"; ts: number; booking: (typeof upcomingMatches)[number] }
+    | { kind: "training"; ts: number; tb: TrainingBookingWithTraining };
+  const upcoming: UpcomingItem[] = [
+    ...upcomingMatches.map(
+      (booking): UpcomingItem => ({
+        kind: "match",
+        ts: matchTimestamp(booking.match?.date, booking.match?.time),
+        booking,
+      }),
+    ),
+    ...upcomingTrainings.map(
+      (tb): UpcomingItem => ({
+        kind: "training",
+        ts: new Date(tb.training.dateTime).getTime(),
+        tb,
+      }),
+    ),
+  ].sort((a, b) => a.ts - b.ts);
+
+  // Drive the empty state from what actually renders, not raw counts — a user
+  // with only cancelled/past training records and no matches must still see the
+  // empty state rather than a blank page.
+  const hasContent = upcoming.length > 0 || past.length > 0;
 
   return (
     <AppLayout>
@@ -114,7 +177,7 @@ export default function Bookings() {
             </p>
           </header>
 
-          {isLoading ? (
+          {isLoading || loadingTrainings ? (
             <div className="space-y-6">
               <section>
                 <div
@@ -135,7 +198,7 @@ export default function Bookings() {
                 </div>
               </section>
             </div>
-          ) : (bookings ?? []).length === 0 ? (
+          ) : !hasContent ? (
             <div
               className="rounded-[20px] p-10 text-center"
               style={{ background: "hsl(220 20% 6%)", border: "1px solid rgba(255,255,255,0.07)" }}
@@ -172,7 +235,53 @@ export default function Bookings() {
                     {t("bookings.upcoming")}
                   </div>
                   <div className="space-y-3">
-                    {upcoming.map(booking => {
+                    {upcoming.map(item => {
+                      if (item.kind === "training") {
+                        const tr = item.tb.training;
+                        return (
+                          <Link key={`tr-${item.tb.id}`} href="/group-trainings">
+                            <div
+                              className="rounded-[20px] p-5 cursor-pointer transition-all hover:scale-[1.005] active:scale-[0.99]"
+                              style={{
+                                background: "hsl(220 20% 6%)",
+                                border: "1px solid rgba(212,175,55,0.15)",
+                              }}
+                            >
+                              <div className="flex items-start justify-between gap-3 mb-3">
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-serif font-semibold text-white truncate" style={{ fontSize: "17px" }}>
+                                    {tr.courtName}
+                                  </div>
+                                  <div className="text-muted-foreground mt-0.5" style={{ fontSize: "13px" }}>
+                                    {formatTrainingDateTime(tr.dateTime, language)}
+                                    {` · ${tr.durationMinutes} ${language === "ru" ? "мин" : "min"}`}
+                                  </div>
+                                </div>
+                                <span
+                                  className="rounded-full px-3 py-1 font-semibold flex-shrink-0"
+                                  style={{
+                                    fontSize: "12px",
+                                    background: "rgba(212,175,55,0.14)",
+                                    border: "1px solid rgba(212,175,55,0.35)",
+                                    color: "#D4AF37",
+                                  }}
+                                >
+                                  {tr.category}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center justify-between pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                                <span className="text-muted-foreground" style={{ fontSize: "13px" }}>
+                                  👥 {t("bookings.groupTraining")}
+                                </span>
+                                <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "20px", lineHeight: 1 }}>›</span>
+                              </div>
+                            </div>
+                          </Link>
+                        );
+                      }
+
+                      const booking = item.booking;
                       const ps = paymentStyle(booking.paymentStatus ?? "pending");
                       return (
                         <Link key={booking.id} href={`/bookings/${booking.id}`}>

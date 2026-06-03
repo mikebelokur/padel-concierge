@@ -97,6 +97,19 @@ function nextOccurrenceDubaiUtc(weekday: number, time: string): Date {
   return new Date(targetUtc);
 }
 
+/**
+ * The scheduler interprets recurring_series.start_time in the server's local
+ * clock (UTC in this environment), while the seeded occurrences use the Dubai
+ * wall clock. Convert a Dubai "HH:MM" to the equivalent UTC "HH:MM" so the
+ * scheduler regenerates instances at the same instant and dedups against the
+ * seeded rows instead of creating duplicates at a shifted time.
+ */
+function toUtcStartTime(dubaiTime: string): string {
+  const [hh, mm] = dubaiTime.split(":").map((s) => parseInt(s, 10));
+  const utcHh = (((hh - 4) % 24) + 24) % 24;
+  return `${String(utcHh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+}
+
 type CoachRow = { id: number; email: string; role: string };
 
 /**
@@ -165,6 +178,45 @@ async function main() {
         time: s.time,
         tz: "Asia/Dubai",
       });
+
+      // Long-term fix: ensure a matching recurring_series row exists (active)
+      // so the scheduler keeps generating future weekly instances and the
+      // trainings never go stale. The id is pinned to the slot's seriesId so
+      // generated occurrences share the same recurring_series_id as the seeded
+      // occurrence below and dedup cleanly.
+      await client.query(
+        `INSERT INTO recurring_series
+           (id, coach_id, weekday, start_time, duration_minutes, category,
+            court_name, max_participants, price_aed, description_en,
+            description_ru, active)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,true)
+         ON CONFLICT (id) DO UPDATE SET
+           coach_id = EXCLUDED.coach_id,
+           weekday = EXCLUDED.weekday,
+           start_time = EXCLUDED.start_time,
+           duration_minutes = EXCLUDED.duration_minutes,
+           category = EXCLUDED.category,
+           court_name = EXCLUDED.court_name,
+           max_participants = EXCLUDED.max_participants,
+           price_aed = EXCLUDED.price_aed,
+           description_en = EXCLUDED.description_en,
+           description_ru = EXCLUDED.description_ru,
+           active = true,
+           updated_at = now()`,
+        [
+          s.seriesId,
+          coach.id,
+          s.weekday,
+          toUtcStartTime(s.time),
+          s.durationMinutes,
+          s.category,
+          COURT_NAME,
+          s.maxParticipants,
+          s.priceAed,
+          s.descriptionEn,
+          s.descriptionRu,
+        ],
+      );
 
       const existing = await client.query<{ id: string; date_time: Date }>(
         `SELECT id, date_time FROM group_trainings

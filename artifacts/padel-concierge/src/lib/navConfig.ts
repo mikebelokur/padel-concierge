@@ -128,13 +128,15 @@ export interface SectionCard {
   titleKey: string;
   descKey: string;
   icon: string;
+  /** When true, the card is shown greyed-out and is not clickable. */
+  disabled?: boolean;
 }
 
 export const TRAINING_CARDS: SectionCard[] = [
   { href: "/bookings", titleKey: "training.myCalendar", descKey: "training.myCalendarDesc", icon: "📅" },
   { href: "/group-trainings", titleKey: "training.group", descKey: "training.groupDesc", icon: "👥" },
-  { href: "/messages", titleKey: "training.myCoach", descKey: "training.myCoachDesc", icon: "🎓" },
-  { href: "/profile", titleKey: "training.progress", descKey: "training.progressDesc", icon: "📈" },
+  { href: "/messages", titleKey: "training.myCoach", descKey: "training.myCoachDesc", icon: "🎓", disabled: true },
+  { href: "/profile", titleKey: "training.progress", descKey: "training.progressDesc", icon: "📈", disabled: true },
 ];
 
 export const PLAY_CARDS: SectionCard[] = [

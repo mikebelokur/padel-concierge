@@ -156,7 +156,8 @@
     "myCoach": "Мой тренер",
     "myCoachDesc": "Чат с тренером и запрос слотов.",
     "progress": "Прогресс",
-    "progressDesc": "Твой уровень, статистика и зоны роста."
+    "progressDesc": "Твой уровень, статистика и зоны роста.",
+    "comingSoon": "Скоро"
   },
   "play": {
     "title": "Матчи",
@@ -1000,7 +1001,10 @@
     "findMatch": "Найти матч",
     "upcoming": "Предстоящие",
     "past": "Прошедшие",
-    "viewDetails": "Подробнее"
+    "viewDetails": "Подробнее",
+    "groupTraining": "Групповая тренировка",
+    "withCoach": "Тренер: {{coach}}",
+    "openGroup": "Открыть"
   },
   "news": {
     "title": "Новости падела",
@@ -1371,6 +1375,8 @@
       "opensIn": "Откроется через {{in}}",
       "closingIn": "Запись закрывается через {{in}}",
       "regClosed": "Запись закрыта",
+      "rosterTitle": "Участники",
+      "rosterEmpty": "Пока никто не записался",
       "myStatus": {
         "booked": "Записан",
         "cancelled": "Отменена",

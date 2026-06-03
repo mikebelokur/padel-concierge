@@ -154,7 +154,8 @@
     "myCoach": "My coach",
     "myCoachDesc": "Chat with your coach and request slots.",
     "progress": "Progress",
-    "progressDesc": "Your level, stats and growth areas."
+    "progressDesc": "Your level, stats and growth areas.",
+    "comingSoon": "Coming soon"
   },
   "play": {
     "title": "Matches",
@@ -996,7 +997,10 @@
     "findMatch": "Find a Match",
     "upcoming": "Upcoming",
     "past": "Past",
-    "viewDetails": "View Details"
+    "viewDetails": "View Details",
+    "groupTraining": "Group training",
+    "withCoach": "Coach: {{coach}}",
+    "openGroup": "Open"
   },
   "news": {
     "title": "Padel News",
@@ -1367,6 +1371,8 @@
       "opensIn": "Opens in {{in}}",
       "closingIn": "Closing in {{in}}",
       "regClosed": "Registration closed",
+      "rosterTitle": "Players",
+      "rosterEmpty": "No one has signed up yet",
       "myStatus": {
         "booked": "Booked",
         "cancelled": "Cancelled",

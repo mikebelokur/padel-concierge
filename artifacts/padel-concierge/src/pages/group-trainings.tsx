@@ -21,6 +21,8 @@ import {
   useListMyTrainingBookings,
   useBookGroupTraining,
   useCancelMyTrainingBooking,
+  useGetGroupTrainingRoster,
+  getGetGroupTrainingRosterQueryKey,
   getListGroupTrainingsQueryKey,
   getListMyTrainingBookingsQueryKey,
   type GroupTraining,
@@ -238,6 +240,58 @@ function ProgressBar({ booked, max }: { booked: number; max: number }) {
           transition: "width 240ms ease",
         }}
       />
+    </div>
+  );
+}
+
+function RosterStrip({ trainingId, enabled }: { trainingId: string; enabled: boolean }) {
+  const { t } = useLanguage();
+  const { data: roster, isError } = useGetGroupTrainingRoster(trainingId, {
+    query: {
+      enabled,
+      queryKey: getGetGroupTrainingRosterQueryKey(trainingId),
+      staleTime: 60 * 1000,
+      retry: false,
+    },
+  });
+  // Hide entirely when disabled or when the roster is not visible to this
+  // player (403/404) — never surface a misleading "no one signed up" state.
+  if (!enabled || isError) return null;
+  const entries = roster ?? [];
+  return (
+    <div className="mb-3">
+      <div
+        className="uppercase font-semibold mb-1.5"
+        style={{ fontSize: "10px", letterSpacing: "0.08em", color: "rgba(255,255,255,0.4)" }}
+      >
+        {t("playerTrainings.card.rosterTitle")}
+      </div>
+      {entries.length === 0 ? (
+        <div className="text-muted-foreground" style={{ fontSize: "12px" }}>
+          {t("playerTrainings.card.rosterEmpty")}
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-1.5">
+          {entries.map((r) => (
+            <span
+              key={r.id}
+              className="inline-flex items-center rounded-full"
+              style={{
+                fontSize: "12px",
+                padding: "3px 9px",
+                color: "rgba(255,255,255,0.82)",
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}
+            >
+              {r.name}
+              {r.level ? (
+                <span style={{ color: "rgba(255,255,255,0.4)" }}>{` · ${r.level}`}</span>
+              ) : null}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -463,6 +517,20 @@ function TrainingCard({
           {language === "ru" ? training.descriptionRu : training.descriptionEn}
         </div>
       )}
+
+      {/* Roster — masked first name + last initial. Only fetched when the
+          player can actually view it (booked, or an open/full training at or
+          below their level), matching the backend visibility rule. */}
+      {(() => {
+        const rosterVisible =
+          !isPast &&
+          training.status !== "cancelled" &&
+          (isBooked ||
+            (!locked && (training.status === "open" || training.status === "full")));
+        return rosterVisible ? (
+          <RosterStrip trainingId={training.id} enabled={rosterVisible} />
+        ) : null;
+      })()}
 
       {/* CTA — past trainings render a disabled button */}
       {cta.kind === "none" ? (

@@ -3,6 +3,7 @@ import { db, usersTable, matchesTable, bookingsTable, videoAnalysesTable, activi
 import { eq, sql } from "drizzle-orm";
 import { GetActivityLogQueryParams } from "@workspace/api-zod";
 import { requireAuth, requireMode } from "../middleware/auth";
+import { getTokenFromRequest, verifyToken } from "../lib/auth";
 
 const requireAdminMode = requireMode("admin", "developer");
 
@@ -130,7 +131,14 @@ router.get("/stats/activity", requireAdminMode, async (req, res): Promise<void> 
 
 const CATEGORY_ORDER = ["D-", "D", "D+", "C-", "C", "C+", "B-"] as const;
 
-router.get("/stats/participants", async (_req, res): Promise<void> => {
+router.get("/stats/participants", async (req, res): Promise<void> => {
+  // Public route — powers the landing-page player counter for anonymous
+  // visitors. `total` and `threshold` are public, but the per-level breakdown
+  // (byCategory) is only returned to authenticated users. Soft auth: a missing
+  // or invalid token is NOT a 401 here, it just hides the breakdown.
+  const token = getTokenFromRequest(req);
+  const isAuthed = !!(token && verifyToken(token));
+
   const rows = await db
     .select({ level: usersTable.level, c: sql<number>`count(*)::int` })
     .from(usersTable)
@@ -144,7 +152,7 @@ router.get("/stats/participants", async (_req, res): Promise<void> => {
     total += n;
     if (r.level in byCategory) byCategory[r.level] = n;
   }
-  res.json({ total, byCategory, threshold: 100 });
+  res.json({ total, byCategory: isAuthed ? byCategory : {}, threshold: 100 });
 });
 
 export default router;

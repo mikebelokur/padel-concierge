@@ -7,7 +7,6 @@ import {
   RequestUploadUrlResponse,
 } from "@workspace/api-zod";
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
-import { ObjectPermission } from "../lib/objectAcl";
 import { requireAuth } from "../middleware/auth";
 
 const router: IRouter = Router();
@@ -141,31 +140,23 @@ router.get("/storage/public-objects/*filePath", async (req: Request, res: Respon
 /**
  * GET /storage/objects/*
  *
- * Serve object entities from PRIVATE_OBJECT_DIR.
- * These are served from a separate path from /public-objects and can optionally
- * be protected with authentication or ACL checks based on the use case.
+ * Serve private object entities from PRIVATE_OBJECT_DIR. Gated by `requireAuth`
+ * so only authenticated users can read private uploads — public assets are
+ * served separately by GET /storage/public-objects/* (above), which stays open.
+ *
+ * NOTE: the previous "uncomment to protect" example used the replit-auth API
+ * (`req.isAuthenticated()` / `req.user`), which this project does not use — it
+ * authenticates via JWT through the `requireAuth` middleware (sets `req.auth`).
+ * That stale boilerplate is why this route was effectively public. Per-object
+ * ACL (ObjectPermission.READ via canAccessObjectEntity) remains a future
+ * enhancement on top of the auth gate now in place.
  */
-router.get("/storage/objects/*path", async (req: Request, res: Response) => {
+router.get("/storage/objects/*path", requireAuth, async (req: Request, res: Response) => {
   try {
     const raw = req.params.path;
     const wildcardPath = Array.isArray(raw) ? raw.join("/") : raw;
     const objectPath = `/objects/${wildcardPath}`;
     const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
-
-    // --- Protected route example (uncomment when using replit-auth) ---
-    // if (!req.isAuthenticated()) {
-    //   res.status(401).json({ error: "Unauthorized" });
-    //   return;
-    // }
-    // const canAccess = await objectStorageService.canAccessObjectEntity({
-    //   userId: req.user.id,
-    //   objectFile,
-    //   requestedPermission: ObjectPermission.READ,
-    // });
-    // if (!canAccess) {
-    //   res.status(403).json({ error: "Forbidden" });
-    //   return;
-    // }
 
     await serveFile(req, res, objectFile);
   } catch (error) {

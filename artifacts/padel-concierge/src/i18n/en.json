@@ -288,6 +288,49 @@
     "loginFailed": "Sign in failed",
     "invalidCredentials": "Invalid credentials"
   },
+  "welcome": {
+    "title": "Welcome",
+    "summaryStep": "Summary",
+    "qGender": "What's your gender?",
+    "qAge": "Your age range?",
+    "qExperience": "How long have you played padel?",
+    "qLimitations": "Any physical limitations?",
+    "qComm": "Your communication style on court?",
+    "multiHint": "Select all that apply.",
+    "next": "Next",
+    "back": "Back",
+    "finish": "Finish",
+    "saving": "Saving…",
+    "summaryTitle": "Your profile",
+    "summarySubtitle": "Check it over — you can change this later in your profile.",
+    "gender": {
+      "female": "Female",
+      "male": "Male",
+      "other": "Other",
+      "prefer_not": "Prefer not to say"
+    },
+    "exp": {
+      "u6": "Less than 6 months",
+      "m6_12": "6–12 months",
+      "y1_3": "1–3 years",
+      "y3_5": "3–5 years",
+      "y5p": "5+ years"
+    },
+    "limit": {
+      "none": "None",
+      "back": "Back",
+      "knees": "Knees",
+      "shoulder": "Shoulder",
+      "unsure": "Not sure"
+    },
+    "comm": {
+      "direct": "Direct",
+      "supportive": "Supportive",
+      "analytical": "Analytical",
+      "motivating": "Motivating",
+      "unsure": "Not sure yet"
+    }
+  },
   "register": {
     "title": "Join Padel Concierge",
     "subtitle": "Find your game, find your people",

@@ -47,6 +47,7 @@ import AdminSlots from "@/pages/admin-slots";
 import Members from "@/pages/members";
 import MatchRequests from "@/pages/match-requests";
 import Assessment from "@/pages/assessment";
+import Welcome from "@/pages/welcome";
 import Clients from "@/pages/clients";
 import ClientNew from "@/pages/client-new";
 import ClientProfile from "@/pages/client-profile";
@@ -163,6 +164,7 @@ function Router() {
       <Route path="/match-requests">{() => <ProtectedRoute component={MatchRequests} />}</Route>
       <Route path="/match-log/:id">{() => <ProtectedRoute component={MatchLog} allowedModes={["coach", "admin", "developer"]} />}</Route>
       <Route path="/match-feedback/:id">{() => <ProtectedRoute component={MatchFeedback} />}</Route>
+      <Route path="/welcome">{() => <ProtectedRoute component={Welcome} />}</Route>
       <Route path="/assessment">{() => <ProtectedRoute component={Assessment} />}</Route>
 
       <Route path="/clients/new">{() => <ProtectedRoute component={ClientNew} allowedModes={["coach", "admin", "developer"]} />}</Route>

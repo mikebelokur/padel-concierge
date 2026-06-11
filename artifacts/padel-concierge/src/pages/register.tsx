@@ -64,7 +64,7 @@ export default function Register() {
   });
 
   if (isLoading) return null;
-  if (user) return <Redirect to={user.archetype ? "/dashboard" : "/assessment"} />;
+  if (user) return <Redirect to={user.archetype ? "/dashboard" : "/welcome"} />;
 
   const update = (k: string, v: string) => {
     setFormData((p) => ({ ...p, [k]: v }));
@@ -113,7 +113,9 @@ export default function Register() {
     mutation: {
       onSuccess: () => {
         setInlineError(null);
-        setLocation("/assessment");
+        // Stage 1 onboarding: new registrants go through the Welcome
+        // questionnaire before the skill assessment.
+        setLocation("/welcome");
       },
       onError: (err: unknown) => {
         const translated = translateError(err, lang);

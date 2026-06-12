@@ -1,4 +1,7 @@
-const CACHE = "padel-concierge-v1";
+// Bump this on changes to the SW so `activate` purges the previous cache —
+// critical because the old cache could hold a stale index.html pointing at
+// asset hashes that no longer exist after a deploy (→ 404 → black screen).
+const CACHE = "padel-concierge-v2";
 const ASSETS = ["/", "/manifest.webmanifest"];
 
 self.addEventListener("install", (e) => {
@@ -18,6 +21,28 @@ self.addEventListener("fetch", (e) => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.pathname.startsWith("/api/")) return; // never cache API
+
+  // Navigations (the HTML app shell) MUST be network-first: always fetch the
+  // freshest index.html so it references the current build's asset hashes.
+  // Cache is only an offline fallback. (Cache-first here served a stale shell
+  // after deploys → it requested deleted asset chunks → 404 → black screen.)
+  if (req.mode === "navigate") {
+    e.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res.ok && url.origin === self.location.origin) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+          }
+          return res;
+        })
+        .catch(() => caches.match(req).then((cached) => cached || caches.match("/")))
+    );
+    return;
+  }
+
+  // Other same-origin GETs are content-hashed (immutable) assets — cache-first
+  // is safe and fast for them.
   e.respondWith(
     caches.match(req).then((cached) => cached || fetch(req).then((res) => {
       if (res.ok && url.origin === self.location.origin) {

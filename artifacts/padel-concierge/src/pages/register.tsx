@@ -206,7 +206,7 @@ export default function Register() {
       className="bg-black flex flex-col"
       style={{ minHeight: "100dvh", paddingTop: "env(safe-area-inset-top)" }}
     >
-      <div className="flex-shrink-0 px-6 pt-8 pb-6">
+      <div className="mx-auto w-full max-w-md flex-shrink-0 px-6 pt-8 pb-6">
         <div className="text-center mb-8">
           <h1 className="font-serif font-bold text-white" style={{ fontSize: "28px" }}>
             {t("register.title")}
@@ -238,7 +238,7 @@ export default function Register() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 pb-4">
+      <div className="mx-auto w-full max-w-md flex-1 overflow-y-auto px-6 pb-4">
         <div
           key={step}
           style={{ animation: `${slideDir === "right" ? "slideInRight" : "slideInLeft"} 0.3s ease-out both` }}
@@ -246,16 +246,18 @@ export default function Register() {
           {step === 1 && (
             <div className="space-y-5 pb-2">
               <IosInput
+                id="name"
                 label={t("register.fullName")}
                 placeholder={t("register.namePlaceholder")}
                 value={formData.name}
                 onChange={(v) => update("name", v)}
               />
               <div>
-                <label className="block text-white font-medium mb-2" style={{ fontSize: "15px" }}>
+                <label htmlFor="email" className="block text-white font-medium mb-2" style={{ fontSize: "15px" }}>
                   {t("register.email")}
                 </label>
                 <input
+                  id="email"
                   ref={emailInputRef}
                   type="email"
                   autoComplete="email"
@@ -295,16 +297,18 @@ export default function Register() {
                 )}
               </div>
               <IosInput
+                id="phone"
                 label={t("register.phone")}
                 placeholder="+971 50 000 0000"
                 value={formData.phone}
                 onChange={(v) => update("phone", v)}
               />
               <div>
-                <label className="block text-white font-medium mb-2" style={{ fontSize: "15px" }}>
+                <label htmlFor="password" className="block text-white font-medium mb-2" style={{ fontSize: "15px" }}>
                   {t("register.password")}
                 </label>
                 <input
+                  id="password"
                   type="password"
                   autoComplete="new-password"
                   value={formData.password}
@@ -321,10 +325,11 @@ export default function Register() {
                 )}
               </div>
               <div>
-                <label className="block text-white font-medium mb-2" style={{ fontSize: "15px" }}>
+                <label htmlFor="confirmPassword" className="block text-white font-medium mb-2" style={{ fontSize: "15px" }}>
                   {t("register.confirmPassword")}
                 </label>
                 <input
+                  id="confirmPassword"
                   type="password"
                   autoComplete="new-password"
                   value={formData.confirmPassword}
@@ -346,7 +351,7 @@ export default function Register() {
           {step === 2 && (
             <div className="space-y-8 pb-2">
               <div>
-                <label className="block text-white font-medium mb-1" style={{ fontSize: "15px" }}>
+                <label htmlFor="level" className="block text-white font-medium mb-1" style={{ fontSize: "15px" }}>
                   {t("register.selfAssessedLevel")}
                 </label>
                 <p className="text-muted-foreground mb-5" style={{ fontSize: "13px" }}>
@@ -365,6 +370,7 @@ export default function Register() {
                 </div>
                 <div className="relative">
                   <input
+                    id="level"
                     type="range"
                     min={0}
                     max={LEVELS.length - 1}
@@ -417,10 +423,11 @@ export default function Register() {
           {step === 3 && (
             <div className="space-y-8 pb-2">
               <div>
-                <label className="block text-white font-medium mb-2" style={{ fontSize: "15px" }}>
+                <label htmlFor="locationName" className="block text-white font-medium mb-2" style={{ fontSize: "15px" }}>
                   {t("register.cityArea")}
                 </label>
                 <input
+                  id="locationName"
                   placeholder={t("register.cityPlaceholder")}
                   value={formData.locationName}
                   onChange={(e) => update("locationName", e.target.value)}
@@ -471,7 +478,7 @@ export default function Register() {
       </div>
 
       <div
-        className="flex-shrink-0 px-6 pt-4 border-t border-white/6"
+        className="mx-auto w-full max-w-md flex-shrink-0 px-6 pt-4 border-t border-white/6"
         style={{
           background: "rgba(0,0,0,0.97)",
           backdropFilter: "blur(20px)",
@@ -599,12 +606,14 @@ function EmailExistsCard({
 }
 
 function IosInput({
+  id,
   label,
   type = "text",
   placeholder,
   value,
   onChange,
 }: {
+  id: string;
   label: string;
   type?: string;
   placeholder?: string;
@@ -613,10 +622,11 @@ function IosInput({
 }) {
   return (
     <div>
-      <label className="block text-white font-medium mb-2" style={{ fontSize: "15px" }}>
+      <label htmlFor={id} className="block text-white font-medium mb-2" style={{ fontSize: "15px" }}>
         {label}
       </label>
       <input
+        id={id}
         type={type}
         placeholder={placeholder}
         value={value}

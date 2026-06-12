@@ -63,9 +63,6 @@ export default function Register() {
     locationName: "Dubai",
   });
 
-  if (isLoading) return null;
-  if (user) return <Redirect to={user.archetype ? "/dashboard" : "/welcome"} />;
-
   const update = (k: string, v: string) => {
     setFormData((p) => ({ ...p, [k]: v }));
     if (k === "email") {
@@ -200,6 +197,12 @@ export default function Register() {
   const isPending = registerMutation.isPending || updateUserMutation.isPending;
   const selectedLevel = LEVELS[levelIdx];
   const emailQuery = formData.email.trim() ? `?email=${encodeURIComponent(formData.email.trim())}` : "";
+
+  // Guard must run AFTER every hook above (useRef / useUpdateUser /
+  // useRegister sat below the old early-return spot). Bailing earlier
+  // skipped those hooks on this render → "Rendered fewer hooks than expected".
+  if (isLoading) return null;
+  if (user) return <Redirect to={user.archetype ? "/dashboard" : "/welcome"} />;
 
   return (
     <div

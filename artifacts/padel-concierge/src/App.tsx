@@ -66,6 +66,7 @@ import PlayerProfilePage from "@/pages/player-profile";
 import FindMatch from "@/pages/find-match";
 import Invite from "@/pages/invite";
 import AdminClientProfile from "@/pages/admin-client-profile";
+import Cabinet from "@/pages/cabinet";
 import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { PushOptInPrompt } from "@/components/PushOptInPrompt";
@@ -194,6 +195,7 @@ function Router() {
           <ProtectedRoute component={GroupTrainings} />
         </Suspense>
       )}</Route>
+      <Route path="/cabinet">{() => <ProtectedRoute component={Cabinet} allowedModes={["coach", "admin", "developer"]} />}</Route>
       <Route path="/coach">{() => <ProtectedRoute component={CoachDashboard} allowedModes={["coach", "admin", "developer"]} />}</Route>
       <Route path="/admin/users">{() => <ProtectedRoute component={AdminUsers} allowedModes={["admin", "developer"]} />}</Route>
       <Route path="/admin/clients/:userId">{() => <ProtectedRoute component={AdminClientProfile} allowedModes={["coach", "admin", "developer"]} />}</Route>
